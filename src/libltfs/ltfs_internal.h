@@ -88,4 +88,15 @@ void _ltfs_last_ref(struct dentry *d, tape_block_t *dp_last, tape_block_t *ip_la
 int ltfs_split_symlink(struct ltfs_volume *vol);
 int ltfs_set_dentry_dirty(struct dentry *d, struct ltfs_volume *vol);
 
+#ifdef FORMAT_SPEC25
+/* Incremental Index recovery functions */
+int ltfs_apply_incindex_to_memory(const char *incindex_data, size_t data_size,
+								  struct ltfs_volume *vol, bool apply_changes);
+int ltfs_validate_incindex(const char *incindex_data, size_t data_size,
+						   struct ltfs_volume *vol);
+int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
+								  bool apply_changes);
+int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol);
+#endif /* FORMAT_SPEC25 */
+
 #endif /* __ltfs_internal_h__ */

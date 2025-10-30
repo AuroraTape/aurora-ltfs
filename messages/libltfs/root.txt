@@ -441,6 +441,33 @@ root:table {
 		11344I:string { "Tape %s is frozen successfully because of a permanent write error on the DP." }
 		11345E:string { "Failed to freeze tape %s because of permanent write errors on the IP and DP." }
 		11346E:string { "Tape %s is frozen by the previous index on the tape. Some metadata will be lost during the unmount operation." }
+		11347W:string { "Incremental index: Delete UID mismatch, skipping (%s)." }
+		11348W:string { "Incremental index: Entry missing name, skipping (entry %d)." }
+		11349W:string { "Incremental index: Failed to apply operation for entry (%s)." }
+		11350W:string { "Incremental index: Application completed with errors (%d)." }
+		11351W:string { "Incremental index from tape: Entry missing name, skipping (entry %d)." }
+		11352W:string { "Incremental index from tape: Failed to apply operation for entry (%s)." }
+		11353W:string { "Incremental index from tape: Application completed with errors (%d)." }
+		11354E:string { "Incremental index: Parent directory not found for CREATE (%s)." }
+		11355E:string { "Incremental index: Parent is not a directory (%s)." }
+		11356I:string { "Incremental index: Object already exists, skipping CREATE (%s)." }
+		11357E:string { "Incremental index: Failed to allocate dentry (%s)." }
+		11358I:string { "Incremental index: Applied CREATE operation (%s)." }
+		11359E:string { "Incremental index: Target object not found for MODIFY (%s)." }
+		11360E:string { "Incremental index: UID mismatch for MODIFY operation (%s)." }
+		11361I:string { "Incremental index: Applied MODIFY operation (%s)." }
+		11362I:string { "Incremental index: Delete target not found, may already be deleted (%s)." }
+		11363E:string { "Incremental index: Cannot delete root directory (%s)." }
+		11364E:string { "Incremental index: Cannot delete non-empty directory (%s)." }
+		11365I:string { "Incremental index: Applied DELETE operation (%s)." }
+		11366E:string { "Incremental index: Failed to parse incremental index XML (%d)." }
+		11367I:string { "Incremental index: No entries in incremental index." }
+		11368I:string { "Incremental index: Applying incremental index with %d entries." }
+		11369I:string { "Incremental index: Applied successfully (%d entries)." }
+		11370E:string { "Incremental index: Failed to read from tape (%d)." }
+		11371I:string { "Incremental index: No entries in incremental index from tape." }
+		11372I:string { "Incremental index: Applying from tape with %d entries." }
+		11373I:string { "Incremental index: Applied successfully from tape (%d entries)." }
 
 		// Message IDs 11400 through 11800 are allocated to the libchanger.
 		// DO NOT add messages with those IDs to this file.
@@ -574,7 +601,7 @@ root:table {
 		17022E:string { "XML parser: invalid block size %s." }
 		17023E:string { "XML parser: invalid generation number %s." }
 		17024E:string { "XML parser: invalid size criterion %s." }
-		//unused 17025E:string { "XML parser: failed to normalize value (%d)." }
+		// 17025E:string { "XML parser: too many entries in incremental index (max %d)." }
 		17026E:string { "XML parser: file size is shorter than extent list." }
 		17027E:string { "XML parser: unsupported extended attribute type \'%s\'." }
 		17028E:string { "XML parser: base64 decoding failed." }
@@ -843,6 +870,7 @@ root:table {
 		17304E:string { "Unexpected value was provided to _xml_write_incremental_delete (%d)." }
 		17305E:string { "Failed to construct a path helper (push: %d)." }
 		17306E:string { "Failed to find a corresponded directory in path helper (push: %d)." }
+		17307E:string { "XML parser: contents tag not found in incremental index." }
 
 		// For Debug 19999I:string { "%s %s %d." }
 

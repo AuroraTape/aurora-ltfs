@@ -1551,3 +1551,527 @@ int ltfs_set_dentry_dirty(struct dentry *d, struct ltfs_volume *vol)
 
 	return ret;
 }
+
+#ifdef FORMAT_SPEC25
+/**
+ * Find a dentry by UID in the filesystem tree (recursive search)
+ * @param uid Object UID to search for
+ * @param root Root directory to start search
+ * @return dentry pointer or NULL if not found
+ */
+static struct dentry *_find_dentry_by_uid_recursive(uint64_t uid, struct dentry *root)
+{
+	struct name_list *entry, *tmp;
+	struct dentry *result;
+
+	if (root->uid == uid) {
+		return root;
+	}
+
+	if (!root->isdir) {
+		return NULL;
+	}
+
+	/* Search children recursively */
+	HASH_ITER(hh, root->child_list, entry, tmp) {
+		result = _find_dentry_by_uid_recursive(uid, entry->d);
+		if (result) {
+			return result;
+		}
+	}
+
+	return NULL;
+}
+
+/**
+ * Find a dentry by path in the filesystem tree
+ * @param path Full path to the object
+ * @param vol LTFS volume
+ * @return dentry pointer or NULL if not found
+ */
+static struct dentry* _find_dentry_by_path(const char *path, struct ltfs_volume *vol)
+{
+	struct dentry *d;
+	int ret;
+
+	if (!path || !vol || !vol->index) {
+		return NULL;
+	}
+
+	/* Use fs_path_lookup for robust path resolution */
+	ret = fs_path_lookup(path, 0, &d, vol->index);
+	if (ret < 0) {
+		return NULL;
+	}
+
+	return d;
+}
+
+/**
+ * Apply CREATE operation from incremental index
+ * @param entry Incremental index entry
+ * @param parent_path Parent directory path
+ * @param vol LTFS volume
+ * @return 0 on success, negative on error
+ */
+static int _apply_incindex_create(struct incindex_entry *entry,
+								  const char *parent_path,
+								  struct ltfs_volume *vol)
+{
+	struct dentry *parent, *new_dentry;
+	char *full_path;
+	int ret;
+
+	CHECK_ARG_NULL(entry, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(parent_path, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	/* Find parent directory */
+	parent = _find_dentry_by_path(parent_path, vol);
+	if (!parent) {
+		ltfsmsg(LTFS_ERR, 11354E, parent_path);
+		return -LTFS_NO_DENTRY;
+	}
+
+	if (!parent->isdir) {
+		ltfsmsg(LTFS_ERR, 11355E, parent_path);
+		return -LTFS_ISDIRECTORY;
+	}
+
+	/* Check if object already exists */
+	ret = asprintf(&full_path, "%s/%s",
+				   strcmp(parent_path, "/") == 0 ? "" : parent_path, entry->name);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 10001E, "_apply_incindex_create: full path");
+		return -LTFS_NO_MEMORY;
+	}
+
+	if (_find_dentry_by_path(full_path, vol)) {
+		ltfsmsg(LTFS_INFO, 11356I, full_path);
+		free(full_path);
+		return 0; /* Not an error, just skip */
+	}
+
+	/* Create new dentry */
+	new_dentry = fs_allocate_dentry(parent, entry->name, NULL, entry->is_directory,
+									false, true, vol->index);
+	if (!new_dentry) {
+		ltfsmsg(LTFS_ERR, 11357E, entry->name);
+		free(full_path);
+		return -LTFS_NO_MEMORY;
+	}
+
+	/* Set dentry properties */
+	new_dentry->uid = entry->uid;
+	new_dentry->creation_time = entry->modify_time;
+	new_dentry->modify_time = entry->modify_time;
+	new_dentry->access_time = entry->modify_time;
+	new_dentry->change_time = entry->modify_time;
+
+	/* fs_allocate_dentry already adds the dentry to the parent */
+
+	ltfsmsg(LTFS_INFO, 11358I, full_path);
+	free(full_path);
+	return 0;
+}
+
+/**
+ * Apply MODIFY operation from incremental index
+ * @param entry Incremental index entry
+ * @param target_path Target object path
+ * @param vol LTFS volume
+ * @return 0 on success, negative on error
+ */
+static int _apply_incindex_modify(struct incindex_entry *entry,
+								  const char *target_path,
+								  struct ltfs_volume *vol)
+{
+	struct dentry *target;
+
+	CHECK_ARG_NULL(entry, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(target_path, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	/* Find target object by path first */
+	target = _find_dentry_by_path(target_path, vol);
+	if (!target) {
+		/* Try to find by UID if path lookup failed */
+		target = _find_dentry_by_uid_recursive(entry->uid, vol->index->root);
+		if (!target) {
+			ltfsmsg(LTFS_ERR, 11359E, target_path);
+			return -LTFS_NO_DENTRY;
+		}
+	}
+
+	/* Verify UID matches */
+	if (target->uid != entry->uid) {
+		ltfsmsg(LTFS_ERR, 11360E, target_path);
+		return -LTFS_BAD_ARG;
+	}
+
+	/* Update timestamps and mark as dirty */
+	target->modify_time = entry->modify_time;
+	target->change_time = entry->modify_time;
+	target->dirty = true;
+
+	ltfsmsg(LTFS_INFO, 11361I, target_path);
+	return 0;
+}
+
+/**
+ * Apply DELETE operation from incremental index
+ * @param entry Incremental index entry
+ * @param target_path Target object path
+ * @param vol LTFS volume
+ * @return 0 on success, negative on error
+ */
+static int _apply_incindex_delete(struct incindex_entry *entry,
+								  const char *target_path,
+								  struct ltfs_volume *vol)
+{
+	struct dentry *target, *parent;
+
+	CHECK_ARG_NULL(entry, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(target_path, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	/* Find target object */
+	target = _find_dentry_by_path(target_path, vol);
+	if (!target) {
+		ltfsmsg(LTFS_INFO, 11362I, target_path);
+		return 0; /* Not an error if already deleted */
+	}
+
+	/* Verify UID matches if provided */
+	if (entry->uid != 0 && target->uid != entry->uid) {
+		ltfsmsg(LTFS_WARN, 11347W, target_path);
+		return 0; /* Don't delete if UIDs don't match */
+	}
+
+	parent = target->parent;
+	if (!parent) {
+		ltfsmsg(LTFS_ERR, 11363E, target_path);
+		return -LTFS_BAD_ARG;
+	}
+
+	/* For directories, ensure they are empty */
+	if (target->isdir && HASH_COUNT(target->child_list) > 0) {
+		ltfsmsg(LTFS_ERR, 11364E, target_path);
+		return -LTFS_DIRNOTEMPTY;
+	}
+
+	/* Remove from parent and release dentry */
+	fs_release_dentry(target);
+
+	ltfsmsg(LTFS_INFO, 11365I, target_path);
+	return 0;
+}
+
+/**
+ * Build full path for incremental index entry
+ * @param parent_path Parent directory path
+ * @param entry_name Entry name
+ * @param full_path Output full path (caller must free)
+ * @return 0 on success, negative on error
+ */
+static int _build_entry_path(const char *parent_path, const char *entry_name, char **full_path)
+{
+	int ret;
+
+	CHECK_ARG_NULL(parent_path, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(entry_name, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(full_path, -LTFS_NULL_ARG);
+
+	if (strcmp(parent_path, "/") == 0) {
+		ret = asprintf(full_path, "/%s", entry_name);
+	} else {
+		ret = asprintf(full_path, "%s/%s", parent_path, entry_name);
+	}
+
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 10001E, "_build_entry_path: path construction");
+		return -LTFS_NO_MEMORY;
+	}
+
+	return 0;
+}
+
+/**
+ * Context structure for streaming incremental index processing callback
+ */
+struct incindex_callback_ctx {
+	struct ltfs_volume *vol;        /**< LTFS volume */
+	bool apply_changes;              /**< Whether to apply changes */
+	int error_count;                 /**< Count of errors encountered */
+	int processed_count;             /**< Count of entries processed */
+};
+
+/**
+ * Callback function for processing each incremental index entry
+ * Called by the streaming parser for each entry
+ * @param entry The parsed entry
+ * @param user_data Context data (struct incindex_callback_ctx*)
+ * @return 0 on success, negative on error
+ */
+static int _process_incindex_entry_callback(struct incindex_entry *entry, void *user_data)
+{
+	struct incindex_callback_ctx *ctx = (struct incindex_callback_ctx *)user_data;
+	char *full_path = NULL;
+	int ret = 0;
+
+	if (!entry || !ctx) {
+		return -LTFS_NULL_ARG;
+	}
+
+	ctx->processed_count++;
+
+	if (!entry->name) {
+		ltfsmsg(LTFS_WARN, 11351W, ctx->processed_count - 1);
+		ctx->error_count++;
+		return 0; /* Continue processing */
+	}
+
+	/* Build full path for the entry */
+	ret = _build_entry_path("/", entry->name, &full_path);
+	if (ret < 0) {
+		ctx->error_count++;
+		return 0; /* Continue processing */
+	}
+
+	/* Apply the operation based on entry type if requested */
+	if (ctx->apply_changes) {
+		if (entry->is_deleted) {
+			ret = _apply_incindex_delete(entry, full_path, ctx->vol);
+		} else {
+			/* Check if object exists to determine CREATE vs MODIFY */
+			struct dentry *existing = _find_dentry_by_path(full_path, ctx->vol);
+			if (!existing) {
+				ret = _apply_incindex_create(entry, "/", ctx->vol);
+			} else {
+				ret = _apply_incindex_modify(entry, full_path, ctx->vol);
+			}
+		}
+
+		if (ret < 0) {
+			ltfsmsg(LTFS_WARN, 11352W, full_path);
+			ctx->error_count++;
+		}
+	}
+
+	free(full_path);
+	return 0; /* Continue processing even if there was an error */
+}
+
+/**
+ * Apply incremental index entries to in-memory filesystem metadata
+ * Uses streaming approach to avoid memory limits on number of entries
+ * @param incindex_data Buffer containing incremental index XML
+ * @param data_size Size of the buffer
+ * @param vol LTFS volume with existing metadata
+ * @param apply_changes If true, actually apply changes; if false, just validate
+ * @return 0 on success, negative on error
+ */
+int ltfs_apply_incindex_to_memory(const char *incindex_data, size_t data_size,
+								  struct ltfs_volume *vol, bool apply_changes)
+{
+	struct incindex_callback_ctx ctx;
+	int entry_count = 0;
+	int ret = 0;
+	xmlTextReaderPtr reader;
+	xmlChar *name;
+	int type;
+	bool found_contents = false;
+
+	CHECK_ARG_NULL(incindex_data, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	/* Initialize callback context */
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.vol = vol;
+	ctx.apply_changes = apply_changes;
+	ctx.error_count = 0;
+	ctx.processed_count = 0;
+
+	/* Parse incremental index XML from provided data (already read from tape) */
+	reader = xmlReaderForMemory(incindex_data, data_size, NULL, NULL,
+								XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+	if (!reader) {
+		ltfsmsg(LTFS_ERR, 17009E);
+		return -LTFS_LIBXML2_FAILURE;
+	}
+
+	/* Find root element */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		if (type == XML_READER_TYPE_ELEMENT) {
+			name = xmlTextReaderName(reader);
+			if (xmlStrcmp(name, BAD_CAST "ltfsincrementalindex") == 0) {
+				xmlFree(name);
+				break;
+			}
+			xmlFree(name);
+		}
+	}
+
+	if (ret != 1) {
+		ltfsmsg(LTFS_ERR, 17026E);
+		xmlFreeTextReader(reader);
+		return -LTFS_INDEX_INVALID;
+	}
+
+	/* Find contents section */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		if (type == XML_READER_TYPE_ELEMENT) {
+			name = xmlTextReaderName(reader);
+			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				found_contents = true;
+				xmlFree(name);
+				break;
+			}
+			xmlFree(name);
+		}
+	}
+
+	if (!found_contents) {
+		/* No contents section - empty incremental index */
+		xmlFreeTextReader(reader);
+		ltfsmsg(LTFS_INFO, 11367I);
+		return 0;
+	}
+
+	/* Acquire volume write lock if applying changes */
+	if (apply_changes) {
+		acquirewrite_mrsw(&vol->lock);
+	}
+
+	/* Parse contents using streaming callback */
+	ret = _xml_parse_incindex_contents(reader, _process_incindex_entry_callback,
+									   &ctx, &entry_count, vol);
+	xmlFreeTextReader(reader);
+
+	/* Release volume lock */
+	if (apply_changes) {
+		releasewrite_mrsw(&vol->lock);
+	}
+
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 11366E, ret);
+		return ret;
+	}
+
+	if (entry_count == 0) {
+		ltfsmsg(LTFS_INFO, 11367I);
+		return 0;
+	}
+
+	ltfsmsg(LTFS_INFO, 11368I, entry_count);
+
+	/* Update index generation and timestamp if changes were applied successfully */
+	if (apply_changes && ctx.error_count == 0) {
+		vol->index->generation++;
+		get_current_timespec(&vol->index->mod_time);
+		ltfs_set_index_dirty(false, false, vol->index);
+		ltfsmsg(LTFS_INFO, 11369I, entry_count);
+	}
+
+	if (ctx.error_count > 0) {
+		ltfsmsg(LTFS_WARN, 11350W, ctx.error_count);
+		return -LTFS_LIBXML2_FAILURE;
+	}
+
+	return 0;
+}
+
+/**
+ * Validate incremental index against current filesystem state
+ * @param incindex_data Buffer containing incremental index XML
+ * @param data_size Size of the buffer
+ * @param vol LTFS volume with existing metadata
+ * @return 0 if valid, negative on error
+ */
+int ltfs_validate_incindex(const char *incindex_data, size_t data_size,
+						   struct ltfs_volume *vol)
+{
+	return ltfs_apply_incindex_to_memory(incindex_data, data_size, vol, false);
+}
+
+/**
+ * Read and apply incremental index from tape to in-memory filesystem metadata
+ * Uses streaming approach to avoid memory limits on number of entries
+ * @param eod_pos End of data position of the current partition
+ * @param vol LTFS volume with existing metadata
+ * @param apply_changes If true, actually apply changes; if false, just validate
+ * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ *         or a negative value on error.
+ */
+int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
+								  bool apply_changes)
+{
+	struct incindex_callback_ctx ctx;
+	int entry_count = 0;
+	int ret = 0;
+
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	/* Initialize callback context */
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.vol = vol;
+	ctx.apply_changes = apply_changes;
+	ctx.error_count = 0;
+	ctx.processed_count = 0;
+
+	/* Acquire volume write lock if applying changes */
+	if (apply_changes) {
+		acquirewrite_mrsw(&vol->lock);
+	}
+
+	/* Read and parse incremental index directly from tape using streaming API */
+	ret = xml_incindex_from_tape(eod_pos, _process_incindex_entry_callback,
+								  &ctx, &entry_count, vol);
+
+	/* Release volume lock */
+	if (apply_changes) {
+		releasewrite_mrsw(&vol->lock);
+	}
+
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 11370E, ret);
+		return ret;
+	}
+
+	if (entry_count == 0) {
+		ltfsmsg(LTFS_INFO, 11371I);
+		return 0;
+	}
+
+	ltfsmsg(LTFS_INFO, 11372I, entry_count);
+
+	/* Update index generation and timestamp if changes were applied successfully */
+	if (apply_changes && ctx.error_count == 0) {
+		vol->index->generation++;
+		get_current_timespec(&vol->index->mod_time);
+		ltfs_set_index_dirty(false, false, vol->index);
+		ltfsmsg(LTFS_INFO, 11373I, entry_count);
+	}
+
+	if (ctx.error_count > 0) {
+		ltfsmsg(LTFS_WARN, 11353W, ctx.error_count);
+		return -LTFS_LIBXML2_FAILURE;
+	}
+
+	return ret;
+}
+
+/**
+ * Validate incremental index from tape against current filesystem state
+ * @param eod_pos End of data position of the current partition
+ * @param vol LTFS volume with existing metadata
+ * @return 0 if valid, 1 if parsing succeeded but no file mark was encountered,
+ *         or a negative value on error.
+ */
+int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol)
+{
+	return ltfs_apply_incindex_from_tape(eod_pos, vol, false);
+}
+#endif /* FORMAT_SPEC25 */

@@ -2036,3 +2036,360 @@ int xml_extent_symlink_info_from_file(const char *filename, struct dentry *d)
 
 	return ret;
 }
+
+#ifdef FORMAT_SPEC25
+/**
+ * Parse incremental index entry (file or directory)
+ * @param reader XML text reader
+ * @param entry Output entry structure
+ * @param vol LTFS volume
+ * @return 0 on success or a negative value on error
+ */
+static int _xml_parse_incindex_entry(xmlTextReaderPtr reader, 
+									 struct incindex_entry *entry,
+									 struct ltfs_volume *vol)
+{
+	xmlChar *name, *value;
+	int ret = 0;
+	int type;
+
+	CHECK_ARG_NULL(reader, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(entry, -LTFS_NULL_ARG);
+
+	memset(entry, 0, sizeof(struct incindex_entry));
+
+	name = xmlTextReaderName(reader);
+	if (!name) {
+		ltfsmsg(LTFS_ERR, 17023E, "NULL");
+		return -LTFS_INDEX_INVALID;
+	}
+
+	/* Determine if this is a directory or file */
+	if (xmlStrcmp(name, BAD_CAST "directory") == 0) {
+		entry->is_directory = true;
+	} else if (xmlStrcmp(name, BAD_CAST "file") == 0) {
+		entry->is_directory = false;
+	} else {
+		ltfsmsg(LTFS_ERR, 17024E, (char *)name);
+		xmlFree(name);
+		return -LTFS_INDEX_INVALID;
+	}
+	xmlFree(name);
+
+	/* Parse child elements */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		name = xmlTextReaderName(reader);
+
+		if (type == XML_READER_TYPE_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "name") == 0) {
+				value = xmlTextReaderReadString(reader);
+				if (value) {
+					ret = decode_entry_name(&entry->name, (char *)value);
+					xmlFree(value);
+					if (ret < 0) {
+						xmlFree(name);
+						return ret;
+					}
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "uid") == 0) {
+				value = xmlTextReaderReadString(reader);
+				if (value) {
+					entry->uid = strtoull((char *)value, NULL, 10);
+					xmlFree(value);
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "modifytime") == 0) {
+				value = xmlTextReaderReadString(reader);
+				if (value) {
+					ret = xml_parse_time(true, (char *)value, &entry->modify_time);
+					xmlFree(value);
+					if (ret < 0) {
+						xmlFree(name);
+						return ret;
+					}
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "deleted") == 0) {
+				entry->is_deleted = true;
+			} else if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				/* Skip contents for now - handled at higher level */
+				xmlTextReaderNext(reader);
+			}
+		} else if (type == XML_READER_TYPE_END_ELEMENT) {
+			name = xmlTextReaderName(reader);
+			if (xmlStrcmp(name, BAD_CAST "directory") == 0 ||
+				xmlStrcmp(name, BAD_CAST "file") == 0) {
+				xmlFree(name);
+				break;
+			}
+		}
+
+		xmlFree(name);
+	}
+
+	if (ret < 0) {
+		if (entry->name) {
+			free(entry->name);
+			entry->name = NULL;
+		}
+		return ret;
+	}
+
+	return 0;
+}
+
+/**
+ * Free incremental index entries
+ * @param entries Array of entries
+ * @param entry_count Number of entries
+ */
+void xml_free_incindex_entries(struct incindex_entry *entries, int entry_count)
+{
+	int i;
+
+	if (!entries)
+		return;
+
+	for (i = 0; i < entry_count; i++) {
+		if (entries[i].name) {
+			free(entries[i].name);
+			entries[i].name = NULL;
+		}
+	}
+}
+
+/**
+ * Free a single incremental index entry
+ * @param entry Entry to free
+ */
+void xml_free_incindex_entry(struct incindex_entry *entry)
+{
+	if (!entry)
+		return;
+
+	if (entry->name) {
+		free(entry->name);
+		entry->name = NULL;
+	}
+}
+
+/**
+ * Parse incremental index contents section with streaming callback
+ * @param reader XML text reader
+ * @param callback Function to call for each parsed entry
+ * @param user_data User data to pass to callback
+ * @param entry_count Pointer to current entry count
+ * @param vol LTFS_volume
+ * @return 0 on success or a negative value on error
+ */
+int _xml_parse_incindex_contents(xmlTextReaderPtr reader,
+								  incindex_entry_callback_t callback,
+								  void *user_data,
+								  int *entry_count,
+								  struct ltfs_volume *vol)
+{
+	xmlChar *name;
+	int ret = 0;
+	int type;
+	struct incindex_entry entry;
+
+	CHECK_ARG_NULL(reader, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(callback, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(entry_count, -LTFS_NULL_ARG);
+
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		name = xmlTextReaderName(reader);
+
+		if (type == XML_READER_TYPE_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "directory") == 0 ||
+				xmlStrcmp(name, BAD_CAST "file") == 0) {
+
+				/* Parse single entry */
+				ret = _xml_parse_incindex_entry(reader, &entry, vol);
+				if (ret < 0) {
+					xmlFree(name);
+					return ret;
+				}
+
+				/* Call callback with parsed entry */
+				ret = callback(&entry, user_data);
+
+				/* Free entry memory */
+				xml_free_incindex_entry(&entry);
+
+				/* Check callback result */
+				if (ret < 0) {
+					xmlFree(name);
+					return ret;
+				}
+
+				(*entry_count)++;
+			}
+		} else if (type == XML_READER_TYPE_END_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				xmlFree(name);
+				break;
+			}
+		}
+
+		xmlFree(name);
+	}
+
+	return ret < 0 ? ret : 0;
+}
+
+/**
+ * Parse incremental index XML from tape with streaming callback
+ * @param eod_pos End of data position of the current partition
+ * @param callback Function to call for each parsed entry
+ * @param user_data User data to pass to callback
+ * @param entry_count Pointer to store actual entry count
+ * @param vol LTFS volume
+ * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ *         or a negative value on error.
+ */
+int xml_incindex_from_tape(uint64_t eod_pos,
+							incindex_entry_callback_t callback,
+							void *user_data,
+							int *entry_count,
+							struct ltfs_volume *vol)
+{
+	int ret, bk = -1;
+	struct tc_position current_pos;
+	struct xml_input_tape *ctx;
+	xmlParserInputBufferPtr read_buf;
+	xmlTextReaderPtr reader;
+	xmlChar *name;
+	int type;
+
+	CHECK_ARG_NULL(callback, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(entry_count, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	*entry_count = 0;
+
+	/* Save current position */
+	ret = tape_get_position(vol->device, &current_pos);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 17013E, ret);
+		return ret;
+	}
+
+	/* Allocate XML input context */
+	ctx = calloc(1, sizeof(struct xml_input_tape));
+	if (!ctx) {
+		ltfsmsg(LTFS_ERR, 10001E, "xml_incindex_from_tape_streaming: ctx");
+		return -LTFS_NO_MEMORY;
+	}
+
+	ctx->vol = vol;
+	ctx->current_pos = current_pos.block;
+	ctx->eod_pos = eod_pos;
+	ctx->buf_size = vol->label->blocksize;
+
+	/* Allocate read buffer */
+	ctx->buf = malloc(ctx->buf_size);
+	if (!ctx->buf) {
+		ltfsmsg(LTFS_ERR, 10001E, "xml_incindex_from_tape_streaming: buffer");
+		free(ctx);
+		return -LTFS_NO_MEMORY;
+	}
+
+	/* Try to get index cache */
+	ctx->fd = -1;
+	if (vol->index_cache_path_r) {
+		ret = xml_acquire_file_lock(vol->index_cache_path_r, &ctx->fd, &bk, false);
+		if (ret < 0 || ctx->fd < 0) {
+			ctx->fd = -1;
+		}
+	}
+
+	/* Create XML reader */
+	read_buf = xmlParserInputBufferCreateIO(xml_input_tape_read_callback,
+											xml_input_tape_close_callback,
+											ctx, XML_CHAR_ENCODING_NONE);
+	if (!read_buf) {
+		ltfsmsg(LTFS_ERR, 17014E);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_ctx;
+	}
+
+	reader = xmlNewTextReader(read_buf, NULL);
+	if (!reader) {
+		ltfsmsg(LTFS_ERR, 17015E);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_buf;
+	}
+
+	/* Find ltfsindex tag */
+	ret = xmlTextReaderRead(reader);
+	while (ret == 1 && xmlTextReaderNodeType(reader) != XML_READER_TYPE_ELEMENT)
+		ret = xmlTextReaderRead(reader);
+
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 17016E, ret);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_reader;
+	}
+
+	name = xmlTextReaderName(reader);
+	if (!name || xmlStrcmp(name, BAD_CAST "ltfsindex") != 0) {
+		if (name) {
+			ltfsmsg(LTFS_ERR, 17017E, (char *)name);
+			xmlFree(name);
+		} else {
+			ltfsmsg(LTFS_ERR, 17017E, "NULL");
+		}
+		ret = -LTFS_INDEX_INVALID;
+		goto out_free_reader;
+	}
+	xmlFree(name);
+
+	/* Find contents tag */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		if (type == XML_READER_TYPE_ELEMENT) {
+			name = xmlTextReaderName(reader);
+			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				xmlFree(name);
+				break;
+			}
+			xmlFree(name);
+		}
+	}
+
+	if (ret <= 0) {
+		ltfsmsg(LTFS_ERR, 17307E);
+		ret = -LTFS_INDEX_INVALID;
+		goto out_free_reader;
+	}
+
+	/* Parse contents with streaming callback */
+	ret = _xml_parse_incindex_contents(reader, callback, user_data,
+									   entry_count, vol);
+
+	/* Check for tape/file errors */
+	if (ret >= 0) {
+		if (ctx->err_code || ctx->errno_fd) {
+			if (ctx->err_code) ret = ctx->err_code;
+			else if (ctx->errno_fd) ret = ctx->errno_fd;
+		} else if (ret == 0) {
+			if (!ctx->saw_file_mark) {
+				ret = LTFS_NO_TRAIL_FM;
+			}
+		}
+	}
+
+out_free_reader:
+	xmlFreeTextReader(reader);
+out_free_buf:
+	xmlFreeParserInputBuffer(read_buf);
+out_free_ctx:
+	if (ctx->fd >= 0)
+		xml_release_file_lock(vol->index_cache_path_r, ctx->fd, bk, false);
+	free(ctx->buf);
+	free(ctx);
+
+	return ret;
+}
+#endif /* FORMAT_SPEC25 */

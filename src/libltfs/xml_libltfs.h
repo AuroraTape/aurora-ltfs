@@ -92,4 +92,41 @@ int xml_schema_from_file(const char *filename, struct ltfs_index *idx, struct lt
 int xml_schema_from_tape(uint64_t eod_pos, bool skip_dir, struct ltfs_volume *vol);
 int xml_extent_symlink_info_from_file(const char *filename, struct dentry *d);
 
+#ifdef FORMAT_SPEC25
+/**
+ * Structure to hold incremental index operation data
+ */
+struct incindex_entry {
+	char *name;							/**< Object name */
+	uint64_t uid;						/**< Object UID */
+	struct ltfs_timespec modify_time;	/**< Modification time */
+	bool is_directory;					/**< True if directory */
+	bool is_deleted;					/**< True if deleted */
+};
+
+/**
+ * Callback function type for streaming incremental index parsing.
+ * Called once for each entry parsed from the incremental index.
+ * @param entry The parsed entry (will be freed after callback returns)
+ * @param user_data User-provided context data
+ * @return 0 on success, negative on error (stops parsing)
+ */
+typedef int (*incindex_entry_callback_t)(struct incindex_entry *entry, void *user_data);
+
+/* Functions for reading Incremental Index files. See xml_reader_libltfs.c */
+int xml_incindex_from_tape(uint64_t eod_pos,
+							incindex_entry_callback_t callback,
+							void *user_data,
+							int *entry_count,
+							struct ltfs_volume *vol);
+void xml_free_incindex_entry(struct incindex_entry *entry);
+
+/* Internal helper functions for incremental index parsing */
+int _xml_parse_incindex_contents(xmlTextReaderPtr reader,
+								  incindex_entry_callback_t callback,
+								  void *user_data,
+								  int *entry_count,
+								  struct ltfs_volume *vol);
+#endif /* FORMAT_SPEC25 */
+
 #endif /* __xml_libltfs_h */

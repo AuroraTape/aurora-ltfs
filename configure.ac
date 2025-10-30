@@ -651,6 +651,7 @@ AC_CONFIG_FILES([
     src/iosched/Makefile
     src/kmi/Makefile
     src/utils/Makefile
+    src/test-tools/Makefile
     ltfs.pc:ltfs.pc.in
 ])
 

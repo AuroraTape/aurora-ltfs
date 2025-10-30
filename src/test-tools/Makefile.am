@@ -3,7 +3,7 @@
 #  OO_Copyright_BEGIN
 #
 #
-#  Copyright 2010, 2020 IBM Corp. All rights reserved.
+#  Copyright 2010, 2025 The LTFS project. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -31,28 +31,32 @@
 #
 #
 #  OO_Copyright_END
-#
 
-ACLOCAL_AMFLAGS = -I m4
+# Test tools - not installed by default
+noinst_PROGRAMS = ltfs_incindex_recovery
 
-nobase_pkginclude_HEADERS = config.h
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/src/libltfs
+AM_CFLAGS = $(GLOBAL_CFLAGS) $(AM_EXTRA_CFLAGS)
+AM_LDFLAGS = 
 
-SUBDIRS = messages src conf init.d man
+# Program for testing incremental index recovery
+ltfs_incindex_recovery_SOURCES = ltfs_incindex_recovery.c
+ltfs_incindex_recovery_LDADD = ../libltfs/libltfs.la
+ltfs_incindex_recovery_LDFLAGS = $(AM_LDFLAGS)
+ltfs_incindex_recovery_DEPENDENCIES = ../libltfs/libltfs.la
 
-install-data-local: ltfs.pc
-	if [ ! -d $(DESTDIR)$(libdir)/pkgconfig ]; then \
-		mkdir -p $(DESTDIR)$(libdir)/pkgconfig; \
-	fi
-	cp ./ltfs.pc $(DESTDIR)$(libdir)/pkgconfig/
-
-clean-local:
-	rm -f ltfs.pc
-
-# Install test tools
-install-tests:
-	$(MAKE) -C src/test-tools install-tests
+# Custom install target for test tools
+install-tests: $(noinst_PROGRAMS)
+	@echo "Installing test tools..."
+	$(MKDIR_P) $(DESTDIR)$(bindir)
+	for prog in $(noinst_PROGRAMS); do \
+		$(INSTALL_PROGRAM) $$prog $(DESTDIR)$(bindir)/$$prog; \
+	done
 
 uninstall-tests:
-	$(MAKE) -C src/test-tools uninstall-tests
+	@echo "Uninstalling test tools..."
+	for prog in $(noinst_PROGRAMS); do \
+		rm -f $(DESTDIR)$(bindir)/$$prog; \
+	done
 
 .PHONY: install-tests uninstall-tests
