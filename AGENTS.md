@@ -198,7 +198,8 @@ ltfsck -d <device_name>
 - Message number must NEVER be reused, even with different severity
   - Example: If `12345I` existed in a release, you cannot later add `12345E`
 - Obsolete messages must be commented out (not deleted) to reserve the ID
-  - Example: `// 12345I:string { "Old message" } // No longer used since v1.2.3`
+  - When commenting out, add `unused` prefix before the message ID
+  - Example: `//unused 12345I:string { "Old message" }`
 
 **During Development (before release):**
 - Message numbers should be kept consecutive without gaps
