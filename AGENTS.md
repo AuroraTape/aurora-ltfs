@@ -4,9 +4,22 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-This is the reference implementation of the Linear Tape File System (LTFS) format specifications from SNIA, the LTFS format specification 2.5 (https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-v2.5-Technical-Position.pdf).
+Aurora LTFS is a filesystem implementation that allows mounting LTFS-formatted tapes as regular filesystems using FUSE (Filesystem in Userspace).
 
-LTFS is a filesystem implementation that allows mounting LTFS-formatted tapes as regular filesystems. LTFS uses Filesystem in Userspace (FUSE) under the foot.
+This project is based on the reference implementation of the LTFS format specifications from SNIA, targeting the [LTFS Format Specification 2.5.1](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf).
+
+See [AI_POLICY.md](docs/AI_POLICY.md) for the project's AI usage policy.
+
+## AI Agent Files
+
+| File | Tracked | Purpose |
+|:-----|:-------:|:--------|
+| `AGENTS.md` | Yes | Common instructions for all AI agents (project structure, build, rules) |
+| `CLAUDE.md` | Yes | Claude Code specific configuration (references `AGENTS.md`) |
+| `.agent-memory.md` | No | Agent's working memory within this repository, persists across sessions |
+| `PROMPT.md` | No | User-written instructions, context, and task descriptions for AI agents |
+
+`.agent-memory.md` and `PROMPT.md` are listed in `.gitignore` and must not be committed.
 
 ## Build Commands
 
@@ -111,7 +124,9 @@ make distclean
 
 # Project Structure
 - `contrib`:               Contribution code that is not a part of the project but is variable for this project
-- `docs`:                  Documents and configuration files for system. See also docs/README.md
+- `conf`:                  System configuration files (rsyslog, syslog-ng, systemd)
+- `docs`:                  Project documentation (coding style guide)
+- `examples`:              Example and sample configuration files
 - `init.d`:                Service script for init
 - `man`:                   man pages for the commands provided by the project
 - `man/sgml`:              Original documents for man pages written by docbook 4.1 format
@@ -163,7 +178,7 @@ ltfsck -d <device_name>
 ## Message System
 
 - Messages defined in `messages/` directory
-- Message is constructed a number and sevirity (Error, Warning, Info, Debug)
+- Message is constructed a number and severity (Error, Warning, Info, Debug)
 - Number part of message must be unique
   - It means 11111W must not be used if 11111I is used
 - Number part of message must not be reused once used
@@ -173,7 +188,7 @@ ltfsck -d <device_name>
 - Run `make_message_src.sh` to regenerate message headers
 
 # Do Not Section
-- Do not commit directly to the any branches
+- Do not commit directly to the release branches
 - Do not provide any changes which cannot be compiled
-- Do not use duplicated messege number under the `messages` directory
-- Do not reuse any message number which is commented out inder the `messages` directory
+- Do not use duplicated message number under the `messages` directory
+- Do not reuse any message number which is commented out under the `messages` directory

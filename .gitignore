@@ -25,6 +25,9 @@ messages/.lib
 .dirstamp
 # local settings for claude code
 .claude
+# AI agent workspace files
+.agent-memory.md
+PROMPT.md
 # Files created by OS
 .DS_Store
 # Files for development

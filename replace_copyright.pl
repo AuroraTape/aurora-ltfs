@@ -1,13 +1,14 @@
 #!/usr/bin/perl
 
-sub print_copyright
-{
-    *FILE   = $_[0];
-    $prefix = $_[1];
-    @copyright = (
-        "",
-        "",
-        "Copyright 2010, 2020 IBM Corp. All rights reserved.",
+# Copyright markers:
+#   OO_Copyright_BEGIN/END - IBM only (original, unmodified files)
+#   OA_Copyright_BEGIN/END - IBM + Aurora (modified original files)
+#   AA_Copyright_BEGIN/END - Aurora only (new files)
+
+$COPYRIGHT_IBM    = "Copyright 2010, 2026 IBM Corp. All rights reserved.";
+$COPYRIGHT_AURORA = "Copyright 2026,      Aurora Tape Project contributors. All rights reserved.";
+
+@license_body = (
         "",
         "Redistribution and use in source and binary forms, with or without",
         " modification, are permitted provided that the following conditions",
@@ -36,6 +37,23 @@ sub print_copyright
         "",
         );
 
+sub print_copyright
+{
+    *FILE   = $_[0];
+    $prefix = $_[1];
+    $mode   = $_[2];
+
+    my @holders;
+    if ($mode eq "OO") {
+        @holders = ($COPYRIGHT_IBM);
+    } elsif ($mode eq "OA") {
+        @holders = ($COPYRIGHT_IBM, $COPYRIGHT_AURORA);
+    } elsif ($mode eq "AA") {
+        @holders = ($COPYRIGHT_AURORA);
+    }
+
+    my @copyright = ("", "", @holders, @license_body);
+
     foreach $line ( @copyright ) {
         $p = "$prefix$line";
         $p =~ s/\s+$//;
@@ -57,21 +75,23 @@ open(NEW, ">$ARGV[0]") || die "Cannot open $ARGV[0]";
 
 while (<ORG>) {
     if ($in_copyright == 0) {
-        if ($_ =~ /^(\s*\S+\s*)OO_Copyright_BEGIN/) {
+        if ($_ =~ /^(\s*\S+\s*)(OO|OA|AA)_Copyright_BEGIN/) {
             $in_copyright = 1;
             $prefix = $1;
-            print "Start copyright section: $ARGV[0]\n";
+            $mode = $2;
+            print "Start copyright section ($mode): $ARGV[0]\n";
             print "Prefix = \"$prefix\"\n";
             print NEW $_;
-            print_copyright(*NEW, $prefix);
-        } elsif ($_ =~ /^OO_Copyright_BEGIN/) {
+            print_copyright(*NEW, $prefix, $mode);
+        } elsif ($_ =~ /^(OO|OA|AA)_Copyright_BEGIN/) {
             $in_copyright = 1;
-            print "Start copyright section: $ARGV[0]\n";
+            $mode = $1;
+            print "Start copyright section ($mode): $ARGV[0]\n";
             print NEW $_;
-            print_copyright(*NEW, "");
+            print_copyright(*NEW, "", $mode);
         }
     } else {
-        if ($_ =~ /^(\s*\S+\s*)OO_Copyright_END/ || $_ =~ /^OO_Copyright_END/) {
+        if ($_ =~ /^(\s*\S+\s*)(OO|OA|AA)_Copyright_END/ || $_ =~ /^(OO|OA|AA)_Copyright_END/) {
             $in_copyright = 0;
             print "End copyright section: $ARGV[0]\n";
         }

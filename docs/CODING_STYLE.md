@@ -1,6 +1,6 @@
-# C language coding style guide for LTFS
+# C language coding style guide for Aurora LTFS
 
-This document is guide line of wring C language code in the LTFS development.
+This document is guide line of writing C language code in the LTFS development.
 
 This guide line is not a rule. You don't need to follow every items in every place. But this document is described for guiding that normal level engineer or higher can understand your code easily.
 
@@ -16,13 +16,13 @@ Again, this is not a rule. You can use any style of coding if you find another w
 ## 2. General guide
 
   - Max width of line is 120 characters, 2-byte character is counted as 2 characters
-  - Use tab indentation with 4 spaces
-  - Do not place following white spaces at the end of line
+  - Use tab indentation (tab width: 4)
+  - Do not place trailing whitespace at the end of line
   - Do not place leading spaces at empty line
 
 ### 2.1. Consideration about text editors
 
-At this time, VIM and EMACS might be major editors for developing LTFS. It would be an good idea to add magic lines for editor setting in the source code like below.
+At this time, VIM and EMACS might be major editors for developing LTFS. It would be a good idea to add magic lines for editor setting in the source code like below.
 
 ```C
 /* -*- indent-tabs-mode: t; tab-width: 4 -*- */
@@ -56,7 +56,7 @@ Use standard C style comment line and block. C++ style comment is acceptable onl
  * Use this style for multi-line comment
  */
 
-/* Following 3 libnes are an exsample of logic comment out */
+/* Following 3 lines are an example of logic comment out */
 //for (int i = 0; i < MAX_LINE; i++) {
 //    ...
 //}
@@ -64,7 +64,7 @@ Use standard C style comment line and block. C++ style comment is acceptable onl
 
 ### 3.2. Brace Placement
 
-Brace placement below is recommended. For function declaration, another format is recommended. See xxx.
+Brace placement below is recommended. For function declaration, another format is recommended. See [Section 3.5](#35-function-declaration).
 
 ```C
 
@@ -109,7 +109,7 @@ return (a > b) ? true : false;
 
 ### 3.4. `switch` Statement
 
-  - Indent `case` with in a `switch` statement
+  - Indent `case` within a `switch` statement
   - Falling through a case statement into the next case statement is acceptable as long as a comment is included
   - The `default` case should always be present and trigger an error if it should not be reached, yet is reached
   - If you need to create variables put all the code in a block
@@ -139,14 +139,14 @@ return (a > b) ? true : false;
   - Do not place line break between return type and function name as much as possible
   - Place starting brace `{` in the next line
   - Break line after comma `,`
-  - Doxygen style comment is recommended if the function can be called from customer as API
+  - Doxygen style comment is recommended if the function can be called as a public API
 
 ```C
 /**
  * Summary of func_normal()
- * Developer can be add more details about func_nortmal() here.
+ * Developer can be add more details about func_normal() here.
  *
- * @param c integer variable for the fucntion
+ * @param c integer variable for the function
  * @return 0 on success, otherwise a negative value
  */
 int func_normal(int c)
@@ -163,7 +163,7 @@ int func_which_has_a_very_long_name_and_need_line_break(struct very_long_name_st
 }
 
 struct very_long_name_structure
-    *anothr_func_which_has_a_very_long_name_and_need_line_break (struct very_long_name_structure *st1,
+    *another_func_which_has_a_very_long_name_and_need_line_break (struct very_long_name_structure *st1,
                                                                  struct very_long_name_structure *st2)
 {
     /* Logic of the func */
@@ -176,7 +176,7 @@ struct very_long_name_structure
 ### 3.6. Pointer variables and function that returns a pointer
 
   - Place the `*` close to the variable name not type
-  - place the `*` close to the function name not type
+  - Place the `*` close to the function name not type
 
 ```C
 char *foo; /* GOOD: foo is a pointer of char */
@@ -199,8 +199,8 @@ int* func_foo(int a)
 
   - Place starting brace `{` in the next line
   - Do not create new type from a pointer type as much as possible
-  - It is not a good idea to redefine the primitive type as another name. Check it is almost defined in the standard header before considering this.
-  - Doxygen style comment is recommended if it is used from customer as API
+  - It is not a good idea to redefine the primitive type as another name. Check it is already defined in the standard header before considering this.
+  - Doxygen style comment is recommended if it is used as a public API
 
 ```C
 /**
@@ -238,7 +238,7 @@ typedef struct
 
 typedef struct foo st_foo;     /* GOOD */
 typedef struct foo *pst_foo;   /* NOT GOOD: Might not be a good idea because you need to name value that implies it is a pointer. */
-typedef int (*func_type)(int); /* ACCEPTABLE: May be function pointer type is only expeption */
+typedef int (*func_type)(int); /* ACCEPTABLE: May be function pointer type is only exception */
 typedef char[8] st_barcode;    /* WORST...: Actually it is no meaning. It just say `st_barcode` type is pointer of `char` */
 
 ```
@@ -248,7 +248,7 @@ typedef char[8] st_barcode;    /* WORST...: Actually it is no meaning. It just s
 ### 4.1. Preprocessor directives
 
   - Indent can be used
-  - Do not make indent against logic after detectives
+  - Do not make indent against logic after directives
 
 ```C
 #ifdef AAA
@@ -263,9 +263,9 @@ int func_foo(int a)
     int b;
 
     #ifdef AAA
-    b = a * 2
+    b = a * 2;
     #else
-    b = a/2
+    b = a/2;
     #endif
 
     return b;
@@ -316,7 +316,7 @@ The snake case with small letter is recommended. Starting underscore, "`_`", is 
 static int _func_foo(int a)
 {
     ...
-    retuern 0;
+    return 0;
 }
 
 int func_foo(int a, int b)
@@ -342,7 +342,7 @@ struct foo_structure
 
 union foo_union
 {
-    int a:
+    int a;
     ...
 };
 ```
@@ -356,7 +356,7 @@ enum foo_enumerator
     FOO_BBB,
     FOO_CCC,
     ...
-    FOO_CCC,
+    FOO_DDD,
 }
 ```
 
@@ -422,7 +422,7 @@ Having include guard in every header files are strongly recommended for avoiding
 Example of `foo_baa.h`
 ```C
 #ifndef FOO_BAA_H
-#define
+#define FOO_BAA_H
 
 /* Add header contents here */
 ...
@@ -442,7 +442,7 @@ Following include order is preferable.
   6. Empty line
   7. Headers in the project
 
-Example of `foo_baa.h`.
+Example of `foo_baa.c`.
 
 ```C
 #include "foo_baa.h"
@@ -467,7 +467,7 @@ int func_foo(void)
 
 ### X.1. Preamble
 
-May be preamble at the beginning of file is important for tracking the originality of the code. Because license and copyright clearance must be done bore releasing the product.
+May be preamble at the beginning of file is important for tracking the originality of the code. Because license and copyright clearance must be done before releasing the product.
 
 In this process,  we need to distinguish between the code written by ourselves and the code written by others. And finally we might need to indicate something (like into NOTICES file) if others are using other licenses.
 
@@ -479,15 +479,15 @@ It could have following information.
   - Short description of file
   - Authors
 
-Example is a preamble in another project.
+Example of a preamble:
 
 ```C
 /*
 **
-**  OO_Copyright_BEGIN
+**  AA_Copyright_BEGIN
 **
 **
-**  Copyright 2010, 2025 The LTFS project. All rights reserved.
+**  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 **
 **  Redistribution and use in source and binary forms, with or without
 **   modification, are permitted provided that the following conditions
@@ -514,27 +514,18 @@ Example is a preamble in another project.
 **  POSSIBILITY OF SUCH DAMAGE.
 **
 **
-**  OO_Copyright_END
+**  AA_Copyright_END
 **
 *************************************************************************************
 **
-** COMPONENT NAME:  Linear Tape File System
+** COMPONENT NAME:  Aurora LTFS
 **
 ** FILE NAME:       xml_reader_libltfs.c
 **
 ** DESCRIPTION:     XML parser routines for Indexes and Labels.
 **
-** AUTHORS:         Brian Biskeborn
-**                  IBM Almaden Research Center
-**                  bbiskebo@us.ibm.com
-**
-**                  Lucas C. Villa Real
-**                  IBM Almaden Research Center
-**                  lucasvr@us.ibm.com
-**
-**                  Atsushi Abe
-**                  IBM Tokyo Lab., Japan
-**                  piste@jp.ibm.com
+** AUTHORS:         Your Name
+**                  your-email@example.com
 **
 *************************************************************************************
 */
