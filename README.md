@@ -10,10 +10,26 @@ The current target is the [LTFS Format Specification 2.5.1](https://www.snia.org
 
 ## Goals
 
-- **Modern development practices** — CI/CD, Dev Containers, and AI-assisted development to improve developer experience.
-- **High-quality code through testing** — Expand automated test coverage to catch regressions early and deliver reliable software.
-- **Up-to-date platform support** — Free from corporate politics, we continuously support modern operating systems that reflect the current landscape.
-- **Community-driven development** — Open governance and transparent decision-making to encourage contributions from the broader tape storage community.
+### Short term — Foundation
+
+- **CI and unit testing infrastructure** — Build a reliable CI pipeline and unit testing framework to catch regressions early.
+- **Package and Docker image distribution** — Provide official packages and container images for easy installation and deployment.
+- **LTFS Format Specification 2.5.1 compliance** — Fully implement and validate compliance with the current SNIA standard.
+- **Code modernization and refactoring** — Clean up the inherited codebase to improve readability, maintainability, and long-term development velocity.
+- **Up-to-date platform support** — Continuously support modern operating systems, free from corporate politics.
+- **Modern development practices** — Dev Containers, AI-assisted development, and streamlined workflows to improve developer productivity.
+
+### Middle term — Expansion
+
+- **Expanded test coverage** — Broaden automated tests across components to deliver reliable software with confidence.
+- **Tape library support** — Enable automated operation with tape library devices (medium changers).
+- **Community-driven development** — Open governance and transparent decision-making to grow the tape storage community.
+
+### Long term — Growth
+
+- **HSM (Hierarchical Storage Management) support** — Integrate with HSM workflows for automated data migration between disk and tape.
+- **Windows support** — Bring LTFS to the Windows platform to broaden accessibility.
+
 
 ## Platform Support Policy
 
