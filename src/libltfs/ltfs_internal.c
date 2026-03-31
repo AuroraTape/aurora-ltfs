@@ -1236,6 +1236,24 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 
 	/* Set append position for data partition to end of trailing data. */
 	if (dp_have_index && dp_blocks_after) {
+#ifdef FORMAT_SPEC25
+		/* Try incremental index recovery before treating extra blocks as stray data */
+		if (fix) {
+			ret = ltfs_incindex_recovery(dp_endofidx, dp_eod, vol);
+			if (ret == 0) {
+				/* Successfully applied inc indexes and wrote full index */
+				dp_blocks_after = false;
+				extra_blocks =
+					(ip_have_index && ip_blocks_after) ||
+					(! ip_have_index && ip_eod != 4);
+				goto skip_dp_extra_blocks;
+			} else if (ret < 0) {
+				goto out_unlock;
+			}
+			/* ret == 1: no incremental indexes found — fall through to regular handling */
+			ret = 0;
+		}
+#endif /* FORMAT_SPEC25 */
 		ret = _ltfs_find_append_blk_after_idx(vol, vol->label->partid_dp, dp_index->selfptr.block, fix);
 		if (ret < 0) {
 			goto out_unlock;
@@ -1245,6 +1263,9 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 				11222E, out_unlock);
 		}
 	}
+#ifdef FORMAT_SPEC25
+skip_dp_extra_blocks:;
+#endif
 
 	/* Set append position for index partition to end of trailing data or preceding data */
 	if (ip_have_index && ip_blocks_after) {
@@ -1754,13 +1775,7 @@ static int _apply_incindex_delete(struct incindex_entry *entry,
 		return -LTFS_BAD_ARG;
 	}
 
-	/* For directories, ensure they are empty */
-	if (target->isdir && HASH_COUNT(target->child_list) > 0) {
-		ltfsmsg(LTFS_ERR, 11364E, target_path);
-		return -LTFS_DIRNOTEMPTY;
-	}
-
-	/* Remove from parent and release dentry */
+	/* Remove from parent and release dentry (recursively frees children for directories) */
 	fs_release_dentry(target);
 
 	ltfsmsg(LTFS_INFO, 11365I, target_path);
@@ -2008,32 +2023,34 @@ int ltfs_validate_incindex(const char *incindex_data, size_t data_size,
 int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
 								  bool apply_changes)
 {
-	struct incindex_callback_ctx ctx;
 	int entry_count = 0;
 	int ret = 0;
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
-	/* Initialize callback context */
-	memset(&ctx, 0, sizeof(ctx));
-	ctx.vol = vol;
-	ctx.apply_changes = apply_changes;
-	ctx.error_count = 0;
-	ctx.processed_count = 0;
+	/* Acquire volume write lock */
+	acquirewrite_mrsw(&vol->lock);
 
-	/* Acquire volume write lock if applying changes */
 	if (apply_changes) {
-		acquirewrite_mrsw(&vol->lock);
+		/* Use the direct recursive apply path: handles extents, nested dirs,
+		 * all timestamps — correctly manipulates the dentry tree. */
+		ret = xml_apply_incindex_from_tape(eod_pos, &entry_count, vol);
+	} else {
+		/* Validation path: use the callback-based parser (no tree changes). */
+		struct incindex_callback_ctx ctx;
+		memset(&ctx, 0, sizeof(ctx));
+		ctx.vol = vol;
+		ctx.apply_changes = false;
+		ret = xml_incindex_from_tape(eod_pos, _process_incindex_entry_callback,
+									 &ctx, &entry_count, vol);
+		if (ctx.error_count > 0) {
+			releasewrite_mrsw(&vol->lock);
+			ltfsmsg(LTFS_WARN, 11353W, ctx.error_count);
+			return -LTFS_LIBXML2_FAILURE;
+		}
 	}
 
-	/* Read and parse incremental index directly from tape using streaming API */
-	ret = xml_incindex_from_tape(eod_pos, _process_incindex_entry_callback,
-								  &ctx, &entry_count, vol);
-
-	/* Release volume lock */
-	if (apply_changes) {
-		releasewrite_mrsw(&vol->lock);
-	}
+	releasewrite_mrsw(&vol->lock);
 
 	if (ret < 0) {
 		ltfsmsg(LTFS_ERR, 11370E, ret);
@@ -2042,22 +2059,19 @@ int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
 
 	if (entry_count == 0) {
 		ltfsmsg(LTFS_INFO, 11371I);
-		return 0;
+		return ret;
 	}
 
 	ltfsmsg(LTFS_INFO, 11372I, entry_count);
 
-	/* Update index generation and timestamp if changes were applied successfully */
-	if (apply_changes && ctx.error_count == 0) {
+	/* Update index generation and timestamp */
+	if (apply_changes) {
+		acquirewrite_mrsw(&vol->lock);
 		vol->index->generation++;
 		get_current_timespec(&vol->index->mod_time);
 		ltfs_set_index_dirty(false, false, vol->index);
+		releasewrite_mrsw(&vol->lock);
 		ltfsmsg(LTFS_INFO, 11373I, entry_count);
-	}
-
-	if (ctx.error_count > 0) {
-		ltfsmsg(LTFS_WARN, 11353W, ctx.error_count);
-		return -LTFS_LIBXML2_FAILURE;
 	}
 
 	return ret;
@@ -2073,5 +2087,85 @@ int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
 int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol)
 {
 	return ltfs_apply_incindex_from_tape(eod_pos, vol, false);
+}
+
+/**
+ * Recover filesystem state by applying incremental indexes found on the data partition
+ * after the last full index, then writing a new full index to both partitions.
+ *
+ * @param dp_full_idx_end Block position just after the last full index's filemark on DP
+ * @param dp_eod End of data position on DP
+ * @param vol LTFS volume with vol->index already populated from the last full index
+ * @return 0 on success, 1 if no incremental indexes were found, or a negative value on error.
+ */
+int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
+						   struct ltfs_volume *vol)
+{
+	int ret;
+	int inc_count = 0;
+	struct tc_position seek_pos, cur_pos;
+	tape_partition_t dp_num;
+
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	dp_num = ltfs_part_id2num(ltfs_dp_id(vol), vol);
+
+	/* Seek to the first block after the last full index's filemark */
+	seek_pos.partition = dp_num;
+	seek_pos.block = dp_full_idx_end;
+	ret = tape_seek(vol->device, &seek_pos);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 11374E, ret);
+		return ret;
+	}
+
+	/* Apply all incremental indexes found between the full index and EOD.
+	 * Between the full index and each inc index there may be data blocks separated
+	 * by filemarks. Skip any non-inc-index sections by spacing forward over filemarks. */
+	while (true) {
+		ret = tape_get_position(vol->device, &cur_pos);
+		if (ret < 0)
+			return ret;
+		if (cur_pos.block >= dp_eod)
+			break;
+
+		ret = ltfs_apply_incindex_from_tape(dp_eod, vol, true);
+		if (ret == 0 || ret == 1) {
+			inc_count++;
+			if (ret == 1)
+				break; /* no trailing filemark — at end of data */
+		} else {
+			/* Not an inc index (data block or parse error) — skip to next FM section */
+			ret = tape_spacefm(vol->device, 1);
+			if (ret < 0)
+				break; /* cannot space further, stop */
+			ret = 0;
+		}
+	}
+
+	if (inc_count == 0) {
+		ltfsmsg(LTFS_INFO, 11375I);
+		return 1;
+	}
+
+	ltfsmsg(LTFS_INFO, 11376I, inc_count);
+
+	/* Write recovered full index to DP (appended after inc indexes) */
+	ltfs_set_commit_message_reason(SYNC_RECOVERY, vol);
+	ret = ltfs_write_index(vol->label->partid_dp, SYNC_RECOVERY, LTFS_FULL_INDEX, vol);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 11377E, ret);
+		return ret;
+	}
+
+	/* Write recovered full index to IP */
+	ret = ltfs_write_index(vol->label->partid_ip, SYNC_RECOVERY, LTFS_FULL_INDEX, vol);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 11378E, ret);
+		return ret;
+	}
+
+	ltfsmsg(LTFS_INFO, 11379I);
+	return 0;
 }
 #endif /* FORMAT_SPEC25 */

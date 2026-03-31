@@ -48,11 +48,3 @@ install-data-local: ltfs.pc
 clean-local:
 	rm -f ltfs.pc
 
-# Install test tools
-install-tests:
-	$(MAKE) -C src/test-tools install-tests
-
-uninstall-tests:
-	$(MAKE) -C src/test-tools uninstall-tests
-
-.PHONY: install-tests uninstall-tests

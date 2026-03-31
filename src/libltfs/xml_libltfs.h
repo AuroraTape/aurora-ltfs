@@ -119,6 +119,7 @@ int xml_incindex_from_tape(uint64_t eod_pos,
 							void *user_data,
 							int *entry_count,
 							struct ltfs_volume *vol);
+int xml_apply_incindex_from_tape(uint64_t eod_pos, int *entry_count, struct ltfs_volume *vol);
 void xml_free_incindex_entry(struct incindex_entry *entry);
 
 /* Internal helper functions for incremental index parsing */

@@ -468,6 +468,12 @@ root:table {
 		11371I:string { "Incremental index: No entries in incremental index from tape." }
 		11372I:string { "Incremental index: Applying from tape with %d entries." }
 		11373I:string { "Incremental index: Applied successfully from tape (%d entries)." }
+		11374E:string { "Incremental index recovery: Failed to seek to start position (%d)." }
+		11375I:string { "Incremental index recovery: No incremental indexes found after full index." }
+		11376I:string { "Incremental index recovery: Applied %d incremental index(es), writing full index." }
+		11377E:string { "Incremental index recovery: Failed to write full index to data partition (%d)." }
+		11378E:string { "Incremental index recovery: Failed to write full index to index partition (%d)." }
+		11379I:string { "Incremental index recovery: Recovery complete." }
 
 		// Message IDs 11400 through 11800 are allocated to the libchanger.
 		// DO NOT add messages with those IDs to this file.
@@ -871,6 +877,7 @@ root:table {
 		17305E:string { "Failed to construct a path helper (push: %d)." }
 		17306E:string { "Failed to find a corresponded directory in path helper (push: %d)." }
 		17307E:string { "XML parser: contents tag not found in incremental index." }
+		17308I:string { "XML parser: Found an incremental index, but skip this." }
 
 		// For Debug 19999I:string { "%s %s %d." }
 

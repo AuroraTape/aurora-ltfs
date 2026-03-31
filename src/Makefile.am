@@ -66,14 +66,14 @@ PLAT_DRV += tape_drivers/linux/lin_tape
 endif
 
 GEN_DRV = tape_drivers/generic/file
-SUB = iosched libltfs utils test-tools
+SUB = iosched libltfs utils
 
 if OSS
 GEN_DRV += tape_drivers/generic/itdtimg
 SUB += kmi
 endif
 
-SUBDIRS = libltfs $(GEN_DRV) $(PLAT_DRV) $(SUB) iosched utils test-tools
+SUBDIRS = libltfs $(GEN_DRV) $(PLAT_DRV) $(SUB) iosched utils
 
 noinst_HEADERS = \
 	libltfs/base64.h \

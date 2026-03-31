@@ -97,6 +97,8 @@ int ltfs_validate_incindex(const char *incindex_data, size_t data_size,
 int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
 								  bool apply_changes);
 int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol);
+int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
+						   struct ltfs_volume *vol);
 #endif /* FORMAT_SPEC25 */
 
 #endif /* __ltfs_internal_h__ */

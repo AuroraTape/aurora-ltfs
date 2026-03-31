@@ -336,7 +336,11 @@ static int _xml_parser_init(xmlTextReaderPtr reader, const char *top_name, int *
 		return ret;
 
 	if (strcmp(name, top_name)) {
-		ltfsmsg(LTFS_ERR, 17017E, name);
+		if ( !strcmp(top_name, "ltfsindex") && !strcmp(name, "ltfsincrementalindex"))
+			ltfsmsg(LTFS_INFO, 17308I);
+		else
+			ltfsmsg(LTFS_ERR, 17017E, name);
+
 		return -LTFS_XML_WRONG_TOPTAG;
 	}
 
@@ -2045,7 +2049,7 @@ int xml_extent_symlink_info_from_file(const char *filename, struct dentry *d)
  * @param vol LTFS volume
  * @return 0 on success or a negative value on error
  */
-static int _xml_parse_incindex_entry(xmlTextReaderPtr reader, 
+static int _xml_parse_incindex_entry(xmlTextReaderPtr reader,
 									 struct incindex_entry *entry,
 									 struct ltfs_volume *vol)
 {
@@ -2092,7 +2096,7 @@ static int _xml_parse_incindex_entry(xmlTextReaderPtr reader,
 						return ret;
 					}
 				}
-			} else if (xmlStrcmp(name, BAD_CAST "uid") == 0) {
+			} else if (xmlStrcmp(name, BAD_CAST "fileuid") == 0) {
 				value = xmlTextReaderReadString(reader);
 				if (value) {
 					entry->uid = strtoull((char *)value, NULL, 10);
@@ -2238,6 +2242,435 @@ int _xml_parse_incindex_contents(xmlTextReaderPtr reader,
 	return ret < 0 ? ret : 0;
 }
 
+/* Forward declaration for recursive use */
+static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *parent,
+										int *count, struct ltfs_volume *vol);
+
+/**
+ * Clear all extents from a dentry, resetting size tracking fields.
+ */
+static void _xml_clear_dentry_extents(struct dentry *d)
+{
+	struct extent_info *ext, *ext_aux;
+	if (!TAILQ_EMPTY(&d->extentlist)) {
+		TAILQ_FOREACH_SAFE(ext, &d->extentlist, list, ext_aux) {
+			TAILQ_REMOVE(&d->extentlist, ext, list);
+			free(ext);
+		}
+	}
+	d->realsize = 0;
+	d->used_blocks = 0;
+	d->size = 0;
+}
+
+/**
+ * Apply one file or directory entry from the incremental index to the dentry tree.
+ * On entry, reader is positioned AT the <file> or <directory> start element.
+ * On return, reader is positioned after the </file> or </directory> end element.
+ */
+static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *parent,
+									 int *count, struct ltfs_volume *vol)
+{
+	xmlChar *tag_name_mem, *name, *val;
+	bool is_dir;
+	char *entry_name = NULL;
+	uint64_t uid = 0, length = 0;
+	bool is_deleted = false;
+	struct ltfs_timespec ctime = {0}, mtime = {0}, atime = {0}, chtime = {0}, btime = {0};
+	struct dentry *d = NULL;
+	struct name_list *nl;
+	bool d_existing = false;  /* true if dentry already existed (MODIFY), false if created (CREATE) */
+	int ret = 0, type, rc = 0;
+
+	/* Determine file vs directory from current element */
+	tag_name_mem = xmlTextReaderName(reader);
+	if (!tag_name_mem)
+		return -LTFS_LIBXML2_FAILURE;
+	if (xmlStrcmp(tag_name_mem, BAD_CAST "directory") == 0)
+		is_dir = true;
+	else if (xmlStrcmp(tag_name_mem, BAD_CAST "file") == 0)
+		is_dir = false;
+	else {
+		xmlFree(tag_name_mem);
+		return -LTFS_INDEX_INVALID;
+	}
+	xmlFree(tag_name_mem);
+
+	/* Stream through child elements */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		name = xmlTextReaderName(reader);
+		if (!name)
+			continue;
+
+		if (type == XML_READER_TYPE_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "name") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) {
+					ret = decode_entry_name(&entry_name, (char *)val);
+					xmlFree(val);
+					if (ret < 0) { xmlFree(name); goto out; }
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "deleted") == 0) {
+				is_deleted = true;
+			} else if (xmlStrcmp(name, BAD_CAST UID_TAGNAME) == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { uid = strtoull((char *)val, NULL, 10); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "length") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { length = strtoull((char *)val, NULL, 10); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "creationtime") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { xml_parse_time(true, (char *)val, &ctime); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "changetime") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { xml_parse_time(true, (char *)val, &chtime); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "modifytime") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { xml_parse_time(true, (char *)val, &mtime); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "accesstime") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { xml_parse_time(true, (char *)val, &atime); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST BACKUPTIME_TAGNAME) == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) { xml_parse_time(true, (char *)val, &btime); xmlFree(val); }
+			} else if (xmlStrcmp(name, BAD_CAST "extentinfo") == 0) {
+				/* Find or create the dentry before parsing extents */
+				if (!d && !is_deleted && entry_name) {
+					nl = fs_find_key_from_hash_table(parent->child_list, entry_name, &rc);
+					if (nl) {
+						d = nl->d;
+						d_existing = true;
+						_xml_clear_dentry_extents(d);
+					} else {
+						d = fs_allocate_dentry(parent, entry_name, NULL, is_dir,
+											   false, false, vol->index);
+						if (!d) { ret = -LTFS_NO_MEMORY; xmlFree(name); goto out; }
+					}
+				}
+				if (d) {
+					ret = _xml_parse_extents(reader, IDX_VERSION_SPARSE, d);
+					if (ret < 0) { xmlFree(name); goto out; }
+				} else {
+					/* No dentry yet (deleted entry with extents?) - skip */
+					if (xml_skip_tag(reader) < 0) { xmlFree(name); ret = -LTFS_XML_SKIP_FAIL; goto out; }
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				/* Find or create directory dentry before recursing */
+				if (!d && !is_deleted && entry_name) {
+					nl = fs_find_key_from_hash_table(parent->child_list, entry_name, &rc);
+					if (nl) {
+						d = nl->d;
+						d_existing = true;
+					} else {
+						d = fs_allocate_dentry(parent, entry_name, NULL, is_dir,
+											   false, false, vol->index);
+						if (!d) { ret = -LTFS_NO_MEMORY; xmlFree(name); goto out; }
+					}
+				}
+				if (d) {
+					ret = _xml_apply_incindex_contents(reader, d, count, vol);
+					if (ret < 0) { xmlFree(name); goto out; }
+				} else {
+					/* No dentry (deleted dir with contents?) - skip */
+					if (xml_skip_tag(reader) < 0) { xmlFree(name); ret = -LTFS_XML_SKIP_FAIL; goto out; }
+				}
+			} else {
+				/* Skip unrecognized or unneeded tags (readonly, etc.) */
+				if (xml_skip_tag(reader) < 0) { xmlFree(name); ret = -LTFS_XML_SKIP_FAIL; goto out; }
+			}
+		} else if (type == XML_READER_TYPE_END_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "directory") == 0 ||
+				xmlStrcmp(name, BAD_CAST "file") == 0) {
+				xmlFree(name);
+
+				/* Apply the operation */
+				if (is_deleted) {
+					/* Find dentry and delete it from parent */
+					if (entry_name) {
+						nl = fs_find_key_from_hash_table(parent->child_list, entry_name, &rc);
+						if (nl) {
+							d = nl->d;
+							/* Remove from parent hash table */
+							acquirewrite_mrsw(&parent->contents_lock);
+							nl = fs_find_key_from_hash_table(parent->child_list,
+															 d->platform_safe_name, &rc);
+							if (nl) {
+								HASH_DEL(parent->child_list, nl);
+								free(nl->name);
+								free(nl);
+							}
+							releasewrite_mrsw(&parent->contents_lock);
+							d->parent = NULL;
+							if (!d->isdir)
+								--vol->index->file_count;
+							/* Release the "in tree" reference (numhandles: 1→0 → freed) */
+							fs_release_dentry(d);
+							d = NULL;
+							ltfsmsg(LTFS_INFO, 11365I, entry_name);
+						} else {
+							ltfsmsg(LTFS_INFO, 11362I, entry_name);
+						}
+					}
+				} else {
+					/* Find or create dentry if not done yet (no extentinfo or contents) */
+					if (!d && entry_name) {
+						nl = fs_find_key_from_hash_table(parent->child_list, entry_name, &rc);
+						if (nl) {
+							d = nl->d;
+							d_existing = true;
+						} else {
+							d = fs_allocate_dentry(parent, entry_name, NULL, is_dir,
+														   false, false, vol->index);
+							if (!d) { ret = -LTFS_NO_MEMORY; goto out; }
+						}
+					}
+
+					/* Apply metadata to dentry */
+					if (d) {
+						if (uid) {
+							d->uid = uid;
+							if (uid > vol->index->uid_number)
+								vol->index->uid_number = uid;
+						}
+						d->size = length;
+						if (ctime.tv_sec || ctime.tv_nsec)
+							d->creation_time = ctime;
+						if (chtime.tv_sec || chtime.tv_nsec)
+							d->change_time = chtime;
+						if (mtime.tv_sec || mtime.tv_nsec)
+							d->modify_time = mtime;
+						if (atime.tv_sec || atime.tv_nsec)
+							d->access_time = atime;
+						if (btime.tv_sec || btime.tv_nsec)
+							d->backup_time = btime;
+						d->dirty = true;
+						if (d_existing)
+							ltfsmsg(LTFS_INFO, 11361I, entry_name);
+						else
+							ltfsmsg(LTFS_INFO, 11358I, entry_name);
+					}
+				}
+
+				(*count)++;
+				ret = 0;
+				goto out;
+			}
+		}
+
+		xmlFree(name);
+	}
+
+out:
+	if (entry_name)
+		free(entry_name);
+	return ret;
+}
+
+/**
+ * Apply all entries in a <contents> section of the incremental index.
+ * On entry, reader is positioned AT the <contents> start element.
+ * On return, reader is positioned after the </contents> end element.
+ */
+static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *parent,
+										int *count, struct ltfs_volume *vol)
+{
+	xmlChar *name;
+	int ret = 0, type;
+
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		name = xmlTextReaderName(reader);
+		if (!name)
+			continue;
+
+		if (type == XML_READER_TYPE_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "directory") == 0 ||
+				xmlStrcmp(name, BAD_CAST "file") == 0) {
+				xmlFree(name);
+				ret = _xml_apply_incindex_entry(reader, parent, count, vol);
+				if (ret < 0)
+					return ret;
+				continue;
+			}
+		} else if (type == XML_READER_TYPE_END_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
+				xmlFree(name);
+				break;
+			}
+		}
+
+		xmlFree(name);
+	}
+
+	return ret < 0 ? ret : 0;
+}
+
+/**
+ * Read and apply an incremental index directly from tape, performing full recursive
+ * tree manipulation (handles extents, nested directories, all timestamps).
+ * Caller must hold vol->lock (write) before calling.
+ *
+ * @param eod_pos End-of-data position on the current partition
+ * @param entry_count Output: number of entries applied
+ * @param vol LTFS volume with in-memory index already loaded
+ * @return 0 on success (with trailing FM), LTFS_NO_TRAIL_FM if no FM, negative on error.
+ *         Returns -LTFS_INDEX_INVALID if the current tape position does not hold an inc index.
+ */
+int xml_apply_incindex_from_tape(uint64_t eod_pos, int *entry_count, struct ltfs_volume *vol)
+{
+	int ret, bk = -1;
+	struct tc_position current_pos;
+	struct xml_input_tape *ctx;
+	xmlParserInputBufferPtr read_buf;
+	xmlTextReaderPtr reader;
+	xmlChar *name;
+	int type;
+	int count = 0;
+
+	CHECK_ARG_NULL(entry_count, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	*entry_count = 0;
+
+	/* Save current position */
+	ret = tape_get_position(vol->device, &current_pos);
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 17013E, ret);
+		return ret;
+	}
+
+	/* Allocate XML input context */
+	ctx = calloc(1, sizeof(struct xml_input_tape));
+	if (!ctx) {
+		ltfsmsg(LTFS_ERR, 10001E, "xml_apply_incindex_from_tape: ctx");
+		return -LTFS_NO_MEMORY;
+	}
+
+	ctx->vol = vol;
+	ctx->current_pos = current_pos.block;
+	ctx->eod_pos = eod_pos;
+	ctx->buf_size = vol->label->blocksize;
+	ctx->buf = malloc(ctx->buf_size);
+	if (!ctx->buf) {
+		ltfsmsg(LTFS_ERR, 10001E, "xml_apply_incindex_from_tape: buffer");
+		free(ctx);
+		return -LTFS_NO_MEMORY;
+	}
+
+	/* Try to get index cache */
+	ctx->fd = -1;
+	if (vol->index_cache_path_r) {
+		ret = xml_acquire_file_lock(vol->index_cache_path_r, &ctx->fd, &bk, false);
+		if (ret < 0 || ctx->fd < 0)
+			ctx->fd = -1;
+	}
+
+	/* Create XML reader */
+	read_buf = xmlParserInputBufferCreateIO(xml_input_tape_read_callback,
+											xml_input_tape_close_callback,
+											ctx, XML_CHAR_ENCODING_NONE);
+	if (!read_buf) {
+		ltfsmsg(LTFS_ERR, 17014E);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_ctx;
+	}
+
+	reader = xmlNewTextReader(read_buf, NULL);
+	if (!reader) {
+		ltfsmsg(LTFS_ERR, 17015E);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_buf;
+	}
+
+	/* Find <ltfsincrementalindex> root tag */
+	ret = xmlTextReaderRead(reader);
+	while (ret == 1 && xmlTextReaderNodeType(reader) != XML_READER_TYPE_ELEMENT)
+		ret = xmlTextReaderRead(reader);
+
+	if (ret < 0) {
+		ltfsmsg(LTFS_ERR, 17016E, ret);
+		ret = -LTFS_LIBXML2_FAILURE;
+		goto out_free_reader;
+	}
+
+	name = xmlTextReaderName(reader);
+	if (!name || xmlStrcmp(name, BAD_CAST "ltfsincrementalindex") != 0) {
+		if (name) { ltfsmsg(LTFS_ERR, 17017E, (char *)name); xmlFree(name); }
+		else       { ltfsmsg(LTFS_ERR, 17017E, "NULL"); }
+		ret = -LTFS_INDEX_INVALID;
+		goto out_free_reader;
+	}
+	xmlFree(name);
+
+	/* Scan top-level elements: update uid_number from <highestfileuid>,
+	 * then descend into the root <directory>'s <contents>. */
+	while ((ret = xmlTextReaderRead(reader)) == 1) {
+		type = xmlTextReaderNodeType(reader);
+		name = xmlTextReaderName(reader);
+		if (!name)
+			continue;
+
+		if (type == XML_READER_TYPE_ELEMENT) {
+			if (xmlStrcmp(name, BAD_CAST NEXTUID_TAGNAME) == 0) {
+				xmlChar *val = xmlTextReaderReadString(reader);
+				if (val) {
+					unsigned long long uid_num = strtoull((char *)val, NULL, 10);
+					xmlFree(val);
+					if (uid_num > vol->index->uid_number)
+						vol->index->uid_number = uid_num;
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "directory") == 0) {
+				/* Found the root directory entry — scan for its <contents> */
+				xmlFree(name);
+				while ((ret = xmlTextReaderRead(reader)) == 1) {
+					type = xmlTextReaderNodeType(reader);
+					name = xmlTextReaderName(reader);
+					if (!name) continue;
+					if (type == XML_READER_TYPE_ELEMENT &&
+						xmlStrcmp(name, BAD_CAST "contents") == 0) {
+						xmlFree(name);
+						ret = _xml_apply_incindex_contents(reader,
+														   vol->index->root,
+														   &count, vol);
+						goto done_scanning;
+					}
+					xmlFree(name);
+				}
+				/* No contents found in root directory */
+				goto done_scanning;
+			}
+		}
+		xmlFree(name);
+	}
+
+done_scanning:
+	*entry_count = count;
+
+	/* Check for tape/file errors */
+	if (ret >= 0) {
+		if (ctx->err_code || ctx->errno_fd) {
+			ret = ctx->err_code ? ctx->err_code : ctx->errno_fd;
+		} else if (ret == 0 && !ctx->saw_file_mark) {
+			ret = LTFS_NO_TRAIL_FM;
+		} else {
+			ret = 0;
+		}
+	}
+
+out_free_reader:
+	xmlFreeTextReader(reader);
+out_free_buf:
+	xmlFreeParserInputBuffer(read_buf);
+out_free_ctx:
+	if (ctx->fd >= 0)
+		xml_release_file_lock(vol->index_cache_path_r, ctx->fd, bk, false);
+	free(ctx->buf);
+	free(ctx);
+
+	return ret;
+}
+
 /**
  * Parse incremental index XML from tape with streaming callback
  * @param eod_pos End of data position of the current partition
@@ -2333,7 +2766,7 @@ int xml_incindex_from_tape(uint64_t eod_pos,
 	}
 
 	name = xmlTextReaderName(reader);
-	if (!name || xmlStrcmp(name, BAD_CAST "ltfsindex") != 0) {
+	if (!name || xmlStrcmp(name, BAD_CAST "ltfsincrementalindex") != 0) {
 		if (name) {
 			ltfsmsg(LTFS_ERR, 17017E, (char *)name);
 			xmlFree(name);
