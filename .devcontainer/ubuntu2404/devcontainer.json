@@ -16,6 +16,7 @@
             ]
         }
     },
+    "runArgs": ["--privileged", "--device=/dev/fuse", "--cap-add=SYS_ADMIN"],
     "postCreateCommand": "./autogen.sh && ./configure --prefix=/workspaces/ltfs-oss",
     "remoteUser": "vscode"
 }

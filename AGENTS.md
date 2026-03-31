@@ -177,6 +177,7 @@ ltfsck -d <device_name>
 
 ## Message System
 
+### Message Structure
 - Messages defined in `messages/` directory
 - Message is constructed a number and severity (Error, Warning, Info, Debug)
 - Number part of message must be unique
@@ -185,7 +186,30 @@ ltfsck -d <device_name>
   - It means 11111[EWID] must not be used if 11111[EWID] is already commented out
 - Message ID must be commented out when it is not required anymore
 - Each component has its own message file
-- Run `make_message_src.sh` to regenerate message headers
+
+### Message ID Rules
+
+**Uniqueness:**
+- Number part of message must be unique across all severities
+  - Example: If `11111I` is used, `11111E`, `11111W`, and `11111D` cannot be used
+
+**Once Released (in any release/tag):**
+- Message IDs must NEVER be reused after a release
+- Message number must NEVER be reused, even with different severity
+  - Example: If `12345I` existed in a release, you cannot later add `12345E`
+- Obsolete messages must be commented out (not deleted) to reserve the ID
+  - When commenting out, add `unused` prefix before the message ID
+  - Example: `//unused 12345I:string { "Old message" }`
+
+**During Development (before release):**
+- Message numbers should be kept consecutive without gaps
+- If a message is removed before release, renumber subsequent messages to fill the gap
+- This keeps message IDs compact and organized
+
+### Workflow
+1. Add new messages using the next available consecutive number
+2. Run `make_message_src.sh` to regenerate message headers after changes
+3. Before committing, ensure no duplicate message numbers exist
 
 # Do Not Section
 - Do not commit directly to the release branches
