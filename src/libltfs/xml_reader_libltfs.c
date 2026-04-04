@@ -858,10 +858,10 @@ static int _xml_parse_one_xattr(xmlTextReaderPtr reader, struct dentry *d)
 	if (xattr) {
 		TAILQ_INSERT_TAIL(&d->xattrlist, xattr, list);
 
-		if (!strcmp(xattr->key.name, "ltfs.vendor.IBM.immutable") && !strcmp(xattr->value, "1") ) {
+		if (!strcmp(xattr->key.name, "ltfs.vendor." LTFS_VENDOR_NAME ".immutable") && !strcmp(xattr->value, "1") ) {
 			d->is_immutable = true;
 		}
-		if (!strcmp(xattr->key.name, "ltfs.vendor.IBM.appendonly") && !strcmp(xattr->value, "1") ) {
+		if (!strcmp(xattr->key.name, "ltfs.vendor." LTFS_VENDOR_NAME ".appendonly") && !strcmp(xattr->value, "1") ) {
 			d->is_appendonly = true;
 		}
 	}

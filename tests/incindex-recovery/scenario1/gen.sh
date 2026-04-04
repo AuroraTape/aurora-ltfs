@@ -15,9 +15,9 @@
 #     1. Format virtual tape with mkaltfs
 #     2. Mount
 #     3. Create initial data (L01-L03, D03 setup)
-#     4. Write full index  (ltfs.vendor.IBM.FullSync)
+#     4. Write full index  (ltfs.vendor.Aurora.FullSync)
 #     5. Perform incremental operations (L02 modify, L03 delete, L06+D02 create, D03 delete)
-#     6. Write incremental index  (ltfs.vendor.IBM.IncrementalSync)
+#     6. Write incremental index  (ltfs.vendor.Aurora.IncrementalSync)
 #     7. Snapshot tape dir   -> crash-state tape (input to altfsck -x)
 #     8. Unmount             -> final full index written to DP and IP
 #
@@ -68,13 +68,13 @@ need fusermount "sudo apt-get install fuse"
 # ---------------------------------------------------------------------------
 
 write_full_index() {
-    attr -s ltfs.vendor.IBM.FullSync -V "$1" "${MNT_DIR}" > /dev/null \
+    attr -s ltfs.vendor.Aurora.FullSync -V "$1" "${MNT_DIR}" > /dev/null \
         || die "FullSync xattr failed"
     log "Full index written (reason: $1)"
 }
 
 write_inc_index() {
-    attr -s ltfs.vendor.IBM.IncrementalSync -V "$1" "${MNT_DIR}" > /dev/null \
+    attr -s ltfs.vendor.Aurora.IncrementalSync -V "$1" "${MNT_DIR}" > /dev/null \
         || die "IncrementalSync xattr failed"
     log "Incremental index written (reason: $1)"
 }

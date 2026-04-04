@@ -1844,7 +1844,7 @@ int filedebug_get_xattr(void *device, const char *name, char **buf)
 	struct filedebug_data *state = (struct filedebug_data *) device;
 	int ret = -LTFS_NO_XATTR;
 
-	if (!strcmp(name, "ltfs.vendor.IBM.seekLatency")) {
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".seekLatency")) {
 		ret = asprintf(buf, "%lds%ldns",
 			state->accumulated_delay.tv_sec,
 			state->accumulated_delay.tv_nsec);
@@ -1876,7 +1876,7 @@ int filedebug_set_xattr(void *device, const char *name, const char *buf, size_t 
 	}
 	memcpy(null_terminated, buf, size);
 
-	if (! strcmp(name, "ltfs.vendor.IBM.forceErrorWrite")) {
+	if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorWrite")) {
 		perm_count = strtoll(null_terminated, NULL, 0);
 		if (perm_count < 0) {
 			state->force_writeperm = -perm_count;
@@ -1888,10 +1888,10 @@ int filedebug_set_xattr(void *device, const char *name, const char *buf, size_t 
 
 		state->write_counter = 0;
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorType")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorType")) {
 		state->force_errortype = strtol(null_terminated, NULL, 0);
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorRead")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorRead")) {
 		perm_count = strtoll(null_terminated, NULL, 0);
 		if (perm_count < 0) {
 			state->force_readperm = -perm_count;
@@ -1902,7 +1902,7 @@ int filedebug_set_xattr(void *device, const char *name, const char *buf, size_t 
 		}
 		state->read_counter = 0;
 		ret = DEVICE_GOOD;
-	} else if (!strcmp(name, "ltfs.vendor.IBM.seekLatency")) {
+	} else if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".seekLatency")) {
 		attr_val = strtoull(null_terminated, NULL, 0);
 		if ((attr_val == ULLONG_MAX && errno) || attr_val > 0)
 			ret = -EDEV_INVALID_ARG;

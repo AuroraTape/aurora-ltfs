@@ -3166,7 +3166,7 @@ int camtape_get_xattr(void *device, const char *name, char **buf)
 	struct ltfs_timespec now;
 
 	ltfs_profiler_add_entry(softc->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETXATTR));
-	if (! strcmp(name, "ltfs.vendor.IBM.mediaCQsLossRate")) {
+	if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".mediaCQsLossRate")) {
 		rc = DEVICE_GOOD;
 
 		/* If first fetch or cache value is too old and valuie is dirty, refetch value */
@@ -3245,15 +3245,15 @@ int camtape_set_xattr(void *device, const char *name, const char *buf, size_t si
 	memcpy(null_terminated, buf, size);
 	null_terminated[size] = '\0';
 
-	if (! strcmp(name, "ltfs.vendor.IBM.forceErrorWrite")) {
+	if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorWrite")) {
 		softc->force_writeperm = strtoull(null_terminated, NULL, 0);
 		if (softc->force_writeperm && softc->force_writeperm < THRESHOLD_FORCE_WRITE_NO_WRITE)
 			softc->force_writeperm = THRESHOLD_FORCE_WRITE_NO_WRITE;
 		rc = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorType")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorType")) {
 		softc->force_errortype = strtol(null_terminated, NULL, 0);
 		rc = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorRead")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorRead")) {
 		softc->force_readperm = strtoull(null_terminated, NULL, 0);
 		softc->read_counter = 0;
 		rc = DEVICE_GOOD;

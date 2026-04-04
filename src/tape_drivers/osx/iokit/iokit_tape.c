@@ -3331,7 +3331,7 @@ int iokit_get_xattr(void *device, const char *name, char **buf)
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETXATTR));
 
-	if (!strcmp(name, "ltfs.vendor.IBM.mediaCQsLossRate"))
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".mediaCQsLossRate"))
 	{
 		ret = DEVICE_GOOD;
 
@@ -3405,7 +3405,7 @@ int iokit_set_xattr(void *device, const char *name, const char *buf, size_t size
 	memcpy(null_terminated, buf, size);
 	null_terminated[size] = '\0';
 
-	if (! strcmp(name, "ltfs.vendor.IBM.forceErrorWrite")) {
+	if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorWrite")) {
 		wp_count = strtoll(null_terminated, NULL, 0);
 		if (wp_count < 0) {
 			priv->force_writeperm = -wp_count;
@@ -3414,10 +3414,10 @@ int iokit_set_xattr(void *device, const char *name, const char *buf, size_t size
 		if (priv->force_writeperm && priv->force_writeperm < THRESHOLD_FORCE_WRITE_NO_WRITE)
 			priv->force_writeperm = THRESHOLD_FORCE_WRITE_NO_WRITE;
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorType")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorType")) {
 		priv->force_errortype = strtol(null_terminated, NULL, 0);
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorRead")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorRead")) {
 		priv->force_readperm = strtoull(null_terminated, NULL, 0);
 		priv->read_counter = 0;
 		ret = DEVICE_GOOD;

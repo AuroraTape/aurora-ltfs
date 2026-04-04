@@ -3562,7 +3562,7 @@ int scsipi_ibmtape_get_xattr(void *device, const char *name, char **buf)
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETXATTR));
 
-	if (!strcmp(name, "ltfs.vendor.IBM.mediaCQsLossRate"))
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".mediaCQsLossRate"))
 	{
 		ret = DEVICE_GOOD;
 
@@ -3637,7 +3637,7 @@ int scsipi_ibmtape_set_xattr(void *device, const char *name, const char *buf, si
 	memcpy(null_terminated, buf, size);
 	null_terminated[size] = '\0';
 
-	if (! strcmp(name, "ltfs.vendor.IBM.forceErrorWrite")) {
+	if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorWrite")) {
 		perm_count = strtoll(null_terminated, NULL, 0);
 		if (perm_count < 0) {
 			priv->force_writeperm = -perm_count;
@@ -3650,10 +3650,10 @@ int scsipi_ibmtape_set_xattr(void *device, const char *name, const char *buf, si
 			priv->force_writeperm = THRESHOLD_FORCE_WRITE_NO_WRITE;
 		priv->write_counter = 0;
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorType")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorType")) {
 		priv->force_errortype = strtol(null_terminated, NULL, 0);
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.forceErrorRead")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".forceErrorRead")) {
 		perm_count = strtoll(null_terminated, NULL, 0);
 		if (perm_count < 0) {
 			priv->force_readperm = -perm_count;
@@ -3664,7 +3664,7 @@ int scsipi_ibmtape_set_xattr(void *device, const char *name, const char *buf, si
 		}
 		priv->read_counter = 0;
 		ret = DEVICE_GOOD;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.capOffset")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".capOffset")) {
 		global_data.capacity_offset = strtoul(null_terminated, NULL, 0);
 		ret = DEVICE_GOOD;
 	}
