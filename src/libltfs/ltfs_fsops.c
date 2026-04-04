@@ -389,7 +389,7 @@ out_dispose:
 
 	if (ret == 0 && parent->is_appendonly) {
 		ltfs_file_id id;
-		ret = ltfs_fsops_setxattr(path, "user.ltfs.vendor.IBM.appendonly", "1", 1, 0, &id, vol);
+		ret = ltfs_fsops_setxattr(path, "user.ltfs.vendor." LTFS_VENDOR_NAME ".appendonly", "1", 1, 0, &id, vol);
 		if (ret != 0) {
 			ltfsmsg(LTFS_ERR, 17237E, "create: failed to set appendonly");
 			dcache_unlink(dentry_path, d, vol);

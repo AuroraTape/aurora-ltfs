@@ -63,9 +63,9 @@ IncrementalSync()
 
     ${ECHO} -n "Syncing LTFS (Incremental) ... "
     if [ "$PLATFORM" == "Darwin" ]; then
-        /usr/bin/xattr -w ltfs.vendor.IBM.IncrementalSync ${MSG} ${MOUNTPOINT}
+        /usr/bin/xattr -w ltfs.vendor.Aurora.IncrementalSync ${MSG} ${MOUNTPOINT}
     else
-        /usr/bin/attr -s ltfs.vendor.IBM.IncrementalSync -V ${MSG} ${MOUNTPOINT}
+        /usr/bin/attr -s ltfs.vendor.Aurora.IncrementalSync -V ${MSG} ${MOUNTPOINT}
     fi
 
     if [ $? == 0 ]; then
@@ -93,9 +93,9 @@ FullSync()
 
     ${ECHO} "Syncing LTFS (Full) ... "
     if [ "$PLATFORM" == "Darwin" ]; then
-        /usr/bin/xattr -w ltfs.vendor.IBM.FullSync ${MSG} ${MOUNTPOINT}
+        /usr/bin/xattr -w ltfs.vendor.Aurora.FullSync ${MSG} ${MOUNTPOINT}
     else
-        /usr/bin/attr -s ltfs.vendor.IBM.FullSync -V ${MSG} ${MOUNTPOINT}
+        /usr/bin/attr -s ltfs.vendor.Aurora.FullSync -V ${MSG} ${MOUNTPOINT}
     fi
 
     if [ $? == 0 ]; then

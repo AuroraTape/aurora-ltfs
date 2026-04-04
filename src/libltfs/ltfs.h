@@ -190,9 +190,9 @@ enum ltfs_index_type {
 
 #define LTFS_LOSTANDFOUND_DIR         "_ltfs_lostandfound"
 
-#define LTFS_VENDOR_NAME              "IBM"
+#define LTFS_VENDOR_NAME              "Aurora"
 
-#define LTFS_LIVELINK_EA_NAME         "ltfs.vendor.IBM.prefixLength"
+#define LTFS_LIVELINK_EA_NAME         "ltfs.vendor." LTFS_VENDOR_NAME ".prefixLength"
 
 /* rao parameters */
 #define LTFS_OUT_FILE_EXTENSION       ".out"

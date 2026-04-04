@@ -248,7 +248,7 @@ static int _xattr_set_vendorunique_xattr(const char *name, const char *value, si
  */
 static inline bool _xattr_is_worm_ea(const char *name)
 {
-	if (!strcmp(name, "ltfs.vendor.IBM.immutable") || !strcmp(name, "ltfs.vendor.IBM.appendonly")) {
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".immutable") || !strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".appendonly")) {
 		/* WORM related xattr */
 		return true;
 	}
@@ -486,16 +486,16 @@ static bool _xattr_is_virtual(struct dentry *d, const char *name, struct ltfs_vo
 			|| ! strcmp(name, "ltfs.driveEncryptionState")
 			|| ! strcmp(name, "ltfs.driveEncryptionMethod")
 			/* Vendor specific EAs */
-			|| ! strcmp(name, "ltfs.vendor.IBM.referencedBlocks")
-			|| ! strcmp(name, "ltfs.vendor.IBM.trace")
-			|| ! strcmp(name, "ltfs.vendor.IBM.totalBlocks")
-			|| ! strcmp(name, "ltfs.vendor.IBM.cartridgeMountNode")
-			|| ! strcmp(name, "ltfs.vendor.IBM.logLevel")
-			|| ! strcmp(name, "ltfs.vendor.IBM.syslogLevel")
-			|| ! strcmp(name, "ltfs.vendor.IBM.rao")
-			|| ! strcmp(name, "ltfs.vendor.IBM.logPage")
-			|| ! strcmp(name, "ltfs.vendor.IBM.mediaMAM")
-			|| ! strcmp(name, "ltfs.vendor.IBM.dumpincj")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".referencedBlocks")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".trace")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".totalBlocks")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".cartridgeMountNode")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logLevel")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".syslogLevel")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".rao")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logPage")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".mediaMAM")
+			|| ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".dumpincj")
 			|| ! strncmp(name, "ltfs.vendor", strlen("ltfs.vendor")))
 			return true;
 	}
@@ -594,21 +594,21 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 			ret = xattr_get_string("LTFS LE", &val, name);
 		else
 			ret = -LTFS_NO_XATTR;
-	} else if (! strcmp(name, "ltfs.vendor.IBM.logLevel")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logLevel")) {
 		ret = asprintf(&val, "%d", ltfs_log_level);
 		if (ret < 0) {
 			ltfsmsg(LTFS_ERR, 10001E, name);
 			val = NULL;
 			ret = -LTFS_NO_MEMORY;
 		}
-	} else if (! strcmp(name, "ltfs.vendor.IBM.syslogLevel")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".syslogLevel")) {
 		ret = asprintf(&val, "%d", ltfs_syslog_level);
 		if (ret < 0) {
 			ltfsmsg(LTFS_ERR, 10001E, name);
 			val = NULL;
 			ret = -LTFS_NO_MEMORY;
 		}
-	} else if (! strcmp(name, "ltfs.vendor.IBM.profiler")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".profiler")) {
 		ret = ltfs_trace_get_offset(&val);
 		if (ret < 0) {
 			ltfsmsg(LTFS_ERR, 10001E, name);
@@ -809,25 +809,25 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 			ret = xattr_get_string(tape_get_drive_encryption_state(vol->device), &val, name);
 		} else if (! strcmp(name, "ltfs.driveEncryptionMethod")) {
 			ret = xattr_get_string(tape_get_drive_encryption_method(vol->device), &val, name);
-		} else if (! strcmp(name, "ltfs.vendor.IBM.referencedBlocks")) {
+		} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".referencedBlocks")) {
 			ret = xattr_get_u64(ltfs_get_valid_block_count_unlocked(vol), &val, name);
-		} else if (! strcmp(name, "ltfs.vendor.IBM.trace")) {
+		} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".trace")) {
 			ret = ltfs_get_trace_status(&val);
-		} else if (! strcmp(name, "ltfs.vendor.IBM.totalBlocks")) {
+		} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".totalBlocks")) {
 			ret = ltfs_get_append_position(&append_pos, vol);
 			if (ret < 0)
 				val = NULL;
 			else
 				ret = xattr_get_u64(append_pos, &val, name);
-		} else if (! strcmp(name, "ltfs.vendor.IBM.cartridgeMountNode")) {
+		} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".cartridgeMountNode")) {
 			ret = asprintf(&val, "localhost");
 			if (ret < 0) {
 				ltfsmsg(LTFS_ERR, 10001E, name);
 				val = NULL;
 				ret = -LTFS_NO_MEMORY;
 			}
-		} else if ( (!strncmp(name, "ltfs.vendor.IBM.logPage.", strlen("ltfs.vendor.IBM.logPage."))) &&
-					(strlen(name) == strlen("ltfs.vendor.IBM.logPage.XX.XX")) ) {
+		} else if ( (!strncmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logPage.", strlen("ltfs.vendor." LTFS_VENDOR_NAME ".logPage."))) &&
+					(strlen(name) == strlen("ltfs.vendor." LTFS_VENDOR_NAME ".logPage.XX.XX")) ) {
 			char page_str[3]    = {0x00, 0x00, 0x00};
 			char subpage_str[3] = {0x00, 0x00, 0x00};
 
@@ -849,8 +849,8 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 
 			ret = ltfs_logpage(page, subpage, (unsigned char *)buf, buf_size, vol);
 
-		} else if ( (!strncmp(name, "ltfs.vendor.IBM.mediaMAM.", strlen("ltfs.vendor.IBM.mediaMAM."))) &&
-					(strlen(name) == strlen("ltfs.vendor.IBM.mediaMAM.XX")) ) {
+		} else if ( (!strncmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".mediaMAM.", strlen("ltfs.vendor." LTFS_VENDOR_NAME ".mediaMAM."))) &&
+					(strlen(name) == strlen("ltfs.vendor." LTFS_VENDOR_NAME ".mediaMAM.XX")) ) {
 			char part_str[3] = {0x00, 0x00, 0x00};
 			tape_partition_t part = 0;
 
@@ -872,7 +872,7 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 
 			ret = ltfs_mam(part, (unsigned char *)buf, buf_size, vol);
 
-		} else if (! strcmp(name, "ltfs.vendor.IBM.dumpincj")) {
+		} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".dumpincj")) {
 			incj_dump(vol);
 			ret = 0;
 
@@ -919,8 +919,8 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 
 	if ((! strcmp(name, "ltfs.commitMessage") ||
 		 ! strcmp(name, "ltfs.sync") ||
-		 ! strcmp(name, "ltfs.vendor.IBM.FullSync") ||
-		 ! strcmp(name, "ltfs.vendor.IBM.IncrementalSync"))
+		 ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync") ||
+		 ! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync"))
 		&& d == vol->index->root) {
 		char *value_null_terminated, *new_value;
 
@@ -930,13 +930,13 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		}
 
 #ifdef FORMAT_SPEC25
-		if (! strcmp(name, "ltfs.vendor.IBM.FullSync"))
+		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync"))
 			idx_type = LTFS_FULL_INDEX;
-		else if (! strcmp(name, "ltfs.vendor.IBM.IncrementalSync"))
+		else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync"))
 			idx_type = LTFS_INCREMENTAL_INDEX;
 #else
-		if (! strcmp(name, "ltfs.vendor.IBM.FullSync") ||
-			! strcmp(name, "ltfs.vendor.IBM.IncrementalSync")) {
+		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync") ||
+			! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync")) {
 		}
 #endif
 
@@ -1079,7 +1079,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		else
 			ret = -LTFS_STRING_CONVERSION;
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.logLevel")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logLevel")) {
 		int level = 0;
 		char *invalid_start, *v;
 
@@ -1089,7 +1089,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 			return -LTFS_NO_MEMORY;
 		}
 
-		/* ltfs.vendor.IBM.logLevel shall be specified by hexadecimal text */
+		/* ltfs.vendor.<VENDOR>.logLevel shall be specified by hexadecimal text */
 		level = strtoul(v, &invalid_start, 0);
 		if( (*invalid_start == '\0') && v ) {
 			ret = 0;
@@ -1097,7 +1097,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		} else
 			ret = -LTFS_STRING_CONVERSION;
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.syslogLevel")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".syslogLevel")) {
 		int level = 0;
 		char *invalid_start, *v;
 
@@ -1107,7 +1107,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 			return -LTFS_NO_MEMORY;
 		}
 
-		/* ltfs.vendor.IBM.syslogLevel shall be specified by hexadecimal text */
+		/* ltfs.vendor.<VENDOR>.syslogLevel shall be specified by hexadecimal text */
 		level = strtoul(v, &invalid_start, 0);
 		if( (*invalid_start == '\0') && v ) {
 			ret = 0;
@@ -1115,7 +1115,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		} else
 			ret = -LTFS_STRING_CONVERSION;
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.rao")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".rao")) {
 		char *v;
 		v = strndup(value, size);
 		if (! v) {
@@ -1125,7 +1125,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		if (strlen(v) > PATH_MAX) return -LTFS_LARGE_XATTR; /* file path size check */
 		ret = ltfs_get_rao_list(v, vol);
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.trace")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".trace")) {
 		char *v;
 
 		v = strndup(value, size);
@@ -1136,7 +1136,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 
 		ret = ltfs_set_trace_status(v);
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.dump")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".dump")) {
 		char *v;
 
 		v = strndup(value, size);
@@ -1147,7 +1147,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 
 		ret = ltfs_dump(v, vol->work_directory);
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.dumpTrace")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".dumpTrace")) {
 		char *v;
 
 		v = strndup(value, size);
@@ -1158,7 +1158,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 
 		ret = ltfs_trace_dump(v, vol->work_directory);
 		free(v);
-	} else if (! strcmp(name, "ltfs.vendor.IBM.profiler")) {
+	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".profiler")) {
 		uint64_t source = 0;
 		char *invalid_start, *v;
 
@@ -1433,7 +1433,7 @@ int xattr_set(struct dentry *d, const char *name, const char *value, size_t size
 		goto out_unlock;
 	}
 
-	if ((is_worm_cart && (d->is_immutable || (d->is_appendonly && strcmp(name, "ltfs.vendor.IBM.immutable"))))
+	if ((is_worm_cart && (d->is_immutable || (d->is_appendonly && strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".immutable"))))
 		|| (!is_worm_cart && (d->is_immutable || d->is_appendonly) && !_xattr_is_worm_ea(name))) {
 		/* EA cannot be set in case of immutable/appendonly */
 		ltfsmsg(LTFS_ERR, 17237E, "set xattr: WORM entry");
@@ -1498,11 +1498,11 @@ int xattr_set(struct dentry *d, const char *name, const char *value, size_t size
 	}
 
 	/* update metadata */
-	if (!strcmp(name, "ltfs.vendor.IBM.immutable")) {
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".immutable")) {
 		d->is_immutable = !disable_worm_ea;
 		ltfsmsg(LTFS_INFO, 17238I, "immutable", d->is_immutable, d->name.name);
 	}
-	else if (!strcmp(name, "ltfs.vendor.IBM.appendonly")) {
+	else if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".appendonly")) {
 		d->is_appendonly = !disable_worm_ea;
 		ltfsmsg(LTFS_INFO, 17238I, "appendonly", d->is_appendonly, d->name.name);
 	}
@@ -1764,11 +1764,11 @@ int xattr_remove(struct dentry *d, const char *name, struct ltfs_volume *vol)
 	if (ret < 0)
 		goto out_dunlk;
 
-	if (!strcmp(name, "ltfs.vendor.IBM.immutable")) {
+	if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".immutable")) {
 		d->is_immutable = false;
 		ltfsmsg(LTFS_INFO, 17238I, "immutable", d->is_immutable, d->name.name);
 	}
-	else if (!strcmp(name, "ltfs.vendor.IBM.appendonly")) {
+	else if (!strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".appendonly")) {
 		d->is_appendonly = false;
 		ltfsmsg(LTFS_INFO, 17238I, "appendonly", d->is_appendonly, d->name.name);
 	}
