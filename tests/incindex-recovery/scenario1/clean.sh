@@ -11,5 +11,5 @@ echo "[scenario1/clean] Removing generated test data..."
 rm -rf "${SCRIPT_DIR}/tape" \
        "${SCRIPT_DIR}/tape-crashed" \
        "${SCRIPT_DIR}/expected"
-rm -f  "${SCRIPT_DIR}/ltfsck.log"
+rm -f  "${SCRIPT_DIR}"/*.log
 echo "[scenario1/clean] Done."

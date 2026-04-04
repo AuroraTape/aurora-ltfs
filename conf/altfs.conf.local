@@ -1,7 +1,7 @@
 #
-# This file is the local configuration file for LTFS SDE
+# This file is the local configuration file for Aurora LTFS
 #
-# The default LTFS configuration file includes this file.
+# The default Aurora LTFS configuration file includes this file.
 # Any directives that are placed here will be kept across software updates.
 #
 # Lines that begin with "##" show default settings.

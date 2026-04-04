@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@/@PACKAGE@
 
 Name: @PACKAGE@
-Description: LTFS
+Description: Aurora LTFS
 Version: @VERSION@
-Libs: -L${libdir} -lltfs
+Libs: -L${libdir} -laltfs
 Cflags: -I${includedir}

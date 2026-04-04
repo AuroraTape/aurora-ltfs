@@ -92,10 +92,10 @@ This section is for users who already have Aurora LTFS installed.
 ## Step 1: List tape drives
 
 ```
-# ltfs -o device_list
+# altfs -o device_list
 ```
 
-The output shows available tape drives. Use the "Device Name" field (e.g., `/dev/sg43`) or the serial number as the argument to ltfs commands.
+The output shows available tape drives. Use the "Device Name" field (e.g., `/dev/sg43`) or the serial number as the argument to altfs commands.
 
 ```
 Tape Device list:
@@ -109,7 +109,7 @@ Device Name = /dev/sg37, Vender ID = IBM    , Product ID = ULT3580-TD7    , Seri
 LTFS uses the partition feature of the tape drive, so tapes must be formatted before first use.
 
 ```
-# mkltfs -d 9A700L0077
+# mkaltfs -d 9A700L0077
 ```
 
 You can use either the serial number or the device name (e.g., `/dev/sg43`).
@@ -117,24 +117,24 @@ You can use either the serial number or the device name (e.g., `/dev/sg43`).
 ## Step 3: Mount a tape
 
 ```
-# ltfs -o devname=9A700L0077 /ltfs
+# altfs -o devname=9A700L0077 /altfs
 ```
 
-After successful mounting, access the tape contents through the `/ltfs` directory.
+After successful mounting, access the tape contents through the `/altfs` directory.
 
-> **Note:** Do not access any `st` devices while ltfs is mounting a tape.
+> **Note:** Do not access any `st` devices while altfs is mounting a tape.
 
 ## Step 4: Unmount
 
 ```
-# umount /ltfs
+# umount /altfs
 ```
 
-The unmount command triggers the ltfs process to write metadata and close the tape cleanly. The actual unmount completes when the ltfs process finishes.
+The unmount command triggers the altfs process to write metadata and close the tape cleanly. The actual unmount completes when the altfs process finishes.
 
-## The `ltfs_ordered_copy` utility
+## The `altfs_ordered_copy` utility
 
-[`ltfs_ordered_copy`](src/utils/ltfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires the `pyxattr` module.
+[`altfs_ordered_copy`](src/utils/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires the `pyxattr` module.
 
 # Building from Source
 

@@ -20,7 +20,7 @@ TAPE_DIR="${SCRIPT_DIR}/tape"
 CRASHED_DIR="${SCRIPT_DIR}/tape-crashed"
 EXPECTED_DIR="${SCRIPT_DIR}/expected"
 
-INSTALL_PREFIX="/workspaces/ltfs-oss"
+INSTALL_PREFIX="/workspaces/altfs"
 export PATH="${INSTALL_PREFIX}/bin:${PATH}"
 export LD_LIBRARY_PATH="${INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 
@@ -62,15 +62,15 @@ esac
 [ -f "${CRASHED_DIR}/.manifest" ] \
     || die "Crash-state manifest not found  (re-run gen.sh)"
 
-command -v ltfsck >/dev/null 2>&1 \
-    || die "ltfsck not found — run 'make install' in the repo root"
+command -v altfsck >/dev/null 2>&1 \
+    || die "altfsck not found — run 'make install' in the repo root"
 
 # ---------------------------------------------------------------------------
 # Reset crash-state tape
 #
 # gen.sh wrote tape-crashed/.manifest listing the files present at crash time.
 # Restore that exact state: remove anything added by a previous recovery run,
-# and restore any empty marker files (F/E) that ltfsck removed.
+# and restore any empty marker files (F/E) that altfsck removed.
 # ---------------------------------------------------------------------------
 log "Resetting crash-state tape..."
 
@@ -82,7 +82,7 @@ for f in "${CRASHED_DIR}"/*; do
     grep -qxF "${fname}" "${CRASHED_DIR}/.manifest" || rm -f "$f"
 done
 
-# Restore empty marker files (F/E) that may have been removed by ltfsck
+# Restore empty marker files (F/E) that may have been removed by altfsck
 while IFS= read -r fname; do
     [ -e "${CRASHED_DIR}/${fname}" ] || touch "${CRASHED_DIR}/${fname}"
 done < "${CRASHED_DIR}/.manifest"
@@ -92,14 +92,14 @@ log "  Reset complete ($(wc -l < "${CRASHED_DIR}/.manifest") files restored)"
 # ---------------------------------------------------------------------------
 # Run recovery
 # ---------------------------------------------------------------------------
-log "Running ltfsck -x ..."
+log "Running altfsck -x ..."
 
-LTFSCK_LOG="${SCRIPT_DIR}/ltfsck.log"
+ALTFSCK_LOG="${SCRIPT_DIR}/altfsck.log"
 set +o pipefail
-ltfsck -e file -x "${CRASHED_DIR}" 2>&1 | tee "${LTFSCK_LOG}"
-LTFSCK_RC=${PIPESTATUS[0]}
+altfsck -e file -x "${CRASHED_DIR}" 2>&1 | tee "${ALTFSCK_LOG}"
+ALTFSCK_RC=${PIPESTATUS[0]}
 set -o pipefail
-log "ltfsck exit code: ${LTFSCK_RC}"
+log "altfsck exit code: ${ALTFSCK_RC}"
 
 # ---------------------------------------------------------------------------
 # Verify: recovered full index exists in IP
@@ -116,7 +116,7 @@ log "Recovered full index: ${RECOVERED}"
 # ---------------------------------------------------------------------------
 check_msg() {
     local id="$1" desc="$2"
-    grep -q "${id}" "${LTFSCK_LOG}" \
+    grep -q "${id}" "${ALTFSCK_LOG}" \
         || fail "Expected log message ${id} (${desc}) not found"
 }
 
@@ -178,5 +178,5 @@ check_absent  "old_dir"
 # ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
-log "ltfsck log: ${LTFSCK_LOG}"
+log "altfsck log: ${ALTFSCK_LOG}"
 pass "Scenario 1 recovery test passed."

@@ -58,7 +58,7 @@ run_scenario() {
     local name
     name=$(basename "${dir}")
     local log
-    log=$(mktemp "/tmp/ltfs-incindex-${name}.XXXXXX")
+    log=$(mktemp "/tmp/altfs-incindex-${name}.XXXXXX")
     bash "${dir}run.sh" >"${log}" 2>&1
     echo "${log}"
 }
@@ -80,7 +80,7 @@ else
     # Parallel run
     for s in "${SCENARIOS[@]}"; do
         name=$(basename "${s}")
-        log=$(mktemp "/tmp/ltfs-incindex-${name}.XXXXXX")
+        log=$(mktemp "/tmp/altfs-incindex-${name}.XXXXXX")
         bash "${s}run.sh" >"${log}" 2>&1 &
         PIDS+=($!)
         LOGS+=("${log}")

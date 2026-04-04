@@ -40,17 +40,17 @@ AM_LIBTOOLFLAGS = --tag=disable-static
 
 libiosched_fcfs_la_SOURCES = fcfs.c
 libiosched_fcfs_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_fcfs_dat.a
-libiosched_fcfs_la_DEPENDENCIES = ../../messages/libiosched_fcfs_dat.a ../libltfs/libltfs.la
-libiosched_fcfs_la_LIBADD = ../libltfs/libltfs.la
+libiosched_fcfs_la_DEPENDENCIES = ../../messages/libiosched_fcfs_dat.a ../libltfs/libaltfs.la
+libiosched_fcfs_la_LIBADD = ../libltfs/libaltfs.la
 libiosched_fcfs_la_CPPFLAGS = @AM_CPPFLAGS@ -I ..
 
 libiosched_unified_la_SOURCES = unified.c cache_manager.c
 libiosched_unified_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_unified_dat.a
-libiosched_unified_la_DEPENDENCIES = ../../messages/libiosched_unified_dat.a ../libltfs/libltfs.la
-libiosched_unified_la_LIBADD = ../libltfs/libltfs.la
+libiosched_unified_la_DEPENDENCIES = ../../messages/libiosched_unified_dat.a ../libltfs/libaltfs.la
+libiosched_unified_la_LIBADD = ../libltfs/libaltfs.la
 libiosched_unified_la_CPPFLAGS = @AM_CPPFLAGS@ -I ..
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(libdir)/ltfs
+	mkdir -p $(DESTDIR)$(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(DESTDIR)$(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/altfs; done

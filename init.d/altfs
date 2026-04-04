@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# /etc/init.d/ltfs
+# /etc/init.d/altfs
 #
 #  OO_Copyright_BEGIN
 #
@@ -43,7 +43,7 @@
 # description: Ensures that all LTFS volumes are unmounted before shutdown
 #
 ### BEGIN INIT INFO
-# Provides:       ltfs
+# Provides:       altfs
 # Required-Start:
 # Required-Stop:
 # Default-Start:  2 3 4 5
@@ -112,13 +112,13 @@ stop() {
 	fi
 	rc=$?
 	fn_exists log_end_msg && log_end_msg "$rc"
-	rm -f /var/lock/subsys/ltfs
+	rm -f /var/lock/subsys/altfs
 	return $rc
 }
 
 case "$1" in
 	start)
-		[ -d /var/lock/subsys ] && touch /var/lock/subsys/ltfs
+		[ -d /var/lock/subsys ] && touch /var/lock/subsys/altfs
 		exit 0
 		;;
 	stop)

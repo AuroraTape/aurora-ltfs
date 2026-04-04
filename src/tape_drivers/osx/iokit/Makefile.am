@@ -39,8 +39,8 @@ BASENAMES = libtape-iokit
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_iokit_la_SOURCES = iokit_tape.c iokit_scsi.c iokit_service.c vendor_compat.c ibm_tape.c hp_tape.c quantum_tape.c
-libtape_iokit_la_DEPENDENCIES = ../../../../messages/libtape_iokit_dat.a ../../../libltfs/libltfs.la ./libtape_iokit_la-reed_solomon_crc.lo ./libtape_iokit_la-crc32c_crc.lo
-libtape_iokit_la_LIBADD = ../../../libltfs/libltfs.la ./libtape_iokit_la-reed_solomon_crc.lo ./libtape_iokit_la-crc32c_crc.lo
+libtape_iokit_la_DEPENDENCIES = ../../../../messages/libtape_iokit_dat.a ../../../libltfs/libaltfs.la ./libtape_iokit_la-reed_solomon_crc.lo ./libtape_iokit_la-crc32c_crc.lo
+libtape_iokit_la_LIBADD = ../../../libltfs/libaltfs.la ./libtape_iokit_la-reed_solomon_crc.lo ./libtape_iokit_la-crc32c_crc.lo
 libtape_iokit_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_iokit_dat.a
 libtape_iokit_la_CPPFLAGS = @AM_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ -I ../../.. -I ../..
 
@@ -66,6 +66,6 @@ libtape_iokit_la-crc32c_crc.lo: ../../crc32c_crc.c
 	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtape_iokit_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) $(CRC_OPTIMIZE) -MT libtape_iokit_la-crc32c_crc.lo -MD -MP -c -o libtape_iokit_la-crc32c_crc.lo $<
 
 install-exec-hook:
-	mkdir -p $(libdir)/ltfs
+	mkdir -p $(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(libdir)/$$f* $(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(libdir)/$$f* $(libdir)/altfs; done

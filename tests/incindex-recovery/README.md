@@ -1,6 +1,6 @@
 # Incremental Index Recovery Tests
 
-Tests for the incremental index recovery feature (`ltfsck -x`).
+Tests for the incremental index recovery feature (`altfsck -x`).
 
 ## Directory Structure
 
@@ -20,9 +20,9 @@ and must be created locally before running tests.
 
 ## Prerequisites
 
-- Project built and installed under `/workspaces/ltfs-oss`:
+- Project built and installed under `/workspaces/altfs`:
   ```bash
-  ./autogen.sh && ./configure --prefix=/workspaces/ltfs-oss
+  ./autogen.sh && ./configure --prefix=/workspaces/altfs
   make && make install
   ```
 - FUSE available (`/dev/fuse`) and `attr` package installed (for `gen.sh` only)
@@ -100,6 +100,6 @@ Covers the basic incremental index operations against a single full index.
 3. `run_all.sh` will automatically discover and run it
 
 Key conventions:
-- Mount point: `/tmp/ltfs-mnt-scenarioN` (unique per scenario for parallel runs)
+- Mount point: `/tmp/altfs-mnt-scenarioN` (unique per scenario for parallel runs)
 - Generated directories: `tape/`, `tape-crashed/`, `expected/`
 - `run.sh` exits 0 on PASS, 1 on FAIL, 2 on setup error

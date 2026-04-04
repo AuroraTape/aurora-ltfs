@@ -75,7 +75,7 @@ volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGH
 /* Defined in src/ltfs.c */
 extern struct fuse_operations ltfs_ops;
 /* Defined in messages/ */
-extern char bin_ltfs_dat[];
+extern char bin_altfs_dat[];
 
 /**
  * Command line parsing
@@ -599,7 +599,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Register messages with libltfs */
-	ret = ltfsprintf_load_plugin("bin_ltfs", bin_ltfs_dat, &message_handle);
+	ret = ltfsprintf_load_plugin("bin_altfs", bin_altfs_dat, &message_handle);
 	if (ret < 0) {
 		ltfsmsg(LTFS_ERR, 10012E, ret);
 		return 1;

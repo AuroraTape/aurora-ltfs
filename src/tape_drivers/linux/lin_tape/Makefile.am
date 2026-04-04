@@ -39,8 +39,8 @@ BASENAMES = libtape-lin_tape
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_lin_tape_la_SOURCES = lin_tape_ibmtape.c vendor_compat.c ibm_tape.c hp_tape.c quantum_tape.c
-libtape_lin_tape_la_DEPENDENCIES = ../../../../messages/libtape_linux_lin_tape_dat.a ../../../libltfs/libltfs.la ./libtape_lin_tape_la-reed_solomon_crc.lo ./libtape_lin_tape_la-crc32c_crc.lo
-libtape_lin_tape_la_LIBADD = ../../../libltfs/libltfs.la ./libtape_lin_tape_la-reed_solomon_crc.lo ./libtape_lin_tape_la-crc32c_crc.lo
+libtape_lin_tape_la_DEPENDENCIES = ../../../../messages/libtape_linux_lin_tape_dat.a ../../../libltfs/libaltfs.la ./libtape_lin_tape_la-reed_solomon_crc.lo ./libtape_lin_tape_la-crc32c_crc.lo
+libtape_lin_tape_la_LIBADD = ../../../libltfs/libaltfs.la ./libtape_lin_tape_la-reed_solomon_crc.lo ./libtape_lin_tape_la-crc32c_crc.lo
 libtape_lin_tape_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_linux_lin_tape_dat.a
 libtape_lin_tape_la_CPPFLAGS = @AM_CPPFLAGS@ -I ../../.. -I ../..
 
@@ -66,6 +66,6 @@ libtape_lin_tape_la-crc32c_crc.lo: ../../crc32c_crc.c
 	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtape_lin_tape_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) $(CRC_OPTIMIZE) -MT libtape_lin_tape_la-crc32c_crc.lo -MD -MP -c -o libtape_lin_tape_la-crc32c_crc.lo $<
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(libdir)/ltfs
+	mkdir -p $(DESTDIR)$(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(DESTDIR)$(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/altfs; done
