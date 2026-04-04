@@ -69,7 +69,7 @@ make distclean
 
 ### Main Components
 
-1. **libltfs** (`src/libltfs/`) - Core LTFS library
+1. **libaltfs** (`src/libltfs/`) - Core LTFS library
    - `ltfs.c/h` - Main LTFS data structures and operations
    - `ltfs_fsops.c` - Filesystem operations implementation
    - `tape.c/h` - Tape drive abstraction layer
@@ -93,12 +93,12 @@ make distclean
    - `flatfile.c` - Flat file-based key storage, receive keys specified unencrypted file
 
 5. **Utilities** (`src/utils/`)
-   - `mkltfs.c` - Format tapes for LTFS like `mkfs`
-   - `ltfsck.c` - Check and repair LTFS volumes like `fsck`
-   - `ltfsindextool.c` - Manipulate LTFS indexes outside of LTFS filesystem implementation
-   - `ltfs_ordered_copy` - Python script for optimized file copying
+   - `mkltfs.c` - Format tapes for LTFS like `mkfs` (installed as `mkaltfs`)
+   - `ltfsck.c` - Check and repair LTFS volumes like `fsck` (installed as `altfsck`)
+   - `ltfsindextool.c` - Manipulate LTFS indexes outside of LTFS filesystem implementation (installed as `altfsindextool`)
+   - `altfs_ordered_copy` - Python script for optimized file copying
 
-6. **Entry point of `ltfs` process** (`src/main.c`)
+6. **Entry point of `altfs` process** (`src/main.c`)
    - This is the start point of LTFS filesystem process
 
 7. **ltfs internal filesystem operations** (`src/libltfs/ltfs_fsops.c/h`)
@@ -131,14 +131,14 @@ make distclean
 - `man`:                   man pages for the commands provided by the project
 - `man/sgml`:              Original documents for man pages written by docbook 4.1 format
 - `messages`:              Message files used in the code tree
-- `src/libltfs`:           Source files for libltfs, the library that handles logical layer of the LTFS format
-- `src/iosched`:           I/O scheduler plugins for libltfs. The libltfs makes indirect calls to an ioschead plugin loaded when a command is launched for creating 512KB block for tape R/W
-- `src/tape_drivers`:      Tape drive handling plugins for libltfs. The libltfs makes indirect calls to an tape drive plugin loaded when a command is launched for issuing SCSI commands to different type of tape drives
-- `src/kmi`:               Encryption key management plugins for libltfs
-- `utils/mkltfs.c`:        Formatting tool for the LTFS like `mkfs`
-- `utils/ltfsck.c`:        Recovery tool for the LTFS like `fsck`
-- `utils/ltfsindextool.c`: Tools for capturing indexes on the tape
-- `./main.c`:              Main function for `ltfs` command, it is the file system command for FUSE
+- `src/libltfs`:           Source files for libaltfs, the library that handles logical layer of the LTFS format
+- `src/iosched`:           I/O scheduler plugins for libaltfs. The libaltfs makes indirect calls to an ioschead plugin loaded when a command is launched for creating 512KB block for tape R/W
+- `src/tape_drivers`:      Tape drive handling plugins for libaltfs. The libaltfs makes indirect calls to an tape drive plugin loaded when a command is launched for issuing SCSI commands to different type of tape drives
+- `src/kmi`:               Encryption key management plugins for libaltfs
+- `utils/mkltfs.c`:        Formatting tool for the LTFS like `mkfs` (installed as `mkaltfs`)
+- `utils/ltfsck.c`:        Recovery tool for the LTFS like `fsck` (installed as `altfsck`)
+- `utils/ltfsindextool.c`: Tools for capturing indexes on the tape (installed as `altfsindextool`)
+- `./main.c`:              Main function for `altfs` command, it is the file system command for FUSE
 - `./ltfs_fuse.*`:         FUSE - LTFS file operation glue layer
 - `./ltfs_copyright.h`:    Copyright definition for injecting to compiled binaries
 
@@ -148,19 +148,19 @@ make distclean
 
 ```bash
 # List available tape drives
-ltfs -o device_list
+altfs -o device_list
 
 # Format a tape
-mkltfs -d <device_name>
+mkaltfs -d <device_name>
 
 # Mount a tape
-ltfs -o devname=<device_name> <mount_point>
+altfs -o devname=<device_name> <mount_point>
 
 # Unmount
 umount <mount_point>
 
 # Check/repair LTFS volume
-ltfsck -d <device_name>
+altfsck -d <device_name>
 ```
 
 ### Debugging

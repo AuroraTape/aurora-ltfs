@@ -39,12 +39,12 @@ BASENAMES = libtape-itdtimg
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_itdtimg_la_SOURCES = itdtimg_tc.c
-libtape_itdtimg_la_DEPENDENCIES = ../../../../messages/libtape_generic_itdtimg_dat.a ../../../libltfs/libltfs.la
-libtape_itdtimg_la_LIBADD = ../../../libltfs/libltfs.la
+libtape_itdtimg_la_DEPENDENCIES = ../../../../messages/libtape_generic_itdtimg_dat.a ../../../libltfs/libaltfs.la
+libtape_itdtimg_la_LIBADD = ../../../libltfs/libaltfs.la
 libtape_itdtimg_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_generic_itdtimg_dat.a
 libtape_itdtimg_la_CPPFLAGS = @AM_CPPFLAGS@ -I ../../..
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(libdir)/ltfs
+	mkdir -p $(DESTDIR)$(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(DESTDIR)$(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/altfs; done

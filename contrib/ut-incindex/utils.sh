@@ -3,8 +3,8 @@
 PLATFORM=`uname`
 ECHO='/bin/echo'
 
-if [ "x${LTFS_BIN_PATH}" == 'x' ]; then
-    LTFS_BIN_PATH='/usr/local/bin'
+if [ "x${ALTFS_BIN_PATH}" == 'x' ]; then
+    ALTFS_BIN_PATH='/usr/local/bin'
 fi
 
 AddXattr()
@@ -110,7 +110,7 @@ FullSync()
 FormatLTFS()
 {
     if [ "x$1" == "x" ]; then
-        TAPE_PATH='/tmp/ltfstape'
+        TAPE_PATH='/tmp/altfstape'
     else
         TAPE_PATH=$1
     fi
@@ -125,7 +125,7 @@ FormatLTFS()
     fi
 
     ${ECHO} "Formatting tape directory with the file backend on ${TAPE_PATH} ... "
-    ${LTFS_BIN_PATH}/mkltfs -f -e file -d ${TAPE_PATH}
+    ${ALTFS_BIN_PATH}/mkaltfs -f -e file -d ${TAPE_PATH}
     if [ $? != 0 ]; then
         ${ECHO} "Failed to format a tape path: ${TAPE_PATH}"
         return 1
@@ -144,7 +144,7 @@ LaunchLTFS()
     fi
 
     if [ "x$2" == "x" ]; then
-        TAPE_PATH='/tmp/ltfstape'
+        TAPE_PATH='/tmp/altfstape'
     else
         TAPE_PATH=$2
     fi
@@ -167,7 +167,7 @@ LaunchLTFS()
         fi
 
         ${ECHO} "Formatting tape directory with the file backend"
-        ${LTFS_BIN_PATH}/mkltfs -f -e file -d ${TAPE_PATH}
+        ${ALTFS_BIN_PATH}/mkaltfs -f -e file -d ${TAPE_PATH}
         if [ $? != 0 ]; then
             ${ECHO} "Failed to format a tape path: ${TAPE_PATH}"
             return 1
@@ -175,7 +175,7 @@ LaunchLTFS()
     fi
 
     ${ECHO} "Launching LTFS with the file backend"
-    ${LTFS_BIN_PATH}/ltfs -o tape_backend=file -o sync_type=unmount -o devname=${TAPE_PATH} ${MOUNTPOINT}
+    ${ALTFS_BIN_PATH}/altfs -o tape_backend=file -o sync_type=unmount -o devname=${TAPE_PATH} ${MOUNTPOINT}
     if [ $? != 0 ]; then
         ${ECHO} "Failed to launch LTFS on ${MOUNTPOINT}"
         return 1

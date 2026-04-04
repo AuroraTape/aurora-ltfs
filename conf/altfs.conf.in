@@ -3,27 +3,27 @@
 # schedulers or to change default settings.
 #
 # To make configuration changes that will persist across software
-# updates, edit ltfs.conf.local instead of this file.
+# updates, edit altfs.conf.local instead of this file.
 
 # Tape device plugins
 # Syntax: plugin tape PLUGIN-NAME PLUGIN-PATH
 # The PLUGIN-PATH may contain spaces.
 
 __PLATFORM_DRIVERS__
-plugin tape file __LIBDIR__/ltfs/libtape-file.so
-plugin tape itdtimg __LIBDIR__/ltfs/libtape-itdtimg.so
+plugin tape file __LIBDIR__/altfs/libtape-file.so
+plugin tape itdtimg __LIBDIR__/altfs/libtape-itdtimg.so
 
 # I/O scheduler plugins
 # Syntax: plugin iosched PLUGIN-NAME PLUGIN-PATH
 # The PLUGIN-PATH may contain spaces.
-plugin iosched unified __LIBDIR__/ltfs/libiosched-unified.so
-plugin iosched fcfs __LIBDIR__/ltfs/libiosched-fcfs.so
+plugin iosched unified __LIBDIR__/altfs/libiosched-unified.so
+plugin iosched fcfs __LIBDIR__/altfs/libiosched-fcfs.so
 
 # Key Manager Interface plugins
 # Syntax: plugin kmi PLUGIN-NAME PLUGIN-PATH
 # The PLUGIN-PATH may contain spaces.
-plugin kmi flatfile __LIBDIR__/ltfs/libkmi-flatfile.so
-plugin kmi simple __LIBDIR__/ltfs/libkmi-simple.so
+plugin kmi flatfile __LIBDIR__/altfs/libkmi-flatfile.so
+plugin kmi simple __LIBDIR__/altfs/libkmi-simple.so
 
 # Default plugins
 # Syntax: default PLUGIN-TYPE PLUGIN-NAME
@@ -39,4 +39,4 @@ default kmi __DEFAULT_KMI__
 
 # Include the local settings file. That file is not overwritten when a newer
 # version of LTFS is installed.
-include __CONFDIR__/ltfs.conf.local
+include __CONFDIR__/altfs.conf.local

@@ -36,7 +36,7 @@
 dnl
 dnl LTFS configure.ac.
 dnl
-AC_INIT([LTFS], [2.5.0.0 (Prelim)], IBM corporation.)
+AC_INIT([Aurora LTFS], [2.5.0.0 (Prelim)], [])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])
@@ -46,8 +46,6 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
-AC_PROG_CC_C99
-AM_PROG_CC_C_O
 AM_PROG_AR
 LT_INIT
 
@@ -478,7 +476,7 @@ dnl
 dnl Update flags
 dnl Sets CFLAGS to force optimization and debugging options, which isn't quite kosher
 dnl
-AM_CPPFLAGS="-D_GNU_SOURCE -I\$(top_srcdir)/src -DLTFS_CONFIG_FILE='\"${sysconfdir}/ltfs.conf\"' -DLTFS_BASE_DIR='\"${prefix}\"'"
+AM_CPPFLAGS="-D_GNU_SOURCE -I\$(top_srcdir)/src -DLTFS_CONFIG_FILE='\"${sysconfdir}/altfs.conf\"' -DLTFS_BASE_DIR='\"${prefix}\"'"
 AM_CFLAGS="-Wall -Wsign-compare -fsigned-char ${FUSE_MODULE_CFLAGS} ${UUID_MODULE_CFLAGS} ${LIBXML2_MODULE_CFLAGS} ${ICU_MODULE_CFLAGS} ${SNMP_ENABLE} ${SNMP_MODULE_CFLAGS}"
 
 if test "x$use_fast" = "xyes"
@@ -651,7 +649,7 @@ AC_CONFIG_FILES([
     src/iosched/Makefile
     src/kmi/Makefile
     src/utils/Makefile
-    ltfs.pc:ltfs.pc.in
+    altfs.pc:altfs.pc.in
 ])
 
 AC_OUTPUT

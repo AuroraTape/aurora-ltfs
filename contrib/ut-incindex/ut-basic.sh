@@ -3,7 +3,7 @@
 source ./utils.sh
 
 MOUNTPOINT='/tmp/mnt'
-TAPE_PATH='/tmp/ltfstape'
+TAPE_PATH='/tmp/altfstape'
 
 if [ $# == 1 ]; then
     MOUNTPOINT=$1

@@ -34,13 +34,13 @@
 #
 
 if OSS
-bin_PROGRAMS = ltfs
+bin_PROGRAMS = altfs
 
-ltfs_SOURCES = main.c ltfs_fuse.c
-ltfs_DEPENDENCIES = libltfs/libltfs.la ../messages/libbin_ltfs_dat.a
-ltfs_CPPFLAGS = @AM_CPPFLAGS@ -I ../ltfs-sde/src -fPIC
-ltfs_LDADD = libltfs/libltfs.la
-ltfs_LDFLAGS = @AM_LDFLAGS@ ../messages/libbin_ltfs_dat.a
+altfs_SOURCES = main.c ltfs_fuse.c
+altfs_DEPENDENCIES = libltfs/libaltfs.la ../messages/libbin_altfs_dat.a
+altfs_CPPFLAGS = @AM_CPPFLAGS@ -I ../ltfs-sde/src -fPIC
+altfs_LDADD = libltfs/libaltfs.la
+altfs_LDFLAGS = @AM_LDFLAGS@ ../messages/libbin_altfs_dat.a
 endif
 
 PLAT_DRV =

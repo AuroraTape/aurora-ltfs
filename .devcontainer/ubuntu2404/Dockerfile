@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     libtool \
     make \
     gcc \
+    clang \
+    clangd \
     pkg-config \
     libfuse-dev \
     fuse \
@@ -25,7 +27,8 @@ RUN apt-get install -y \
     valgrind \
     git \
     sudo \
-    attr
+    attr \
+    bear
 
 # Clean up apt cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

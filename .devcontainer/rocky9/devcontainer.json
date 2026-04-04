@@ -1,5 +1,5 @@
 {
-    "name": "LTFS Development (Rocky Linux 9)",
+    "name": "Aurora LTFS Development (Rocky Linux 9)",
     "build": {
         "dockerfile": "Dockerfile",
         "context": "../.."
@@ -7,12 +7,14 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-vscode.cpptools",
-                "ms-vscode.cmake-tools",
+                "llvm-vs-code-extensions.vscode-clangd",
                 "ms-vscode.makefile-tools"
             ]
         }
     },
-    "postCreateCommand": "./autogen.sh && ./configure --prefix=/workspaces/ltfs-oss",
+    "mounts": [
+        "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind"
+    ],    
+    "postCreateCommand": "./autogen.sh && ./configure --prefix=/workspaces/altfs && bear -- make -j$(nproc)",
     "remoteUser": "vscode"
 }

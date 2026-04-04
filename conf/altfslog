@@ -1,4 +1,4 @@
-/var/log/ltfs.log {
+/var/log/altfs.log {
 	size 1M
 	rotate 4
 	missingok

@@ -8,17 +8,17 @@
 # Prerequisites:
 #   - FUSE available (/dev/fuse)
 #   - `attr` package installed  (sudo apt-get install attr)
-#   - Project installed (make install) to /workspaces/ltfs-oss
+#   - Project installed (make install) to /workspaces/altfs
 #
 # Procedure:
 #   Phase 1: Create ground truth
-#     1. Format virtual tape with mkltfs
+#     1. Format virtual tape with mkaltfs
 #     2. Mount
 #     3. Create initial data (L01-L03, D03 setup)
 #     4. Write full index  (ltfs.vendor.IBM.FullSync)
 #     5. Perform incremental operations (L02 modify, L03 delete, L06+D02 create, D03 delete)
 #     6. Write incremental index  (ltfs.vendor.IBM.IncrementalSync)
-#     7. Snapshot tape dir   -> crash-state tape (before unmount full index)
+#     7. Snapshot tape dir   -> crash-state tape (input to altfsck -x)
 #     8. Unmount             -> final full index written to DP and IP
 #
 #   Phase 2: Extract artifacts
@@ -41,10 +41,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TAPE_DIR="${SCRIPT_DIR}/tape"
 CRASHED_DIR="${SCRIPT_DIR}/tape-crashed"
 EXPECTED_DIR="${SCRIPT_DIR}/expected"
-MNT_DIR="/tmp/ltfs-mnt-scenario1"
+MNT_DIR="/tmp/altfs-mnt-scenario1"
 
-# Use installed binaries and libraries under /workspaces/ltfs-oss
-INSTALL_PREFIX="/workspaces/ltfs-oss"
+# Use installed binaries and libraries under /workspaces/altfs
+INSTALL_PREFIX="/workspaces/altfs"
 export PATH="${INSTALL_PREFIX}/bin:${PATH}"
 export LD_LIBRARY_PATH="${INSTALL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 
@@ -56,8 +56,8 @@ log()  { echo "[scenario1/gen] $*"; }
 die()  { echo "[scenario1/gen] ERROR: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1  (hint: $2)"; }
 
-need mkltfs     "run 'make install' in the repo root"
-need ltfs       "run 'make install' in the repo root"
+need mkaltfs    "run 'make install' in the repo root"
+need altfs      "run 'make install' in the repo root"
 need attr       "sudo apt-get install attr"
 need fusermount "sudo apt-get install fuse"
 
@@ -83,8 +83,8 @@ do_umount() {
     fusermount -u "${MNT_DIR}" 2>/dev/null \
         || sudo umount "${MNT_DIR}" \
         || die "umount failed"
-    if [ -n "${LTFS_PID:-}" ]; then
-        wait "${LTFS_PID}" 2>/dev/null || true
+    if [ -n "${ALTFS_PID:-}" ]; then
+        wait "${ALTFS_PID}" 2>/dev/null || true
     fi
 }
 
@@ -102,21 +102,21 @@ mkdir -p "${MNT_DIR}"
 # ---------------------------------------------------------------------------
 log "Formatting virtual tape..."
 mkdir -p "${TAPE_DIR}"
-mkltfs -e file -d "${TAPE_DIR}" -s "SCN001" -n "Scenario1" -f \
-    || die "mkltfs failed"
+mkaltfs -e file -d "${TAPE_DIR}" -s "SCN001" -n "Scenario1" -f \
+    || die "mkaltfs failed"
 
 # ---------------------------------------------------------------------------
 # Phase 1-2: Mount (sync_type=unmount: explicit sync via xattr, final sync on unmount)
 # ---------------------------------------------------------------------------
 log "Mounting tape at ${MNT_DIR}..."
-ltfs -o tape_backend=file \
+altfs -o tape_backend=file \
      -o devname="${TAPE_DIR}" \
      -o sync_type=unmount \
      "${MNT_DIR}" \
-    || die "ltfs mount failed"
+    || die "altfs mount failed"
 
-LTFS_PID=$(pgrep -n -f "devname=${TAPE_DIR}" 2>/dev/null || true)
-log "ltfs PID: ${LTFS_PID:-unknown}"
+AALTFS_PID=$(pgrep -n -f "devname=${TAPE_DIR}" 2>/dev/null || true)
+log "altfs PID: ${AALTFS_PID:-unknown}"
 
 # ---------------------------------------------------------------------------
 # Phase 1-3: Create initial data

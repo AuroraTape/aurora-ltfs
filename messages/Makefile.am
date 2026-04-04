@@ -47,10 +47,10 @@
 ######################################################################################
 
 RESOURCES = \
-	libbin_mkltfs_dat.a \
-	libbin_ltfsck_dat.a \
-	libbin_ltfsindextool_dat.a \
-	libbin_ltfs_dat.a \
+	libbin_mkaltfs_dat.a \
+	libbin_altfsck_dat.a \
+	libbin_altfsindextool_dat.a \
+	libbin_altfs_dat.a \
 	libkmi_simple_dat.a \
 	libkmi_flatfile_dat.a \
 	libtape_generic_file_dat.a \
@@ -61,7 +61,7 @@ RESOURCES = \
 	libtape_freebsd_cam_dat.a \
 	libiosched_fcfs_dat.a \
 	libiosched_unified_dat.a \
-	liblibltfs_dat.a \
+	liblibaltfs_dat.a \
 	libtape_common_dat.a \
 	libinternal_error_dat.a
 

@@ -39,8 +39,8 @@ BASENAMES = libtape-file
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_file_la_SOURCES = filedebug_tc.c filedebug_conf_tc.c ibm_tape.c
-libtape_file_la_DEPENDENCIES = ../../../../messages/libtape_generic_file_dat.a ../../../libltfs/libltfs.la
-libtape_file_la_LIBADD  =../../../libltfs/libltfs.la
+libtape_file_la_DEPENDENCIES = ../../../../messages/libtape_generic_file_dat.a ../../../libltfs/libaltfs.la
+libtape_file_la_LIBADD  =../../../libltfs/libaltfs.la
 libtape_file_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_generic_file_dat.a
 libtape_file_la_CPPFLAGS = @AM_CPPFLAGS@ -I ../../..
 
@@ -51,6 +51,6 @@ clean-local:
 	rm -f ibm_tape.c
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(libdir)/ltfs
+	mkdir -p $(DESTDIR)$(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(DESTDIR)$(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/altfs; done

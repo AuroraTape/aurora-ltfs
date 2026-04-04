@@ -15,6 +15,8 @@ RUN dnf install -y \
     libtool \
     make \
     gcc \
+    clang \
+    clang-tools-extra \
     pkg-config \
     fuse-devel \
     fuse \
@@ -30,7 +32,8 @@ RUN dnf install -y \
     gdb \
     valgrind \
     git \
-    sudo
+    sudo \
+    bear
 
 # Install GitHub CLI
 RUN dnf install -y 'dnf-command(config-manager)' && \

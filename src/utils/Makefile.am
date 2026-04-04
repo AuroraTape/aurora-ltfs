@@ -33,26 +33,26 @@
 #  OO_Copyright_END
 #
 
-bin_PROGRAMS = mkltfs ltfsck ltfsindextool
+bin_PROGRAMS = mkaltfs altfsck altfsindextool
 
-nobase_bin_SCRIPTS = ltfs_ordered_copy
+nobase_bin_SCRIPTS = altfs_ordered_copy
 
 noinst_HEADERS =
 
-mkltfs_SOURCES = mkltfs.c
-mkltfs_DEPENDENCIES = ../libltfs/libltfs.la ../../messages/libbin_mkltfs_dat.a
-mkltfs_LDADD = ../libltfs/libltfs.la
-mkltfs_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_mkltfs_dat.a
-mkltfs_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
+mkaltfs_SOURCES = mkltfs.c
+mkaltfs_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_mkaltfs_dat.a
+mkaltfs_LDADD = ../libltfs/libaltfs.la
+mkaltfs_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_mkaltfs_dat.a
+mkaltfs_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
 
-ltfsck_SOURCES = ltfsck.c
-ltfsck_DEPENDENCIES = ../libltfs/libltfs.la ../../messages/libbin_ltfsck_dat.a
-ltfsck_LDADD = ../libltfs/libltfs.la
-ltfsck_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_ltfsck_dat.a
-ltfsck_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
+altfsck_SOURCES = ltfsck.c
+altfsck_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_altfsck_dat.a
+altfsck_LDADD = ../libltfs/libaltfs.la
+altfsck_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_altfsck_dat.a
+altfsck_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
 
-ltfsindextool_SOURCES = ltfsindextool.c
-ltfsindextool_DEPENDENCIES = ../libltfs/libltfs.la ../../messages/libbin_ltfsindextool_dat.a ../../messages/libbin_mkltfs_dat.a
-ltfsindextool_LDADD = ../libltfs/libltfs.la
-ltfsindextool_LDFLAGS = @AM_LDFLAGS@ -L../../messages -lbin_ltfsindextool_dat
-ltfsindextool_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
+altfsindextool_SOURCES = ltfsindextool.c
+altfsindextool_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_altfsindextool_dat.a ../../messages/libbin_mkaltfs_dat.a
+altfsindextool_LDADD = ../libltfs/libaltfs.la
+altfsindextool_LDFLAGS = @AM_LDFLAGS@ -L../../messages -lbin_altfsindextool_dat
+altfsindextool_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC

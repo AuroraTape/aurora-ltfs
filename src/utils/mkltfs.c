@@ -82,9 +82,9 @@ volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGH
 #define DATA_PART_NUM 1
 
 #ifdef mingw_PLATFORM
-char *bin_mkltfs_dat;
+char *bin_mkaltfs_dat;
 #else
-extern char bin_mkltfs_dat[];
+extern char bin_mkaltfs_dat[];
 #endif
 
 struct other_format_opts {
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Register messages with libltfs */
-	ret = ltfsprintf_load_plugin("bin_mkltfs", bin_mkltfs_dat, &message_handle);
+	ret = ltfsprintf_load_plugin("bin_mkaltfs", bin_mkaltfs_dat, &message_handle);
 	if (ret < 0) {
 		ltfsmsg(LTFS_ERR, 10012E, ret);
 		return MKLTFS_OPERATIONAL_ERROR;

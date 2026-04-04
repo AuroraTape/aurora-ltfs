@@ -71,9 +71,9 @@ volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGH
 #endif
 
 #ifdef mingw_PLATFORM
-char *bin_ltfsindextool_dat;
+char *bin_altfsindextool_dat;
 #else
-extern char bin_ltfsindextool_dat[];
+extern char bin_altfsindextool_dat[];
 #endif
 
 typedef enum {
@@ -578,7 +578,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Register messages with libltfs */
-	ret = ltfsprintf_load_plugin("bin_ltfsindextool", bin_ltfsindextool_dat, &message_handle);
+	ret = ltfsprintf_load_plugin("bin_altfsindextool", bin_altfsindextool_dat, &message_handle);
 	if (ret < 0) {
 		ltfsmsg(LTFS_ERR, 10012E, ret);
 		return INDEXTOOL_OPERATIONAL_ERROR;

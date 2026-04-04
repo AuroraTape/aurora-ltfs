@@ -39,8 +39,8 @@ BASENAMES = libtape-scsipi-ibmtape
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_scsipi_ibmtape_la_SOURCES = scsipi_scsi_tape.c scsipi_ibmtape.c vendor_compat.c ibm_tape.c hp_tape.c quantum_tape.c
-libtape_scsipi_ibmtape_la_DEPENDENCIES = ../../../../messages/libtape_linux_sg_ibmtape_dat.a ../../../libltfs/libltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
-libtape_scsipi_ibmtape_la_LIBADD = ../../../libltfs/libltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
+libtape_scsipi_ibmtape_la_DEPENDENCIES = ../../../../messages/libtape_linux_sg_ibmtape_dat.a ../../../libltfs/libaltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
+libtape_scsipi_ibmtape_la_LIBADD = ../../../libltfs/libaltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
 libtape_scsipi_ibmtape_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_linux_sg_ibmtape_dat.a
 libtape_scsipi_ibmtape_la_CPPFLAGS = @AM_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ -I ../../.. -I ../..
 
@@ -66,6 +66,6 @@ libtape_scsipi_ibmtape_la-crc32c_crc.lo: ../../crc32c_crc.c
 	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtape_scsipi_ibmtape_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) $(CRC_OPTIMIZE) -MT libtape_scsipi_ibmtape_la-crc32c_crc.lo -MD -MP -c -o libtape_scsipi_ibmtape_la-crc32c_crc.lo ../../crc32c_crc.c
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(libdir)/ltfs
+	mkdir -p $(DESTDIR)$(libdir)/altfs
 	for f in $(lib_LTLIBRARIES); do rm -f $(DESTDIR)$(libdir)/$$f; done
-	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/ltfs; done
+	for f in $(BASENAMES); do mv $(DESTDIR)$(libdir)/$$f* $(DESTDIR)$(libdir)/altfs; done
