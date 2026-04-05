@@ -21,7 +21,7 @@ A clear and concise description of what you expected to happen.
  - Architecture: [e.g. x86_64, arm64, ppc64le]
  - Aurora LTFS version or commit hash:
  - Tape drive model: [e.g. IBM LTO9, HP LTO8]
- - Tape driver: [e.g. sg, lin_tape, iokit]
+ - Tape driver: [e.g. sg, iokit]
 
 **Log output**
 If applicable, attach relevant log output (e.g. syslog, ltfs debug log).

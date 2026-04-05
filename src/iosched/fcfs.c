@@ -49,11 +49,7 @@
 
 #include "libltfs/ltfs.h"
 #include "libltfs/ltfs_fsops_raw.h"
-#include "ltfs_copyright.h"
 #include "libltfs/iosched_ops.h"
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n" \
-	LTFS_COPYRIGHT_3"\n"LTFS_COPYRIGHT_4"\n"LTFS_COPYRIGHT_5"\n";
 
 struct fcfs_data {
 	ltfs_mutex_t sched_lock;    /**< Serializes read and write access */

@@ -25,7 +25,8 @@ RUN dnf install -y \
     icu \
     libuuid-devel \
     net-snmp-devel \
-    diffutils
+    diffutils \
+    docbook-utils
 
 # Install development and debugging tools
 RUN dnf install -y \

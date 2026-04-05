@@ -61,7 +61,6 @@
 
 #include "ltfs_fuse.h"
 #include "libltfs/ltfs.h"
-#include "ltfs_copyright.h"
 #include "libltfs/pathname.h"
 #include "libltfs/plugin.h"
 #include "libltfs/dcache.h"
@@ -69,8 +68,6 @@
 #include "libltfs/ltfssnmp.h"
 #include "libltfs/kmi.h"
 #include "libltfs/tape.h"
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n";
 
 /* Defined in src/ltfs.c */
 extern struct fuse_operations ltfs_ops;

@@ -33,16 +33,6 @@
 #  OO_Copyright_END
 #
 
-if OSS
-bin_PROGRAMS = altfs
-
-altfs_SOURCES = main.c ltfs_fuse.c
-altfs_DEPENDENCIES = libltfs/libaltfs.la ../messages/libbin_altfs_dat.a
-altfs_CPPFLAGS = @AM_CPPFLAGS@ -I ../ltfs-sde/src -fPIC
-altfs_LDADD = libltfs/libaltfs.la
-altfs_LDFLAGS = @AM_LDFLAGS@ ../messages/libbin_altfs_dat.a
-endif
-
 PLAT_DRV =
 
 if PLATFORM_LINUX
@@ -61,19 +51,21 @@ if PLATFORM_NETBSD
 PLAT_DRV += tape_drivers/netbsd/scsipi-ibmtape
 endif
 
-if ENABLE_LIN_TAPE
-PLAT_DRV += tape_drivers/linux/lin_tape
-endif
-
 GEN_DRV = tape_drivers/generic/file
-SUB = iosched libltfs utils
+SUB = iosched libltfs
 
 if OSS
 GEN_DRV += tape_drivers/generic/itdtimg
 SUB += kmi
 endif
 
-SUBDIRS = libltfs $(GEN_DRV) $(PLAT_DRV) $(SUB) iosched utils
+CMD = cmd/mkaltfs cmd/altfsck cmd/altfsindextool cmd/altfs_ordered_copy
+
+if OSS
+CMD += cmd/altfs
+endif
+
+SUBDIRS = libltfs $(GEN_DRV) $(PLAT_DRV) $(SUB) $(CMD)
 
 noinst_HEADERS = \
 	libltfs/base64.h \

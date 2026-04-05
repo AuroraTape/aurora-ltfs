@@ -1,5 +1,5 @@
 <!doctype reference PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-          <!ENTITY dhcommand "ltfsindextool">
+          <!ENTITY dhcommand "altfsindextool">
           <!ENTITY gnu       "<acronym>GNU</acronym>">
           ]>
 
@@ -8,9 +8,7 @@
 
   <refentry>
     <refmeta>
-      <refentrytitle>
-        <command>&dhcommand;</command>
-      </refentrytitle>
+      <refentrytitle><command>&dhcommand;</command></refentrytitle>
       <manvolnum>8</manvolnum>
       <refmiscinfo>LTFS</refmiscinfo>
     </refmeta>
@@ -142,16 +140,16 @@
       <example>
         <title>USAGE EXAMPLE</title>
         <programlisting>
-          ltfsindextool -d /dev/sg10
-          ltfsindextool -d /dev/sg10 -p 1 --output-dir=/foo
-          ltfsindextool -d ltfs-index-1-35.xml
+          altfsindextool -d /dev/sg10
+          altfsindextool -d /dev/sg10 -p 1 --output-dir=/foo
+          altfsindextool -d ltfs-index-1-35.xml
         </programlisting>
       </example>
     </refsect1>
 
     <refsect1>
       <title>SEE ALSO</title>
-      <para>ltfs(8), mkltfs(8), ltfsck(8), tape-backend(4), kmi-backend(4), ltfs.conf(5).</para>
+      <para>altfs(8), mkaltfs(8), altfsck(8), tape-backend(4), kmi-backend(4), altfs.conf(5).</para>
     </refsect1>
 
   </refentry>

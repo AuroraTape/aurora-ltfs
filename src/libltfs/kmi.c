@@ -47,7 +47,9 @@
 *************************************************************************************
 */
 
-#include "ltfs_fuse.h"
+#include "ltfs_fuse_version.h"
+#include <fuse.h>
+#include "ltfs.h"
 #include "kmi.h"
 
 struct kmi_priv {

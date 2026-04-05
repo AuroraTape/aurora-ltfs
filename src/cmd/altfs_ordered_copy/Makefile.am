@@ -1,9 +1,9 @@
 #
 #
-#  OO_Copyright_BEGIN
+#  AA_Copyright_BEGIN
 #
 #
-#  Copyright 2010, 2020 IBM Corp. All rights reserved.
+#  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -30,29 +30,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 #
-#  OO_Copyright_END
+#  AA_Copyright_END
 #
 
-bin_PROGRAMS = mkaltfs altfsck altfsindextool
-
-nobase_bin_SCRIPTS = altfs_ordered_copy
-
-noinst_HEADERS =
-
-mkaltfs_SOURCES = mkltfs.c
-mkaltfs_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_mkaltfs_dat.a
-mkaltfs_LDADD = ../libltfs/libaltfs.la
-mkaltfs_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_mkaltfs_dat.a
-mkaltfs_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
-
-altfsck_SOURCES = ltfsck.c
-altfsck_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_altfsck_dat.a
-altfsck_LDADD = ../libltfs/libaltfs.la
-altfsck_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_altfsck_dat.a
-altfsck_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
-
-altfsindextool_SOURCES = ltfsindextool.c
-altfsindextool_DEPENDENCIES = ../libltfs/libaltfs.la ../../messages/libbin_altfsindextool_dat.a ../../messages/libbin_mkaltfs_dat.a
-altfsindextool_LDADD = ../libltfs/libaltfs.la
-altfsindextool_LDFLAGS = @AM_LDFLAGS@ -L../../messages -lbin_altfsindextool_dat
-altfsindextool_CPPFLAGS = @AM_CPPFLAGS@ -I .. -fPIC
+bin_SCRIPTS = altfs_ordered_copy

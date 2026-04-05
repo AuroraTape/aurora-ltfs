@@ -9,7 +9,7 @@
 # 17089I # Distribution
 # 14063I # Sync type
 # 17085I # Plugin: Loading message
-# 12165I # lin_tape version
+# 12165I # tape driver version
 # 12118I # Changer or Drive identification
 # 12162I # Vendor ID
 # 12159I # Firmware revision

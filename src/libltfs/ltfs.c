@@ -61,7 +61,6 @@
 #include "ltfs.h"
 #include "ltfs_internal.h"
 #include "libltfs/ltfslogging.h"
-#include "ltfs_copyright.h"
 #include "tape.h"
 #include "tape_ops.h"
 #include "pathname.h"
@@ -81,9 +80,6 @@
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n" \
-	LTFS_COPYRIGHT_3"\n"LTFS_COPYRIGHT_4"\n"LTFS_COPYRIGHT_5"\n";
 
 /** \file
  * The typical use case for this library is as follows.
