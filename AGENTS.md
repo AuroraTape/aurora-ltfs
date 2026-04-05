@@ -79,7 +79,6 @@ make distclean
 2. **Tape Drivers** (`src/tape_drivers/`)
    - Platform-specific tape drive implementations
    - `linux/sg/` - Linux SCSI generic driver
-   - `linux/lin_tape/` - IBM lin_tape driver
    - `osx/iokit/` - macOS IOKit driver
    - `freebsd/cam/` - FreeBSD CAM driver
    - `generic/file/` - Debug purpose tape emulation on a directory (for creating situations hard to recreate)
@@ -92,20 +91,15 @@ make distclean
    - `simple.c` - Simple key management interface, receive keys from options
    - `flatfile.c` - Flat file-based key storage, receive keys specified unencrypted file
 
-5. **Utilities** (`src/utils/`)
-   - `mkltfs.c` - Format tapes for LTFS like `mkfs` (installed as `mkaltfs`)
-   - `ltfsck.c` - Check and repair LTFS volumes like `fsck` (installed as `altfsck`)
-   - `ltfsindextool.c` - Manipulate LTFS indexes outside of LTFS filesystem implementation (installed as `altfsindextool`)
-   - `altfs_ordered_copy` - Python script for optimized file copying
+5. **Commands** (`src/cmd/`)
+   - `altfs/` - FUSE filesystem daemon (entry point and FUSE-LTFS bridge)
+   - `mkaltfs/` - Format tapes for LTFS like `mkfs`
+   - `altfsck/` - Check and repair LTFS volumes like `fsck`
+   - `altfsindextool/` - Manipulate LTFS indexes outside of LTFS filesystem implementation
+   - `altfs_ordered_copy/` - Python script for optimized file copying
 
-6. **Entry point of `altfs` process** (`src/main.c`)
-   - This is the start point of LTFS filesystem process
-
-7. **ltfs internal filesystem operations** (`src/libltfs/ltfs_fsops.c/h`)
+6. **ltfs internal filesystem operations** (`src/libltfs/ltfs_fsops.c/h`)
    - This is the ltfs own filesystem operations implementation
-
-8. **FUSE-LTFS bridge** (`ltfs_fuse.c`)
-   - This layer converts request from FUSE to the ltfs own filesystem operations
 
 ### Key Design Patterns
 
@@ -135,12 +129,11 @@ make distclean
 - `src/iosched`:           I/O scheduler plugins for libaltfs. The libaltfs makes indirect calls to an ioschead plugin loaded when a command is launched for creating 512KB block for tape R/W
 - `src/tape_drivers`:      Tape drive handling plugins for libaltfs. The libaltfs makes indirect calls to an tape drive plugin loaded when a command is launched for issuing SCSI commands to different type of tape drives
 - `src/kmi`:               Encryption key management plugins for libaltfs
-- `utils/mkltfs.c`:        Formatting tool for the LTFS like `mkfs` (installed as `mkaltfs`)
-- `utils/ltfsck.c`:        Recovery tool for the LTFS like `fsck` (installed as `altfsck`)
-- `utils/ltfsindextool.c`: Tools for capturing indexes on the tape (installed as `altfsindextool`)
-- `./main.c`:              Main function for `altfs` command, it is the file system command for FUSE
-- `./ltfs_fuse.*`:         FUSE - LTFS file operation glue layer
-- `./ltfs_copyright.h`:    Copyright definition for injecting to compiled binaries
+- `src/cmd/altfs`:         FUSE filesystem daemon (entry point and FUSE-LTFS bridge)
+- `src/cmd/mkaltfs`:       Formatting tool for the LTFS like `mkfs`
+- `src/cmd/altfsck`:       Recovery tool for the LTFS like `fsck`
+- `src/cmd/altfsindextool`: Tools for capturing indexes on the tape
+- `src/cmd/altfs_ordered_copy`: Python script for optimized file copying
 
 ## Common Development Tasks
 
@@ -171,7 +164,7 @@ altfsck -d <device_name>
 
 ## Platform-Specific Notes
 
-- **Linux**: Supports both sg (SCSI generic) and lin_tape drivers
+- **Linux**: Uses sg (SCSI generic) driver
 - **macOS**: Requires disabling SNMP support (`--disable-snmp`)
 - **FreeBSD/NetBSD**: Uses platform-specific SCSI interfaces
 

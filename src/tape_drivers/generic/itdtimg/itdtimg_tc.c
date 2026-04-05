@@ -71,15 +71,11 @@
 #include "libltfs/ltfs_fuse_version.h"
 #include <fuse.h>
 
-#include "ltfs_copyright.h"
 #include "libltfs/ltfslogging.h"
 #include "libltfs/ltfs.h"
 #include "libltfs/ltfs_endian.h"
 #include "libltfs/tape_ops.h"
 #include "libltfs/ltfs_error.h"
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n" \
-	LTFS_COPYRIGHT_3"\n"LTFS_COPYRIGHT_4"\n"LTFS_COPYRIGHT_5"\n";
 
 /* Default directory where the emulated tape contents go to */
 const char *itdtimage_default_device = "tape.img";

@@ -18,10 +18,6 @@ if PLATFORM_NETBSD
 PLAT_OPT += plugin tape scsipi-ibmtape __LIBDIR__/altfs/libtape-scsipi-ibmtape.so
 endif
 
-if ENABLE_LIN_TAPE
-PLAT_OPT += \\nplugin tape lin_tape __LIBDIR__/altfs/libtape-lin_tape.so
-endif
-
 altfs.conf: altfs.conf.in
 	${SED} -e "s!__PLATFORM_DRIVERS__!${PLAT_OPT}!" altfs.conf.in >altfs.conf.in1
 	${SED} -e "s!__LIBDIR__!@libdir@!" altfs.conf.in1 >altfs.conf

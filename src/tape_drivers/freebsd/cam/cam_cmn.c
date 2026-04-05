@@ -59,12 +59,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <cam/scsi/scsi_message.h>
-#include "ltfs_copyright.h"
 #include "vendor_compat.h"
 #include "libltfs/ltfslogging.h"
 #include "cam_cmn.h"
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n";
 
 extern struct error_table *standard_table;
 extern struct error_table *vendor_table;

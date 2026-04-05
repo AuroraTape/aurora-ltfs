@@ -1,5 +1,5 @@
 <!doctype reference PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-          <!ENTITY dhcommand "ltfs_ordered_copy">
+          <!ENTITY dhcommand "altfs_ordered_copy">
           <!ENTITY gnu       "<acronym>GNU</acronym>">
           ]>
 
@@ -8,9 +8,7 @@
 
   <refentry>
     <refmeta>
-      <refentrytitle>
-        <command>&dhcommand;</command>
-      </refentrytitle>
+      <refentrytitle><command>&dhcommand;</command></refentrytitle>
       <manvolnum>1</manvolnum>
       <refmiscinfo>LTFS</refmiscinfo>
     </refmeta>
@@ -117,26 +115,26 @@
         <title>SIMPLE USAGE</title>
 
         <para>Copy file /foo/aaa to file /foo/bbb</para>
-        <blockquote><para>$ ltfs_ordered_copy /foo/aaa /foo/bbb</para></blockquote>
+        <blockquote><para>$ altfs_ordered_copy /foo/aaa /foo/bbb</para></blockquote>
 
         <para>Copy file /foo/aaa and /foo/bbb to directory /bar/</para>
-        <blockquote><para>% ltfs_ordered_copy /foo/aaa /foo/bbb /bar</para></blockquote>
+        <blockquote><para>% altfs_ordered_copy /foo/aaa /foo/bbb /bar</para></blockquote>
 
         <para>Copy directory /foo/ddd and /foo/DDD to directory /bar/</para>
-        <blockquote><para>% ltfs_ordered_copy /foo/ddd /foo/DDD /bar</para></blockquote>
+        <blockquote><para>% altfs_ordered_copy /foo/ddd /foo/DDD /bar</para></blockquote>
       </example>
 
       <example>
         <title>HOW TO USE WITH FIND COMMAND</title>
 
         <para>Copy all files under /foo/ddd to directory /bar</para>
-        <blockquote><para>$ find /foo/ddd -type f | ltfs_ordered_copy -t /bar</para></blockquote>
+        <blockquote><para>$ find /foo/ddd -type f | altfs_ordered_copy -t /bar</para></blockquote>
 
         <para>Copy all directories just under /foo/ddd to directory /bar</para>
-        <blockquote><para>$ find /foo/ddd -type d -maxdepth 1 | ltfs_ordered_copy -t /bar</para></blockquote>
+        <blockquote><para>$ find /foo/ddd -type d -maxdepth 1 | altfs_ordered_copy -t /bar</para></blockquote>
 
         <para>Copy all files just under /foo/ddd to directory /bar with keeping tree (Chop /foo/ddd from source list)</para>
-        <blockquote><para>$ find /foo/ddd -type f | ltfs_ordered_copy -t /bar --keep-tree=/foo/ddd</para></blockquote>
+        <blockquote><para>$ find /foo/ddd -type f | altfs_ordered_copy -t /bar --keep-tree=/foo/ddd</para></blockquote>
       </example>
     </refsect1>
 

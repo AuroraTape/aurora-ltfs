@@ -54,7 +54,6 @@
 #include <dirent.h>
 #include <sys/ioctl.h>
 
-#include "ltfs_copyright.h"
 #include "libltfs/ltfslogging.h"
 #include "libltfs/fs.h"
 #include "libltfs/ltfs_endian.h"
@@ -74,9 +73,6 @@
 
 #include "libltfs/ltfs_fuse_version.h"
 #include <fuse.h>
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n" \
-	LTFS_COPYRIGHT_3"\n"LTFS_COPYRIGHT_4"\n"LTFS_COPYRIGHT_5"\n";
 
 /* Default device name */
 const char *default_device = "0";

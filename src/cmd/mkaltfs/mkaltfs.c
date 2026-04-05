@@ -62,15 +62,11 @@
 #include <fuse.h>
 
 #include "libltfs/ltfs.h"
-#include "ltfs_copyright.h"
 #include "libltfs/index_criteria.h"
 #include "libltfs/pathname.h"
 #include "libltfs/plugin.h"
 #include "libltfs/kmi.h"
 #include "libltfs/tape.h"
-
-volatile char *copyright = LTFS_COPYRIGHT_0"\n"LTFS_COPYRIGHT_1"\n"LTFS_COPYRIGHT_2"\n" \
-	LTFS_COPYRIGHT_3"\n"LTFS_COPYRIGHT_4"\n"LTFS_COPYRIGHT_5"\n";
 
 #ifdef __APPLE__
 #include "libltfs/arch/osx/osx_string.h"

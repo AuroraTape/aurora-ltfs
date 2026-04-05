@@ -37,7 +37,7 @@ dnl
 dnl LTFS configure.ac.
 dnl
 AC_INIT([Aurora LTFS], [2.5.0.0 (Prelim)], [])
-AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_SRCDIR([src/cmd/altfs/altfs.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CANONICAL_HOST
@@ -161,17 +161,6 @@ AC_ARG_ENABLE([new-locking],
 AC_MSG_RESULT([$use_new_locking])
 
 dnl
-dnl Handle --enable-lin-tape (default:no, Linux Only)
-dnl
-AC_MSG_CHECKING([whether to enable lin_tape or not (Linux Only)])
-AC_ARG_ENABLE([lintape],
-    [AS_HELP_STRING([--enable-lintape],[Support IBM's lin_tape driver or not])],
-    [lintape=$enableval],
-    [lintape=no]
-)
-AC_MSG_RESULT([$lintape])
-
-dnl
 dnl Handle --enable-buggy-ifs (default:no, Linux/MacOS Only)
 dnl
 AC_MSG_CHECKING([whether to enable handling of buggy I/Fs or not (Linux/MacOS Only)])
@@ -244,14 +233,6 @@ then
     fi
 fi
 
-if test "x${DEFAULT_TAPE}" = "xlin_tape"
-then
-    if test "x${lintape}" != "xyes"
-    then
-        AC_MSG_ERROR([lin_tape is not enabled --enable-lintape is required.])
-    fi
-fi
-
 if test -z "$DEFAULT_IOSCHED" ; then
     DEFAULT_IOSCHED=unified
 fi
@@ -293,6 +274,12 @@ if test "x${PKGDATA}" = "xno"
 then
     AC_MSG_ERROR([pkgdata was not found])
 fi
+
+dnl
+dnl Check for docbook2man (optional, for rebuilding man pages from SGML)
+dnl
+AC_PATH_PROG(DOCBOOK2MAN, docbook2man, no)
+AM_CONDITIONAL([HAVE_DOCBOOK2MAN], [test "x${DOCBOOK2MAN}" != "xno"])
 
 dnl
 dnl Check for FUSE, libuuid, and libxml2
@@ -613,7 +600,6 @@ dnl
 dnl Define options
 dnl
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x${host_linux}" = "xyes"])
-AM_CONDITIONAL([ENABLE_LIN_TAPE], [test "x${lintape}" = "xyes"])
 AM_CONDITIONAL([PLATFORM_MAC], [test "x${host_mac}" = "xyes"])
 AM_CONDITIONAL([PLATFORM_FREEBSD], [test "x${host_freebsd}" = "xyes"])
 AM_CONDITIONAL([PLATFORM_NETBSD], [test "x${host_netbsd}" = "xyes"])
@@ -641,14 +627,17 @@ AC_CONFIG_FILES([
     src/libltfs/Makefile
     src/tape_drivers/generic/file/Makefile
     src/tape_drivers/generic/itdtimg/Makefile
-    src/tape_drivers/linux/lin_tape/Makefile
     src/tape_drivers/linux/sg/Makefile
     src/tape_drivers/osx/iokit/Makefile
     src/tape_drivers/freebsd/cam/Makefile
     src/tape_drivers/netbsd/scsipi-ibmtape/Makefile
     src/iosched/Makefile
     src/kmi/Makefile
-    src/utils/Makefile
+    src/cmd/altfs/Makefile
+    src/cmd/mkaltfs/Makefile
+    src/cmd/altfsck/Makefile
+    src/cmd/altfsindextool/Makefile
+    src/cmd/altfs_ordered_copy/Makefile
     altfs.pc:altfs.pc.in
 ])
 

@@ -56,7 +56,7 @@ The coarse message ID allocation is as follows.
   == Tape Drivers (30000-39999) ==
   * 30000-30199: Generic file debug tape backend
   * 30200-30399: sg tape backend for IBM tape drives
-  * 30400-30599: Tape backend for IBM lin_tape driver
+  * 30400-30599: Reserved (formerly lin_tape driver)
   * 30600-30799: Tape backend for IBM scsi lib (Windows)
   * 30800-30999: iokit tape backend for IBM tape drives
   * 31000-31199: ITDT tape image backend

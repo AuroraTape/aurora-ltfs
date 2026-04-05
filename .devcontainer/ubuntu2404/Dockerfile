@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     uuid-dev \
     libsnmp-dev \
-    icu-devtools
+    icu-devtools \
+    docbook-utils
 
 # Install development and debugging tools
 RUN apt-get install -y \
