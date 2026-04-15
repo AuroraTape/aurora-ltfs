@@ -762,7 +762,6 @@ int _config_file_parse_option(const char *line, char *saveptr, struct option_ent
 	bool is_admin_service = false;
 	bool is_dcache = false;
 	bool is_startup = false;
-	bool is_snmp = false;
 
 	/* Read the option type */
 	tok = strtok_r(NULL, " \t\r\n", &saveptr);
@@ -786,8 +785,6 @@ int _config_file_parse_option(const char *line, char *saveptr, struct option_ent
 		is_dcache = true;
 	else if (! strcmp(type, "startup"))
 		is_startup = true;
-	else if (! strcmp(type, "snmp"))
-		is_snmp = true;
 
 	/* Read the option */
 	tok = strtok_r(NULL, " \t\r\n", &saveptr);
@@ -799,7 +796,7 @@ int _config_file_parse_option(const char *line, char *saveptr, struct option_ent
 		return -LTFS_CONFIG_INVALID;
 	}
 
-	if (is_admin_service || is_dcache || is_startup || line[tok-start] == '-' || is_snmp)
+	if (is_admin_service || is_dcache || is_startup || line[tok-start] == '-')
 		ret = asprintf(&option, "%s", &line[tok-start]);
 	else
 		ret = asprintf(&option, "-o%s", &line[tok-start]);

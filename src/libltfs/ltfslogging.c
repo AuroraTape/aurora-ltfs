@@ -86,7 +86,6 @@
 #include "libltfs/ltfs_locking.h"
 #include "libltfs/ltfs_error.h"
 #include "queue.h"
-#include "ltfssnmp.h"
 
 /* Some hard-coded message bits. */
 #define MSG_PREFIX_POSIX_TID   "%016llx LTFS%s "
@@ -491,19 +490,6 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 		*msg_out = strdup(msg_buf);
 	}
 
-#ifdef ENABLE_SNMP
-	if (is_snmp_enabled()) {
-		if (is_snmp_trapid(id) == true) {
-			/* Send a trap of Info (id and pos+1) */
-			char *pos;
-			va_start(argp, _id);
-			vsprintf(msg_buf, output_buf, argp);
-			va_end(argp);
-			pos = strstr(msg_buf, " ");
-			send_ltfsInfoTrap(pos+1);
-		}
-	}
-#endif
 
 	ltfs_mutex_unlock(&output_lock);
 

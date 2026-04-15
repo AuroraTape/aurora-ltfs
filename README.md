@@ -151,7 +151,7 @@ These Dockerfiles contain the full list of required packages. You can use them d
 
 ### macOS (Homebrew)
 
-Install the following packages via Homebrew. Note that SNMP is not supported on macOS.
+Install the following packages via Homebrew.
 
 ```
 automake autoconf libtool osxfuse ossp-uuid libxml2 icu4c gnu-sed
@@ -162,7 +162,7 @@ automake autoconf libtool osxfuse ossp-uuid libxml2 icu4c gnu-sed
 Install the following packages. FreeBSD 10.2 or later is required for sa(4) driver support.
 
 ```
-automake autoconf libtool fusefs-libs net-snmp e2fsprogs-libuuid libxml2 icu
+automake autoconf libtool fusefs-libs e2fsprogs-libuuid libxml2 icu
 ```
 
 ### NetBSD
@@ -170,7 +170,7 @@ automake autoconf libtool fusefs-libs net-snmp e2fsprogs-libuuid libxml2 icu
 Install the following packages. NetBSD 7.0 or later is required for FUSE support.
 
 ```
-automake autoconf libtool libfuse net-snmp libuuid libxml2 icu
+automake autoconf libtool libfuse libuuid libxml2 icu
 ```
 
 ## Linux
@@ -197,11 +197,11 @@ export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libxml
 export PATH="$PATH:$ICU_PATH:$LIBXML2_PATH"
 ```
 
-Build (SNMP is not supported on macOS):
+Build:
 
 ```bash
 ./autogen.sh
-LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --disable-snmp
+LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure
 make
 make install
 ```

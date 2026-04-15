@@ -79,7 +79,6 @@ noinst_HEADERS = \
 	libltfs/ltfs_fsops_raw.h \
 	libltfs/ltfs_fuse_version.h \
 	libltfs/ltfs_internal.h \
-	libltfs/ltfssnmp.h \
 	libltfs/pathname.h \
 	libltfs/periodic_sync.h \
 	libltfs/xattr.h \

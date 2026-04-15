@@ -139,17 +139,6 @@ AC_ARG_ENABLE([livelink],
 AC_MSG_RESULT([$livelink])
 
 dnl
-dnl Handle --enable-snmp (default:yes)
-dnl
-AC_MSG_CHECKING([whether to enable snmp or not])
-AC_ARG_ENABLE([snmp],
-    [AS_HELP_STRING([--enable-snmp],[Support SNMP or not])],
-    [snmp=$enableval],
-    [snmp=yes]
-)
-AC_MSG_RESULT([$snmp])
-
-dnl
 dnl Handle --enable-new-locking (default: yes)
 dnl
 AC_MSG_CHECKING([whether to enable new locking system or not])
@@ -369,30 +358,6 @@ else
 fi
 
 dnl
-dnl Check for SNMP
-dnl
-SNMP_ENABLE=""
-SNMP_MODULE_CFLAGS=""
-SNMP_MODULE_LIBS_A=""
-SNMP_MODULE_LIBS=""
-if test "x${snmp}" != "xno"
-then
-    SNMP_ENABLE="-D ENABLE_SNMP"
-    SNMP_MODULE_CFLAGS="`net-snmp-config --cflags 2> /dev/null`";
-    SNMP_MODULE_LIBS_A="`net-snmp-config --agent-libs 2> /dev/null`";
-    SNMP_MODULE_LIBS="`net-snmp-config --libs 2> /dev/null`";
-    if test -z "$SNMP_MODULE_LIBS_A"
-    then
-        PKG_CHECK_MODULES([SNMP_MODULE], [net-snmp >= 5.3])
-    fi
-
-    if test -z "$SNMP_MODULE_LIBS"
-    then
-        PKG_CHECK_MODULES([SNMP_MODULE], [net-snmp >= 5.3])
-    fi
-fi
-
-dnl
 dnl Check for headers, types, structures, compiler characteristics
 dnl
 AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/mount.h sys/time.h termios.h unistd.h sys/sysctl.h])
@@ -464,7 +429,7 @@ dnl Update flags
 dnl Sets CFLAGS to force optimization and debugging options, which isn't quite kosher
 dnl
 AM_CPPFLAGS="-D_GNU_SOURCE -I\$(top_srcdir)/src -DLTFS_CONFIG_FILE='\"${sysconfdir}/altfs.conf\"' -DLTFS_BASE_DIR='\"${prefix}\"'"
-AM_CFLAGS="-Wall -Wsign-compare -fsigned-char ${FUSE_MODULE_CFLAGS} ${UUID_MODULE_CFLAGS} ${LIBXML2_MODULE_CFLAGS} ${ICU_MODULE_CFLAGS} ${SNMP_ENABLE} ${SNMP_MODULE_CFLAGS}"
+AM_CFLAGS="-Wall -Wsign-compare -fsigned-char ${FUSE_MODULE_CFLAGS} ${UUID_MODULE_CFLAGS} ${LIBXML2_MODULE_CFLAGS} ${ICU_MODULE_CFLAGS} "
 
 if test "x$use_fast" = "xyes"
 then
@@ -593,7 +558,7 @@ then
 fi
 
 AM_CFLAGS=`echo ${AM_CFLAGS} | ${SED} 's|-D_FORTIFY_SOURCE=. ||g'`
-AM_LDFLAGS="${AM_LDFLAGS} ${MODULE_CHECK_LD} ${FUSE_MODULE_LIBS} ${UUID_MODULE_LIBS} ${LIBXML2_MODULE_LIBS} ${ICU_MODULE_LIBS} ${SNMP_MODULE_LIBS_A} ${SNMP_MODULE_LIBS}"
+AM_LDFLAGS="${AM_LDFLAGS} ${MODULE_CHECK_LD} ${FUSE_MODULE_LIBS} ${UUID_MODULE_LIBS} ${LIBXML2_MODULE_LIBS} ${ICU_MODULE_LIBS} "
 CFLAGS="${CFLAGS} ${OPT_FLAGS}"
 
 dnl
