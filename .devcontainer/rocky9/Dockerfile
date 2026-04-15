@@ -24,7 +24,6 @@ RUN dnf install -y \
     libicu-devel \
     icu \
     libuuid-devel \
-    net-snmp-devel \
     diffutils \
     docbook-utils
 

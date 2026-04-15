@@ -40,7 +40,6 @@ libaltfs_la_SOURCES = \
 	ltfs_internal.c \
 	ltfs_fsops.c \
 	ltfs_fsops_raw.c \
-	ltfssnmp.c \
 	fs.c \
 	xml_common.c \
 	xml_writer.c \
@@ -74,12 +73,3 @@ libaltfs_la_LIBADD =
 libaltfs_la_CPPFLAGS = @AM_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ -I ..
 libaltfs_la_LDFLAGS = -version-info 0:0:0 @AM_LDFLAGS@ ../../messages/liblibaltfs_dat.a ../../messages/libinternal_error_dat.a ../../messages/libtape_common_dat.a
 
-install-data-local:
-	if [ ! -d "$(DESTDIR)$(prefix)/share/snmp" ]; then \
-		mkdir -p "$(DESTDIR)$(prefix)/share/snmp"; \
-		cp LtfsSnmpTrapDef.txt LTFS-MIB.txt "$(DESTDIR)$(prefix)/share/snmp/"; \
-	elif [ ! -f "$(DESTDIR)$(prefix)/share/snmp/LtfsSnmpTrapDef.txt" ]; then \
-		cp LtfsSnmpTrapDef.txt "$(DESTDIR)$(prefix)/share/snmp/LtfsSnmpTrapDef.txt"; \
-	elif [ ! -f "$(DESTDIR)$(prefix)/share/snmp/LTFS-MIB.txt" ]; then \
-		cp LTFS-MIB.txt "$(DESTDIR)$(prefix)/share/snmp/LTFS-MIB.txt"; \
-	fi

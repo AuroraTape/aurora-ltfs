@@ -45,7 +45,7 @@ export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libxml
 export PATH="$PATH:$ICU_PATH:$LIBXML2_PATH"
 
 ./autogen.sh
-LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --disable-snmp --prefix=</path_to_install>
+LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --prefix=</path_to_install>
 ```
 
 ### macOS Build
@@ -165,7 +165,7 @@ altfsck -d <device_name>
 ## Platform-Specific Notes
 
 - **Linux**: Uses sg (SCSI generic) driver
-- **macOS**: Requires disabling SNMP support (`--disable-snmp`)
+- **macOS**: Uses IOKit driver
 - **FreeBSD/NetBSD**: Uses platform-specific SCSI interfaces
 
 ## Message System

@@ -96,9 +96,6 @@ struct ltfs_fuse_data {
 	ltfs_sync_type_t sync_type;    /**< Sync type (time, close or none)*/
 	long sync_time;                /**< Sync time*/
 
-	bool snmp_enabled;             /**< Indicates if the snmp service is enabled */
-	char *snmp_deffile;            /**< SNMP definition file */
-
 	const char *devname;              /**< Device where tape resides */
 	const char *tape_backend_name;    /**< Name of tape backend library or path to library */
 	const char *iosched_backend_name; /**< Name or path to the I/O scheduler backend library */
