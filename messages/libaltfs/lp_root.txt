@@ -1,0 +1,171 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// libaltfs plugin glue (plugin, iosched, tape, kmi, dcache)
+	messages:table {
+		prefix:string { "ALP" }
+
+		ALP0001E:string { "Cache manager: failed to initialize the pool." }
+		ALP0002W:string { "Cache manager: failed to fully expand the pool." }
+		ALP0003E:string { "Cache manager: failed to grow the pool." }
+		ALP0004E:string { "Plug-in \'%s\' was not found in the configuration file." }
+		ALP0005E:string { "Cannot load plug-in: %s." }
+		ALP0006E:string { "Cannot unload plug-in: %s." }
+		ALP0007E:string { "Cannot resolve plug-in operation interface: %s." }
+		ALP0008E:string { "Cannot get plug-in operations." }
+		ALP0009E:string { "Cannot resolve plug-in message bundle interface: %s." }
+		ALP0010E:string { "Cannot load %s plug-in \'%s\': failed to load the message bundle (%d)." }
+		ALP0011E:string { "Failed to print help message of key manager interface backend." }
+		ALP0012E:string { "Cannot print help message: unknown type: '%s'." }
+		ALP0013E:string { "Failed to seek EOD: seek invalid partition (%d, %d)." }
+		ALP0014I:string { "The attribute does not exist. Ignore the expected error." }
+		ALP0015D:string { "%s volume lock status (%d)." }
+		ALP0016E:string { "Cannot load the medium: failed to get capacity data (%d)." }
+		ALP0017E:string { "Device backend does not implement all required methods." }
+		ALP0018E:string { "Cannot allocate device data: failed to initialize mutex (%d)." }
+		ALP0019E:string { "Cannot open device: failed backend open call." }
+		ALP0020E:string { "Cannot inquire the tape device: backend call failed (%d)." }
+		ALP0021E:string { "Cannot open device: failed to reserve the device (%d)." }
+		ALP0022E:string { "No medium present." }
+		ALP0023E:string { "Cannot load the medium (%d)." }
+		ALP0024E:string { "Cannot load the medium: failed to lock the medium in the drive (%d)." }
+		ALP0025E:string { "Cannot load the medium: failed to determine medium position (%d)." }
+		ALP0026E:string { "Cannot load the medium: failed to set device defaults (%d)." }
+		ALP0027E:string { "Cannot load the medium: failed to get device parameters (%d)." }
+		ALP0028I:string { "Unloading medium." }
+		ALP0029D:string { "Reserving device." }
+		ALP0030E:string { "Cannot reserve device: backend call failed (%d)." }
+		ALP0031D:string { "Releasing device." }
+		ALP0032D:string { "Locking medium in the drive." }
+		ALP0033E:string { "Cannot lock medium in the drive: backend call failed (%d)." }
+		ALP0034D:string { "Unlocking medium." }
+		ALP0035E:string { "Device is not ready (%d)." }
+		ALP0036E:string { "Cannot get capacity data: backend call failed (%d)." }
+		ALP0037E:string { "Cannot set compression: backend call failed (%d)." }
+		ALP0038E:string { "Cannot set append position: invalid partition %lu." }
+		ALP0039E:string { "Cannot seek to append position: seek failed (%d)." }
+		ALP0040E:string { "Cannot get maximum device blocksize: backend call failed (%d)." }
+		ALP0041E:string { "Cannot rewind medium: backend call failed (%d)." }
+		ALP0042E:string { "Seek failed: final position is not what was requested." }
+		ALP0043E:string { "Cannot seek: backend call failed (%d)." }
+		ALP0044E:string { "Cannot seek EOD: invalid partition %lu." }
+		ALP0045E:string { "Cannot seek EOD: backend locate call failed (%d)." }
+		ALP0046E:string { "Cannot parse backend options: backend call failed (%d)." }
+		ALP0047E:string { "Cannot space file marks: backend call failed (%d)." }
+		ALP0048E:string { "Cannot write block: must open the device first." }
+		ALP0049E:string { "Cannot write block: device is read-only." }
+		ALP0050E:string { "Cannot write a %u-byte block: maximum block size is %lu." }
+		ALP0051E:string { "Cannot write block: backend call failed (%d). Dropping to read-only mode." }
+		ALP0052E:string { "Cannot write file marks: must open the device first." }
+		ALP0053E:string { "Cannot write file marks: backend call failed (%d). Dropping to read-only mode." }
+		ALP0054E:string { "Cannot read: must open the device first." }
+		ALP0055E:string { "Cannot read: backend call failed (%d)." }
+		ALP0056E:string { "Cannot format medium: locate to partition 0, block 0 failed (%d)." }
+		ALP0057E:string { "Cannot format medium: Mode Sense for Medium Partition failed (%d)." }
+		ALP0058E:string { "Cannot format medium: backend call failed (%d)." }
+		ALP0059E:string { "Cannot unformat medium: locate to partition 0, block 0 failed (%d)." }
+		ALP0060E:string { "Cannot unformat medium: backend call failed (%d)." }
+		ALP0061W:string { "Cannot get Volume Change Reference parameter: read attribute failed (%d)." }
+		ALP0062W:string { "Cannot get VCI data: read attribute failed (%d)." }
+		ALP0063W:string { "Cannot get VCI data: unexpected ID 0x%04x." }
+		ALP0064W:string { "Cannot get VCI data: unexpected length 0x%04x." }
+		ALP0065W:string { "Cannot get VCI data: unexpected VCR length 0x%04x." }
+		ALP0066W:string { "Cannot get VCI data: unexpected Application Specific Info length %d." }
+		ALP0067W:string { "Cannot get VCI data: unexpected Application Specific Info signature." }
+		ALP0068W:string { "Cannot set VCI data: backend call failed (%d)." }
+		ALP0069E:string { "Cannot write block: no space left on device." }
+		ALP0070E:string { "Scheduler backend does not implement all required methods." }
+		ALP0071E:string { "Dentry cache backend does not implement all required methods." }
+		ALP0072I:string { "Plugin: Loading \"%s\" %s backend." }
+		ALP0073E:string { "Cannot set PEWS: Mode Sense for Device Configuration Extension failed (%d)." }
+		ALP0074E:string { "Cannot set PEWS: Mode Select for Device Configuration Extension failed (%d)." }
+		ALP0075E:string { "Cannot get PEWS: Mode Sense for Device Configuration Extension failed (%d)." }
+		ALP0076E:string { "Cannot load the medium: failed to get programmable early warning size (%d)." }
+		ALP0077I:string { "Detecting the final record to read by hitting read error takes about 20 minutes." }
+		ALP0078W:string { "Unexpected read error occurred." }
+		ALP0079I:string { "Expected read error occurred." }
+		ALP0080I:string { "Recovering EOD at (%llu, %llu) takes about 20 minutes." }
+		ALP0081E:string { "Failed to get current position." }
+		ALP0082E:string { "Failed to unload the cartridge." }
+		ALP0083E:string { "Failed to reload the cartridge." }
+		ALP0084E:string { "Failed to seek to EOD recovery point." }
+		ALP0085E:string { "Failed to erase at EOD recovery point." }
+		ALP0086E:string { "Cannot erase: backend call failed (%d)." }
+		ALP0087E:string { "Cannot set WRITE MODE: Failed to unload medium (%d)." }
+		ALP0088E:string { "Cannot set WRITE MODE: Failed to load medium (%s, %d)." }
+		ALP0089E:string { "Cannot set WRITE MODE: Mode Sense for Device Configuration Extension failed (%d)." }
+		ALP0090E:string { "Cannot set WRITE MODE: Mode Select for Device Configuration Extension failed (%d)." }
+		ALP0091E:string { "Cannot get WRITE MODE: Mode Sense for Device Configuration Extension failed (%d)." }
+		ALP0092I:string { "Process was interrupted by user." }
+		ALP0093E:string { "Cannot reset the capacity proportion: backend call failed (%d)." }
+		ALP0094I:string { "Detected EOD on the missing EOD cartridge." }
+		ALP0095E:string { "Failed to parse LTFS dcache configuration rules: invalid option '%s'." }
+		ALP0096E:string { "Failed to parse LTFS dcache configuration rules: invalid value '%d' for option '%s'." }
+		ALP0097E:string { "Key manager interface backend does not implement all required methods." }
+		ALP0098E:string { "Cannot read: failed to get data key identifier (%d)." }
+		ALP0099E:string { "Cannot read: failed to get data key (%d)." }
+		ALP0100E:string { "Cannot read: no correct key." }
+		ALP0101E:string { "Cannot read: failed to set data key (%d)." }
+		ALP0102I:string { "Cleaning cartridge was loaded. (TA=%016llx)." }
+		ALP0103E:string { "Cannot reopen device: failed backend reopen call." }
+		ALP0104E:string { "Unexpected not ready state (%d)." }
+		ALP0105I:string { "Device is not ready (%d)." }
+		ALP0106I:string { "Device is becoming ready (%d)." }
+		ALP0107I:string { "Data key is set to enable encryption feature." }
+		ALP0108I:string { "Data key is cleared to disable encryption feature." }
+		ALP0109W:string { "Cannot read: medium is encrypted." }
+		ALP0110E:string { "Cannot get maximum block size : %s (%d)." }
+		ALP0111W:string { "Cannot retrieve the tape attribute data: unexpected ID 0x%04x." }
+		ALP0112W:string { "Cannot retrieve the tape attribute data: unexpected length 0x%04x." }
+		ALP0113D:string { "Cannot get the tape attribute: 0x%04x (%s)." }
+		ALP0114W:string { "Cannot update the tape attribute (type: 0x%04x): %s." }
+		ALP0115W:string { "Truncate the tape attribute: %s (%s) to %d bytes." }
+		ALP0116W:string { "Cannot set: unknown tape attribute type(0x%04x): %s." }
+		ALP0117E:string { "Cannot set the tape attribute (type: 0x%04x): %s ." }
+		ALP0118W:string { "Cannot update the tape attribute: the maximum (%s) attribute length is %d." }
+		ALP0119I:string { "Tape attribute: %s = %s." }
+		ALP0120I:string { "Tape attribute: %s = 0x%02x." }
+		ALP0121D:string { "Truncate the tape attribute: %s (%s) to %d bytes." }
+		ALP0122W:string { "The bar code information is null." }
+		ALP0123E:string { "Cannot %s the tape attribute: %s." }
+		ALP0124E:string { "Failed to update density (%s) %d." }
+		ALP0125I:string { "Density code is updated to x%02x." }
+		ALP0126I:string { "Skip setting the append only mode because the drive doesn't seem to support it." }
+		ALP0127E:string { "Locate command returns write-perm error (%d). Replace a return code to %d." }
+		ALP0128I:string { "RAO command returns error on %s (%d)." }
+		ALP0129I:string { "Current position is (%llu, %llu), Error position is (%llu, %llu)." }
+	}
+}

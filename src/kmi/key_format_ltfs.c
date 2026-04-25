@@ -86,9 +86,9 @@ static int is_key(const unsigned char * const key)
 	for (i = 0; i < (DK_LENGTH * 8 + 5) / 6; ++i) {
 		if (! isalnum(*(key + i)) && *(key + i) != '+' && *(key + i) != '/') {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "DK");
+			ltfsmsg(AKS0003E, __FUNCTION__, "DK");
 #else
-			ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "DK");
+			ltfsmsg(AKF0006E, __FUNCTION__, "DK");
 #endif
 			return -LTFS_BAD_ARG;
 		}
@@ -96,9 +96,9 @@ static int is_key(const unsigned char * const key)
 	for (; i % 4; ++i) { /* BEAM: loop doesn't iterate - Use loop for future enhancement */
 		if (*(key + i) != '=') {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "DK padding");
+			ltfsmsg(AKS0003E, __FUNCTION__, "DK padding");
 #else
-			ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "DK padding");
+			ltfsmsg(AKF0006E, __FUNCTION__, "DK padding");
 #endif
 			return -LTFS_BAD_ARG;
 		}
@@ -119,9 +119,9 @@ static int is_keyalias(const unsigned char * const keyalias)
 	for (i = 0; i < DKI_ASCII_LENGTH; ++i) {
 		if (! isprint(*(keyalias + i))) {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "DKi ascii");
+			ltfsmsg(AKS0003E, __FUNCTION__, "DKi ascii");
 #else
-			ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "DKi ascii");
+			ltfsmsg(AKF0006E, __FUNCTION__, "DKi ascii");
 #endif
 			return -LTFS_BAD_ARG;
 		}
@@ -129,9 +129,9 @@ static int is_keyalias(const unsigned char * const keyalias)
 	for (; i < DKI_ASCII_LENGTH + (DKI_LENGTH - DKI_ASCII_LENGTH) * 2; ++i) {
 		if (! isxdigit(*(keyalias + i))) {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "DKi binary");
+			ltfsmsg(AKS0003E, __FUNCTION__, "DKi binary");
 #else
-			ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "DKi binary");
+			ltfsmsg(AKF0006E, __FUNCTION__, "DKi binary");
 #endif
 			return -LTFS_BAD_ARG;
 		}
@@ -163,18 +163,18 @@ static int get_num_of_keys(const unsigned char * const dk_list)
 			int ret = is_key(dk_list + i);
 			if (ret < 0) {
 #ifdef KMI_SIMPLE
-				ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "kmi_dk_list");
+				ltfsmsg(AKS0003E, __FUNCTION__, "kmi_dk_list");
 #else
-				ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "kmi_dk_list");
+				ltfsmsg(AKF0006E, __FUNCTION__, "kmi_dk_list");
 #endif
 				return -LTFS_BAD_ARG;
 			}
 			i += key_length;
 			if (*(dk_list + i) != ':') {
 #ifdef KMI_SIMPLE
-				ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "Separator of DK and DKi is incorrect.");
+				ltfsmsg(AKS0003E, __FUNCTION__, "Separator of DK and DKi is incorrect.");
 #else
-				ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "Separator of DK and DKi is incorrect.");
+				ltfsmsg(AKF0006E, __FUNCTION__, "Separator of DK and DKi is incorrect.");
 #endif
 				return -LTFS_BAD_ARG;
 			}
@@ -182,9 +182,9 @@ static int get_num_of_keys(const unsigned char * const dk_list)
 			ret = is_keyalias(dk_list + i);
 			if (ret < 0) {
 #ifdef KMI_SIMPLE
-				ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "kmi_dk_list");
+				ltfsmsg(AKS0003E, __FUNCTION__, "kmi_dk_list");
 #else
-				ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "kmi_dk_list");
+				ltfsmsg(AKF0006E, __FUNCTION__, "kmi_dk_list");
 #endif
 				return -LTFS_BAD_ARG;
 			}
@@ -195,9 +195,9 @@ static int get_num_of_keys(const unsigned char * const dk_list)
 
 		if (i != length) {
 #ifdef KMI_SIMPLE
-				ltfsmsg(LTFS_ERR, 15502E, __FUNCTION__, "Invalid length of kmi_dk_list.");
+				ltfsmsg(AKS0003E, __FUNCTION__, "Invalid length of kmi_dk_list.");
 #else
-				ltfsmsg(LTFS_ERR, 15562E, __FUNCTION__, "Invalid length of kmi_dk_list.");
+				ltfsmsg(AKF0006E, __FUNCTION__, "Invalid length of kmi_dk_list.");
 #endif
 			return -LTFS_BAD_ARG;
 		}
@@ -255,9 +255,9 @@ void *key_format_ltfs_init(struct ltfs_volume *vol)
 	 */
 	if (state != KFL_UNINITIALIZED) {
 #ifdef KMI_SIMPLE
-		ltfsmsg(LTFS_ERR, 15505E, state, KFL_UNINITIALIZED, __FUNCTION__);
+		ltfsmsg(AKS0006E, state, KFL_UNINITIALIZED, __FUNCTION__);
 #else
-		ltfsmsg(LTFS_ERR, 15565E, state, KFL_UNINITIALIZED, __FUNCTION__);
+		ltfsmsg(AKF0009E, state, KFL_UNINITIALIZED, __FUNCTION__);
 #endif
 		return NULL;
 	}
@@ -265,13 +265,13 @@ void *key_format_ltfs_init(struct ltfs_volume *vol)
 
 	struct key_format_ltfs_data *priv = calloc(1, sizeof(struct key_format_ltfs_data));
 	if (! priv) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return NULL;
 	}
 	priv->vol = vol;
 	priv->data = calloc(1, sizeof(struct key_format_ltfs));
 	if (! priv->data) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return NULL;
 	}
 
@@ -314,9 +314,9 @@ static int set_dk_list(const unsigned char * const dk_list, void **data)
 
 	if (state != KFL_INITIALIZED && state != KFL_CLEARED) {
 #ifdef KMI_SIMPLE
-		ltfsmsg(LTFS_ERR, 15505E, state, KFL_UNINITIALIZED, __FUNCTION__);
+		ltfsmsg(AKS0006E, state, KFL_UNINITIALIZED, __FUNCTION__);
 #else
-		ltfsmsg(LTFS_ERR, 15565E, state, KFL_UNINITIALIZED, __FUNCTION__);
+		ltfsmsg(AKF0009E, state, KFL_UNINITIALIZED, __FUNCTION__);
 #endif
 		return -LTFS_INVALID_SEQUENCE;
 	}
@@ -330,7 +330,7 @@ static int set_dk_list(const unsigned char * const dk_list, void **data)
 	if (num_of_keys) {
 		(*priv)->dk_list = calloc(num_of_keys, sizeof(struct key));
 		if (! (*priv)->dk_list) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			return -LTFS_NO_MEMORY;
 		}
 		(*priv)->num_of_keys = num_of_keys;
@@ -371,7 +371,7 @@ static int get_key(unsigned char **keyalias, unsigned char **key, void *data, un
 				return 0; /* This is not an error path but a normal pass. Make a non-encrypted cartridge. */
 			*keyalias = calloc(DKI_LENGTH, sizeof(char));
 			if (! *keyalias) {
-				ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+				ltfsmsg(ALC0002E, __FUNCTION__);
 				return -LTFS_NO_MEMORY;
 			}
 			convert_keyalias(dki_for_format, *keyalias);
@@ -382,7 +382,7 @@ static int get_key(unsigned char **keyalias, unsigned char **key, void *data, un
 			if (! memcmp(*keyalias, (priv->dk_list + i)->dki, DKI_LENGTH)) {
 				*key = calloc(DK_LENGTH, sizeof(char));
 				if (! *key) {
-					ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+					ltfsmsg(ALC0002E, __FUNCTION__);
 					return -LTFS_NO_MEMORY;
 				}
 				memcpy(*key, (priv->dk_list + i)->dk, DK_LENGTH);
@@ -391,9 +391,9 @@ static int get_key(unsigned char **keyalias, unsigned char **key, void *data, un
 		}
 		if (! *key) {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15503E);
+			ltfsmsg(AKS0004E);
 #else
-			ltfsmsg(LTFS_ERR, 15563E);
+			ltfsmsg(AKF0007E);
 #endif
 
 			return -LTFS_KEY_NOT_FOUND;
@@ -444,18 +444,18 @@ int key_format_ltfs_get_key(unsigned char **keyalias, unsigned char **key, void 
 	int ret = set_dk_list(dk_list, &priv->data);
 	if (ret < 0) {
 #ifdef KMI_SIMPLE
-			ltfsmsg(LTFS_ERR, 15506E);
+			ltfsmsg(AKS0007E);
 #else
-			ltfsmsg(LTFS_ERR, 15566E);
+			ltfsmsg(AKF0010E);
 #endif
 		return ret;
 	}
 	ret = get_key(keyalias, key, priv->data, dki_for_format);
 	if (ret < 0) {
 #ifdef KMI_SIMPLE
-		ltfsmsg(LTFS_ERR, 15507E);
+		ltfsmsg(AKS0008E);
 #else
-		ltfsmsg(LTFS_ERR, 15567E);
+		ltfsmsg(AKF0011E);
 #endif
 		(void) clear(&priv->data);
 		return ret;

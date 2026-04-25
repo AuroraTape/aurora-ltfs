@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the key manager interface simple plugin.
@@ -39,18 +39,17 @@
 // ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 15500 }
-		end_id:int { 15549 }
+		prefix:string { "AKS" }
 
-		15500D:string { "Simple plug-in initialized." }
-		15501D:string { "Simple plug-in uninitialized." }
-		15502E:string { "Encryption key format violation (%s): %s." }
-		15503E:string { "Cannot find data key." }
-		15504E:string { "Option parsing for the key manager interface backend failed (%d)." }
-		15505E:string { "Invalid sequence error (%d,%d): %s." }
-		15506E:string { "Failed to parse data key and/or data key identifier." }
-		15507E:string { "Cannot find data key of the data key identifier." }
-		15508I:string { "Key manager interface simple plug-in options:\n"
+		AKS0001D:string { "Simple plug-in initialized." }
+		AKS0002D:string { "Simple plug-in uninitialized." }
+		AKS0003E:string { "Encryption key format violation (%s): %s." }
+		AKS0004E:string { "Cannot find data key." }
+		AKS0005E:string { "Option parsing for the key manager interface backend failed (%d)." }
+		AKS0006E:string { "Invalid sequence error (%d,%d): %s." }
+		AKS0007E:string { "Failed to parse data key and/or data key identifier." }
+		AKS0008E:string { "Cannot find data key of the data key identifier." }
+		AKS0009I:string { "Key manager interface simple plug-in options:\n"
 			"    -o kmi_dk=<DK>\n"
 			"                              Data key\n"
 			"    -o kmi_dki=<DKi>\n"

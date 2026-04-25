@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,123 +30,121 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the sg backend.
 root:table {
 	messages:table {
-		start_id:int { 30200 }
-		end_id:int { 30399 }
+		prefix:string { "ATG" }
 
-		30200I:string { "Failed to execute SG_IO ioctl, opcode = %02x (%d)." }
-		30201D:string { "CDB check condition: sense = %06x, %s." }
-		30202D:string { "CDB %s." }
-		30203I:string { "CDB unexpected status: S = 0x%02x, M = 0x%02x" }
-		30204D:string { "%s (0x%02x) expected error %d." }
-		30205I:string { "%s (0x%02x) returns %d." }
-		30206I:string { "Cannot open device: inquiry failed (%d)." }
-		30207I:string { "Vendor ID is %s." }
-		30208I:string { "Product ID is %s." }
-		30209I:string { "Opening a device through sg-ibmtape driver (%s)." }
-		30210I:string { "Cannot open device: failed to open %s (%d)." }
-		30211I:string { "Cannot %s blocking mode (%d)." }
-		30212I:string { "Cannot get drive identifier of %s." }
-		30213I:string { "Unsupported Drive \'%s\' / \'%s\'." }
-		30214I:string { "Firmware revision is %s." }
-		30215I:string { "Drive serial is %s." }
-		30216W:string { "Length mismatch is detected. (Act = %d, resid = %d, resid_sense = %d)." }
-		30217I:string { "Read block: overrun in illegal length. residual = %d, actual = %d." }
-		30218D:string { "Read block: underrun in illegal length. residual = %d, actual = %d." }
-		30219D:string { "Read block: file mark detected." }
-		30220I:string { "Drive cleaning required." }
-		30221E:string { "Logical block protection Error on read." }
-		30222W:string { "Received low space warning (early warning) in %s." }
-		30223W:string { "Received low space warning (programmable early warning) in %s." }
-		30224D:string { "EOD detected (%s): ignore sense." }
-		30225I:string { "Unrecognized space type." }
-		30226I:string { "A long data wipe is in progress. (%d minutes passed)." }
-		30227I:string { "A long data wipe is in progress. %d %%." }
-		30228I:string { "Unsupported cartridge (0x%x, 0x%x)." }
-		30229I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)." }
-		30230I:string { "Cannot parse remaining capacity (0x%x, %d)." }
-		30231I:string { "Unexpected field in remaining capacity (0x%x)." }
-		30232I:string { "Cannot get remaining capacity: failed to parse the log page." }
-		30233I:string { "Cannot read attribute (%d)." }
-		30234I:string { "Cannot get log page 0x%02x (%d) in %s." }
-		30235I:string { "Cannot parse the log page 0x%02x in %s." }
-		30236I:string { "Unexpected parameter size for getting active CQ loss write (%d)." }
-		30237W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)." }
-		30238W:string { "Cannot get EOD status: failed to parse the log page." }
-		30239W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)." }
-		30240I:string { "Cannot open directory (/dev)." }
-		30241E:string { "Invalid scsi_lbprotect option: %s." }
-		30242E:string { "Encryption method of the drive is not AME but %s (0x%02X)." }
-		30243E:string { "Encryption feature is not supported on the drive: %d." }
-		30244I:string { "CDB unexpected status: H = 0x%02x, D = 0x%02x" }
-		30245D:string { "Tape device returns %d, ignore for buffered sense cleaning." }
-		30246I:string { "Connection down is detected, try to reconnect (%s)." }
-		30247I:string { "No alternate device is found for drive %s." }
-		30248I:string { "Drive serial is not matched. Actual: %s, Expected %s." }
-		30249I:string { "Opening another path for drive %s on %s." }
-		30250I:string { "Opened the SCSI tape device %d.%d.%d.%d (%s)." }
-		30251I:string { "Logical block protection is enabled." }
-		30252I:string { "Logical block protection is disabled." }
-		30253I:string { "Saving drive dump to %s." }
-		30254W:string { "Cannot retrieve drive dump: failed to create dump file (%d)." }
-		30255D:string { "Total dump data length is %lld." }
-		30256D:string { "Total number of transfers is %d." }
-		30257D:string { "Transferring dump data." }
-		30258W:string { "Cannot retrieve drive dump: failed to read buffer (%d)." }
-		30259W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)." }
-		30260W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d." }
-		30261W:string { "Cannot retrieve drive dump: failed to communicate with drive. Tried (%d) times." }
-		30261I:string { "Taking drive dump in buffer." }
-		30262I:string { "Forcing drive dump." }
-		30263I:string { "%s returns %s (%d) %s." }
-		30264E:string { "%s returns msg = NULL (%d) %s." }
-		30265W:string { "Failed to get medium type code: medium type check is skipped." }
-		30266W:string { "The drive is already reserved: %s (%s)." }
-		30267W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)." }
-		30268I:string { "Retry to reserve from key registration (%s)." }
-		30269I:string { "Successfully reopened drive %s with another path. Preempting the reservation." }
-		30270I:string { "A power-on-reset happened on drive %s." }
-		30271I:string { "Successfully reopened drive %s with the same path." }
-		30272I:string { "Drive %s is successfully reserved." }
-		30273I:string { "Cannot %s device flag (%d)." }
-		30274I:string { "Pseudo-error on %s." }
-		30275I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
-		30276I:string { "Raw capacity info of partition %d (%llu - %llu) %s." }
-		30277W:string { "Detect ENOMEM in ioctl() call. Wait 3 seconds and retry (%d)." }
-		30278I:string { "Retrying the %s operation at (%u, %llu)." }
-		30279I:string { "Retrying the %s operation at (%u, %llu) with skip back, because the command was already run (%u, %llu)." }
-		30280W:string { "Unexpected current position for %s operation (%d). (%u, %llu), (%u, %llu) ." }
-		30281W:string { "Position confirmation for %s operation retry has failed (%d). (%u, %llu), (%u, %llu)." }
-		30282W:string { "Unexpected position after skip back for a %s operation. (%u, %llu), (%u, %llu)." }
-		30283W:string { "Skip back for %s operation has failed (%d). (%u, %llu), (%u, %llu)." }
-		30284I:string { "Cannot get the reserved buffer size of %s." }
-		30285I:string { "The reserved buffer size of %s is %d." }
-		30286I:string { "Failed to get the cartridge status. The cartridge is not loaded." }
-		30287I:string { "Received an unknown sense code %06x." }
-		30288I:string { "Opening a tape device for drive serial %s." }
-		30289I:string { "Cannot fetch the reservation key (%s, %d)." }
-		30290I:string { "Changer %s isn't reserved from any nodes." }
-		30291I:string { "Changer %s was reserved from this node and can be reserved from the current path." }
-		30292I:string { "Changer %s was reserved from this node but failed to reserve from the current path." }
-		30293I:string { "Changer %s was reserved from another node (%s)." }
-		30294I:string { "Setting up timeout values from %s." }
-		30295I:string { "Have unstable TUR response, start over (Cur = %d, Prev = %d)." }
-		30296I:string { "Capturing a stable TUR at line %d." }
-		30297W:string { "Cannot retrieve drive dump: failed to communicate with drive. Tried (%d) times." }
+		ATG0001I:string { "Failed to execute SG_IO ioctl, opcode = %02x (%d)." }
+		ATG0002D:string { "CDB check condition: sense = %06x, %s." }
+		ATG0003D:string { "CDB %s." }
+		ATG0004I:string { "CDB unexpected status: S = 0x%02x, M = 0x%02x" }
+		ATG0005D:string { "%s (0x%02x) expected error %d." }
+		ATG0006I:string { "%s (0x%02x) returns %d." }
+		ATG0007I:string { "Cannot open device: inquiry failed (%d)." }
+		ATG0008I:string { "Vendor ID is %s." }
+		ATG0009I:string { "Product ID is %s." }
+		ATG0010I:string { "Opening a device through sg-ibmtape driver (%s)." }
+		ATG0011I:string { "Cannot open device: failed to open %s (%d)." }
+		ATG0012I:string { "Cannot %s blocking mode (%d)." }
+		ATG0013I:string { "Cannot get drive identifier of %s." }
+		ATG0014I:string { "Unsupported Drive \'%s\' / \'%s\'." }
+		ATG0015I:string { "Firmware revision is %s." }
+		ATG0016I:string { "Drive serial is %s." }
+		ATG0017W:string { "Length mismatch is detected. (Act = %d, resid = %d, resid_sense = %d)." }
+		ATG0018I:string { "Read block: overrun in illegal length. residual = %d, actual = %d." }
+		ATG0019D:string { "Read block: underrun in illegal length. residual = %d, actual = %d." }
+		ATG0020D:string { "Read block: file mark detected." }
+		ATG0021I:string { "Drive cleaning required." }
+		ATG0022E:string { "Logical block protection Error on read." }
+		ATG0023W:string { "Received low space warning (early warning) in %s." }
+		ATG0024W:string { "Received low space warning (programmable early warning) in %s." }
+		ATG0025D:string { "EOD detected (%s): ignore sense." }
+		ATG0026I:string { "Unrecognized space type." }
+		ATG0027I:string { "A long data wipe is in progress. (%d minutes passed)." }
+		ATG0028I:string { "A long data wipe is in progress. %d %%." }
+		ATG0029I:string { "Unsupported cartridge (0x%x, 0x%x)." }
+		ATG0030I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)." }
+		ATG0031I:string { "Cannot parse remaining capacity (0x%x, %d)." }
+		ATG0032I:string { "Unexpected field in remaining capacity (0x%x)." }
+		ATG0033I:string { "Cannot get remaining capacity: failed to parse the log page." }
+		ATG0034I:string { "Cannot read attribute (%d)." }
+		ATG0035I:string { "Cannot get log page 0x%02x (%d) in %s." }
+		ATG0036I:string { "Cannot parse the log page 0x%02x in %s." }
+		ATG0037I:string { "Unexpected parameter size for getting active CQ loss write (%d)." }
+		ATG0038W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)." }
+		ATG0039W:string { "Cannot get EOD status: failed to parse the log page." }
+		ATG0040W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)." }
+		ATG0041I:string { "Cannot open directory (/dev)." }
+		ATG0042E:string { "Invalid scsi_lbprotect option: %s." }
+		ATG0043E:string { "Encryption method of the drive is not AME but %s (0x%02X)." }
+		ATG0044E:string { "Encryption feature is not supported on the drive: %d." }
+		ATG0045I:string { "CDB unexpected status: H = 0x%02x, D = 0x%02x" }
+		ATG0046D:string { "Tape device returns %d, ignore for buffered sense cleaning." }
+		ATG0047I:string { "Connection down is detected, try to reconnect (%s)." }
+		ATG0048I:string { "No alternate device is found for drive %s." }
+		ATG0049I:string { "Drive serial is not matched. Actual: %s, Expected %s." }
+		ATG0050I:string { "Opening another path for drive %s on %s." }
+		ATG0051I:string { "Opened the SCSI tape device %d.%d.%d.%d (%s)." }
+		ATG0052I:string { "Logical block protection is enabled." }
+		ATG0053I:string { "Logical block protection is disabled." }
+		ATG0054I:string { "Saving drive dump to %s." }
+		ATG0055W:string { "Cannot retrieve drive dump: failed to create dump file (%d)." }
+		ATG0056D:string { "Total dump data length is %lld." }
+		ATG0057D:string { "Total number of transfers is %d." }
+		ATG0058D:string { "Transferring dump data." }
+		ATG0059W:string { "Cannot retrieve drive dump: failed to read buffer (%d)." }
+		ATG0060W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)." }
+		ATG0061W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d." }
+		ATG0063I:string { "Taking drive dump in buffer." }
+		ATG0064I:string { "Forcing drive dump." }
+		ATG0065I:string { "%s returns %s (%d) %s." }
+		ATG0066E:string { "%s returns msg = NULL (%d) %s." }
+		ATG0067W:string { "Failed to get medium type code: medium type check is skipped." }
+		ATG0068W:string { "The drive is already reserved: %s (%s)." }
+		ATG0069W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)." }
+		ATG0070I:string { "Retry to reserve from key registration (%s)." }
+		ATG0071I:string { "Successfully reopened drive %s with another path. Preempting the reservation." }
+		ATG0072I:string { "A power-on-reset happened on drive %s." }
+		ATG0073I:string { "Successfully reopened drive %s with the same path." }
+		ATG0074I:string { "Drive %s is successfully reserved." }
+		ATG0075I:string { "Cannot %s device flag (%d)." }
+		ATG0076I:string { "Pseudo-error on %s." }
+		ATG0077I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
+		ATG0078I:string { "Raw capacity info of partition %d (%llu - %llu) %s." }
+		ATG0079W:string { "Detect ENOMEM in ioctl() call. Wait 3 seconds and retry (%d)." }
+		ATG0080I:string { "Retrying the %s operation at (%u, %llu)." }
+		ATG0081I:string { "Retrying the %s operation at (%u, %llu) with skip back, because the command was already run (%u, %llu)." }
+		ATG0082W:string { "Unexpected current position for %s operation (%d). (%u, %llu), (%u, %llu) ." }
+		ATG0083W:string { "Position confirmation for %s operation retry has failed (%d). (%u, %llu), (%u, %llu)." }
+		ATG0084W:string { "Unexpected position after skip back for a %s operation. (%u, %llu), (%u, %llu)." }
+		ATG0085W:string { "Skip back for %s operation has failed (%d). (%u, %llu), (%u, %llu)." }
+		ATG0086I:string { "Cannot get the reserved buffer size of %s." }
+		ATG0087I:string { "The reserved buffer size of %s is %d." }
+		ATG0088I:string { "Failed to get the cartridge status. The cartridge is not loaded." }
+		ATG0089I:string { "Received an unknown sense code %06x." }
+		ATG0090I:string { "Opening a tape device for drive serial %s." }
+		ATG0091I:string { "Cannot fetch the reservation key (%s, %d)." }
+		ATG0092I:string { "Changer %s isn't reserved from any nodes." }
+		ATG0093I:string { "Changer %s was reserved from this node and can be reserved from the current path." }
+		ATG0094I:string { "Changer %s was reserved from this node but failed to reserve from the current path." }
+		ATG0095I:string { "Changer %s was reserved from another node (%s)." }
+		ATG0096I:string { "Setting up timeout values from %s." }
+		ATG0097I:string { "Have unstable TUR response, start over (Cur = %d, Prev = %d)." }
+		ATG0098I:string { "Capturing a stable TUR at line %d." }
+		ATG0099W:string { "Cannot retrieve drive dump: failed to communicate with drive. Tried (%d) times." }
 
-		30392D:string { "Backend %s %s." }
-		30393D:string { "Backend %s: %d %s." }
-		30394D:string { "Backend %s: %zu %s." }
-		30395D:string { "Backend %s: %zu bytes %s." }
-		30396D:string { "Backend %s: %llu %s." }
-		30397D:string { "Backend %s: (%llu, %llu) %s." }
-		30398D:string { "Backend %s: (%llu, %llu) FM = %llu %s." }
-		30399I:string { "sg tape backend for IBM tape options:\n    -o devname=<dev>           tape device (default=%s)\n"
+		ATG0100D:string { "Backend %s %s." }
+		ATG0101D:string { "Backend %s: %d %s." }
+		ATG0102D:string { "Backend %s: %zu %s." }
+		ATG0103D:string { "Backend %s: %zu bytes %s." }
+		ATG0104D:string { "Backend %s: %llu %s." }
+		ATG0105D:string { "Backend %s: (%llu, %llu) %s." }
+		ATG0106D:string { "Backend %s: (%llu, %llu) FM = %llu %s." }
+		ATG0107I:string { "sg tape backend for IBM tape options:\n    -o devname=<dev>           tape device (default=%s)\n"
 						"    -o autodump                enable autodump (default)\n"
 						"    -o noautodump              disable autodump\n"
 						"    -o scsi_lbprotect=<on|off> enable drive logical block protection (default=off)\n." }

@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the iokit backend.
@@ -39,57 +39,56 @@
 // ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 30800 }
-		end_id:int { 30999 }
+		prefix:string { "ATK" }
 
-		30800I:string { "Cannot set scatter gather, the opcode = %02x (%d)." }
-		30801I:string { "Cannot set CDB, the opcode = %02x (%d)." }
-		30802I:string { "Cannot set timeout, the opcode = %02x (%d)." }
-		30803I:string { "Failed to execute CDB, the opcode = %02x (%d)." }
-		30804D:string { "CDB check condition: sense = %06x, %s." }
-		30805D:string { "CDB %s." }
-		30806I:string { "Unexpected CDB status: 0x%08x." }
-		30807D:string { "%s (0x%02x) expected error %d." }
-		30808I:string { "%s (0x%02x) returns %d." }
-		30809I:string { "Cannot open device: inquiry failed (%d)." }
-		30810I:string { "Opening a device through iokit driver (%s)." }
-		30811I:string { "Cannot open device: failed to convert devname to devnumber (%s)." }
-		30812I:string { "Cannot get the drive identifier of %s." }
-		30813I:string { "Unsupported drive \'%s\' / \'%s\'." }
-		30814I:string { "Vendor ID is %s." }
-		30815I:string { "Product ID is \'%s\'." }
-		30816I:string { "Firmware revision is %s." }
-		30817I:string { "Drive serial is %s." }
-		30818I:string { "Reopening a device through iokit driver (%s)." }
-		30819W:string { "A length mismatch is detected. (Act = %d, resid = %d, resid_sense = %d)." }
-		30820I:string { "Read block: overrun in illegal length. residual = %d, actual = %d." }
-		30821D:string { "Read block: underrun in illegal length. residual = %d, actual = %d." }
-		30822D:string { "Read block: file mark detected." }
-		30823I:string { "Drive cleaning required." }
-		30824E:string { "Logical block protection Error on read." }
-		30825W:string { "Received low space warning (early warning) in %s." }
-		30826W:string { "Received low space warning (programmable early warning) in %s." }
-		30827D:string { "EOD detected (%s): ignore sense." }
-		30828I:string { "Unrecognized space type." }
-		30829I:string { "A long data wipe is in progress. (%d minutes passed)." }
-		30830I:string { "A long data wipe is in progress. %d %%." }
-		30831I:string { "Unsupported cartridge (0x%x, 0x%x)." }
-		30832I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)." }
-		30833I:string { "Cannot parse remaining capacity (0x%x, %d)." }
-		30834I:string { "Unexpected field in remaining capacity (0x%x)." }
-		30835I:string { "Cannot get remaining capacity: failed to parse the log page." }
-		30836I:string { "Cannot read attribute (%d)." }
-		30837I:string { "Cannot get log page 0x%02x (%d) in %s." }
-		30838I:string { "Cannot parse the log page 0x%02x in %s." }
-		30839I:string { "Unexpected parameter size for getting active CQ loss write (%d)." }
-		30840W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)." }
-		30841W:string { "Cannot get EOD status: failed to parse the log page." }
-		30842W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)." }
-		30843E:string { "Invalid scsi_lbprotect option: %s." }
-		30844E:string { "Encryption method of the drive is not AME but %s (0x%02X)." }
-		30845E:string { "Encryption feature is not supported on the drive: %d." }
-		30846I:string { "Pseudo-error on %s." }
-		30847I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
+		ATK0001I:string { "Cannot set scatter gather, the opcode = %02x (%d)." }
+		ATK0002I:string { "Cannot set CDB, the opcode = %02x (%d)." }
+		ATK0003I:string { "Cannot set timeout, the opcode = %02x (%d)." }
+		ATK0004I:string { "Failed to execute CDB, the opcode = %02x (%d)." }
+		ATK0005D:string { "CDB check condition: sense = %06x, %s." }
+		ATK0006D:string { "CDB %s." }
+		ATK0007I:string { "Unexpected CDB status: 0x%08x." }
+		ATK0008D:string { "%s (0x%02x) expected error %d." }
+		ATK0009I:string { "%s (0x%02x) returns %d." }
+		ATK0010I:string { "Cannot open device: inquiry failed (%d)." }
+		ATK0011I:string { "Opening a device through iokit driver (%s)." }
+		ATK0012I:string { "Cannot open device: failed to convert devname to devnumber (%s)." }
+		ATK0013I:string { "Cannot get the drive identifier of %s." }
+		ATK0014I:string { "Unsupported drive \'%s\' / \'%s\'." }
+		ATK0015I:string { "Vendor ID is %s." }
+		ATK0016I:string { "Product ID is \'%s\'." }
+		ATK0017I:string { "Firmware revision is %s." }
+		ATK0018I:string { "Drive serial is %s." }
+		ATK0019I:string { "Reopening a device through iokit driver (%s)." }
+		ATK0020W:string { "A length mismatch is detected. (Act = %d, resid = %d, resid_sense = %d)." }
+		ATK0021I:string { "Read block: overrun in illegal length. residual = %d, actual = %d." }
+		ATK0022D:string { "Read block: underrun in illegal length. residual = %d, actual = %d." }
+		ATK0023D:string { "Read block: file mark detected." }
+		ATK0024I:string { "Drive cleaning required." }
+		ATK0025E:string { "Logical block protection Error on read." }
+		ATK0026W:string { "Received low space warning (early warning) in %s." }
+		ATK0027W:string { "Received low space warning (programmable early warning) in %s." }
+		ATK0028D:string { "EOD detected (%s): ignore sense." }
+		ATK0029I:string { "Unrecognized space type." }
+		ATK0030I:string { "A long data wipe is in progress. (%d minutes passed)." }
+		ATK0031I:string { "A long data wipe is in progress. %d %%." }
+		ATK0032I:string { "Unsupported cartridge (0x%x, 0x%x)." }
+		ATK0033I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)." }
+		ATK0034I:string { "Cannot parse remaining capacity (0x%x, %d)." }
+		ATK0035I:string { "Unexpected field in remaining capacity (0x%x)." }
+		ATK0036I:string { "Cannot get remaining capacity: failed to parse the log page." }
+		ATK0037I:string { "Cannot read attribute (%d)." }
+		ATK0038I:string { "Cannot get log page 0x%02x (%d) in %s." }
+		ATK0039I:string { "Cannot parse the log page 0x%02x in %s." }
+		ATK0040I:string { "Unexpected parameter size for getting active CQ loss write (%d)." }
+		ATK0041W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)." }
+		ATK0042W:string { "Cannot get EOD status: failed to parse the log page." }
+		ATK0043W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)." }
+		ATK0044E:string { "Invalid scsi_lbprotect option: %s." }
+		ATK0045E:string { "Encryption method of the drive is not AME but %s (0x%02X)." }
+		ATK0046E:string { "Encryption feature is not supported on the drive: %d." }
+		ATK0047I:string { "Pseudo-error on %s." }
+		ATK0048I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
 		//unused 30846
 		//unused 30847
 		//unused 30848
@@ -97,35 +96,35 @@ root:table {
 		//unused 30850
 		//unused (moved) 30851W:string { "Drive firmware must be upgraded to %s or later." }
 		//unused (moved) 30852W:string { "Drive firmware level does not correctly detect the EOD status." }
-		30853I:string { "Logical block protection is enabled." }
-		30854I:string { "Logical block protection is disabled." }
-		30855I:string { "Saving drive dump to %s." }
-		30856W:string { "Cannot retrieve drive dump: failed to create dump file (%d)." }
-		30857D:string { "Total dump data length is %lld." }
-		30858D:string { "Total number of transfers is %d." }
-		30859D:string { "Transferring dump data." }
-		30860W:string { "Cannot retrieve drive dump: failed to read buffer (%d)." }
-		30861W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)." }
-		30862W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d." }
-		30863I:string { "Taking drive dump in buffer." }
-		30864I:string { "Forcing drive dump." }
-		30865I:string { "%s returns %s (%d) %s." }
-		30866E:string { "%s returns msg = NULL (%d) %s." }
-		30867W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)" }
-		30868I:string { "Retry to reserve from key registration (%s)" }
-		30869W:string { "The drive is already reserved: %s (%s)" }
-		30870I:string { "Failed to get the cartridge status. The cartridge is not loaded." }
-		30871W:string { "Failed to get medium type code: medium type check is skipped." }
-		30872I:string { "Setting up timeout values from %s." }
+		ATK0049I:string { "Logical block protection is enabled." }
+		ATK0050I:string { "Logical block protection is disabled." }
+		ATK0051I:string { "Saving drive dump to %s." }
+		ATK0052W:string { "Cannot retrieve drive dump: failed to create dump file (%d)." }
+		ATK0053D:string { "Total dump data length is %lld." }
+		ATK0054D:string { "Total number of transfers is %d." }
+		ATK0055D:string { "Transferring dump data." }
+		ATK0056W:string { "Cannot retrieve drive dump: failed to read buffer (%d)." }
+		ATK0057W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)." }
+		ATK0058W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d." }
+		ATK0059I:string { "Taking drive dump in buffer." }
+		ATK0060I:string { "Forcing drive dump." }
+		ATK0061I:string { "%s returns %s (%d) %s." }
+		ATK0062E:string { "%s returns msg = NULL (%d) %s." }
+		ATK0063W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)" }
+		ATK0064I:string { "Retry to reserve from key registration (%s)" }
+		ATK0065W:string { "The drive is already reserved: %s (%s)" }
+		ATK0066I:string { "Failed to get the cartridge status. The cartridge is not loaded." }
+		ATK0067W:string { "Failed to get medium type code: medium type check is skipped." }
+		ATK0068I:string { "Setting up timeout values from %s." }
 
-		30992D:string { "Backend %s %s." }
-		30993D:string { "Backend %s: %d %s." }
-		30994D:string { "Backend %s: %zu %s." }
-		30995D:string { "Backend %s: %zu bytes %s." }
-		30996D:string { "Backend %s: %llu %s." }
-		30997D:string { "Backend %s: (%llu, %llu) %s." }
-		30998D:string { "Backend %s: (%llu, %llu) FM = %llu %s." }
-		30999I:string { "iokit backend options:\n    -o devname=<dev>          tape device (default=%s)\n"
+		ATK0069D:string { "Backend %s %s." }
+		ATK0070D:string { "Backend %s: %d %s." }
+		ATK0071D:string { "Backend %s: %zu %s." }
+		ATK0072D:string { "Backend %s: %zu bytes %s." }
+		ATK0073D:string { "Backend %s: %llu %s." }
+		ATK0074D:string { "Backend %s: (%llu, %llu) %s." }
+		ATK0075D:string { "Backend %s: (%llu, %llu) FM = %llu %s." }
+		ATK0076I:string { "iokit backend options:\n    -o devname=<dev>          tape device (default=%s)\n"
 						"    -o scsi_lbprotect=<on|off> enable drive logical block protection (default=off)\n." }
         }
 }

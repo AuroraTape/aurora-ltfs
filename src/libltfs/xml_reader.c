@@ -87,11 +87,11 @@ int xml_scan_text(xmlTextReaderPtr reader, const char **value)
 		 * Since we also actually try to get the text, this does not lead to incorrect parsing. */
 		*value = (const char *)xmlTextReaderConstValue(reader);
 		if (!(*value)) {
-			ltfsmsg(LTFS_ERR, 17035E);
+			ltfsmsg(ALX0041E);
 			return -LTFS_XML_CONST_FAIL;
 		}
 	} else {
-		ltfsmsg(LTFS_ERR, 17036E, type);
+		ltfsmsg(ALX0042E, type);
 		return -LTFS_XML_WRONG_NODE;
 	}
 
@@ -135,7 +135,7 @@ int xml_skip_tag(xmlTextReaderPtr reader)
 
 	depth = start_depth = xmlTextReaderDepth(reader);
 	if (start_depth < 0) {
-		ltfsmsg(LTFS_ERR, 17093E);
+		ltfsmsg(ALX0072E);
 		return -1;
 	}
 
@@ -143,20 +143,20 @@ int xml_skip_tag(xmlTextReaderPtr reader)
 	while (! empty && (type != XML_ELEMENT_DECL || depth > start_depth)) {
 		ret = xmlTextReaderRead(reader);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17093E);
+			ltfsmsg(ALX0072E);
 			return -1;
 		} else if (ret == 0) {
-			ltfsmsg(LTFS_ERR, 17038E);
+			ltfsmsg(ALX0044E);
 			return -1;
 		}
 		type = xmlTextReaderNodeType(reader);
 		if (type < 0) {
-			ltfsmsg(LTFS_ERR, 17093E);
+			ltfsmsg(ALX0072E);
 			return -1;
 		}
 		depth = xmlTextReaderDepth(reader);
 		if (depth < 0) {
-			ltfsmsg(LTFS_ERR, 17093E);
+			ltfsmsg(ALX0072E);
 			return -1;
 		}
 	}
@@ -191,30 +191,30 @@ int xml_save_tag(xmlTextReaderPtr reader, size_t *tag_count, unsigned char ***ta
 	 * finished, as this call modifies the behavior of xmlFreeTextReader. */
 	doc = xmlTextReaderCurrentDoc(reader);
 	if (! doc) {
-		ltfsmsg(LTFS_ERR, 17200E, "xmlTextReaderCurrentDoc");
+		ltfsmsg(ALX0081E, "xmlTextReaderCurrentDoc");
 		return -1;
 	}
 	node = xmlTextReaderExpand(reader);
 	if (! node) {
-		ltfsmsg(LTFS_ERR, 17200E, "xmlTextReaderExpand");
+		ltfsmsg(ALX0081E, "xmlTextReaderExpand");
 		return -1;
 	}
 	buf = xmlBufferCreate();
 	if (! buf) {
-		ltfsmsg(LTFS_ERR, 17200E, "xmlBufferCreate");
+		ltfsmsg(ALX0081E, "xmlBufferCreate");
 		return -1;
 	}
 
 	ret = xmlNodeDump(buf, doc, node, 0, 0);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17200E, "xmlNodeDump");
+		ltfsmsg(ALX0081E, "xmlNodeDump");
 		return -1;
 	}
 	bufsize = xmlBufferLength(buf);
 	tag_value = malloc(bufsize + 1);
 	if (! tag_value) {
 		xmlBufferFree(buf);
-		ltfsmsg(LTFS_ERR, 10001E, "_xml_save_tag: tag value");
+		ltfsmsg(ALC0002E, "_xml_save_tag: tag value");
 		return -1;
 	}
 	memcpy(tag_value, xmlBufferContent(buf), bufsize);
@@ -224,14 +224,14 @@ int xml_save_tag(xmlTextReaderPtr reader, size_t *tag_count, unsigned char ***ta
 #else
 	tag_value = xmlTextReaderReadOuterXml(reader);
 	if (! tag_value) {
-		ltfsmsg(LTFS_ERR, 17091E);
+		ltfsmsg(ALX0070E);
 		return -1;
 	}
 #endif /* __APPLE__ */
 
 	t = realloc(*tag_list, c * sizeof(unsigned char *));
 	if (! t) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		free(tag_value);
 		return -1;
 	}
@@ -254,10 +254,10 @@ int xml_reader_read(xmlTextReaderPtr reader)
 {
 	int ret = xmlTextReaderRead(reader);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17037E);
+		ltfsmsg(ALX0043E);
 		return -LTFS_XML_READ_FAIL;
 	} else if (ret == 0) {
-		ltfsmsg(LTFS_ERR, 17038E);
+		ltfsmsg(ALX0044E);
 		return -LTFS_XML_UNEXPECTED_EOF;
 	}
 	return 0;
@@ -276,7 +276,7 @@ int xml_parse_uuid(char *out_val, const char *val)
 	CHECK_ARG_NULL(val, -LTFS_NULL_ARG);
 
 	if (strlen(val) != 36) {
-		ltfsmsg(LTFS_ERR, 17029E, val);
+		ltfsmsg(ALX0035E, val);
 		return -1;
 	}
 	strcpy(out_val, val);
@@ -284,13 +284,13 @@ int xml_parse_uuid(char *out_val, const char *val)
 	for (i=0; i<36; ++i) {
 		if (i == 8 || i == 13 || i == 18 || i == 23) {
 			if (val[i] != '-') {
-				ltfsmsg(LTFS_ERR, 17029E, val);
+				ltfsmsg(ALX0035E, val);
 				return -1;
 			}
 		} else {
 			if ((val[i] < '0' || val[i] > '9') && (val[i] < 'a' || val[i] > 'f') &&
 				(val[i] < 'A' || val[i] > 'F')) {
-				ltfsmsg(LTFS_ERR, 17029E, val);
+				ltfsmsg(ALX0035E, val);
 				return -1;
 			}
 		}
@@ -319,13 +319,13 @@ int xml_parse_filename(char **out_val, const char *value)
 
 	ret = pathname_normalize(value, out_val);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17030E, "name", value);
+		ltfsmsg(ALX0036E, "name", value);
 		return ret;
 	}
 
 	ret = pathname_validate_file(*out_val);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17031E, "name", value);
+		ltfsmsg(ALX0037E, "name", value);
 		free(*out_val);
 		*out_val = NULL;
 		return ret;
@@ -350,13 +350,13 @@ int xml_parse_target(char **out_val, const char *value)
 
 	ret = pathname_normalize(value, out_val);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17030E, "target", value);
+		ltfsmsg(ALX0036E, "target", value);
 		return ret;
 	}
 
 	ret = pathname_validate_target(*out_val);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17031E, "target", value);
+		ltfsmsg(ALX0037E, "target", value);
 		free(*out_val);
 		*out_val = NULL;
 		return ret;
@@ -457,7 +457,7 @@ int xml_parse_bool(bool *out_val, const char *value)
 	else if (! strcmp(value, "false") || ! strcmp(value, "0"))
 		*out_val = false;
 	else {
-		ltfsmsg(LTFS_ERR, 17032E, value);
+		ltfsmsg(ALX0038E, value);
 		return -1;
 	}
 
@@ -483,7 +483,7 @@ int xml_parse_time(bool msg, const char *fmt_time, struct ltfs_timespec *rawtime
 				 &rawtime->tv_nsec);
 	if( ret != 7 ) {
 		if (msg)
-			ltfsmsg(LTFS_ERR, 17034E, fmt_time, ret);
+			ltfsmsg(ALX0040E, fmt_time, ret);
 		return -1;
 	}
 
@@ -552,7 +552,7 @@ int xml_input_tape_read_callback(void *context, char *buffer, int len)
 			if (ctx->fd > 0 && nread > 0) {
 				ret_fd = write(ctx->fd, ctx->buf, nread);
 				if (ret_fd < 0) {
-					ltfsmsg(LTFS_ERR, 17244E, (int)errno);
+					ltfsmsg(ALX0093E, (int)errno);
 					ctx->errno_fd = -LTFS_CACHE_IO;
 					return -1;
 				}
@@ -561,7 +561,7 @@ int xml_input_tape_read_callback(void *context, char *buffer, int len)
 			/* Condition check of data read */
 			if (nread < 0) {
 				/* We know we're not at EOD, so read errors are unexpected. */
-				ltfsmsg(LTFS_ERR, 17039E, (int)nread);
+				ltfsmsg(ALX0045E, (int)nread);
 				ctx->err_code = nread;
 				return -1;
 			} else if ((size_t) nread < ctx->buf_size) {
@@ -572,7 +572,7 @@ int xml_input_tape_read_callback(void *context, char *buffer, int len)
 					ctx->saw_file_mark = true;
 					ret_sp = tape_spacefm(ctx->vol->device, -1);
 					if (ret_sp < 0) {
-						ltfsmsg(LTFS_ERR, 17040E);
+						ltfsmsg(ALX0046E);
 						ctx->err_code = ret_sp;
 						return -1;
 					}
@@ -581,7 +581,7 @@ int xml_input_tape_read_callback(void *context, char *buffer, int len)
 					/* Look for a trailing file mark. */
 					buf2 = malloc(ctx->vol->label->blocksize);
 					if (!buf2) {
-						ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+						ltfsmsg(ALC0002E, __FUNCTION__);
 						ctx->err_code = -LTFS_NO_MEMORY;
 						return -1;
 					}
@@ -590,14 +590,14 @@ int xml_input_tape_read_callback(void *context, char *buffer, int len)
 					free(buf2);
 					errno = 0; /* Clear errno because some OSs set errno in free() */
 					if (nr2 < 0) { /* Still not at EOD, so read errors are cause for alarm. */
-						ltfsmsg(LTFS_ERR, 17041E, (int)nr2);
+						ltfsmsg(ALX0047E, (int)nr2);
 						ctx->err_code = nr2;
 						return -1;
 					} else if (nr2 == 0) {
 						ctx->saw_file_mark = true;
 						ret_sp = tape_spacefm(ctx->vol->device, -1);
 						if (ret_sp < 0) {
-							ltfsmsg(LTFS_ERR, 17040E);
+							ltfsmsg(ALX0046E);
 							ctx->err_code = ret_sp;
 							return -1;
 						}

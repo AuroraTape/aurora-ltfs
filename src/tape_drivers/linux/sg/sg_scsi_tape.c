@@ -89,7 +89,7 @@ static int sg_sense2errno(sg_io_hdr_t *req, uint32_t *s, char **msg)
 		rc = -EDEV_HARDWARE_ERROR;
 
 	if (rc == -EDEV_UNKNOWN) {
-		ltfsmsg(LTFS_INFO, 30287I, sense_value);
+		ltfsmsg(ATG0089I, sense_value);
 	}
 
 	return rc;
@@ -201,7 +201,7 @@ int sg_issue_cdb_command(struct sg_tape *device, sg_io_hdr_t *req, char **msg)
 start:
 	ret = ioctl(device->fd, SG_IO, req);
 	if (ret < 0) {
-		ltfsmsg(LTFS_INFO, 30200I, *req->cmdp, errno);
+		ltfsmsg(ATG0001I, *req->cmdp, errno);
 		if (errno == ENODEV) {
 			if (msg) *msg = "No device found";
 			return -EDEV_CONNECTION_LOST;
@@ -288,7 +288,7 @@ start:
 				ret = -EDEV_RESERVATION_CONFLICT;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30244I, req->host_status, req->driver_status);
+				ltfsmsg(ATG0045I, req->host_status, req->driver_status);
 				if (msg) *msg = "Unexpected host status";
 				ret = -EDEV_HOST_ERROR;
 				break;
@@ -323,7 +323,7 @@ start:
 			case DRIVER_INVALID:
 			case DRIVER_HARD:
 			default:
-				ltfsmsg(LTFS_INFO, 30244I, req->host_status, req->driver_status);
+				ltfsmsg(ATG0045I, req->host_status, req->driver_status);
 				if (msg) *msg = "Busy on the driver";
 				ret = -EDEV_DRIVER_ERROR;
 				break;
@@ -368,24 +368,24 @@ start:
 		case SCSI_CHECK_CONDITION:
 			if (req->sb_len_wr) {
 				ret = sg_sense2errno(req, &sense, msg);
-				ltfsmsg(LTFS_DEBUG, 30201D, sense, *msg);
+				ltfsmsg(ATG0002D, sense, *msg);
 			} else {
 				ret = -EDEV_NO_SENSE;
-				ltfsmsg(LTFS_DEBUG, 30202D, "nosense");
+				ltfsmsg(ATG0003D, "nosense");
 			}
 			break;
 		case SCSI_BUSY:
-			ltfsmsg(LTFS_DEBUG, 30202D, "busy");
+			ltfsmsg(ATG0003D, "busy");
 			ret = -EDEV_DEVICE_BUSY;
 			if (msg) *msg = "Drive busy";
 			break;
 		case SCSI_RESERVATION_CONFLICT:
-			ltfsmsg(LTFS_DEBUG, 30202D, "reservation conflict");
+			ltfsmsg(ATG0003D, "reservation conflict");
 			ret = -EDEV_RESERVATION_CONFLICT;
 			if (msg) *msg = "Drive reservation conflict";
 			break;
 		default:
-			ltfsmsg(LTFS_INFO, 30203I, req->status, req->masked_status);
+			ltfsmsg(ATG0004I, req->status, req->masked_status);
 			ret = -EDEV_TARGET_ERROR;
 			if (msg) *msg = "CDB command returned unexpected status";
 			break;
@@ -393,9 +393,9 @@ start:
 
 	if (ret != DEVICE_GOOD) {
 		if (is_expected_error(device, req->cmdp, ret)) {
-			ltfsmsg(LTFS_DEBUG, 30204D, (char *)req->usr_ptr, req->cmdp[0], ret);
+			ltfsmsg(ATG0005D, (char *)req->usr_ptr, req->cmdp[0], ret);
 		} else {
-			ltfsmsg(LTFS_INFO, 30205I, (char *)req->usr_ptr, req->cmdp[0], ret);
+			ltfsmsg(ATG0006I, (char *)req->usr_ptr, req->cmdp[0], ret);
 		}
 	}
 
@@ -453,7 +453,7 @@ int sg_get_drive_identifier(struct sg_tape *device, scsi_device_identifier *id_d
 
 	ret = _inquiry_low(device, 0, inquiry_buf, MAX_INQ_LEN);
 	if( ret < 0 ) {
-		ltfsmsg(LTFS_INFO, 30206I, ret);
+		ltfsmsg(ATG0007I, ret);
 		return ret;
 	}
 
@@ -470,7 +470,7 @@ int sg_get_drive_identifier(struct sg_tape *device, scsi_device_identifier *id_d
 
 	ret = _inquiry_low(device, 0x80, inquiry_buf, MAX_INQ_LEN);
 	if( ret < 0 ) {
-		ltfsmsg(LTFS_INFO, 30206I, ret);
+		ltfsmsg(ATG0007I, ret);
 		return ret;
 	}
 

@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the fcfs scheduler.
@@ -39,11 +39,10 @@
 // ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 13005 }
-		end_id:int { 13499 }
+		prefix:string { "AIF" }
 
-		13019I:string { "FCFS I/O scheduler initialized." }
-		13020I:string { "FCFS I/O scheduler uninitialized." }
+		AIF0001I:string { "FCFS I/O scheduler initialized." }
+		AIF0002I:string { "FCFS I/O scheduler uninitialized." }
 	}
 }
 

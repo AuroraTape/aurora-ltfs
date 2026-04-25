@@ -128,7 +128,7 @@ int ltfs_init(int log_level, bool use_syslog, bool print_thread_id)
 
 	ret = ltfsprintf_init(log_level, use_syslog, print_thread_id);
 	if (ret < 0) {
-		fprintf(stderr, "LTFS9011E Logging initialization failed\n");
+		fprintf(stderr, "ALB0001E Logging initialization failed\n");
 		return ret;
 	}
 
@@ -158,7 +158,7 @@ int ltfs_fs_init(void)
 
 	ret = fs_init_inode();
 	if (ret < 0)
-		ltfsmsg(LTFS_ERR, 17232E, ret);
+		ltfsmsg(ALB0255E, ret);
 
 	return ret;
 }
@@ -311,28 +311,28 @@ int ltfs_volume_alloc(const char *execname, struct ltfs_volume **volume)
 	newvol = calloc(1, sizeof(struct ltfs_volume));
 	if (!newvol) {
 		/* Memory allocation failed */
-		ltfsmsg(LTFS_ERR, 10001E, "ltfs_volume_alloc");
+		ltfsmsg(ALC0002E, "ltfs_volume_alloc");
 		return -LTFS_NO_MEMORY;
 	}
 
 	ret = tape_device_alloc(&newvol->device);
 	if (ret < 0) {
 		/* Couldn't allocate device data structure */
-		ltfsmsg(LTFS_ERR, 11000E);
+		ltfsmsg(ALB0002E);
 		goto out_volfree;
 	}
 
 	ret = label_alloc(&newvol->label);
 	if (ret < 0) {
 		/* Failed to allocate label data */
-		ltfsmsg(LTFS_ERR, 11001E);
+		ltfsmsg(ALB0003E);
 		goto out_devfree;
 	}
 
 	ret = ltfs_index_alloc(&newvol->index, newvol);
 	if (ret < 0) {
 		/* Failed to allocate index data */
-		ltfsmsg(LTFS_ERR, 11002E);
+		ltfsmsg(ALB0004E);
 		goto out_labelfree;
 	}
 
@@ -343,18 +343,18 @@ int ltfs_volume_alloc(const char *execname, struct ltfs_volume **volume)
 
 	ret = init_mrsw(&newvol->lock);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10002E, ret);
+		ltfsmsg(ALC0003E, ret);
 		goto out_indexfree;
 	}
 	ret = ltfs_thread_mutex_init(&newvol->reval_lock);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10002E, ret);
+		ltfsmsg(ALC0003E, ret);
 		ret = -LTFS_MUTEX_INIT;
 		goto out_lockfree;
 	}
 	ret = ltfs_thread_cond_init(&newvol->reval_cond);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10003E, ret);
+		ltfsmsg(ALC0004E, ret);
 		ret = -LTFS_MUTEX_INIT;
 		goto out_lockfree2;
 	}
@@ -364,7 +364,7 @@ int ltfs_volume_alloc(const char *execname, struct ltfs_volume **volume)
 			"IBM LTFS", PACKAGE_VERSION, PLATFORM, execname);
 		if (ret < 0) {
 			/* Memory allocation failed */
-			ltfsmsg(LTFS_ERR, 10001E, "ltfs_volume_alloc, creator string");
+			ltfsmsg(ALC0002E, "ltfs_volume_alloc, creator string");
 			ret = -LTFS_NO_MEMORY;
 			goto out_condfree;
 		}
@@ -459,10 +459,10 @@ int ltfs_device_open(const char *devname, struct tape_ops *ops, struct ltfs_volu
 
 	ret = tape_get_max_blocksize(vol->device, &block_size);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17195E, "open", ret);
+		ltfsmsg(ALP0110E, "open", ret);
 		return ret;
 	}
-	ltfsmsg(LTFS_INFO, 17160I, block_size);
+	ltfsmsg(ALB0240I, block_size);
 
 	return 0;
 }
@@ -515,16 +515,16 @@ int ltfs_setup_device(struct ltfs_volume *vol)
 		return ret;
 
 	if (vol->append_only_mode) {
-		ltfsmsg(LTFS_INFO, 17157I, "to append-only mode");
+		ltfsmsg(ALB0239I, "to append-only mode");
 		ret = tape_enable_append_only_mode(vol->device, true);
 	} else {
 		/* Check write mode and reset to write-anywhere mode if required. */
-		ltfsmsg(LTFS_INFO, 17157I, "to write-anywhere mode");
+		ltfsmsg(ALB0239I, "to write-anywhere mode");
 		ret = tape_get_append_only_mode_setting(vol->device, &enabled);
 		if (ret < 0)
 			return ret;
 		if (enabled) {
-			ltfsmsg(LTFS_INFO, 17157I, "from append-only mode to write-anywhere mode");
+			ltfsmsg(ALB0239I, "from append-only mode to write-anywhere mode");
 			ret = tape_enable_append_only_mode(vol->device, false);
 		}
 	}
@@ -563,7 +563,7 @@ start:
 		else
 			return ret;
 	} else if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+		ltfsmsg(ALB0190E, __FUNCTION__);
 		releaseread_mrsw(&vol->lock);
 		return ret;
 	}
@@ -691,7 +691,7 @@ int ltfs_capacity_data_unlocked(struct device_capacity *cap, struct ltfs_volume 
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -712,7 +712,7 @@ int ltfs_capacity_data_unlocked(struct device_capacity *cap, struct ltfs_volume 
 			vol->reval = -LTFS_REVAL_FAILED;
 		tape_device_unlock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11003E, ret);
+			ltfsmsg(ALB0005E, ret);
 			return ret;
 		}
 
@@ -764,7 +764,7 @@ int ltfs_get_cartridge_health(cartridge_health_info *h, struct ltfs_volume *vol)
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -837,7 +837,7 @@ int ltfs_get_tape_alert_unlocked(uint64_t *tape_alert, struct ltfs_volume *vol)
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -879,7 +879,7 @@ int ltfs_clear_tape_alert(uint64_t tape_alert, struct ltfs_volume *vol)
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -910,7 +910,7 @@ int ltfs_get_params_unlocked(struct device_param *params, struct ltfs_volume *vo
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -983,7 +983,7 @@ int ltfs_get_vendorunique_xattr(const char *name, char **buf, struct ltfs_volume
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -1019,7 +1019,7 @@ int ltfs_set_vendorunique_xattr(const char *name, const char *value, size_t size
 	if (vol->device) {
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			return ret;
 		}
 
@@ -1273,7 +1273,7 @@ int ltfs_get_index_commit_message(char **msg, struct ltfs_volume *vol)
 	if (vol->index->commit_message) {
 		ret = strdup(vol->index->commit_message);
 		if (! ret) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			releaseread_mrsw(&vol->lock);
 			return -LTFS_NO_MEMORY;
 		}
@@ -1298,7 +1298,7 @@ int ltfs_get_index_creator(char **msg, struct ltfs_volume *vol)
 	if (vol->index->creator) {
 		ret = strdup(vol->index->creator);
 		if (! ret) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			releaseread_mrsw(&vol->lock);
 			return -LTFS_NO_MEMORY;
 		}
@@ -1323,7 +1323,7 @@ int ltfs_get_volume_name(char **msg, struct ltfs_volume *vol)
 	if (vol->index->volume_name.name) {
 		ret = strdup(vol->index->volume_name.name);
 		if (! ret) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			releaseread_mrsw(&vol->lock);
 			return -LTFS_NO_MEMORY;
 		}
@@ -1406,13 +1406,13 @@ int ltfs_start_mount(bool trial, struct ltfs_volume *vol)
 
 	/* load tape */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_DEBUG, 11012D); /* loading the tape... */
+	ltfsmsg(ALB0014D); /* loading the tape... */
 	ret = tape_load_tape(vol->device, vol->kmi_handle, false);
 	if (ret < 0) {
 		if (ret == -LTFS_UNSUPPORTED_MEDIUM)
-			ltfsmsg(LTFS_ERR, 11298E);
+			ltfsmsg(ALB0137E);
 		else
-			ltfsmsg(LTFS_ERR, 11006E);
+			ltfsmsg(ALB0008E);
 		return ret;
 	}
 
@@ -1422,50 +1422,50 @@ int ltfs_start_mount(bool trial, struct ltfs_volume *vol)
 	ret = tape_seek(vol->device, &seekpos);
 	if (ret < 0) {
 		if (ret == -LTFS_UNSUPPORTED_MEDIUM || ret == -EDEV_MEDIUM_FORMAT_ERROR)
-			ltfsmsg(LTFS_ERR, 11298E);
+			ltfsmsg(ALB0137E);
 		else
-			ltfsmsg(LTFS_ERR, 11006E);
+			ltfsmsg(ALB0008E);
 		return ret;
 	}
 
-	ltfsmsg(LTFS_DEBUG, 11007D); /* tape is loaded */
+	ltfsmsg(ALB0009D); /* tape is loaded */
 
 	/* Check partition */
 	ret = tape_get_capacity(vol->device, &cap);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17167E, ret);
+		ltfsmsg(ALB0245E, ret);
 		return ret;
 	} else if (cap.max_p0 == 0 || cap.max_p1 == 0) {
 		if (! trial)
-			ltfsmsg(LTFS_ERR, 17168E);
+			ltfsmsg(ALB0246E);
 		return -LTFS_NOT_PARTITIONED;
 	}
 
 	/* read labels from both partitions and compare them */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_DEBUG, 11008D); /* read partition labels ... */
+	ltfsmsg(ALB0010D); /* read partition labels ... */
 	ret = ltfs_read_labels(trial, vol);
 	if (ret < 0) {
 		/* Failed to read partition labels */
-		ltfsmsg(LTFS_ERR, 11009E);
+		ltfsmsg(ALB0011E);
 		return ret;
 	}
 
 	ret = tape_set_compression(vol->device, vol->label->enable_compression);
 	if (ret < 0) {
 		/* Failed to set compression */
-		ltfsmsg(LTFS_ERR, 11010E);
+		ltfsmsg(ALB0012E);
 		return ret;
 	}
 
 	ret = tape_get_max_blocksize(vol->device, &tape_maxblk);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17195E, "mount", ret);
+		ltfsmsg(ALP0110E, "mount", ret);
 		return ret;
 	}
 	if (tape_maxblk < vol->label->blocksize) {
 		/* Blocksize too large for device */
-		ltfsmsg(LTFS_ERR, 11011E, vol->label->blocksize, tape_maxblk);
+		ltfsmsg(ALB0013E, vol->label->blocksize, tape_maxblk);
 		return -LTFS_LARGE_BLOCKSIZE;
 	}
 
@@ -1479,30 +1479,30 @@ static inline int _ltfs_search_index_wp(bool recover_symlink, bool can_skip_ip,
 	tape_block_t end_pos, index_end_pos;
 	bool fm_after, blocks_after;
 
-	ltfsmsg(LTFS_INFO, 17284I, "IP");
+	ltfsmsg(ALB0272I, "IP");
 	ret = ltfs_seek_index(vol->label->partid_ip, &end_pos, &index_end_pos, &fm_after,
 						  &blocks_after, recover_symlink, vol);
 	if (ret) {
 		if (can_skip_ip) {
-			ltfsmsg(LTFS_INFO, 17289I);
+			ltfsmsg(ALB0277I);
 			vol->ip_coh.count = 0;
 			vol->ip_coh.set_id = 0;
 		} else {
-			ltfsmsg(LTFS_ERR, 17285E, "IP", ret);
+			ltfsmsg(ALB0273E, "IP", ret);
 			return -LTFS_INDEX_INVALID;
 		}
 	}
 
-	ltfsmsg(LTFS_INFO, 17284I, "DP");
+	ltfsmsg(ALB0272I, "DP");
 	ret = ltfs_seek_index(vol->label->partid_dp, &end_pos, &index_end_pos, &fm_after,
 						  &blocks_after, recover_symlink, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17285E, "DP", ret);
+		ltfsmsg(ALB0273E, "DP", ret);
 		return -LTFS_INDEX_INVALID;
 	}
 
 	/* Use the latest index on the tape */
-	ltfsmsg(LTFS_INFO, 17288I,
+	ltfsmsg(ALB0276I,
 			(unsigned long long)vol->ip_coh.count, (unsigned long long)vol->ip_coh.set_id,
 			(unsigned long long)vol->dp_coh.count, (unsigned long long)vol->dp_coh.set_id);
 
@@ -1542,7 +1542,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	char *vl_print = NULL;
 	char *barcode = NULL;
 
-	ltfsmsg(LTFS_INFO, 11005I, "device");
+	ltfsmsg(ALB0007I, "device");
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
@@ -1562,8 +1562,8 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	vol->first_locate.tv_sec = 0;
 	vol->first_locate.tv_nsec = 0;
 
-	ltfsmsg(LTFS_DEBUG, 11013D); /* partition labels are valid */
-	ltfsmsg(LTFS_DEBUG, 11014D); /* read MAM parameters... */
+	ltfsmsg(ALB0015D); /* partition labels are valid */
+	ltfsmsg(ALB0016D); /* read MAM parameters... */
 
 	tape_get_cart_volume_lock_status(vol->device, &vollock);
 	tape_get_worm_status(vol->device, &vol->device->is_worm);
@@ -1587,7 +1587,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 		&vol->ip_coh);
 	if (ret != 0 || strcmp(vol->ip_coh.uuid, vol->label->vol_uuid)) {
 		/* MAM parameter for index partition invalid */
-		ltfsmsg(LTFS_WARN, 11016W);
+		ltfsmsg(ALB0018W);
 		memset(&vol->ip_coh, 0, sizeof(struct tc_coherency));
 	}
 
@@ -1595,14 +1595,14 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 		&vol->dp_coh);
 	if (ret != 0 || strcmp(vol->dp_coh.uuid, vol->label->vol_uuid)) { /* attribute was invalid */
 		/* MAM parameter for data partition invalid */
-		ltfsmsg(LTFS_WARN, 11017W);
+		ltfsmsg(ALB0019W);
 		memset(&vol->dp_coh, 0, sizeof(struct tc_coherency));
 	}
 
 	ret = tape_get_volume_change_reference(vol->device, &volume_change_ref);
 	if (ret < 0 || volume_change_ref == 0 || volume_change_ref == UINT64_MAX) {
 		/* MAM parameters are invalid. */
-		ltfsmsg(LTFS_WARN, 11015W);
+		ltfsmsg(ALB0017W);
 		memset(&vol->ip_coh, 0, sizeof(struct tc_coherency));
 		memset(&vol->dp_coh, 0, sizeof(struct tc_coherency));
 	}
@@ -1612,8 +1612,8 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	if (vol->ip_coh.version == 0 || vol->dp_coh.version == 0)
 		force_full = true;
 
-	ltfsmsg(LTFS_DEBUG, 11018D); /* Done reading MAM parameters */
-	ltfsmsg(LTFS_DEBUG, 11019D); /* Checking volume consistency... */
+	ltfsmsg(ALB0020D); /* Done reading MAM parameters */
+	ltfsmsg(ALB0021D); /* Checking volume consistency... */
 
 	/* check for consistency */
 	INTERRUPTED_GOTO(ret, out_unlock);
@@ -1640,7 +1640,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				break;
 		}
 
-		ltfsmsg(LTFS_INFO, 11333I, vl_print,
+		ltfsmsg(ALB0154I, vl_print,
 				(unsigned long long)vol->ip_coh.count, (unsigned long long)vol->ip_coh.volume_change_ref,
 				(unsigned long long)vol->dp_coh.count, (unsigned long long)vol->dp_coh.volume_change_ref,
 				(unsigned long long)volume_change_ref);
@@ -1656,7 +1656,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				 * If LTFS failed to write IP with non-medium reason error (like cable pull on locate)
 				 * while write error handling at DP in the previous session, this condition would happen.
 				 */
-				ltfsmsg(LTFS_INFO, 17264I, "DP", vl_print);
+				ltfsmsg(ALB0262I, "DP", vl_print);
 			}
 
 			if (volume_change_ref != vol->dp_coh.volume_change_ref) {
@@ -1665,7 +1665,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				 * This would happen when the drive returns an error against acquiring the VCR
 				 * while write error handling.
 				 */
-				ltfsmsg(LTFS_INFO, 17283I,
+				ltfsmsg(ALB0271I,
 						(unsigned long long)vol->dp_coh.volume_change_ref,
 						(unsigned long long)volume_change_ref);
 
@@ -1675,7 +1675,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 					goto out_unlock;
 
 			} else {
-				ltfsmsg(LTFS_INFO, 17286I, "DP", (unsigned long long)volume_change_ref);
+				ltfsmsg(ALB0274I, "DP", (unsigned long long)volume_change_ref);
 				seekpos.partition = ltfs_part_id2num(vol->label->partid_dp, vol);
 				seekpos.block = vol->dp_coh.set_id;
 			}
@@ -1686,7 +1686,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				 * LTFS already have written an index on DP when it is writing an index on IP,
 				 * so this condition wouldn't happen logically.
 				 */
-				ltfsmsg(LTFS_INFO, 17264I, "IP", vl_print);
+				ltfsmsg(ALB0262I, "IP", vl_print);
 			}
 
 			if (volume_change_ref != vol->ip_coh.volume_change_ref) {
@@ -1695,7 +1695,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				 * This would happen when the drive returns an error against acquiring the VCR
 				 * while write error handling.
 				 */
-				ltfsmsg(LTFS_INFO, 17283I,
+				ltfsmsg(ALB0271I,
 						(unsigned long long)vol->dp_coh.volume_change_ref,
 						(unsigned long long)volume_change_ref);
 
@@ -1710,7 +1710,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 					goto out_unlock;
 
 			} else {
-				ltfsmsg(LTFS_INFO, 17286I, "IP", (unsigned long long)volume_change_ref);
+				ltfsmsg(ALB0274I, "IP", (unsigned long long)volume_change_ref);
 				seekpos.partition = ltfs_part_id2num(vol->label->partid_ip, vol);
 				seekpos.block = vol->ip_coh.set_id;
 			}
@@ -1719,7 +1719,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 		if (vol->label->part_num2id[seekpos.partition] == vol->label->partid_ip)
 			read_ip = true;
 
-		ltfsmsg(LTFS_INFO, 17287I,
+		ltfsmsg(ALB0275I,
 				vol->label->part_num2id[seekpos.partition],
 				(unsigned long long)seekpos.block);
 
@@ -1727,29 +1727,29 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 		if (ret == -EDEV_EOD_DETECTED) {
 			INTERRUPTED_GOTO(ret, out_unlock);
 			/* MAM parameters could be corrupted, try a full consistency check */
-			ltfsmsg(LTFS_INFO, 11026I);
+			ltfsmsg(ALB0028I);
 			ret = ltfs_check_medium(true, deep_recovery, recover_extra, recover_symlink, vol);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 11027E);
+				ltfsmsg(ALB0029E);
 				goto out_unlock;
 			}
 		} else if (ret < 0) {
 			if (read_ip)
-				ltfsmsg(LTFS_ERR, 11023E); /* seek to IP Index failed */
+				ltfsmsg(ALB0025E); /* seek to IP Index failed */
 			else
-				ltfsmsg(LTFS_ERR, 11020E); /* seek to DP Index failed */
+				ltfsmsg(ALB0022E); /* seek to DP Index failed */
 			goto out_unlock;
 		} else {
 			INTERRUPTED_GOTO(ret, out_unlock);
 			ret = ltfs_read_index(0, false, false, vol);
 			if (ret < 0) {
 				if (read_ip)
-					ltfsmsg(LTFS_ERR, 11024E); /* read IP Index failed */
+					ltfsmsg(ALB0026E); /* read IP Index failed */
 				else
-					ltfsmsg(LTFS_ERR, 11021E); /* read DP Index failed */
+					ltfsmsg(ALB0023E); /* read DP Index failed */
 				goto out_unlock;
 			} else {
-				ltfsmsg(LTFS_DEBUG, 11025D); /* volume is consistent */
+				ltfsmsg(ALB0027D); /* volume is consistent */
 				vol->mount_type = MOUNT_ERR_TAPE;
 			}
 		}
@@ -1763,24 +1763,24 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 			if (ret == -EDEV_EOD_DETECTED) {
 				INTERRUPTED_GOTO(ret, out_unlock);
 				/* MAM parameters could be corrupted, try a full consistency check */
-				ltfsmsg(LTFS_INFO, 11026I);
+				ltfsmsg(ALB0028I);
 				ret = ltfs_check_medium(true, deep_recovery, recover_extra, recover_symlink, vol);
 				if (ret < 0) {
-					ltfsmsg(LTFS_ERR, 11027E);
+					ltfsmsg(ALB0029E);
 					goto out_unlock;
 				}
 			} else if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 11020E); /* seek to DP Index failed */
+				ltfsmsg(ALB0022E); /* seek to DP Index failed */
 				goto out_unlock;
 			} else {
 				INTERRUPTED_GOTO(ret, out_unlock);
 				ret = ltfs_read_index(0, false, false, vol);
 				if (ret < 0) {
-					ltfsmsg(LTFS_ERR, 11021E); /* read DP Index failed */
+					ltfsmsg(ALB0023E); /* read DP Index failed */
 					goto out_unlock;
 				}
 				INTERRUPTED_GOTO(ret, out_unlock);
-				ltfsmsg(LTFS_INFO, 11022I);
+				ltfsmsg(ALB0024I);
 				ltfs_set_commit_message_reason(SYNC_RECOVERY, vol);
 				ret = ltfs_write_index(vol->label->partid_ip, SYNC_RECOVERY, LTFS_FULL_INDEX, vol);
 				if (ret < 0)
@@ -1793,23 +1793,23 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 			if (ret == -EDEV_EOD_DETECTED) {
 				INTERRUPTED_GOTO(ret, out_unlock);
 				/* MAM parameters could be corrupted, try a full consistency check */
-				ltfsmsg(LTFS_INFO, 11026I);
+				ltfsmsg(ALB0028I);
 				ret = ltfs_check_medium(true, deep_recovery, recover_extra, recover_symlink, vol);
 				if (ret < 0) {
-					ltfsmsg(LTFS_ERR, 11027E);
+					ltfsmsg(ALB0029E);
 					goto out_unlock;
 				}
 			} else if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 11023E); /* seek to IP Index failed */
+				ltfsmsg(ALB0025E); /* seek to IP Index failed */
 				goto out_unlock;
 			} else {
 				INTERRUPTED_GOTO(ret, out_unlock);
 				ret = ltfs_read_index(0, false, false, vol);
 				if (ret < 0) {
-					ltfsmsg(LTFS_ERR, 11024E); /* read IP Index failed */
+					ltfsmsg(ALB0026E); /* read IP Index failed */
 					goto out_unlock;
 				}
-				ltfsmsg(LTFS_DEBUG, 11025D); /* volume is consistent */
+				ltfsmsg(ALB0027D); /* volume is consistent */
 			}
 		}
 	} else if (is_worm_recovery_mount) {
@@ -1817,15 +1817,15 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	} else {
 		/* do a full consistency check on the medium itself */
 		INTERRUPTED_GOTO(ret, out_unlock);
-		ltfsmsg(LTFS_INFO, 11026I); /* performing full medium consistency check */
+		ltfsmsg(ALB0028I); /* performing full medium consistency check */
 		ret = ltfs_check_medium(true, deep_recovery, recover_extra, recover_symlink, vol);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11027E); /* consistency check failed */
+			ltfsmsg(ALB0029E); /* consistency check failed */
 			goto out_unlock;
 		}
 	}
 
-	ltfsmsg(LTFS_DEBUG, 11028D); /* finished consistency check */
+	ltfsmsg(ALB0030D); /* finished consistency check */
 
 	/* Make roll back mount if necessary */
 	INTERRUPTED_GOTO(ret, out_unlock);
@@ -1844,7 +1844,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				ret = ltfs_traverse_index_backward(vol, ltfs_dp_id(vol), gen, false, NULL, NULL, NULL);
 		}
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17079E, gen);
+			ltfsmsg(ALB0202E, gen);
 			goto out_unlock;
 		} else {
 			vol->mount_type = MOUNT_ROLLBACK;
@@ -1859,13 +1859,13 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	ret = tape_set_ip_append_position(vol->device, ltfs_part_id2num(ltfs_ip_id(vol), vol), vol->index->selfptr.block - 1);
 
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11029E); /* failed to save append position for IP */
+		ltfsmsg(ALB0031E); /* failed to save append position for IP */
 		goto out_unlock;
 	}
 
 	/* Issue a warning if the UID space is exhausted: new create/mkdir requests will be rejected */
 	if (vol->index->uid_number == 0)
-		ltfsmsg(LTFS_WARN, 11307W, vol->label->vol_uuid);
+		ltfsmsg(ALB0140W, vol->label->vol_uuid);
 
 	/* If we reach this point, both partitions end in an index file. */
 	vol->ip_index_file_end = true;
@@ -1894,7 +1894,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 
 	barcode = _get_barcode(vol);
 
-	ltfsmsg(LTFS_INFO, 11031I,
+	ltfsmsg(ALB0032I,
 			barcode,
 			(unsigned long long)vol->index->generation,
 			vol->index->selfptr.partition,
@@ -1928,7 +1928,7 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 {
 	int ret = 0;
 
-	ltfsmsg(LTFS_INFO, 11005I, filename);
+	ltfsmsg(ALB0007I, filename);
 
 	CHECK_ARG_NULL(filename, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
@@ -1940,7 +1940,7 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 			/* ltfs_start_mount() generated an appropriate error message */
 			goto out_unlock;
 		}
-		ltfsmsg(LTFS_DEBUG, 11013D); /* partition labels are valid */
+		ltfsmsg(ALB0015D); /* partition labels are valid */
 		vol->mount_type = MOUNT_ROLLBACK;
 	} else {
 		/* Assume 512KB block*/
@@ -1959,7 +1959,7 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 			 * Volume UUID in label and it on index is not matched.
 			 * Actual UUID is not printed to avoid illegal modification by hand.
 			 */
-			ltfsmsg(LTFS_ERR, 17293E);
+			ltfsmsg(ALB0280E);
 			ret = -LTFS_LABEL_MISMATCH;
 		}
 	}
@@ -1983,7 +1983,7 @@ int ltfs_load_all_attributes(struct ltfs_volume *vol)
 		/* load tape attribute from Cartridge Memory*/
 		vol->t_attr = (struct tape_attr *) calloc(1, sizeof(struct tape_attr));
 		if (! vol->t_attr) {
-			ltfsmsg(LTFS_ERR, 10001E, "ltfs_load_all_attribute: vol->t_attr");
+			ltfsmsg(ALC0002E, "ltfs_load_all_attribute: vol->t_attr");
 			ret = -LTFS_NO_MEMORY;
 		} else
 			tape_load_all_attribute_from_cm(vol->device, vol->t_attr);
@@ -2018,7 +2018,7 @@ void ltfs_set_index_dirty(bool locking, bool atime, struct ltfs_index *idx)
 			ltfs_mutex_unlock(&idx->dirty_lock);
 
 		if (!was_dirty && idx->dirty) {
-			ltfsmsg(LTFS_INFO, 11337I, true, _get_barcode(idx->root->vol), idx->root->vol);
+			ltfsmsg(ALB0156I, true, _get_barcode(idx->root->vol), idx->root->vol);
 		}
 	}
 }
@@ -2044,7 +2044,7 @@ void ltfs_unset_index_dirty(bool update_version, struct ltfs_index *idx)
 		ltfs_mutex_unlock(&idx->dirty_lock);
 
 		if (was_dirty && !idx->dirty) {
-			ltfsmsg(LTFS_INFO, 11337I, false, _get_barcode(idx->root->vol), idx->root->vol);
+			ltfsmsg(ALB0156I, false, _get_barcode(idx->root->vol), idx->root->vol);
 		}
 	}
 }
@@ -2064,7 +2064,7 @@ int ltfs_unmount(char *reason, struct ltfs_volume *vol)
 	char *mount_type = NULL;
 	char *mam_lock = NULL;
 
-	ltfsmsg(LTFS_DEBUG, 11032D); /* Unmount the volume... */
+	ltfsmsg(ALB0033D); /* Unmount the volume... */
 
 start:
 	ret = ltfs_get_volume_lock(true, vol);
@@ -2082,7 +2082,7 @@ start:
 					releasewrite_mrsw(&vol->lock);
 					goto start;
 				} else {
-					ltfsmsg(LTFS_ERR, 11033E);
+					ltfsmsg(ALB0034E);
 					/* Reset revalidation flag to allow future mount attempts */
 					ltfs_thread_mutex_lock(&vol->reval_lock);
 					vol->reval = 0;
@@ -2093,7 +2093,7 @@ start:
 			} else if (ret < 0) {
 				if (IS_UNEXPECTED_MOVE(ret))
 					vol->reval = -LTFS_REVAL_FAILED;
-				ltfsmsg(LTFS_ERR, 11033E); /* could not unmount, failed to write Index */
+				ltfsmsg(ALB0034E); /* could not unmount, failed to write Index */
 				releasewrite_mrsw(&vol->lock);
 				return ret;
 			}
@@ -2114,9 +2114,9 @@ start:
 						mount_type = "the volume is mounted as UNKNOWN";
 						break;
 				}
-				ltfsmsg(LTFS_INFO, 17265I, mount_type);
+				ltfsmsg(ALB0263I, mount_type);
 			} else if (!ltfs_is_dirty(vol) && vol->index->selfptr.partition == ltfs_ip_id(vol)) {
-				ltfsmsg(LTFS_INFO, 17265I, "the volume is not dirty and current self pointer points IP");
+				ltfsmsg(ALB0263I, "the volume is not dirty and current self pointer points IP");
 			} else if (vollock == PWE_MAM_IP || vollock == PWE_MAM_BOTH) {
 				switch (vollock) {
 					case PWE_MAM:
@@ -2135,9 +2135,9 @@ start:
 						mam_lock = "the mam lock field is UNKNOWN";
 						break;
 				}
-				ltfsmsg(LTFS_INFO, 17265I, mam_lock);
+				ltfsmsg(ALB0263I, mam_lock);
 			} else {
-				ltfsmsg(LTFS_INFO, 17265I, "the volume is unexpected condition");
+				ltfsmsg(ALB0263I, "the volume is unexpected condition");
 			}
 		}
 	} else {
@@ -2156,7 +2156,7 @@ start:
 
 	releasewrite_mrsw(&vol->lock);
 
-	ltfsmsg(LTFS_INFO, 11034I); /* unmount successful */
+	ltfsmsg(ALB0035I); /* unmount successful */
 	return 0;
 }
 
@@ -2207,16 +2207,16 @@ int ltfs_load_tape(struct ltfs_volume *vol)
 {
 	int ret;
 
-	ltfsmsg(LTFS_INFO, 11330I); /* Loading cartridge... */
+	ltfsmsg(ALB0151I); /* Loading cartridge... */
 
 	INTERRUPTED_RETURN();
 	ret = tape_load_tape(vol->device, vol->kmi_handle, true);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11331E, __FUNCTION__); /* Failed to load the cartridge */
+		ltfsmsg(ALB0152E, __FUNCTION__); /* Failed to load the cartridge */
 		return ret;
 	}
 
-	ltfsmsg(LTFS_INFO, 11332I); /* Eject successful */
+	ltfsmsg(ALB0153I); /* Eject successful */
 	return ret;
 }
 
@@ -2229,16 +2229,16 @@ int ltfs_eject_tape(bool keep_on_drive, struct ltfs_volume *vol)
 {
 	int ret;
 
-	ltfsmsg(LTFS_INFO, 11289I); /* Ejecting cartridge... */
+	ltfsmsg(ALB0131I); /* Ejecting cartridge... */
 
 	INTERRUPTED_RETURN();
 	ret = tape_unload_tape(keep_on_drive, vol->device);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11290E, __FUNCTION__); /* Failed to eject the cartridge */
+		ltfsmsg(ALB0132E, __FUNCTION__); /* Failed to eject the cartridge */
 		return ret;
 	}
 
-	ltfsmsg(LTFS_INFO, 11291I); /* Eject successful */
+	ltfsmsg(ALB0133I); /* Eject successful */
 	return ret;
 }
 
@@ -2305,7 +2305,7 @@ int ltfs_get_partition_readonly(char partition, struct ltfs_volume *vol)
 {
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 	if (partition != ltfs_dp_id(vol) && partition != ltfs_ip_id(vol)) {
-		ltfsmsg(LTFS_ERR, 11306E);
+		ltfsmsg(ALB0139E);
 		return -LTFS_BAD_PARTNUM;
 	}
 
@@ -2365,7 +2365,7 @@ void ltfs_set_eod_check(bool use, struct ltfs_volume *vol)
 void ltfs_set_traverse_mode(int mode, struct ltfs_volume *vol)
 {
 	if (mode != TRAVERSE_FORWARD && mode != TRAVERSE_BACKWARD) {
-		ltfsmsg(LTFS_WARN, 11310W, mode);
+		ltfsmsg(ALB0141W, mode);
 		return;
 	}
 	if (vol)
@@ -2459,7 +2459,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 
 	ret = tape_get_cart_volume_lock_status(vol->device, &volstat);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11342E, ret);
+		ltfsmsg(ALB0159E, ret);
 		return ret;
 	}
 
@@ -2491,7 +2491,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	bc_print = _get_barcode(vol);
 
 	if (write_perm) {
-		ltfsmsg(LTFS_INFO, 11343I, bc_print);
+		ltfsmsg(ALB0160I, bc_print);
 
 		/* Temporary disable device->write_error flag to write an index on IP after WP on DP */
 		ltfs_mutex_lock(&vol->device->read_only_flag_mutex);
@@ -2543,7 +2543,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		if (IS_WRITE_PERM(-ret)) {
 			ret = tape_get_cart_volume_lock_status(vol->device, &volstat);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 11342E, ret);
+				ltfsmsg(ALB0159E, ret);
 				return ret;
 			}
 
@@ -2575,7 +2575,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	/* locate to append position */
 	ret = tape_seek_append_position(vol->device, ltfs_part_id2num(partition, vol), partition == vol->label->partid_ip);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11080E, partition, ret);
+		ltfsmsg(ALB0044E, partition, ret);
 		if (generation_inc) {
 			vol->index->mod_time = modtime_old;
 			--vol->index->generation;
@@ -2596,7 +2596,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	/* update self pointer */
 	ret = tape_get_position(vol->device, &physical_selfptr);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11081E, ret);
+		ltfsmsg(ALB0045E, ret);
 		if (type == LTFS_FULL_INDEX) {
 			if (generation_inc) {
 				vol->index->mod_time = modtime_old;
@@ -2627,7 +2627,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	if ((partition == ltfs_ip_id(vol)) && !vol->ip_index_file_end) {
 		ret = tape_write_filemark(vol->device, 0, true, true, false);	// Flush data before writing FM
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11326E, ret);
+			ltfsmsg(ALB0148E, ret);
 			if (type == LTFS_FULL_INDEX) {
 				if (generation_inc) {
 					vol->index->mod_time = modtime_old;
@@ -2647,12 +2647,12 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		}
 	}
 
-	ltfsmsg(LTFS_INFO, 17235I, bc_print, partition, reason,
+	ltfsmsg(ALB0256I, bc_print, partition, reason,
 			(unsigned long long)vol->index->file_count, tape_get_serialnumber(vol->device));
 
 	ret = tape_write_filemark(vol->device, 1, true, true, true);	// immediate WFM
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11082E, ret);
+		ltfsmsg(ALB0046E, ret);
 
 		if (type == LTFS_FULL_INDEX) {
 			if (generation_inc) {
@@ -2675,7 +2675,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	/* Actually write index to tape and disk if vol->index_cache_path is existed */
 	ret = xml_schema_to_tape(reason, type, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11083E, ret);
+		ltfsmsg(ALB0047E, ret);
 
 		if (type == LTFS_FULL_INDEX) {
 			if (generation_inc) {
@@ -2706,7 +2706,7 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		 * ignore failures when updating MAM parameters. */
 		ltfs_update_cart_coherency(vol);
 
-		ltfsmsg(LTFS_INFO, 17236I,
+		ltfsmsg(ALB0257I,
 				bc_print,
 				(unsigned long long)vol->index->generation,
 				vol->index->selfptr.partition,
@@ -2735,13 +2735,13 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		incj_clear(vol); /* Clear incremental journal data */
 		ltfs_unset_index_dirty(true, vol->index);
 	} else {
-		ltfsmsg(LTFS_INFO, 17300I,
+		ltfsmsg(ALB0281I,
 				bc_print,
 				(unsigned long long)vol->index->generation,
 				vol->index->selfptr_inc.partition,
 				(unsigned long long)vol->index->selfptr_inc.block,
 				tape_get_serialnumber(vol->device));
-		ltfsmsg(LTFS_INFO, 17301I,
+		ltfsmsg(ALB0282I,
 				(unsigned long long)vol->index->generation,
 				vol->index->backptr.partition,
 				(unsigned long long)vol->index->backptr.block,
@@ -2796,7 +2796,7 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 	CHECK_ARG_NULL(vol->label, -LTFS_NULL_ARG);
 
 	/* Write the schema to a file on disk */
-	ltfsmsg(LTFS_DEBUG, 17182D, vol->label->vol_uuid, vol->label->barcode);
+	ltfsmsg(ALB0247D, vol->label->vol_uuid, vol->label->barcode);
 	if (id) {
 		if (HAVE_BARCODE(vol))
 			ret = asprintf(&path, "%s/%s-%d-%c.schema", work_dir, vol->label->barcode, vol->index->generation, id);
@@ -2810,17 +2810,17 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 	}
 
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, "ltfs_save_index_to_disk: path");
+		ltfsmsg(ALC0002E, "ltfs_save_index_to_disk: path");
 		return -ENOMEM;
 	}
 
-	ltfsmsg(LTFS_INFO, 17235I, _get_barcode(vol), id ? id : 'Z', "Volume Cache",
+	ltfsmsg(ALB0256I, _get_barcode(vol), id ? id : 'Z', "Volume Cache",
 			(unsigned long long)vol->index->file_count, path);
 
 	ret = xml_schema_to_file(path, vol->index->creator, reason, vol->index);
 	if (ret < 0) {
 		/* Error writing XML schema to file '%s' on disk */
-		ltfsmsg(LTFS_ERR, 17183E, path);
+		ltfsmsg(ALB0248E, path);
 		free(path);
 		return ret;
 	}
@@ -2828,10 +2828,10 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 	/* Change index file's mode */
 	if (chmod(path, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) {
 		ret = -errno;
-		ltfsmsg(LTFS_ERR, 17184E, errno);
+		ltfsmsg(ALB0249E, errno);
 	}
 
-	ltfsmsg(LTFS_INFO, 17236I,
+	ltfsmsg(ALB0257I,
 			_get_barcode(vol),
 			(unsigned long long)vol->index->generation,
 			id ? id : 'Z',
@@ -2851,7 +2851,7 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 char ltfs_dp_id(struct ltfs_volume *vol)
 {
 	if (! vol || ! vol->label) {
-		ltfsmsg(LTFS_WARN, 11090W);
+		ltfsmsg(ALB0053W);
 		return 0;
 	}
 	return vol->label->partid_dp;
@@ -2866,7 +2866,7 @@ char ltfs_dp_id(struct ltfs_volume *vol)
 char ltfs_ip_id(struct ltfs_volume *vol)
 {
 	if (! vol || ! vol->label) {
-		ltfsmsg(LTFS_WARN, 11091W);
+		ltfsmsg(ALB0054W);
 		return 0;
 	}
 	return vol->label->partid_ip;
@@ -2956,7 +2956,7 @@ int ltfs_set_volume_name(const char *volname, struct ltfs_volume *vol)
 			return ret;
 		name_dup = strdup(volname);
 		if (! name_dup) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			return -LTFS_NO_MEMORY;
 		}
 	}
@@ -3036,7 +3036,7 @@ int ltfs_write_label(tape_partition_t partition, struct ltfs_volume *vol)
 	seekpos.block = 0;
 	ret = tape_seek(vol->device, &seekpos);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11101E, ret, partition);
+		ltfsmsg(ALB0062E, ret, partition);
 		return ret;
 	}
 
@@ -3044,27 +3044,27 @@ int ltfs_write_label(tape_partition_t partition, struct ltfs_volume *vol)
 	label_make_ansi_label(vol, ansi_label, sizeof(ansi_label) - LTFS_CRC_SIZE);
 	nw = tape_write(vol->device, ansi_label, sizeof(ansi_label) - LTFS_CRC_SIZE, true, false);
 	if (nw < 0) {
-		ltfsmsg(LTFS_ERR, 11102E, (int)nw, partition);
+		ltfsmsg(ALB0063E, (int)nw, partition);
 		return nw;
 	}
 
 	ret = tape_write_filemark(vol->device, 1, true, false, true);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11104E, ret, partition);
+		ltfsmsg(ALB0064E, ret, partition);
 		return ret;
 	}
 
 	/* write XML label */
 	xml_buf = xml_make_label(vol->creator, partition, vol->label);
 	if (! xml_buf) {
-		ltfsmsg(LTFS_ERR, 11105E);
+		ltfsmsg(ALB0065E);
 		return -LTFS_NO_MEMORY; /* TODO: this is the most likely error, but not the only possible one */
 	}
 
 	buf = calloc(1, xmlBufferLength(xml_buf) + LTFS_CRC_SIZE);
 	if (!buf) {
 		/* Memory allocation failed */
-		ltfsmsg(LTFS_ERR, 10001E, "label buffer");
+		ltfsmsg(ALC0002E, "label buffer");
 		xmlBufferFree(xml_buf);
 		return -LTFS_NO_MEMORY;
 	}
@@ -3073,7 +3073,7 @@ int ltfs_write_label(tape_partition_t partition, struct ltfs_volume *vol)
 
 	nw = tape_write(vol->device, buf, xmlBufferLength(xml_buf), true, false);
 	if (nw < 0) {
-		ltfsmsg(LTFS_ERR, 11106E, (int)nw, partition);
+		ltfsmsg(ALB0066E, (int)nw, partition);
 		free(buf);
 		xmlBufferFree(xml_buf);
 		return -nw;
@@ -3083,7 +3083,7 @@ int ltfs_write_label(tape_partition_t partition, struct ltfs_volume *vol)
 
 	ret = tape_write_filemark(vol->device, 1, true, false, true);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11108E, ret, partition);
+		ltfsmsg(ALB0067E, ret, partition);
 		return ret;
 	}
 
@@ -3115,14 +3115,14 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 	if (! ret || ret == -LTFS_NO_SPACE || ret == -LTFS_LESS_SPACE || ret == -LTFS_RDONLY_DEN_DRV)
 		ret = ltfs_get_partition_readonly(ltfs_dp_id(vol), vol);
 	if (ret < 0 && ret != -LTFS_NO_SPACE && ret != -LTFS_LESS_SPACE && ret != -LTFS_RDONLY_DEN_DRV) {
-		ltfsmsg(LTFS_ERR, 11095E);
+		ltfsmsg(ALB0056E);
 		return ret;
 	}
 
 	/* Check the tape can be (re-)format */
 	ret = tape_get_params(vol->device, &cart_param);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17253E, "format", ret);
+		ltfsmsg(ALB0258E, "format", ret);
 		return ret;
 	}
 
@@ -3134,14 +3134,14 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 			/* May be reformattable, do nothing */
 			break;
 		default:
-			ltfsmsg(LTFS_ERR, 17254E, cart_param.cart_type, ret);
+			ltfsmsg(ALB0259E, cart_param.cart_type, ret);
 			return -LTFS_RDONLY_DEN_DRV;
 			break;
 	}
 
 	/* Determine max block size */
 	if (cart_param.max_blksize < vol->label->blocksize) {
-		ltfsmsg(LTFS_ERR, 11096E, vol->label->blocksize, cart_param.max_blksize);
+		ltfsmsg(ALB0057E, vol->label->blocksize, cart_param.max_blksize);
 		return -LTFS_LARGE_BLOCKSIZE;
 	}
 
@@ -3155,7 +3155,7 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 
 	vol->label->creator = strdup(vol->creator);
 	if (!vol->label->creator) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -3171,10 +3171,10 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 
 	/* Reset capacity proportion */
 	if (vol->reset_capacity) {
-		ltfsmsg(LTFS_INFO, 17165I);
+		ltfsmsg(ALB0243I);
 		ret = tape_reset_capacity(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11311E, ret);
+			ltfsmsg(ALB0142E, ret);
 			return ret;
 		}
 	}
@@ -3182,18 +3182,18 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 	/* Format the tape */
 	INTERRUPTED_RETURN();
 	if (destructive)
-		ltfsmsg(LTFS_INFO, 17290I);
+		ltfsmsg(ALB0278I);
 	else
-		ltfsmsg(LTFS_INFO, 11097I);
+		ltfsmsg(ALB0058I);
 	ret = tape_format(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol), density_code, destructive);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11098E, ret);
+		ltfsmsg(ALB0059E, ret);
 		return ret;
 	}
 
 	ret = tape_set_compression(vol->device, vol->label->enable_compression);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11099E, ret);
+		ltfsmsg(ALB0060E, ret);
 		return ret;
 	}
 
@@ -3202,40 +3202,40 @@ int ltfs_format_tape(struct ltfs_volume *vol, int density_code, bool destructive
 		unsigned char *key = NULL;
 		ret = kmi_get_key(&keyalias, &key, vol->kmi_handle);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11314E, ret);
+			ltfsmsg(ALB0145E, ret);
 			return ret;
 		}
 		ret = tape_set_key(vol->device, keyalias, key);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 11315E, ret);
+			ltfsmsg(ALB0146E, ret);
 			return ret;
 		}
 	}
 
 	/* Write data partition */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 11100I, vol->label->partid_dp);
+	ltfsmsg(ALB0061I, vol->label->partid_dp);
 	ret = ltfs_write_label(ltfs_part_id2num(vol->label->partid_dp, vol), vol);
 	if (ret < 0)
 		return ret;
-	ltfsmsg(LTFS_INFO, 11278I, vol->label->partid_dp); /* "Writing Index to ..." */
+	ltfsmsg(ALB0129I, vol->label->partid_dp); /* "Writing Index to ..." */
 	ltfs_set_commit_message_reason(SYNC_FORMAT, vol);
 	ret = ltfs_write_index(vol->label->partid_dp, SYNC_FORMAT, LTFS_FULL_INDEX, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11279E, vol->label->partid_dp, ret);
+		ltfsmsg(ALB0130E, vol->label->partid_dp, ret);
 		return ret;
 	}
 
 	/* Write index partition */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 11100I, vol->label->partid_ip);
+	ltfsmsg(ALB0061I, vol->label->partid_ip);
 	ret = ltfs_write_label(ltfs_part_id2num(vol->label->partid_ip, vol), vol);
 	if (ret < 0)
 		return ret;
-	ltfsmsg(LTFS_INFO, 11278I, vol->label->partid_ip); /* "Writing Index to ..." */
+	ltfsmsg(ALB0129I, vol->label->partid_ip); /* "Writing Index to ..." */
 	ret = ltfs_write_index(vol->label->partid_ip, SYNC_FORMAT, LTFS_FULL_INDEX, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11279E, vol->label->partid_ip, ret);
+		ltfsmsg(ALB0130E, vol->label->partid_ip, ret);
 		return ret;
 	}
 
@@ -3262,9 +3262,9 @@ int ltfs_unformat_tape(struct ltfs_volume *vol, bool long_wipe, bool destructive
 	ret = tape_load_tape(vol->device, vol->kmi_handle, false);
 	if (ret < 0) {
 		if (ret == -LTFS_UNSUPPORTED_MEDIUM)
-			ltfsmsg(LTFS_ERR, 11299E);
+			ltfsmsg(ALB0138E);
 		else
-			ltfsmsg(LTFS_ERR, 11093E, ret);
+			ltfsmsg(ALB0055E, ret);
 		return ret;
 	}
 
@@ -3272,31 +3272,31 @@ int ltfs_unformat_tape(struct ltfs_volume *vol, bool long_wipe, bool destructive
 	if (! ret || ret == -LTFS_NO_SPACE || ret == -LTFS_LESS_SPACE)
 		ret = ltfs_get_partition_readonly(ltfs_dp_id(vol), vol);
 	if (ret < 0 && ret != -LTFS_NO_SPACE && ret != -LTFS_LESS_SPACE) {
-		ltfsmsg(LTFS_ERR, 11095E);
+		ltfsmsg(ALB0056E);
 		return ret;
 	}
 
 	/* Unformat the tape */
 	INTERRUPTED_RETURN();
 	if (destructive) {
-		ltfsmsg(LTFS_INFO, 17291I);
+		ltfsmsg(ALB0279I);
 		ret = tape_unformat_hard(vol->device);
 	}
 	else {
-		ltfsmsg(LTFS_INFO, 17071I);
+		ltfsmsg(ALB0194I);
 		ret = tape_unformat(vol->device);
 	}
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17072E, ret);
+		ltfsmsg(ALB0195E, ret);
 		return ret;
 	}
 
 	INTERRUPTED_RETURN();
 	if (long_wipe) {
-		ltfsmsg(LTFS_INFO, 17201I);
+		ltfsmsg(ALB0251I);
 		ret = tape_erase(vol->device, true);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17202E, ret);
+			ltfsmsg(ALB0252E, ret);
 			return ret;
 		}
 	}
@@ -3371,16 +3371,16 @@ int _ltfs_revalidate_mam(struct ltfs_volume *vol)
 	if (ret < 0)
 		return ret;
 
-	ltfsmsg(LTFS_DEBUG, 17166D, "coh0",
+	ltfsmsg(ALB0244D, "coh0",
 			(unsigned long long)coh0.volume_change_ref, (unsigned long long)coh0.count, (unsigned long long)coh0.set_id,
 			coh0.version, coh0.uuid, vol->label->part_num2id[0]);
-	ltfsmsg(LTFS_DEBUG, 17166D, "coh1",
+	ltfsmsg(ALB0244D, "coh1",
 			(unsigned long long)coh1.volume_change_ref, (unsigned long long)coh1.count, (unsigned long long)coh1.set_id,
 			coh1.version, coh1.uuid, vol->label->part_num2id[0]);
-	ltfsmsg(LTFS_DEBUG, 17166D, "IP",
+	ltfsmsg(ALB0244D, "IP",
 			(unsigned long long)vol->ip_coh.volume_change_ref, (unsigned long long)vol->ip_coh.count, (unsigned long long)vol->ip_coh.set_id,
 			vol->ip_coh.version, vol->ip_coh.uuid, vol->label->partid_ip);
-	ltfsmsg(LTFS_DEBUG, 17166D, "DP",
+	ltfsmsg(ALB0244D, "DP",
 			(unsigned long long)vol->dp_coh.volume_change_ref, (unsigned long long)vol->dp_coh.count, (unsigned long long)vol->dp_coh.set_id,
 			vol->dp_coh.version, vol->dp_coh.uuid, vol->label->partid_dp);
 
@@ -3434,7 +3434,7 @@ int ltfs_revalidate(bool have_write_lock, struct ltfs_volume *vol)
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
-	ltfsmsg(LTFS_INFO, 11312I, _get_barcode(vol));
+	ltfsmsg(ALB0143I, _get_barcode(vol));
 
 	/* Block other libltfs operations until revalidation finishes */
 	ltfs_thread_mutex_lock(&vol->reval_lock);
@@ -3623,9 +3623,9 @@ out:
 	releasewrite_mrsw(&vol->lock);
 
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 11313E, ret, _get_barcode(vol));
+		ltfsmsg(ALB0144E, ret, _get_barcode(vol));
 	} else {
-		ltfsmsg(LTFS_INFO, 11340I, _get_barcode(vol));
+		ltfsmsg(ALB0158I, _get_barcode(vol));
 	}
 
 	return ret;
@@ -3675,10 +3675,10 @@ start:
 	if (dirty) {
 		bc_print = _get_barcode(vol);
 
-		ltfsmsg(LTFS_INFO, 11338I, bc_print, vol->device->serial_number);
+		ltfsmsg(ALB0157I, bc_print, vol->device->serial_number);
 
 		/* Force a new XML schema to be flushed to the tape */
-		ltfsmsg(LTFS_INFO, 17068I, bc_print, reason, vol->device->serial_number);
+		ltfsmsg(ALB0191I, bc_print, reason, vol->device->serial_number);
 		/* If the DP ends in an index and the IP doesn't, then we're most likely positioned
 		 * at the end of the IP, and writing an index there is allowed without first putting
 		 * down a DP index. */
@@ -3701,7 +3701,7 @@ start:
 		 */
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+			ltfsmsg(ALB0190E, __FUNCTION__);
 			if (index_locking)
 				releasewrite_mrsw(&vol->lock);
 			return ret;
@@ -3725,11 +3725,11 @@ start:
 			ltfs_set_commit_message_reason(SYNC_WRITE_PERM, vol);
 			ret_r = ltfs_write_index(ltfs_ip_id(vol), SYNC_WRITE_PERM, LTFS_FULL_INDEX, vol);
 			if (!ret_r) {
-				ltfsmsg(LTFS_INFO, 11344I, bc_print);
+				ltfsmsg(ALB0161I, bc_print);
 				ret = -LTFS_SYNC_FAIL_ON_DP;
 			} else {
-				ltfsmsg(LTFS_ERR, 11345E, bc_print);
-				ltfsmsg(LTFS_ERR, 11346E, bc_print);
+				ltfsmsg(ALB0162E, bc_print);
+				ltfsmsg(ALB0163E, bc_print);
 			}
 		}
 		tape_device_unlock(vol->device);
@@ -3744,9 +3744,9 @@ start:
 		} else if (index_locking)
 			releasewrite_mrsw(&vol->lock);
 		if (ret)
-			ltfsmsg(LTFS_ERR, 17069E);
+			ltfsmsg(ALB0192E);
 
-		ltfsmsg(LTFS_INFO, 17070I, bc_print, ret, vol->device->serial_number);
+		ltfsmsg(ALB0193I, bc_print, ret, vol->device->serial_number);
 	} else {
 		/* Do nothing and return 0 when filesystem is not dirty */
 		ret = 0;
@@ -3773,7 +3773,7 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 
 	ret = tape_locate_first_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17082E, 'N', partition);
+		ltfsmsg(ALB0205E, 'N', partition);
 		return ret;
 	}
 
@@ -3782,7 +3782,7 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
 		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
-			ltfsmsg(LTFS_ERR, 17075E, 'N', (int)vol->device->position.block, partition);
+			ltfsmsg(ALB0198E, 'N', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
 			ret = tape_spacefm(vol->device, 1);
@@ -3795,11 +3795,11 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 				vol->label->part_num2id[vol->device->position.partition];
 		}
 
-		ltfsmsg(LTFS_DEBUG, 17080D, 'N', vol->index->generation, partition);
+		ltfsmsg(ALB0203D, 'N', vol->index->generation, partition);
 		if (func) {
 			func_ret = (*func)(vol, gen, list, priv);
 			if(func_ret < 0) {
-				ltfsmsg(LTFS_ERR, 17081E, 'N', func_ret, partition);
+				ltfsmsg(ALB0204E, 'N', func_ret, partition);
 				return func_ret;
 			} else if (func_ret > 0) /* Break if call back function returns positive value */
 				return 0;
@@ -3811,17 +3811,17 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 
 		ret = tape_locate_next_index(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_INFO, 17208I, ret, vol->index->generation);
+			ltfsmsg(ALB0254I, ret, vol->index->generation);
 			break;
 		}
 	}
 
 	if(gen != 0) {
 		if(vol->index->generation != gen) {
-			ltfsmsg(LTFS_DEBUG, 17078D, 'N', gen, partition);
+			ltfsmsg(ALB0201D, 'N', gen, partition);
 			return -LTFS_NO_INDEX;
 		} else {
-			ltfsmsg(LTFS_INFO, 17077I, 'N', gen, partition);
+			ltfsmsg(ALB0200I, 'N', gen, partition);
 			return 0;
 		}
 	}
@@ -3848,7 +3848,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 
 	ret = tape_locate_last_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17083E, 'F', partition);
+		ltfsmsg(ALB0206E, 'F', partition);
 		return ret;
 	}
 
@@ -3857,7 +3857,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 
 	ret = tape_locate_first_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17082E, 'F', partition);
+		ltfsmsg(ALB0205E, 'F', partition);
 		return ret;
 	}
 
@@ -3866,7 +3866,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
 		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
-			ltfsmsg(LTFS_ERR, 17075E, 'F', (int)vol->device->position.block, partition);
+			ltfsmsg(ALB0198E, 'F', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
 			ret = tape_spacefm(vol->device, 1);
@@ -3878,11 +3878,11 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 				vol->label->part_num2id[vol->device->position.partition];
 		}
 
-		ltfsmsg(LTFS_DEBUG, 17080D, 'F', vol->index->generation, partition);
+		ltfsmsg(ALB0203D, 'F', vol->index->generation, partition);
 		if (func) {
 			func_ret = (*func)(vol, gen, list, priv);
 			if(func_ret < 0) {
-				ltfsmsg(LTFS_ERR, 17081E, 'F', func_ret, partition);
+				ltfsmsg(ALB0204E, 'F', func_ret, partition);
 				return func_ret;
 			} else if (func_ret > 0) /* Break if call back function returns positive value */
 				return 0;
@@ -3895,7 +3895,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 		if (last_index.block > vol->device->position.block) {
 			ret = tape_locate_next_index(vol->device);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 17076E, 'F', partition);
+				ltfsmsg(ALB0199E, 'F', partition);
 				return ret;
 			}
 		}
@@ -3903,10 +3903,10 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 
 	if(gen != 0) {
 		if(vol->index->generation != gen) {
-			ltfsmsg(LTFS_DEBUG, 17078D, 'F', gen, partition);
+			ltfsmsg(ALB0201D, 'F', gen, partition);
 			return -LTFS_NO_INDEX;
 		} else {
-			ltfsmsg(LTFS_INFO, 17077I, 'F', gen, partition);
+			ltfsmsg(ALB0200I, 'F', gen, partition);
 			return 0;
 		}
 	}
@@ -3931,7 +3931,7 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 
 	ret = tape_locate_last_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17083E, 'B', partition);
+		ltfsmsg(ALB0206E, 'B', partition);
 		return ret;
 	}
 
@@ -3943,7 +3943,7 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
 		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
-			ltfsmsg(LTFS_ERR, 17075E, 'B', (int)vol->device->position.block, partition);
+			ltfsmsg(ALB0198E, 'B', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
 			ret = tape_spacefm(vol->device, 1);
@@ -3955,12 +3955,12 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 				vol->label->part_num2id[vol->device->position.partition];
 		}
 
-		ltfsmsg(LTFS_DEBUG, 17080D, 'B', vol->index->generation, partition);
+		ltfsmsg(ALB0203D, 'B', vol->index->generation, partition);
 
 		if (func) {
 			func_ret = (*func)(vol, gen, list, priv);
 			if(func_ret < 0) {
-				ltfsmsg(LTFS_ERR, 17081E, 'B', func_ret, partition);
+				ltfsmsg(ALB0204E, 'B', func_ret, partition);
 				return func_ret;
 			} else if (func_ret > 0) /* Break if call back function returns positive value */
 				return 0;
@@ -3972,17 +3972,17 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 
 		ret = tape_locate_previous_index(vol->device);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17076E, 'B', partition);
+			ltfsmsg(ALB0199E, 'B', partition);
 			return ret;
 		}
 	}
 
 	if(gen != 0) {
 		if(vol->index->generation != gen) {
-			ltfsmsg(LTFS_DEBUG, 17078D, 'B', gen, partition);
+			ltfsmsg(ALB0201D, 'B', gen, partition);
 			return -LTFS_NO_INDEX;
 		} else {
-			ltfsmsg(LTFS_INFO, 17077I, 'B', gen, partition);
+			ltfsmsg(ALB0200I, 'B', gen, partition);
 			return 0;
 		}
 	}
@@ -4009,41 +4009,41 @@ int ltfs_check_eod_status(struct ltfs_volume *vol)
 	eod_status_dp = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
 	if(eod_status_ip == EOD_UNKNOWN || eod_status_dp == EOD_UNKNOWN) {
 		/* Backend cannnot support EOD status check, print warning  */
-		ltfsmsg(LTFS_WARN, 17145W);
-		ltfsmsg(LTFS_INFO, 17147I);
+		ltfsmsg(ALB0235W);
+		ltfsmsg(ALB0237I);
 	} else if(eod_status_ip == EOD_MISSING || eod_status_dp == EOD_MISSING) {
 		ret = tape_get_worm_status(vol->device, &is_worm);
 
 		/* EOD is missing in both or one of partitions, print message and exit */
 		if(eod_status_ip == EOD_MISSING && eod_status_dp == EOD_MISSING) {
-			ltfsmsg(LTFS_ERR, 17142E);
+			ltfsmsg(ALB0232E);
 			if (is_worm) {
-				ltfsmsg(LTFS_ERR, 17207E);
+				ltfsmsg(ALB0253E);
 			}
 			else {
-				ltfsmsg(LTFS_ERR, 17148E);
+				ltfsmsg(ALB0238E);
 			}
 			ret = -LTFS_BOTH_EOD_MISSING;
 		} else if (eod_status_ip == EOD_MISSING) {
-			ltfsmsg(LTFS_ERR, 17146E, "IP", ltfs_part_id2num(vol->label->partid_ip, vol));
+			ltfsmsg(ALB0236E, "IP", ltfs_part_id2num(vol->label->partid_ip, vol));
 			if (is_worm) {
-				ltfsmsg(LTFS_ERR, 17207E);
+				ltfsmsg(ALB0253E);
 			}
 			else {
-				ltfsmsg(LTFS_ERR, 17148E);
+				ltfsmsg(ALB0238E);
 			}
 			ret = -LTFS_EOD_MISSING_MEDIUM;
 		} else if (eod_status_dp == EOD_MISSING) {
-			ltfsmsg(LTFS_ERR, 17146E, "DP", ltfs_part_id2num(vol->label->partid_dp, vol));
+			ltfsmsg(ALB0236E, "DP", ltfs_part_id2num(vol->label->partid_dp, vol));
 			if (is_worm) {
-				ltfsmsg(LTFS_ERR, 17207E);
+				ltfsmsg(ALB0253E);
 			}
 			else {
-				ltfsmsg(LTFS_ERR, 17148E);
+				ltfsmsg(ALB0238E);
 			}
 			ret = -LTFS_EOD_MISSING_MEDIUM;
 		} else {
-			ltfsmsg(LTFS_ERR, 17126E, eod_status_ip, eod_status_dp);
+			ltfsmsg(ALB0226E, eod_status_ip, eod_status_dp);
 			ret = -LTFS_UNEXPECTED_VALUE;
 		}
 	}
@@ -4069,11 +4069,11 @@ static int _ltfs_detect_final_rec_dp(struct ltfs_volume *vol, struct tc_position
 
 	/* Read the final index of IP */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 17114I);
+	ltfsmsg(ALB0215I);
 	ret = ltfs_seek_index(vol->label->partid_ip, &end_pos, &index_end_pos,
 						  &fm_after, &blocks_after, false, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17115E);
+		ltfsmsg(ALB0216E);
 		return ret;
 	}
 
@@ -4095,7 +4095,7 @@ static int _ltfs_detect_final_rec_dp(struct ltfs_volume *vol, struct tc_position
 		seekpos.block = vol->ip_coh.set_id;
 		seekpos.partition = ltfs_part_id2num(vol->label->partid_dp, vol);
 	} else {
-		ltfsmsg(LTFS_ERR, 17123E,
+		ltfsmsg(ALB0223E,
 				vol->index->generation,
 				ip_coh_gen,
 				dp_coh_gen);
@@ -4103,18 +4103,18 @@ static int _ltfs_detect_final_rec_dp(struct ltfs_volume *vol, struct tc_position
 	}
 
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 17118I, "DP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
+	ltfsmsg(ALB0219I, "DP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
 	ret = tape_seek(vol->device, &seekpos);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17119E, "DP",  ret);
+		ltfsmsg(ALB0220E, "DP",  ret);
 		return ret;
 	}
 
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 17120I, "DP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
+	ltfsmsg(ALB0221I, "DP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
 	ret = ltfs_read_index(0, false, false, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17121E, "DP",  ret);
+		ltfsmsg(ALB0222E, "DP",  ret);
 		return ret;
 	}
 
@@ -4138,11 +4138,11 @@ int _ltfs_detect_final_rec_ip(struct ltfs_volume *vol, struct tc_position *pos)
 	/* Detect the final record number of IP from
        the final index of DP */
 	INTERRUPTED_RETURN();
-	ltfsmsg(LTFS_INFO, 17116I);
+	ltfsmsg(ALB0217I);
 	ret = ltfs_seek_index(vol->label->partid_dp, &end_pos, &index_end_pos,
 						  &fm_after, &blocks_after, false, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17117E);
+		ltfsmsg(ALB0218E);
 		return ret;
 	}
 
@@ -4151,10 +4151,10 @@ int _ltfs_detect_final_rec_ip(struct ltfs_volume *vol, struct tc_position *pos)
 	INTERRUPTED_RETURN();
 	seekpos.block = ip_last;
 	seekpos.partition = ltfs_part_id2num(vol->label->partid_ip, vol);
-	ltfsmsg(LTFS_INFO, 17124I, "IP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
+	ltfsmsg(ALB0224I, "IP", (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
 	ret = tape_seek(vol->device, &seekpos);
 	if (ret < 0){
-		ltfsmsg(LTFS_ERR, 17125E, "DP",  ret);
+		ltfsmsg(ALB0225E, "DP",  ret);
 		return ret;
 	}
 
@@ -4174,7 +4174,7 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 	bool need_verify = false;
 	struct tc_position seekpos;
 
-	ltfsmsg(LTFS_INFO, 17139I);
+	ltfsmsg(ALB0229I);
 
 	/* Check EOD status in both partitions */
 	INTERRUPTED_RETURN();
@@ -4182,29 +4182,29 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 	eod_status_dp = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
 	if(eod_status_ip == EOD_UNKNOWN || eod_status_dp == EOD_UNKNOWN) {
 		/* Backend cannnot support EOD status check */
-		ltfsmsg(LTFS_ERR, 17140E);
+		ltfsmsg(ALB0230E);
 		return -LTFS_UNSUPPORTED;
 	} else if(eod_status_ip == EOD_GOOD && eod_status_dp == EOD_GOOD) {
 		/* Both EODs are good, no need to perform EOD recovery */
-		ltfsmsg(LTFS_INFO, 17141I);
+		ltfsmsg(ALB0231I);
 		return 0;
 	} else if(eod_status_ip == EOD_MISSING && eod_status_dp == EOD_MISSING) {
 		/* Both EODs are missing, Unrecoverable */
-		ltfsmsg(LTFS_ERR, 17142E);
+		ltfsmsg(ALB0232E);
 		return -LTFS_UNSUPPORTED;
 	} else if(eod_status_ip == EOD_GOOD && eod_status_dp == EOD_MISSING) {
 		/* EOD of DP is missing */
-		ltfsmsg(LTFS_INFO, 17143I, "DP", ltfs_part_id2num(vol->label->partid_dp, vol));
+		ltfsmsg(ALB0233I, "DP", ltfs_part_id2num(vol->label->partid_dp, vol));
 		no_eod_part_id = vol->label->partid_dp;
 		(void)ltfs_part_id2num(vol->label->partid_dp, vol);
 	} else if(eod_status_ip == EOD_MISSING && eod_status_dp == EOD_GOOD) {
 		/* EOD of IP is missing */
-		ltfsmsg(LTFS_INFO, 17143I, "IP", ltfs_part_id2num(vol->label->partid_ip, vol));
+		ltfsmsg(ALB0233I, "IP", ltfs_part_id2num(vol->label->partid_ip, vol));
 		no_eod_part_id = vol->label->partid_ip;
 		(void)ltfs_part_id2num(vol->label->partid_ip, vol);
 	} else {
 		// Unexpected result
-		ltfsmsg(LTFS_ERR, 17126E, eod_status_ip, eod_status_dp);
+		ltfsmsg(ALB0226E, eod_status_ip, eod_status_dp);
 		return -LTFS_UNEXPECTED_VALUE;
 	}
 
@@ -4213,29 +4213,29 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 	ret = tape_get_cart_coherency(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol),
 								  &vol->ip_coh);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17144E, "IP");
+		ltfsmsg(ALB0234E, "IP");
 		return ret;
 	}
 
 	ret = tape_get_cart_coherency(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol),
 		&vol->dp_coh);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 17144E, "DP");
+		ltfsmsg(ALB0234E, "DP");
 		return ret;
 	}
 
 	if(vol->ip_coh.version == 0 && vol->dp_coh.version == 0){
 		/* MAM is written by PGA1 or earlier */
-		ltfsmsg(LTFS_INFO, 17110I);
+		ltfsmsg(ALB0211I);
 		need_verify = true;
 	} else if (vol->ip_coh.version >= 1 && vol->dp_coh.version >= 1 &&
 			   vol->ip_coh.version == vol->dp_coh.version){
 		/* MAM is written by PGA2 or later (includes version2) */
-		ltfsmsg(LTFS_INFO, 17111I);
+		ltfsmsg(ALB0212I);
 		need_verify = false;
 	} else {
 		/* Unexpected condition. Cannot support */
-		ltfsmsg(LTFS_ERR, 17107E, vol->ip_coh.version, vol->dp_coh.version);
+		ltfsmsg(ALB0208E, vol->ip_coh.version, vol->dp_coh.version);
 		return -LTFS_UNEXPECTED_VALUE;
 	}
 
@@ -4245,19 +4245,19 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 		/* MAM points the partition which has EOD */
 		if(no_eod_part_id == vol->label->partid_dp) {
 			/* Go to the end of final index of corrupted data partition */
-			ltfsmsg(LTFS_INFO, 17112I);
+			ltfsmsg(ALB0213I);
 			ret = _ltfs_detect_final_rec_dp(vol, &seekpos);
 		} else if(no_eod_part_id == vol->label->partid_ip) {
 			/* Go to the end of final record of corrupted index partition */
-			ltfsmsg(LTFS_INFO, 17112I);
+			ltfsmsg(ALB0213I);
 			ret = _ltfs_detect_final_rec_ip(vol, &seekpos);
 		} else {
-			ltfsmsg(LTFS_ERR, 17108E, no_eod_part_id, no_eod_part_id);
+			ltfsmsg(ALB0209E, no_eod_part_id, no_eod_part_id);
 			return -LTFS_UNEXPECTED_VALUE;
 		}
 
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17109E);
+			ltfsmsg(ALB0210E);
 			return ret;
 		}
 	} else {
@@ -4273,10 +4273,10 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 			seekpos.block = vol->dp_coh.set_id;
 			seekpos.partition = ltfs_part_id2num(vol->label->partid_dp, vol);;
 		} else {
-			ltfsmsg(LTFS_ERR, 17108E, no_eod_part_id, no_eod_part_id);
+			ltfsmsg(ALB0209E, no_eod_part_id, no_eod_part_id);
 			return -LTFS_UNEXPECTED_VALUE;
 		}
-		ltfsmsg(LTFS_INFO, 17113I, (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
+		ltfsmsg(ALB0214I, (unsigned long long)seekpos.partition, (unsigned long long)seekpos.block);
 
 		/* Locate to target and read index */
 		ret = tape_seek(vol->device, &seekpos);
@@ -4298,11 +4298,11 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 	INTERRUPTED_RETURN();
 	ret = tape_recover_eod_status(vol->device, vol->kmi_handle);
 	if(ret < 0) {
-		ltfsmsg(LTFS_ERR, 17137E, ret);
+		ltfsmsg(ALB0227E, ret);
 		return ret;
 	}
 
-	ltfsmsg(LTFS_INFO, 17138I, ret);
+	ltfsmsg(ALB0228I, ret);
 
 	return 0;
 }
@@ -4407,16 +4407,16 @@ void ltfs_recover_eod_simple(struct ltfs_volume *vol)
 
 	eod_status_ip = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol));
 	if (eod_status_ip == EOD_MISSING) {
-		ltfsmsg(LTFS_INFO, 17161I, "IP");
-		ltfsmsg(LTFS_INFO, 17162I);
+		ltfsmsg(ALB0241I, "IP");
+		ltfsmsg(ALB0242I);
 		corrupted = true;
 		tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol));
 	}
 
 	eod_status_dp = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
 	if (eod_status_dp == EOD_MISSING) {
-		ltfsmsg(LTFS_INFO, 17161I, "DP");
-		ltfsmsg(LTFS_INFO, 17162I);
+		ltfsmsg(ALB0241I, "DP");
+		ltfsmsg(ALB0242I);
 		corrupted = true;
 		tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
 	}
@@ -4442,7 +4442,7 @@ int ltfs_print_device_list(struct tape_ops *ops)
 	if (count) {
 		buf = (struct tc_drive_info *)calloc(count * 2, sizeof(struct tc_drive_info));
 		if (! buf) {
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			ret = -LTFS_NO_MEMORY;
 			return ret;
 		}
@@ -4450,7 +4450,7 @@ int ltfs_print_device_list(struct tape_ops *ops)
 	}
 
 	/* Print device list */
-	ltfsresult(17073I);
+	ltfsresult(ALB0196I);
 	c = MIN(info_count, (count * 2));
 	for (i = 0; i < c; i++) {
 		if (buf[i].name[0] && buf[i].vendor[0] &&
@@ -4458,10 +4458,10 @@ int ltfs_print_device_list(struct tape_ops *ops)
 			buf[i].product_name[0]) {
 
 			if (buf[i].lun == -1) {
-				ltfsresult(17074I, buf[i].name,
+				ltfsresult(ALB0197I, buf[i].name,
 						   buf[i].vendor, buf[i].model, buf[i].serial_number, buf[i].product_name);
 			} else {
-				ltfsresult(17098I, buf[i].name, buf[i].host, buf[i].channel, buf[i].target, buf[i].lun,
+				ltfsresult(ALB0207I, buf[i].name, buf[i].host, buf[i].channel, buf[i].target, buf[i].lun,
 						   buf[i].vendor, buf[i].model, buf[i].serial_number, buf[i].product_name);
 			}
 		}
@@ -4528,7 +4528,7 @@ static int _ltfs_write_rao_file(char *file_path_org, unsigned char *buf, size_t 
 
 	ret = asprintf(&path, "%s%s", file_path_org, LTFS_OUT_FILE_EXTENSION);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, __FILE__);
+		ltfsmsg(ALC0002E, __FILE__);
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -4536,7 +4536,7 @@ static int _ltfs_write_rao_file(char *file_path_org, unsigned char *buf, size_t 
 			  O_WRONLY | O_CREAT | O_TRUNC | O_BINARY,
 			  S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 	if (fd < 0) {
-		ltfsmsg(LTFS_INFO, 17276I, path, errno);
+		ltfsmsg(ALB0264I, path, errno);
 		free(path);
 		ret = -errno;
 		return ret;
@@ -4544,11 +4544,11 @@ static int _ltfs_write_rao_file(char *file_path_org, unsigned char *buf, size_t 
 
 	size = write(fd, buf, len);
 	if (size < 0) {
-		ltfsmsg(LTFS_INFO, 17277I, path, errno);
+		ltfsmsg(ALB0265I, path, errno);
 		ret = -errno;
 		goto out;
 	} else if (size != (ssize_t)len) {
-		ltfsmsg(LTFS_INFO, 17278I, path, size, (ssize_t)len);
+		ltfsmsg(ALB0266I, path, size, (ssize_t)len);
 		ret = LTFS_FILE_ERR;
 		goto out;
 	} else {
@@ -4574,13 +4574,13 @@ static int _ltfs_read_rao_file(char *file_path, unsigned char *buf,
 
 	ret = asprintf(&path, "%s", file_path);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, __FILE__);
+		ltfsmsg(ALC0002E, __FILE__);
 		return -LTFS_NO_MEMORY;
 	}
 
 	fd = open(path, O_RDONLY | O_BINARY);
 	if (fd < 0) {
-		ltfsmsg(LTFS_INFO, 17279I, path, errno);
+		ltfsmsg(ALB0267I, path, errno);
 		free(path);
 		ret = -errno;
 		return ret;
@@ -4589,17 +4589,17 @@ static int _ltfs_read_rao_file(char *file_path, unsigned char *buf,
 	ret = fstat(fd, &sbuf);
 	if (ret < 0) {
 		ret = -errno;
-		ltfsmsg(LTFS_INFO, 17280I, path, errno);
+		ltfsmsg(ALB0268I, path, errno);
 		goto out;
 	}
 
 	size = read(fd, buf, len);
 	if (size < 0) {
-		ltfsmsg(LTFS_INFO, 17281I, path, errno);
+		ltfsmsg(ALB0269I, path, errno);
 		ret = -errno;
 		goto out;
 	} if (size != (ssize_t)sbuf.st_size) {
-		ltfsmsg(LTFS_INFO, 17282I, path, size, (ssize_t)sbuf.st_size);
+		ltfsmsg(ALB0270I, path, size, (ssize_t)sbuf.st_size);
 		ret = LTFS_FILE_ERR;
 		goto out;
 	} else {
@@ -4630,13 +4630,13 @@ int ltfs_get_rao_list(char *path, struct ltfs_volume *vol)
 	memset(&rao, 0, sizeof(struct rao_mod));
 	rao.in_buf = calloc(1, RAO_MAX_RET_SIZE);
 	if (!rao.in_buf) {
-		ltfsmsg(LTFS_ERR, 10001E, "ltfs_get_rao_list: out_buf");
+		ltfsmsg(ALC0002E, "ltfs_get_rao_list: out_buf");
 		return -ENOMEM;
 	}
 
 	rao.out_buf = calloc(1, RAO_MAX_RET_SIZE);
 	if (!rao.out_buf) {
-		ltfsmsg(LTFS_ERR, 10001E, "ltfs_get_rao_list: out_buf");
+		ltfsmsg(ALC0002E, "ltfs_get_rao_list: out_buf");
 		free(rao.in_buf);
 		return -ENOMEM;
 	}
@@ -4645,7 +4645,7 @@ int ltfs_get_rao_list(char *path, struct ltfs_volume *vol)
 
 	ret = tape_device_lock(vol->device);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 12010E, __FUNCTION__);
+		ltfsmsg(ALB0190E, __FUNCTION__);
 		return ret;
 	}
 
@@ -4717,7 +4717,7 @@ int ltfs_build_fullpath(char **dest, struct dentry *d)
 	if (path) {
 		*dest = path;
 	} else {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		*dest = NULL;
 		ret = -LTFS_NO_MEMORY;
 	}

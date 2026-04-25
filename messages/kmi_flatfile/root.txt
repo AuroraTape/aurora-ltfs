@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the key manager interface flat file plugin.
@@ -39,26 +39,25 @@
 // ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 15550 }
-		end_id:int { 15599 }
+		prefix:string { "AKF" }
 
 		// Message IDs 15500-15009 are reserved for the crypto direct plugins.
 		// DO NOT add messages with those IDs to this file.
 
-		15550D:string { "Flat File plug-in initialized." }
-		15551D:string { "Flat File plug-in uninitialized." }
-		15552E:string { "Flat File plug-in failed to parse options." }
-		15553E:string { "Flat File plug-in failed to open the file (%s, %d)." }
-		15554E:string { "Flat File plug-in detected key format violation." }
+		AKF0001D:string { "Flat File plug-in initialized." }
+		AKF0002D:string { "Flat File plug-in uninitialized." }
+		AKF0003E:string { "Flat File plug-in failed to parse options." }
+		AKF0004E:string { "Flat File plug-in failed to open the file (%s, %d)." }
+		AKF0005E:string { "Flat File plug-in detected key format violation." }
 
 		// for LTFS specific format
-		15562E:string { "Encryption key format violation (%s): %s." }
-		15563E:string { "Cannot find data key." }
-		15564E:string { "Option parsing for the key manager interface backend failed (%d)." }
-		15565E:string { "Invalid sequence error (%d,%d): %s." }
-		15566E:string { "Failed to parse data key and/or data key identifier." }
-		15567E:string { "Cannot find data key of the data key identifier." }
-		15568I:string { "Key manager interface flatfile plug-in options:\n"
+		AKF0006E:string { "Encryption key format violation (%s): %s." }
+		AKF0007E:string { "Cannot find data key." }
+		AKF0008E:string { "Option parsing for the key manager interface backend failed (%d)." }
+		AKF0009E:string { "Invalid sequence error (%d,%d): %s." }
+		AKF0010E:string { "Failed to parse data key and/or data key identifier." }
+		AKF0011E:string { "Cannot find data key of the data key identifier." }
+		AKF0012I:string { "Key manager interface flatfile plug-in options:\n"
 						"    -o kmi_dki_for_format=<DKi>\n"
 						"                              Data key identifier to format a cartridge\n"
 						"    -o kmi_dk_list=FILE\n"

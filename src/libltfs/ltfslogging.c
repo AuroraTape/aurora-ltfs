@@ -97,8 +97,7 @@
 
 struct plugin_bundle {
 	TAILQ_ENTRY(plugin_bundle) list;
-	int32_t start_id;                  /**< First message ID allocated to this plugin */
-	int32_t end_id;                    /**< Last message ID allocated to this plugin */
+	char prefix[4];                    /**< 3-char message prefix (e.g. "ALG") + NUL */
 	UResourceBundle *bundle_root;      /**< Root resource bundle for this plugin */
 	UResourceBundle *bundle_messages;  /**< Resource bundle containing this plugin's messages */
 };
@@ -115,15 +114,17 @@ static int syslog_levels[] = {
 	LOG_DEBUG,    /* LTFS_TRACE  */
 };
 
-#ifdef mingw_PLATFORM
-char *libaltfs_dat;
-char *internal_error_dat;
-char *tape_common_dat;
-#else
-U_CFUNC char libaltfs_dat[]; /* U_CFUNC is an ICU synonym for extern. */
-U_CFUNC char internal_error_dat[]; /* U_CFUNC is an ICU synonym for extern. */
-U_CFUNC char tape_common_dat[]; /* U_CFUNC is an ICU synonym for extern. */
-#endif
+U_CFUNC char lc_dat[]; /* U_CFUNC is an ICU synonym for extern. */
+U_CFUNC char lg_dat[];
+U_CFUNC char li_dat[];
+U_CFUNC char lb_dat[];
+U_CFUNC char lp_dat[];
+U_CFUNC char lf_dat[];
+U_CFUNC char lj_dat[];
+U_CFUNC char lx_dat[];
+U_CFUNC char ei_dat[];
+U_CFUNC char ed_dat[];
+U_CFUNC char tape_common_dat[];
 
 static bool libaltfs_dat_init = false;
 int ltfs_log_level = LTFS_INFO;
@@ -153,12 +154,12 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 	/* Open converter for generating output in the system locale. */
 	ret = ltfs_mutex_init(&output_lock);
 	if (ret > 0) {
-		fprintf(stderr, "LTFS10002E Could not initialize mutex (%d)\n", ret);
+		fprintf(stderr, "ALC0003E Could not initialize mutex (%d)\n", ret);
 		return -ret;
 	}
 	output_conv = ucnv_open(NULL, &err);
 	if (U_FAILURE(err)) {
-		fprintf(stderr, "LTFS9008E Could not open output converter (ucnv_open: %d)\n", err);
+		fprintf(stderr, "ALG0002E Could not open output converter (ucnv_open: %d)\n", err);
 		output_conv = NULL;
 		ltfsprintf_finish();
 		return -1;
@@ -170,35 +171,61 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 	u_setDataDirectory(LTFS_RB_DIR);
 #endif
 
-	/* Load the libltfs message bundle and the primary message set */
-	ret = ltfsprintf_load_plugin("libaltfs", libaltfs_dat, (void **)&pl);
+	/* Load libaltfs sub-component message bundles.
+	 * Load lg first because it contains fallback_messages. */
+	{
+		struct { const char *name; void *data; } libaltfs_bundles[] = {
+			{ "lg", lg_dat },
+			{ "lc", lc_dat },
+			{ "li", li_dat },
+			{ "lb", lb_dat },
+			{ "lp", lp_dat },
+			{ "lf", lf_dat },
+			{ "lj", lj_dat },
+			{ "lx", lx_dat },
+		};
+		size_t nbundles = sizeof(libaltfs_bundles) / sizeof(libaltfs_bundles[0]);
+		size_t bi;
+		for (bi = 0; bi < nbundles; bi++) {
+			ret = ltfsprintf_load_plugin(libaltfs_bundles[bi].name,
+				libaltfs_bundles[bi].data, (void **)&pl);
+			if (ret < 0) {
+				fprintf(stderr, "ALG0025E Cannot load messages for libltfs/%s (%d)\n",
+					libaltfs_bundles[bi].name, ret);
+				ltfsprintf_finish();
+				return ret;
+			}
+			/* Load fallback message set from the first bundle (lg) */
+			if (bi == 0) {
+				bundle_fallback = ures_getByKey(pl->bundle_root, "fallback_messages", NULL, &err);
+				if (U_FAILURE(err)) {
+					fprintf(stderr, "ALG0001E Could not load resource \"fallback_messages\" (ures_getByKey: %d)\n", err);
+					bundle_fallback = NULL;
+					ltfsprintf_finish();
+					return -1;
+				}
+			}
+		}
+	}
+
+	/* Load internal_error sub-component message bundles */
+	ret = ltfsprintf_load_plugin("ei", ei_dat, (void **)&pl);
 	if (ret < 0) {
-		fprintf(stderr, "LTFS11293E Cannot load messages for libltfs (%d)\n", ret);
+		fprintf(stderr, "ALG0025E Cannot load messages for internal_error/ei (%d)\n", ret);
+		ltfsprintf_finish();
+		return ret;
+	}
+	ret = ltfsprintf_load_plugin("ed", ed_dat, (void **)&pl);
+	if (ret < 0) {
+		fprintf(stderr, "ALG0025E Cannot load messages for internal_error/ed (%d)\n", ret);
 		ltfsprintf_finish();
 		return ret;
 	}
 
-	/* Load fallback message set */
-	bundle_fallback = ures_getByKey(pl->bundle_root, "fallback_messages", NULL, &err);
-	if (U_FAILURE(err)) {
-		fprintf(stderr, "LTFS9006E Could not load resource \"fallback_messages\" (ures_getByKey: %d)\n", err);
-		bundle_fallback = NULL;
-		ltfsprintf_finish();
-		return -1;
-	}
-
-	/* Load the libltfs message bundle and the primary message set */
-	ret = ltfsprintf_load_plugin("internal_error", internal_error_dat, (void **)&pl);
-	if (ret < 0) {
-		fprintf(stderr, "LTFS11293E Cannot load messages for internal error (%d)\n", ret);
-		ltfsprintf_finish();
-		return ret;
-	}
-
-	/* Load the libltfs message bundle and the primary message set */
+	/* Load the tape_common message bundle */
 	ret = ltfsprintf_load_plugin("tape_common", tape_common_dat, (void **)&pl);
 	if (ret < 0) {
-		fprintf(stderr, "LTFS11293E Cannot load messages for tape backend common messages (%d)\n", ret);
+		fprintf(stderr, "ALG0025E Cannot load messages for tape backend common messages (%d)\n", ret);
 		ltfsprintf_finish();
 		return ret;
 	}
@@ -232,12 +259,6 @@ void ltfsprintf_finish()
 		output_conv = NULL;
 	}
 
-#ifdef mingw_PLATFORM
-	free(libaltfs_dat);
-	free(internal_error_dat);
-	free(tape_common_dat);
-#endif
-
 	ltfs_mutex_destroy(&output_lock);
 	u_cleanup();
 }
@@ -246,11 +267,11 @@ void ltfsprintf_finish()
 int ltfsprintf_set_log_level(int log_level)
 {
 	if (log_level < LTFS_ERR) {
-		fprintf(stderr, "LTFS11318W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_ERR);
+		fprintf(stderr, "ALG0027W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_ERR);
 		log_level = LTFS_ERR;
 	}
 	else if (log_level > LTFS_TRACE) {
-		fprintf(stderr, "LTFS11318W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_TRACE);
+		fprintf(stderr, "ALG0027W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_TRACE);
 		log_level = LTFS_TRACE;
 	}
 	else {
@@ -263,7 +284,6 @@ int ltfsprintf_set_log_level(int log_level)
 int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **messages)
 {
 	UErrorCode err = U_ZERO_ERROR;
-	UResourceBundle *bundle;
 	struct plugin_bundle *pl;
 
 	CHECK_ARG_NULL(bundle_name, -LTFS_NULL_ARG);
@@ -273,9 +293,9 @@ int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **me
 	udata_setAppData(bundle_name, bundle_data, &err);
 	if (U_FAILURE(err)) {
 		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 11287E, err);
+			ltfsmsg(ALG0023E, err);
 		else
-			fprintf(stderr, "LTFS11287E Cannot load messages: failed to register message data (%d)\n", err);
+			fprintf(stderr, "ALG0023E Cannot load messages: failed to register message data (%d)\n", err);
 		return -1;
 	}
 #endif
@@ -283,9 +303,9 @@ int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **me
 	pl = calloc(1, sizeof(struct plugin_bundle));
 	if (! pl) {
 		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 		else
-			fprintf(stderr, "LTFS10001E Memory allocation failed (%s)\n", __FUNCTION__);
+			fprintf(stderr, "ALC0002E Memory allocation failed (%s)\n", __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -293,64 +313,44 @@ int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **me
 	pl->bundle_root = ures_open(bundle_name, NULL, &err);
 	if (U_FAILURE(err)) {
 		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 11286E, err);
+			ltfsmsg(ALG0022E, err);
 		else
-			fprintf(stderr, "LTFS11286E Cannot load messages: failed to open resource bundle (%d)\n", err);
+			fprintf(stderr, "ALG0022E Cannot load messages: failed to open resource bundle (%d)\n", err);
 		free(pl);
 		return -1;
 	}
 	pl->bundle_messages = ures_getByKey(pl->bundle_root, "messages", NULL, &err);
 	if (U_FAILURE(err)) {
 		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 11281E, err);
+			ltfsmsg(ALG0019E, err);
 		else
-			fprintf(stderr, "LTFS11281E Cannot load messages: failed to get message table (%d)\n", err);
+			fprintf(stderr, "ALG0019E Cannot load messages: failed to get message table (%d)\n", err);
 		ures_close(pl->bundle_root);
 		free(pl);
 		return -1;
 	}
 
-	/* Figure out the start ID for this component. */
-	bundle = ures_getByKey(pl->bundle_messages, "start_id", NULL, &err);
-	if (U_FAILURE(err)) {
-		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 11282E, err);
-		else
-			fprintf(stderr, "LTFS11282E Cannot load messages: failed to determine first message ID (ures_getByKey: %d)\n", err);
-		ures_close(pl->bundle_messages);
-		ures_close(pl->bundle_root);
-		free(pl);
-		return -1;
-	}
-
-	pl->start_id = ures_getInt(bundle, &err);
-	if (U_FAILURE(err)) {
-		if (libaltfs_dat_init)
-			ltfsmsg(LTFS_ERR, 11283E, err);
-		else
-			fprintf(stderr, "LTFS11283E Cannot load messages: failed to determine first message ID (ures_getInt: %d)\n", err);
-		ures_close(bundle);
-		ures_close(pl->bundle_messages);
-		ures_close(pl->bundle_root);
-		free(pl);
-		return -1;
-	}
-	ures_close(bundle);
-
-	/* Check for an end ID for this component, or default it to start_id + 999 if not present */
-	bundle = ures_getByKey(pl->bundle_messages, "end_id", NULL, &err);
-	if (U_SUCCESS(err)) {
-		pl->end_id = ures_getInt(bundle, &err);
-		if (U_FAILURE(err)) {
+	/* Read the prefix string for this component (e.g. "ALG"). */
+	{
+		int32_t prefix_len = 0;
+		const UChar *prefix_uc;
+		prefix_uc = ures_getStringByKey(pl->bundle_messages, "prefix", &prefix_len, &err);
+		if (U_FAILURE(err) || prefix_len < 2 || prefix_len > 3) {
 			if (libaltfs_dat_init)
-				ltfsmsg(LTFS_WARN, 11288W);
+				ltfsmsg(ALG0020E, err);
 			else
-				fprintf(stderr, "LTFS11288W No end ID found for this message bundle, assigning 1000 message IDs\n");
-			pl->end_id = pl->start_id + 999;
+				fprintf(stderr, "ALG0020E Cannot load messages: failed to determine message prefix (ures_getStringByKey: %d)\n", err);
+			ures_close(pl->bundle_messages);
+			ures_close(pl->bundle_root);
+			free(pl);
+			return -1;
 		}
-		ures_close(bundle);
-	} else
-		pl->end_id = pl->start_id + 999;
+		/* Convert UChar prefix to char */
+		pl->prefix[0] = (char)prefix_uc[0];
+		pl->prefix[1] = (char)prefix_uc[1];
+		pl->prefix[2] = (prefix_len >= 3) ? (char)prefix_uc[2] : '\0';
+		pl->prefix[3] = '\0';
+	}
 
 	*messages = pl;
 	ltfs_mutex_lock(&output_lock);
@@ -378,7 +378,6 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 {
 	const UChar *format_uc = NULL;
 	int32_t prefix_len, format_len;
-	int32_t id_val;
 	char id[16];
 	size_t idlen;
 	UErrorCode err = U_ZERO_ERROR;
@@ -400,25 +399,18 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 		strcpy(id, _id);
 	}
 
-	id_val = atol(id);
-
-	/* Check loaded plugins for the message, most recently loaded first */
+	/* Check loaded plugins for the message, most recently loaded first.
+	 * Match by 3-char prefix (id[0..2] == entry->prefix[0..2]). */
 	if (! TAILQ_EMPTY(&plugin_bundles)) {
 		ltfs_mutex_lock(&output_lock);
 		TAILQ_FOREACH(entry, &plugin_bundles, list) {
-			if (entry->start_id <= id_val && id_val <= entry->end_id) {
+			if (id[0] == entry->prefix[0] && id[1] == entry->prefix[1] && id[2] == entry->prefix[2]) {
 				err = U_ZERO_ERROR;
 				format_uc = ures_getStringByKey(entry->bundle_messages, id, &format_len, &err);
 				if (U_FAILURE(err) && err != U_MISSING_RESOURCE_ERROR) {
 					ltfs_mutex_unlock(&output_lock);
 					goto internal_error;
 				} else if (U_SUCCESS(err))
-					break;
-				format_uc = NULL;
-			} else if (id[0] == 'I' || id[0] == 'D') {
-				err = U_ZERO_ERROR;
-				format_uc = ures_getStringByKey(entry->bundle_messages, id, &format_len, &err);
-				if (U_SUCCESS(err))
 					break;
 				format_uc = NULL;
 			}

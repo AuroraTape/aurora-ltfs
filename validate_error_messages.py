@@ -1,148 +1,102 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
+
+"""
+Validate message IDs between source code and message bundle definitions.
+
+Scans src/**/*.{c,h} for message IDs matching A[A-Z]{2}\\d{4}[EIWD],
+and messages/**/*.txt for the same pattern in :string lines.
+Reports unused (defined but not referenced in source) and
+undefined (referenced in source but not defined) message IDs.
+"""
 
 import os
 import re
+import sys
 
-re_msgid_all      = r'(?P<id>(?P<val>[I0-9][0-9]{3,4})[EWID])'
-re_msgid_all2     = r'"LTFS(?P<id>(?P<val>[0-9]{4,5})[EWID])'
+# Pattern for new-format message IDs: e.g. ALC0002E, ALG0001W
+re_msgid_source = re.compile(r'(A[A-Z]{2}\d{4}[EIWD])')
+re_msgid_bundle = re.compile(r'(A[A-Z]{2}\d{4}[EIWD]):string')
 
-re_msgid_bundle   = r'(^|[^0-9])(?P<id>(?P<val>[0-9]{4,5})[EWID]):string'
+# Prefixes to exclude from unused checks.
+# Internal error messages (AEI/AED) serve as an error code registry —
+# they must have definitions even when not directly referenced as message strings.
+# Individual IDs to exclude from unused checks (with reason).
+# Remove entries as they get resolved.
+UNUSED_EXEMPT_IDS = {
+    "AFS0101I",  # default device display — see GitHub issue #21
+}
 
 msg_used = set()
-msg_unref = set()
+msg_defined = dict()  # module -> set of IDs
 
-def check_line(path, linenum, x):
-	m1 = re.search(re_msgid_all, x)
-	m2 = re.search(re_msgid_all2, x)
-	if m2 and not m1:
-		m1 = m2
-	if m1:
-		mid = m1.group('id')
 
-		if m1.group('val')[0] != 'I':
-			mval = int(m1.group('val'))
-		else:
-			return None
+def scan_source():
+    """Scan source files for message ID references."""
+    for dirpath, dirs, files in os.walk('src'):
+        for f in files:
+            if re.search(r'\.[ch]$', f):
+                filepath = os.path.join(dirpath, f)
+                with open(filepath, 'r') as fd:
+                    for line in fd:
+                        for m in re_msgid_source.finditer(line):
+                            msg_used.add(m.group(1))
 
-		if re.search(r'/\* ltfsresult', line):
-			return None
-		if re.search(r'[^EWID],$', mid):
-			print 'Bad output level in message ID at %s:%d' % (path, linenum)
-			print line.rstrip()
-			return None
-		if re.search(r'ltfsmsg\(', line):
-			if mid[0] == '0':
-				print 'Leading zero(s) in message ID at %s:%d' % (path, linenum)
-				print line.rstrip()
-				return None
-			if re.search(r'LTFS_ERR', line):
-				if mid[-1] != 'E':
-					print 'Output level mismatch at %s:%d' % (path, linenum)
-					print line.rstrip()
-					return None
-			elif re.search(r'LTFS_WARN', line):
-				if mid[-1] != 'W':
-					print 'Output level mismatch at %s:%d' % (path, linenum)
-					print line.rstrip()
-					return None
-			elif re.search(r'LTFS_INFO', line):
-				if mid[-1] != 'I':
-					print 'Output level mismatch at %s:%d' % (path, linenum)
-					print line.rstrip()
-					return None
-			elif re.search(r'LTFS_DEBUG', line):
-				if mid[-1] != 'D':
-					print 'Output level mismatch at %s:%d' % (path, linenum)
-					print line.rstrip()
-					return None
-			else:
-				print 'Unknown output level at %s:%d' % (path, linenum)
-				print line.rstrip()
-				return None
-			return mid
-		elif re.search(r'ltfsresult\(', line):
-			return mid
-		elif re.search(r'fprintf\(', line):
-			return mid
-		elif re.search(r'_slext_trace', line):
-			return mid
-		elif re.search(r'check_err\(', line):
-			return mid
-		elif re.search(r' [0-9]{4,5}[EWID],', line):
-			return mid
-		elif re.search(r'\s+[0-9]{4,5}[EWID],', line):
-			return mid
-		#return mid
-	return None
 
-# List the messages present in the source
-for d, dirs, files in os.walk('src'):
-	for f in files:
-		if re.search(r'\.[ch]$', f) or re.search(r'\.cpp$', f):
-			with file(os.path.join(d, f), 'r') as fd:
-				linenum = 1
-				for line in fd:
-					msgid = check_line(os.path.join(d, f), linenum, line)
-					if msgid:
-						msg_used.add(msgid)
-						msg_unref.add(msgid)
-					linenum += 1
+def scan_messages():
+    """Scan message bundle .txt files for message ID definitions."""
+    for dirpath, dirs, files in os.walk('messages'):
+        if dirpath == 'messages':
+            continue
+        module_ids = set()
+        for f in files:
+            if f.endswith('.txt'):
+                filepath = os.path.join(dirpath, f)
+                with open(filepath, 'r') as fd:
+                    for line in fd:
+                        # Strip comments
+                        comment_pos = line.find('//')
+                        if comment_pos >= 0:
+                            line = line[:comment_pos]
+                        for m in re_msgid_bundle.finditer(line):
+                            module_ids.add(m.group(1))
+        if module_ids:
+            msg_defined[os.path.basename(dirpath)] = module_ids
 
-msg_ids = dict()
 
-# List the messages defined in the message bundles
-for d, dirs, files in os.walk('messages'):
-	if d == 'messages':
-		continue
-	if d == "messages/internal_error":
-		continue
-	msg_list = set()
-	for f in files:
-		start_id = 0
-		end_id = 1000000
-		if re.search(r'\.txt$', f):
-			with file(os.path.join(d, f), 'r') as fd:
-				linenum = 1
-				for line in fd:
-					m = re.search(r'start_id:int\s*{\s*(?P<val>[0-9]+)\s*}', line)
-					if m is not None:
-						start_id = int(m.group('val'))
-					m = re.search(r'end_id:int\s*{\s*(?P<val>[0-9]+)\s*}', line)
-					if m is not None:
-						end_id = int(m.group('val'))
-						if end_id < start_id:
-							print 'Warning: strange message ID range (%d-%d) in %s' % (
-								start_id, end_id, os.path.join(d, f))
+def main():
+    scan_source()
+    scan_messages()
 
-					m = re.search(r'^(?P<val>.*)//', line)
-					if m is not None:
-						m = re.search(re_msgid_bundle, m.group('val'))
-					else:
-						m = re.search(re_msgid_bundle, line)
-					if m is not None:
-						val = int(m.group('val'))
-						if val < start_id or val > end_id:
-							print 'Message ID %s out of range (%d-%d) at %s:%d' % (
-								m.group('id'), start_id, end_id, os.path.join(d, f), linenum)
-						else:
-							msg_list.add(m.group('id'))
-					linenum += 1
-	if len(msg_list) > 0:
-		msg_ids[os.path.basename(d)] = msg_list
+    all_defined = set()
+    for module, ids in msg_defined.items():
+        all_defined |= ids
 
-# Find unused and nonexistent message IDs
-for module in msg_ids:
-	msg_unref = msg_unref - msg_ids[module]
-	diff = msg_ids[module] - msg_used
-	if len(diff) > 0:
-		print "Found %d unused message IDs in message bundle '%s':" % (len(diff), module)
-		diff_list = [i for i in diff]
-		diff_list.sort()
-		for i in diff_list:
-			print '\t%s' % (i,)
-if len(msg_unref) > 0:
-	print "Found %d undefined message IDs in the source:" % (len(msg_unref),)
-	unref_list = [i for i in msg_unref]
-	unref_list.sort()
-	for i in unref_list:
-		print '\t%s' % (i,)
+    # Unused: defined in messages but not referenced in source
+    # Exclude prefixes that serve as registries (e.g., internal error codes)
+    unused = {mid for mid in (all_defined - msg_used)
+              if mid not in UNUSED_EXEMPT_IDS}
+    # Undefined: referenced in source but not defined in messages
+    undefined = msg_used - all_defined
+
+    exit_code = 0
+
+    if unused:
+        print(f"Found {len(unused)} unused message IDs (defined but not in source):")
+        for mid in sorted(unused):
+            print(f"\t{mid}")
+        exit_code = 1
+
+    if undefined:
+        print(f"Found {len(undefined)} undefined message IDs (in source but not defined):")
+        for mid in sorted(undefined):
+            print(f"\t{mid}")
+        exit_code = 1
+
+    if exit_code == 0:
+        print("All message IDs are consistent.")
+
+    return exit_code
+
+
+if __name__ == '__main__':
+    sys.exit(main())

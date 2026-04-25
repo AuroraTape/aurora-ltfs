@@ -60,9 +60,17 @@ RESOURCES = \
 	libtape_freebsd_cam_dat.a \
 	libiosched_fcfs_dat.a \
 	libiosched_unified_dat.a \
-	liblibaltfs_dat.a \
-	libtape_common_dat.a \
-	libinternal_error_dat.a
+	liblc_dat.a \
+	liblg_dat.a \
+	libli_dat.a \
+	liblb_dat.a \
+	liblp_dat.a \
+	liblf_dat.a \
+	liblj_dat.a \
+	liblx_dat.a \
+	libei_dat.a \
+	libed_dat.a \
+	libtape_common_dat.a
 
 .PHONY: all $(RESOURCES) clean-local
 if CHK_MESSAGE
@@ -80,6 +88,6 @@ if CHK_MESSAGE
 endif
 
 clean-local:
-	rm -rf $(RESOURCES) */work
+	rm -rf $(RESOURCES) */work */work_*
 	rm -f ../src/ltfsmsg.h
 	rm -f *.la

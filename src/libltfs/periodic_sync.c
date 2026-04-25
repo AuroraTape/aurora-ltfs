@@ -94,18 +94,18 @@ ltfs_thread_return periodic_sync_thread(void* data)
 
 		ltfs_request_trace(FUSE_REQ_ENTER(REQ_SYNC), 0, 0);
 
-		ltfsmsg(LTFS_DEBUG, 17067D, "Sync-by-Time");
+		ltfsmsg(ALJ0043D, "Sync-by-Time");
 		ret = ltfs_fsops_flush(NULL, false, priv->vol);
 		if (ret < 0) {
 			/* Failed to flush file data */
-			ltfsmsg(LTFS_WARN, 17063W, __FUNCTION__);
+			ltfsmsg(ALJ0039W, __FUNCTION__);
 		}
 
 		ltfs_set_commit_message_reason(SYNC_PERIODIC, priv->vol);
 
 		ret = ltfs_sync_index(SYNC_PERIODIC, true, LTFS_INDEX_AUTO, priv->vol);
 		if (ret < 0) {
-			ltfsmsg(LTFS_INFO, 11030I, ret);
+			ltfsmsg(ALJ0001I, ret);
 			priv->keepalive = false;
 		}
 
@@ -113,7 +113,7 @@ ltfs_thread_return periodic_sync_thread(void* data)
 	}
 	ltfs_thread_mutex_unlock(&priv->periodic_sync_thread_mutex);
 
-	ltfsmsg(LTFS_DEBUG, 17064D, "Sync-by-Time");
+	ltfsmsg(ALJ0040D, "Sync-by-Time");
 	ltfs_thread_exit();
 
 	return LTFS_THREAD_RC_NULL;
@@ -153,7 +153,7 @@ int periodic_sync_thread_init(int sec, struct ltfs_volume *vol)
 
 	priv = calloc(1, sizeof(struct periodic_sync_data));
 	if (! priv) {
-		ltfsmsg(LTFS_ERR, 10001E, "periodic_sync_thread_init: periodic sync data");
+		ltfsmsg(ALC0002E, "periodic_sync_thread_init: periodic sync data");
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -163,13 +163,13 @@ int periodic_sync_thread_init(int sec, struct ltfs_volume *vol)
 
 	ret = ltfs_thread_cond_init(&priv->periodic_sync_thread_cond);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10003E, ret);
+		ltfsmsg(ALC0004E, ret);
 		free(priv);
 		return -ret;
 	}
 	ret = ltfs_thread_mutex_init(&priv->periodic_sync_thread_mutex);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10002E, ret);
+		ltfsmsg(ALC0003E, ret);
 		ltfs_thread_cond_destroy(&priv->periodic_sync_thread_cond);
 		free(priv);
 		return -ret;
@@ -177,14 +177,14 @@ int periodic_sync_thread_init(int sec, struct ltfs_volume *vol)
 	ret = ltfs_thread_create(&priv->periodic_sync_thread_id, periodic_sync_thread, priv);
 	if (ret < 0) {
 		/* Failed to spawn the periodic sync thread (%d) */
-		ltfsmsg(LTFS_ERR, 17099E, ret);
+		ltfsmsg(ALJ0044E, ret);
 		ltfs_thread_mutex_destroy(&priv->periodic_sync_thread_mutex);
 		ltfs_thread_cond_destroy(&priv->periodic_sync_thread_cond);
 		free(priv);
 		return -ret;
 	}
 
-	ltfsmsg(LTFS_DEBUG, 17065D);
+	ltfsmsg(ALJ0041D);
 	vol->periodic_sync_handle = priv;
 
 	return 0;
@@ -214,6 +214,6 @@ int periodic_sync_thread_destroy(struct ltfs_volume *vol)
 
 	vol->periodic_sync_handle = NULL;
 
-	ltfsmsg(LTFS_DEBUG, 17066D);
+	ltfsmsg(ALJ0042D);
 	return 0;
 }

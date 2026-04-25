@@ -1,0 +1,160 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// libaltfs xml reader/writer
+	messages:table {
+		prefix:string { "ALX" }
+
+		ALX0001E:string { "Cannot write index: failed to write a trailing file mark (%d). The medium is in an inconsistent state; unmount and run ltfsck." }
+		ALX0002E:string { "Unable to read index: cannot duplicate index partition criteria." }
+		ALX0003I:string { "Incremental index: Applied CREATE operation (%s)." }
+		ALX0004I:string { "Incremental index: Applied MODIFY operation (%s)." }
+		ALX0005I:string { "Incremental index: Delete target not found, may already be deleted (%s)." }
+		ALX0006I:string { "Incremental index: Applied DELETE operation (%s)." }
+		ALX0007E:string { "XML parser: not all required tags found in \'%s\'." }
+		ALX0008E:string { "XML parser: duplicate required tag \'%s\'." }
+		ALX0009E:string { "XML parser: duplicate optional tag \'%s\'." }
+		ALX0010E:string { "XML parser: cannot determine whether tag is empty." }
+		ALX0011E:string { "XML parser: tag \'%s\' must not be empty." }
+		ALX0012E:string { "XML parser: extra content in tag \'%s\'." }
+		ALX0013W:string { "XML parser: ignoring unrecognized tag \'%s\' inside \'%s\'." }
+		ALX0014E:string { "Cannot instantiate an LTFS label parser for file \'%s\'." }
+		ALX0015E:string { "Cannot parse XML label from file \'%s\'." }
+		ALX0016E:string { "Cannot instantiate an LTFS label parser for a memory buffer." }
+		ALX0017E:string { "Cannot parse XML label from memory (%d)." }
+		ALX0018E:string { "Cannot instantiate an index parser for file \'%s\'." }
+		ALX0019E:string { "Cannot parse index from file \'%s\' (%d)." }
+		ALX0020E:string { "Cannot parse index: failed to determine medium position (%d)." }
+		ALX0021E:string { "Cannot parse index: failed to create XML parser input buffer." }
+		ALX0022E:string { "Cannot parse index: failed to create XML reader." }
+		ALX0023E:string { "Cannot parse index direct from medium (%d)." }
+		ALX0024E:string { "XML parser: unexpected top-level tag \'%s\'." }
+		ALX0025E:string { "XML parser: unsupported encoding \'%s\'." }
+		ALX0026E:string { "XML parser: no schema version found." }
+		ALX0027E:string { "XML parser: invalid schema version \'%s\'." }
+		ALX0028E:string { "XML parser: unsupported %s version %s." }
+		ALX0029E:string { "XML parser: invalid block size %s." }
+		ALX0030E:string { "XML parser: invalid generation number %s." }
+		ALX0031E:string { "XML parser: invalid size criterion %s." }
+		ALX0032E:string { "XML parser: file size is shorter than extent list." }
+		ALX0033E:string { "XML parser: unsupported extended attribute type \'%s\'." }
+		ALX0034E:string { "XML parser: base64 decoding failed." }
+		ALX0035E:string { "XML parser: invalid UUID %s." }
+		ALX0036E:string { "XML parser: failed to normalize %s \'%s\'." }
+		ALX0037E:string { "XML parser: invalid %s \'%s\'." }
+		ALX0038E:string { "XML parser: boolean must be \'true\' (1) or \'false\' (0) but it is \'%s\'." }
+		ALX0039E:string { "XML parser: invalid partition \'%s\'." }
+		ALX0040E:string { "XML parser: invalid time \'%s\' (%d)." }
+		ALX0041E:string { "XML parser: expected a text node." }
+		ALX0042E:string { "XML parser: expected a text node (received type %d)." }
+		ALX0043E:string { "XML parser: failed to read from XML stream." }
+		ALX0044E:string { "XML parser: unexpected end of XML stream." }
+		ALX0045E:string { "XML parser: failed to read a block from the medium (%d)." }
+		ALX0046E:string { "XML parser: failed to space back 1 file mark." }
+		ALX0047E:string { "XML parser: read failed while looking for a file mark (%d)." }
+		ALX0048E:string { "XML writer: error creating tag (%s)." }
+		ALX0049E:string { "Cannot instantiate an LTFS label writer to memory." }
+		ALX0050E:string { "Label writer: failed to start the document (%d)." }
+		ALX0051E:string { "Label writer: failed to format time." }
+		ALX0052E:string { "Label writer: failed to close the document (%d)." }
+		ALX0053E:string { "Cannot generate LTFS label: failed to allocate buffer." }
+		ALX0054E:string { "Cannot generate index data in memory: failed to allocate buffer." }
+		ALX0055E:string { "Cannot instantiate index writer to memory." }
+		ALX0056E:string { "Cannot generate index data in memory." }
+		ALX0057E:string { "Cannot instantiate an index writer to file \'%s\'." }
+		ALX0058E:string { "Cannot generate index data (%d) in file \'%s\'." }
+		ALX0059E:string { "Cannot generate index data direct to tape: failed to create output buffer." }
+		ALX0060E:string { "Cannot instantiate an index writer direct to tape." }
+		ALX0061E:string { "Cannot generate index data direct to tape (%d)." }
+		ALX0062E:string { "XML writer: cannot format time (gmtime failed)." }
+		ALX0063E:string { "Index writer: failed to start the document (%d)." }
+		ALX0064E:string { "Index writer: failed to close the document (%d)." }
+		ALX0065E:string { "Index writer: cannot validate extended attribute value (%d)." }
+		ALX0066E:string { "XML writer: failed to write a block to the medium (%d)." }
+		ALX0067E:string { "XML writer: failed to flush cached data to the medium (%d)." }
+		ALX0068E:string { "XML writer: tried to write a directory as a file." }
+		ALX0069E:string { "XML parser: failed to read extent list from file (%d)." }
+		ALX0070E:string { "Cannot save tag: libxml2 could not return text for this node." }
+		ALX0071E:string { "Index writer: failed to write opaque tags (%s)." }
+		ALX0072E:string { "XML parser: failed to skip tag." }
+		ALX0073E:string { "XML parser: comment field is longer than 64 KiB." }
+		ALX0074W:string { "The index read from the tape uses an old version of the LTFS format. If this tape is modified, the index upgrades format version to %s from %d.%d.%d." }
+		ALX0075W:string { "The index read from the tape uses a newer version of the LTFS format than the one supported by this software. Some functionality might be unavailable. If this tape is modified, the index downgrades format version to %s from %d.%d.%d." }
+		ALX0076E:string { "XML parser: two extents overlap." }
+		ALX0077E:string { "XML parser: UID on the root directory must be 1" }
+		ALX0078E:string { "XML parser: UID 1 is reserved for the root directory (%s)." }
+		ALX0079E:string { "XML parser: UID 0 is reserved." }
+		ALX0080E:string { "File %s has both of symbolic link and extents." }
+		ALX0081E:string { "XML parser: cannot save tag, libxml2 workaround failed (%s)." }
+		ALX0082E:string { "Cannot write XML data to file descriptor (%s, %d, %lu)." }
+		ALX0083W:string { "%s is out of range in parsing the label (%s)." }
+		ALX0084W:string { "%s is out of range in parsing the index (%s)." }
+		ALX0085W:string { "%s is out of range in parsing dentry (%s:%llu %s)." }
+		ALX0086W:string { "%s is out of range in creating the label (%lld)." }
+		ALX0087W:string { "%s is out of range in creating the index (%lld)." }
+		ALX0088W:string { "%s is out of range in creating dentry (%lld)." }
+		ALX0089W:string { "The index read from the tape uses a newer version of the LTFS format than the one supported by this software. If this tape is modified, the index downgrades to format version %s from %d.%d.%d." }
+		ALX0090W:string { "Failed to open the advisory lock '%s' (%d)." }
+		ALX0091W:string { "Failed to acquire the advisory lock '%s' (%d)." }
+		ALX0092W:string { "Failed to release the advisory lock (%d)." }
+		ALX0093E:string { "XML writer: failed to write a block to the disk (%d)." }
+		ALX0094E:string { "XML writer: failed to flush cached data to the disk (%d)." }
+		ALX0095E:string { "Failed to %s (%d)." }
+		ALX0096W:string { "Failed to create the path of %s (%s)." }
+		ALX0097W:string { "Failed to open %s (%s)." }
+		ALX0098I:string { "Information of %lld files are written to the offset cache." }
+		ALX0099I:string { "Information of %lld files are written to the sync list." }
+		ALX0100I:string { "File %s (%lld) was opened when this index was written." }
+		ALX0101W:string { "Invalid value (%s) in the %s tag in UID %lld." }
+		ALX0102I:string { "Cannot open %s cache for sync (%d)." }
+		ALX0103I:string { "An unexpected character exists in the decoded name object (%s). Revert to the encoded character." }
+		ALX0104I:string { "0x2f (/) or 0x1f (US) exists in name object (%s): Replace it with '_'." }
+		ALX0105I:string { "Sleep was interrupted by a signal while taking the advisory lock '%s'." }
+		ALX0106I:string { "The kernel detected a false deadlock retry to acquire the advisory lock '%s' (%d)." }
+		ALX0107I:string { "Sleep failed while taking the advisory lock '%s' (%d, %d)." }
+		ALX0108E:string { "XML parser: Detected invalid %s in a label." }
+		ALX0109W:string { "XML parser: Failed to parse a key name of xattr in %s. Skip one xattr." }
+		ALX0110E:string { "XML parser: Detected invalid %s in a file (%s)." }
+		ALX0111E:string { "Cannot save the conflicted info of symlink and extent: file %s." }
+		ALX0112E:string { "XML parser: Detected invalid %s in a directory (%s)." }
+		ALX0113E:string { "XML parser: Detected an I/O error on reading an index from the tape (%d)." }
+		ALX0114W:string { "XML parser: Unexpected error code is detected (%d)." }
+		ALX0115E:string { "Unexpected value was found in the reason of inc-journal entry (%d)." }
+		ALX0116E:string { "Unexpected value was provided to _xml_write_incremental_delete (%d)." }
+		ALX0117E:string { "XML parser: contents tag not found in incremental index." }
+		ALX0118I:string { "XML parser: Found an incremental index, but skip this." }
+	}
+}

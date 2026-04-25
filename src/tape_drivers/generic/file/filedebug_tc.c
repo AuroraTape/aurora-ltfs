@@ -367,7 +367,7 @@ static void emulate_rewind_wait(struct filedebug_data *state)
 
 void filedebug_help_message(const char *progname)
 {
-	ltfsresult(30199I, filedebug_default_device);
+	ltfsresult(ATF0102I, filedebug_default_device);
 }
 
 int filedebug_open(const char *name, void **handle)
@@ -383,24 +383,24 @@ int filedebug_open(const char *name, void **handle)
 	int i, devs = 0, info_devs = 0;
 	struct tc_drive_info *buf = NULL;
 
-	ltfsmsg(LTFS_INFO, 30000I, name);
+	ltfsmsg(ATF0001I, name);
 
 	CHECK_ARG_NULL(handle, -LTFS_NULL_ARG);
 	*handle = NULL;
 
 	state = (struct filedebug_data *)calloc(1,sizeof(struct filedebug_data));
 	if (!state) {
-		ltfsmsg(LTFS_ERR, 10001E, "filedebug_open: private data");
+		ltfsmsg(ALC0002E, "filedebug_open: private data");
 		return -EDEV_NO_MEMORY;
 	}
 
 	/* check name is file or dir */
 	ret = stat(name, &d);
 	if (ret == 0 && S_ISDIR(d.st_mode)) {
-		ltfsmsg(LTFS_INFO, 30003I, name);
+		ltfsmsg(ATF0004I, name);
 		state->dirname = strdup(name);
 		if (!state->dirname) {
-			ltfsmsg(LTFS_ERR, 10001E, "filedebug_open: dirname");
+			ltfsmsg(ALC0002E, "filedebug_open: dirname");
 			free(state);
 			return -EDEV_NO_MEMORY;
 		}
@@ -410,7 +410,7 @@ int filedebug_open(const char *name, void **handle)
 		if (devs) {
 			buf = (struct tc_drive_info *)calloc(devs * 2, sizeof(struct tc_drive_info));
 			if (! buf) {
-				ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+				ltfsmsg(ALC0002E, __FUNCTION__);
 				return -LTFS_NO_MEMORY;
 			}
 			info_devs = filedebug_get_device_list(buf, devs * 2);
@@ -420,7 +420,7 @@ int filedebug_open(const char *name, void **handle)
 			if (! strncmp(buf[i].serial_number, name, TAPE_SERIAL_LEN_MAX) ) {
 				devname = strdup(buf[i].name);
 				if (!devname) {
-					ltfsmsg(LTFS_ERR, 10001E, "sg_ibmtape_open: devname");
+					ltfsmsg(ALC0002E, "sg_ibmtape_open: devname");
 					if (buf) free(buf);
 					free(state);
 					return -EDEV_NO_MEMORY;
@@ -437,10 +437,10 @@ int filedebug_open(const char *name, void **handle)
 		/* Run on file mode */
 		if (devname == NULL)
 			devname = strdup(name);
-		ltfsmsg(LTFS_INFO, 30001I, devname);
+		ltfsmsg(ATF0002I, devname);
 		state->fd = open(devname, O_RDWR | O_BINARY);
 		if (state->fd < 0) {
-			ltfsmsg(LTFS_ERR, 30002E, devname);
+			ltfsmsg(ATF0003E, devname);
 			return -EDEV_INTERNAL_ERROR;
 		}
 
@@ -460,7 +460,7 @@ int filedebug_open(const char *name, void **handle)
 		if (pid && ser) {
 			ret = asprintf(&state->serial_number, "%s", ser);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 10001E, "filedebug_open: serial & pid");
+				ltfsmsg(ALC0002E, "filedebug_open: serial & pid");
 				free(state);
 				return -EDEV_NO_MEMORY;
 			}
@@ -477,7 +477,7 @@ int filedebug_open(const char *name, void **handle)
 		/* Store directory base */
 		tmp = strdup(devname);
 		if (!tmp) {
-			ltfsmsg(LTFS_ERR, 10001E, "filedebug_open: dirbase tmp");
+			ltfsmsg(ALC0002E, "filedebug_open: dirbase tmp");
 			free(state);
 			return -EDEV_NO_MEMORY;
 		}
@@ -487,7 +487,7 @@ int filedebug_open(const char *name, void **handle)
 		p = dirname(tmp);
 		state->dirbase = (char *) calloc(strlen(p) + 1, sizeof(char));
 		if (!state->dirbase) {
-			ltfsmsg(LTFS_ERR, 10001E, "filedebug_open: dirbase");
+			ltfsmsg(ALC0002E, "filedebug_open: dirbase");
 			free(state);
 			free(tmp);
 			return -EDEV_NO_MEMORY;
@@ -623,12 +623,12 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 	ssize_t bytes_read;
 	int fd;
 
-	ltfsmsg(LTFS_DEBUG, 30005D, (unsigned int)count, state->current_position.partition,
+	ltfsmsg(ATF0006D, (unsigned int)count, state->current_position.partition,
 		(unsigned long long)state->current_position.block,
 		(unsigned long long)state->current_position.filemarks);
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30006E);
+		ltfsmsg(ATF0007E);
 		return -EDEV_NOT_READY;
 	}
 
@@ -641,7 +641,7 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 	if (state->force_readperm) {
 		state->read_counter++;
 		if (state->read_counter > state->force_readperm) {
-			ltfsmsg(LTFS_ERR, 30007E, "read");
+			ltfsmsg(ATF0008E, "read");
 			if (state->force_errortype)
 				return -EDEV_READ_PERM;
 			else
@@ -680,7 +680,7 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 			return ret;
 		}
 		if (ret > 0) {
-			ltfsmsg(LTFS_ERR, 30008E);
+			ltfsmsg(ATF0009E);
 			free(fname);
 			return -EDEV_EOD_NOT_FOUND;
 		}
@@ -689,7 +689,7 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 		fname[fname_len - 1] = rec_suffixes[SUFFIX_FILEMARK];
 		ret = _filedebug_check_file(fname);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30009E, ret);
+			ltfsmsg(ATF0010E, ret);
 			free(fname);
 			return ret;
 		}
@@ -706,7 +706,7 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 		fname[fname_len - 1] = rec_suffixes[SUFFIX_RECORD];
 		ret = _filedebug_check_file(fname);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30010E, ret);
+			ltfsmsg(ATF0011E, ret);
 			free(fname);
 			return ret;
 		}
@@ -714,33 +714,33 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 			fd = open(fname, O_RDONLY | O_BINARY);
 			free(fname);
 			if (fd < 0) {
-				ltfsmsg(LTFS_ERR, 30011E, errno);
+				ltfsmsg(ATF0012E, errno);
 				return -EDEV_RW_PERM;
 			}
 
 			/* TODO: return -EDEV_INVALID_ARG if buffer is too small to hold complete record? */
 			bytes_read = read(fd, buf, count);
 			if (bytes_read < 0) {
-				ltfsmsg(LTFS_ERR, 30012E, errno);
+				ltfsmsg(ATF0013E, errno);
 				close(fd);
 				return -EDEV_RW_PERM;
 			}
 
 			ret = close(fd);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30013E, errno);
+				ltfsmsg(ATF0014E, errno);
 				return -EDEV_RW_PERM;
 			}
 
 			++state->current_position.block;
 			pos->block = state->current_position.block;
 
-			ltfsmsg(LTFS_DEBUG, 30014D, bytes_read);
+			ltfsmsg(ATF0015D, bytes_read);
 			return bytes_read;
 		}
 
 		/* couldn't find any records?! something is corrupted */
-		ltfsmsg(LTFS_ERR, 30015E);
+		ltfsmsg(ATF0016E);
 		free(fname);
 	}
 
@@ -755,12 +755,12 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 	int fd;
 	ssize_t written;
 
-	ltfsmsg(LTFS_DEBUG, 30016D, (unsigned int)count, state->current_position.partition,
+	ltfsmsg(ATF0017D, (unsigned int)count, state->current_position.partition,
 		(unsigned long long)state->current_position.block,
 		(unsigned long long)state->current_position.filemarks);
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30017E);
+		ltfsmsg(ATF0018E);
 		ret = -EDEV_NOT_READY;
 		return ret;
 	}
@@ -778,7 +778,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		else
 			ret = -EDEV_DATA_PROTECT;    /* Emulate 07/3005 */
 
-		ltfsmsg(LTFS_INFO, 30085I, ret, state->serial_number);
+		ltfsmsg(ATF0086I, ret, state->serial_number);
 
 		return ret;
 	}
@@ -792,7 +792,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 	/* TODO: It is nicer if we have a append only mode support */
 
 	if (! buf && count > 0) {
-		ltfsmsg(LTFS_ERR, 30018E);
+		ltfsmsg(ATF0019E);
 		ret = -EDEV_INVALID_ARG;
 		return ret;
 	} else if (count == 0) {
@@ -803,13 +803,13 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 	if ( state->force_writeperm ) {
 		state->write_counter++;
 		if ( state->write_counter > state->force_writeperm ) {
-			ltfsmsg(LTFS_ERR, 30007E, "write");
+			ltfsmsg(ATF0008E, "write");
 			if (state->force_errortype)
 				return -EDEV_NO_SENSE;
 			else
 				return -EDEV_WRITE_PERM;
 		} else if ( state->write_counter > (state->force_writeperm - THRESHOLD_FORCE_WRITE_NO_WRITE) ) {
-			ltfsmsg(LTFS_INFO, 30019I);
+			ltfsmsg(ATF0020I);
 			++state->current_position.block;
 			pos->block = state->current_position.block;
 			return DEVICE_GOOD;
@@ -817,7 +817,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 	}
 
 	if (count > (size_t)state->max_block_size) {
-		ltfsmsg(LTFS_ERR, 30020E, (unsigned int)count, state->max_block_size);
+		ltfsmsg(ATF0021E, (unsigned int)count, state->max_block_size);
 		ret = -EDEV_INVALID_ARG;
 		return ret;
 	}
@@ -840,7 +840,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		/* clean up old records at this position */
 		ret = _filedebug_remove_current_record(state);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30021E, ret);
+			ltfsmsg(ATF0022E, ret);
 			return ret;
 		}
 
@@ -848,7 +848,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		if(state->write_pass_prev == state->write_pass){
 			ret = _set_wp(device, ++(state->write_pass));
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30022E, ret);
+				ltfsmsg(ATF0023E, ret);
 				return ret;
 			}
 		}
@@ -856,7 +856,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		/* create the file */
 		fname = _filedebug_make_current_filename(state, rec_suffixes[SUFFIX_RECORD]);
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30023E);
+			ltfsmsg(ATF0024E);
 			ret = -EDEV_NO_MEMORY;
 			return ret;
 		}
@@ -864,7 +864,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 				  O_WRONLY | O_CREAT | O_TRUNC | O_BINARY,
 				  S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 		if (fd < 0) {
-			ltfsmsg(LTFS_ERR, 30024E, fname, errno);
+			ltfsmsg(ATF0025E, fname, errno);
 			free(fname);
 			return -EDEV_RW_PERM;
 		}
@@ -873,13 +873,13 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		/* write and close the file */
 		written = write(fd, buf, count);
 		if (written < 0) {
-			ltfsmsg(LTFS_ERR, 30025E, errno);
+			ltfsmsg(ATF0026E, errno);
 			close(fd);
 			return -EDEV_RW_PERM;
 		}
 		ret = close(fd);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30026E, errno);
+			ltfsmsg(ATF0027E, errno);
 			return -EDEV_RW_PERM;
 		}
 
@@ -889,7 +889,7 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 
 		ret = _filedebug_write_eod(state);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30027E, ret);
+			ltfsmsg(ATF0028E, ret);
 			return ret;
 		}
 	}
@@ -920,12 +920,12 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 	int fd;
 	size_t i;
 
-	ltfsmsg(LTFS_DEBUG, 30028D, (unsigned int)count, state->current_position.partition,
+	ltfsmsg(ATF0029D, (unsigned int)count, state->current_position.partition,
 		(unsigned long long)state->current_position.block,
 		(unsigned long long)state->current_position.filemarks);
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30029E);
+		ltfsmsg(ATF0030E);
 		ret = -EDEV_NOT_READY;
 		return ret;
 	}
@@ -958,7 +958,7 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 		if(state->write_pass_prev == state->write_pass){
 			ret = _set_wp(device, ++(state->write_pass));
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30030E, ret);
+				ltfsmsg(ATF0031E, ret);
 				return ret;
 			}
 		}
@@ -966,13 +966,13 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 		for (i=0; i<count; ++i) {
 			ret = _filedebug_remove_current_record(state);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30031E, ret);
+				ltfsmsg(ATF0032E, ret);
 				return ret;
 			}
 
 			fname = _filedebug_make_current_filename(state, rec_suffixes[SUFFIX_FILEMARK]);
 			if (!fname) {
-				ltfsmsg(LTFS_ERR, 30032E);
+				ltfsmsg(ATF0033E);
 				ret = -EDEV_NO_MEMORY;
 				return ret;
 			}
@@ -981,7 +981,7 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 					  O_WRONLY | O_CREAT | O_TRUNC | O_BINARY,
 					  S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 			if (fd < 0) {
-				ltfsmsg(LTFS_ERR, 30033E, fname, errno);
+				ltfsmsg(ATF0034E, fname, errno);
 				free(fname);
 				return -EDEV_RW_PERM;
 			}
@@ -989,7 +989,7 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 
 			ret = close(fd);
 			if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30034E, errno);
+			ltfsmsg(ATF0035E, errno);
 			return -EDEV_RW_PERM;
 			}
 
@@ -1000,7 +1000,7 @@ int filedebug_writefm(void *device, size_t count, struct tc_position *pos, bool 
 
 			ret = _filedebug_write_eod(state);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30035E, ret);
+				ltfsmsg(ATF0036E, ret);
 				return ret;
 			}
 		}
@@ -1026,7 +1026,7 @@ int filedebug_rewind(void *device, struct tc_position *pos)
 	struct filedebug_data *state = (struct filedebug_data *)device;
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30036E);
+		ltfsmsg(ATF0037E);
 		return -EDEV_NOT_READY;
 	}
 
@@ -1060,11 +1060,11 @@ int filedebug_locate(void *device, struct tc_position dest, struct tc_position *
 	tape_filemarks_t count_fm = 0;
 	tape_block_t     i;
 
-	ltfsmsg(LTFS_DEBUG, 30197D, "locate", (unsigned long long)dest.partition,
+	ltfsmsg(ATF0100D, "locate", (unsigned long long)dest.partition,
 		(unsigned long long)dest.block);
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30037E);
+		ltfsmsg(ATF0038E);
 		ret = -EDEV_NOT_READY;
 		return ret;
 	}
@@ -1076,7 +1076,7 @@ int filedebug_locate(void *device, struct tc_position dest, struct tc_position *
 	}
 
 	if (dest.partition >= MAX_PARTITIONS) {
-		ltfsmsg(LTFS_ERR, 30038E, (unsigned long)dest.partition);
+		ltfsmsg(ATF0039E, (unsigned long)dest.partition);
 		ret = -EDEV_INVALID_ARG;
 		return ret;
 	}
@@ -1109,7 +1109,7 @@ int filedebug_locate(void *device, struct tc_position dest, struct tc_position *
 		fname = _filedebug_make_filename(state, state->current_position.partition,
 										 i, rec_suffixes[SUFFIX_FILEMARK]);
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30039E);
+			ltfsmsg(ATF0040E);
 			ret = -EDEV_NO_MEMORY;
 			return ret;
 		}
@@ -1148,7 +1148,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 	tape_block_t     i;
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30040E);
+		ltfsmsg(ATF0041E);
 		ret = -EDEV_NOT_READY;
 		return ret;
 	}
@@ -1161,7 +1161,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 
 	switch(type) {
 		case TC_SPACE_EOD:
-			ltfsmsg(LTFS_DEBUG, 30195D, "space to EOD");
+			ltfsmsg(ATF0098D, "space to EOD");
 			state->current_position.block = state->eod[state->current_position.partition];
 			if(state->current_position.block == MISSING_EOD) {
 				ret = -EDEV_RW_PERM;
@@ -1170,7 +1170,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 				ret = 0;
 			break;
 		case TC_SPACE_FM_F:
-			ltfsmsg(LTFS_DEBUG, 30196D, "space forward file marks", (unsigned long long)count);
+			ltfsmsg(ATF0099D, "space forward file marks", (unsigned long long)count);
 			if(state->current_position.block == MISSING_EOD) {
 				ret = -EDEV_RW_PERM;
 				return ret;
@@ -1178,7 +1178,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 				ret = _filedebug_space_fm(state, count, false);
 			break;
 		case TC_SPACE_FM_B:
-			ltfsmsg(LTFS_DEBUG, 30196D, "space back file marks", (unsigned long long)count);
+			ltfsmsg(ATF0099D, "space back file marks", (unsigned long long)count);
 			if(state->current_position.block == MISSING_EOD) {
 				ret = -EDEV_RW_PERM;
 				return ret;
@@ -1186,7 +1186,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 				ret = _filedebug_space_fm(state, count, true);
 			break;
 		case TC_SPACE_F:
-			ltfsmsg(LTFS_DEBUG, 30196D, "space forward records", (unsigned long long)count);
+			ltfsmsg(ATF0099D, "space forward records", (unsigned long long)count);
 			if(state->current_position.block == MISSING_EOD) {
 				ret = -EDEV_RW_PERM;
 				return ret;
@@ -1194,7 +1194,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 				ret = _filedebug_space_rec(state, count, false);
 			break;
 		case TC_SPACE_B:
-			ltfsmsg(LTFS_DEBUG, 30196D, "space back records", (unsigned long long)count);
+			ltfsmsg(ATF0099D, "space back records", (unsigned long long)count);
 			if(state->current_position.block == MISSING_EOD) {
 				ret = -EDEV_RW_PERM;
 				return ret;
@@ -1202,7 +1202,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 				ret = _filedebug_space_rec(state, count, true);
 			break;
 		default:
-			ltfsmsg(LTFS_ERR, 30041E);
+			ltfsmsg(ATF0042E);
 			ret = -EDEV_INVALID_ARG;
 			return ret;
 	}
@@ -1215,7 +1215,7 @@ int filedebug_space(void *device, size_t count, TC_SPACE_TYPE type, struct tc_po
 		fname = _filedebug_make_filename(state, state->current_position.partition,
 										 i, rec_suffixes[SUFFIX_FILEMARK]);
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30042E);
+			ltfsmsg(ATF0043E);
 			ret = -EDEV_NO_MEMORY;
 			return ret;
 		}
@@ -1255,11 +1255,11 @@ int filedebug_erase(void *device, struct tc_position *pos, bool long_erase)
 	struct filedebug_data *state = (struct filedebug_data *)device;
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30043E);
+		ltfsmsg(ATF0044E);
 		return -EDEV_NOT_READY;
 	}
 
-	ltfsmsg(LTFS_DEBUG, 30044D, (unsigned long)state->current_position.partition);
+	ltfsmsg(ATF0045D, (unsigned long)state->current_position.partition);
 	pos->block     = state->current_position.block;
 	pos->filemarks = state->current_position.filemarks;
 
@@ -1282,7 +1282,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				/* Do nothing */
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "LTO5", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "LTO5", state->conf.cart_type);
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
@@ -1294,7 +1294,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				/* Do nothing */
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "LTO6", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "LTO6", state->conf.cart_type);
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
@@ -1307,7 +1307,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				/* Do nothing */
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "LTO7", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "LTO7", state->conf.cart_type);
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
@@ -1319,7 +1319,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				/* Do nothing */
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "LTO8", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "LTO8", state->conf.cart_type);
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
@@ -1331,7 +1331,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				/* Do nothing */
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "LTO9", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "LTO9", state->conf.cart_type);
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
@@ -1348,7 +1348,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				state->is_worm = true;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "TS1140", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "TS1140", state->conf.cart_type);
 				state->is_worm = false;
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1367,7 +1367,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				state->is_worm = true;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "TS1150", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "TS1150", state->conf.cart_type);
 				state->is_worm = false;
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1386,7 +1386,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				state->is_worm = true;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "TS1155", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "TS1155", state->conf.cart_type);
 				state->is_worm = false;
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1408,7 +1408,7 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				state->is_worm = true;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "TS1160", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "TS1160", state->conf.cart_type);
 				state->is_worm = false;
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1420,14 +1420,14 @@ static inline int _sanitize_tape(struct filedebug_data *state)
 				state->is_worm = false;
 				break;
 			default:
-				ltfsmsg(LTFS_INFO, 30086I, "TS1170", state->conf.cart_type);
+				ltfsmsg(ATF0087I, "TS1170", state->conf.cart_type);
 				state->is_worm = false;
 				state->unsupported_tape = true;
 				ret = -EDEV_MEDIUM_FORMAT_ERROR;
 				break;
 		}
 	} else {
-		ltfsmsg(LTFS_INFO, 30086I, "Unexpected Drive", state->conf.cart_type);
+		ltfsmsg(ATF0087I, "Unexpected Drive", state->conf.cart_type);
 		state->is_worm = false;
 		state->unsupported_tape = true;
 		ret = -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1468,7 +1468,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 
 		ret = read(state->fd, buf, sizeof(buf));
 		if (ret != sizeof(buf)) {
-			ltfsmsg(LTFS_ERR, 30045E, "");
+			ltfsmsg(ATF0046E, "");
 			return -EDEV_HARDWARE_ERROR;
 		}
 
@@ -1478,7 +1478,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 			dirlink[strlen(dirlink) - 1] = '\0';
 
 		if(!strcmp(dirlink, "empty")) {
-			ltfsmsg(LTFS_INFO, 30046I, "");
+			ltfsmsg(ATF0047I, "");
 			return -EDEV_NO_MEDIUM;
 		}
 
@@ -1489,30 +1489,30 @@ int filedebug_load(void *device, struct tc_position *pos)
 
 		ret = asprintf(&state->dirname, "%s/%s", state->dirbase, dirlink);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 10001E, "Directory name pointed by redirecting file");
+			ltfsmsg(ALC0002E, "Directory name pointed by redirecting file");
 			return -EDEV_INTERNAL_ERROR;
 		}
 
 		/* make sure directory exists */
 		ret = stat(state->dirname, &d);
 		if (ret || !S_ISDIR(d.st_mode)) {
-			ltfsmsg(LTFS_ERR, 30047E, state->dirname);
+			ltfsmsg(ATF0048E, state->dirname);
 			return -EDEV_NO_MEDIUM;
 		}
 	}
 
-	ltfsmsg(LTFS_INFO, 30048I, state->dirname);
+	ltfsmsg(ATF0049I, state->dirname);
 
 	/* Load configuration of cartridge */
 	ret = asprintf(&config_file, "%s/%s", state->dirname, CARTRIDGE_CONFIG );
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 30049E, ret);
+		ltfsmsg(ATF0050E, ret);
 		return -EDEV_INTERNAL_ERROR;
 	}
 
 	ret = stat(config_file, &d);
 	if (! ret && S_ISDIR(d.st_mode)) {
-		ltfsmsg(LTFS_ERR, 30050E, ret);
+		ltfsmsg(ATF0051E, ret);
 		free(config_file);
 		return -EDEV_INTERNAL_ERROR;
 	}
@@ -1522,7 +1522,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 	else if (! ret)
 		filedebug_conf_tc_read_xml(config_file, &state->conf);
 	else {
-		ltfsmsg(LTFS_ERR, 30051E, ret);
+		ltfsmsg(ATF0052E, ret);
 		free(config_file);
 		return -EDEV_INTERNAL_ERROR;
 	}
@@ -1557,7 +1557,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 			state->is_readonly = true;
 			break;
 		case MEDIUM_CANNOT_ACCESS:
-			ltfsmsg(LTFS_INFO, 30088I, state->drive_type, state->conf.density_code);
+			ltfsmsg(ATF0088I, state->drive_type, state->conf.density_code);
 			state->unsupported_format = true;
 			if (IS_LTO(state->drive_type))
 				return -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1573,7 +1573,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 	for (i=0; i<MAX_PARTITIONS; ++i) {
 		ret = filedebug_search_eod(state, i);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30052E, i, ret);
+			ltfsmsg(ATF0053E, i, ret);
 			return -EDEV_INTERNAL_ERROR;
 		}
 	}
@@ -1595,7 +1595,7 @@ int filedebug_load(void *device, struct tc_position *pos)
 
 	wp = 0;
 	if(_get_wp(device, &wp) != 0) {
-		ltfsmsg(LTFS_ERR, 30053E);
+		ltfsmsg(ATF0054E);
 		return -EDEV_INTERNAL_ERROR;
 	}
 
@@ -1653,7 +1653,7 @@ int filedebug_unload(void *device, struct tc_position *pos)
 	/* Save configuration of cartridge */
 	ret = asprintf(&config_file, "%s/%s", state->dirname, CARTRIDGE_CONFIG );
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 30049E, ret);
+		ltfsmsg(ATF0050E, ret);
 		return -EDEV_INTERNAL_ERROR;
 	}
 
@@ -1672,7 +1672,7 @@ int filedebug_readpos(void *device, struct tc_position *pos)
 	struct filedebug_data *state = (struct filedebug_data *)device;
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30054E);
+		ltfsmsg(ATF0055E);
 		return -EDEV_NOT_READY;
 	}
 
@@ -1680,7 +1680,7 @@ int filedebug_readpos(void *device, struct tc_position *pos)
 	pos->block     = state->current_position.block;
 	pos->filemarks = state->current_position.filemarks;
 
-	ltfsmsg(LTFS_DEBUG, 30198D, "readpos", (unsigned long long)state->current_position.partition,
+	ltfsmsg(ATF0101D, "readpos", (unsigned long long)state->current_position.partition,
 		(unsigned long long)state->current_position.block,
 		(unsigned long long)state->current_position.filemarks);
 	return DEVICE_GOOD;
@@ -1694,7 +1694,7 @@ int filedebug_setcap(void *device, uint16_t proportion)
 	if(state->current_position.partition != 0 ||
 		state->current_position.block != 0)
 	{
-		ltfsmsg(LTFS_ERR, 30055E);
+		ltfsmsg(ATF0056E);
 		return -EDEV_ILLEGAL_REQUEST;
 	}
 
@@ -1720,7 +1720,7 @@ int filedebug_format(void *device, TC_FORMAT_TYPE format, const char *vol_name, 
 	if(state->current_position.partition != 0 ||
 		state->current_position.block != 0)
 	{
-		ltfsmsg(LTFS_ERR, 30056E);
+		ltfsmsg(ATF0057E);
 		return -EDEV_ILLEGAL_REQUEST;
 	}
 
@@ -1737,7 +1737,7 @@ int filedebug_format(void *device, TC_FORMAT_TYPE format, const char *vol_name, 
 		else
 			ret = -EDEV_DATA_PROTECT;    /* Emulate 07/3005 */
 
-		ltfsmsg(LTFS_INFO, 30085I, ret, state->serial_number);
+		ltfsmsg(ATF0086I, ret, state->serial_number);
 
 		return ret;
 	}
@@ -1751,7 +1751,7 @@ int filedebug_format(void *device, TC_FORMAT_TYPE format, const char *vol_name, 
 			state->partitions = 2;
 			break;
 		default:
-			ltfsmsg(LTFS_ERR, 30057E);
+			ltfsmsg(ATF0058E);
 			return -EDEV_INVALID_ARG;
 	}
 
@@ -1785,7 +1785,7 @@ int filedebug_remaining_capacity(void *device, struct tc_remaining_cap *cap)
 	struct filedebug_data *state = (struct filedebug_data *)device;
 
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30058E);
+		ltfsmsg(ATF0059E);
 		return DEVICE_GOOD;
 	}
 
@@ -1845,7 +1845,7 @@ int filedebug_get_xattr(void *device, const char *name, char **buf)
 			state->accumulated_delay.tv_sec,
 			state->accumulated_delay.tv_nsec);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 10001E, "get_xattr buffer");
+			ltfsmsg(ALC0002E, "get_xattr buffer");
 			ret = -LTFS_NO_MEMORY;
 		} else
 			ret = DEVICE_GOOD;
@@ -1867,7 +1867,7 @@ int filedebug_set_xattr(void *device, const char *name, const char *buf, size_t 
 
 	null_terminated = calloc(1, size + 1);
 	if (! null_terminated) {
-		ltfsmsg(LTFS_ERR, 10001E, "ibmtape_set_xattr: null_term");
+		ltfsmsg(ALC0002E, "ibmtape_set_xattr: null_term");
 		return -LTFS_NO_MEMORY;
 	}
 	memcpy(null_terminated, buf, size);
@@ -1916,7 +1916,7 @@ int filedebug_set_xattr(void *device, const char *name, const char *buf, size_t 
 
 int filedebug_logsense(void *device, const uint8_t page, const uint8_t subpage, unsigned char *buf, const size_t size)
 {
-	ltfsmsg(LTFS_ERR, 10007E, __FUNCTION__);
+	ltfsmsg(ALC0008E, __FUNCTION__);
 	return -EDEV_UNSUPPORTED_FUNCTION;
 }
 
@@ -1973,7 +1973,7 @@ int filedebug_modeselect(void *device, unsigned char *buf, const size_t size)
 				state->is_readonly = true;
 				break;
 			case MEDIUM_CANNOT_ACCESS:
-				ltfsmsg(LTFS_INFO, 30088I, state->drive_type, state->conf.density_code);
+				ltfsmsg(ATF0088I, state->drive_type, state->conf.density_code);
 				state->unsupported_format = true;
 				if (IS_LTO(state->drive_type))
 					return -EDEV_MEDIUM_FORMAT_ERROR;
@@ -1994,7 +1994,7 @@ int filedebug_reserve_unit(void *device)
 {
 	struct filedebug_data *state = (struct filedebug_data *)device;
 	if (state->device_reserved) {
-		ltfsmsg(LTFS_ERR, 30059E);
+		ltfsmsg(ATF0060E);
 		return -EDEV_ILLEGAL_REQUEST;
 	}
 	state->device_reserved = true;
@@ -2012,7 +2012,7 @@ int filedebug_prevent_medium_removal(void *device)
 {
 	struct filedebug_data *state = (struct filedebug_data *)device;
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30060E);
+		ltfsmsg(ATF0061E);
 		return -EDEV_NOT_READY;
 	}
 	state->medium_locked = true; /* TODO: fail if medium is already locked? */
@@ -2023,7 +2023,7 @@ int filedebug_allow_medium_removal(void *device)
 {
 	struct filedebug_data *state = (struct filedebug_data *)device;
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30061E);
+		ltfsmsg(ATF0062E);
 		return -EDEV_NOT_READY;
 	}
 	state->medium_locked = false;
@@ -2038,7 +2038,7 @@ int filedebug_read_attribute(void *device, const tape_partition_t part, const ui
 	int fd;
 	ssize_t bytes_read;
 
-	ltfsmsg(LTFS_DEBUG, 30197D, "readattr", (unsigned long long)part, (unsigned long long)id);
+	ltfsmsg(ATF0100D, "readattr", (unsigned long long)part, (unsigned long long)id);
 
 	/* Open attribute record */
 	fname = _filedebug_make_attrname(state, part, id);
@@ -2050,7 +2050,7 @@ int filedebug_read_attribute(void *device, const tape_partition_t part, const ui
 		if (errno == ENOENT) {
 			return -EDEV_INVALID_FIELD_CDB;
 		} else {
-			ltfsmsg(LTFS_WARN, 30062W, errno);
+			ltfsmsg(ATF0063W, errno);
 			return -EDEV_CM_PERM;
 		}
 	}
@@ -2058,7 +2058,7 @@ int filedebug_read_attribute(void *device, const tape_partition_t part, const ui
 	/* TODO: return -EDEV_INVALID_ARG if buffer is too small to hold complete record? */
 	bytes_read = read(fd, buf, size);
 	if(bytes_read == -1) {
-		ltfsmsg(LTFS_WARN, 30063W, errno);
+		ltfsmsg(ATF0064W, errno);
 		close(fd);
 		return -EDEV_CM_PERM;
 	}
@@ -2082,12 +2082,12 @@ int filedebug_write_attribute(void *device, const tape_partition_t part
 		id = ltfs_betou16(buf + i);
 		attr_size = ltfs_betou16(buf + (i + 3));
 
-		ltfsmsg(LTFS_DEBUG, 30197D, "writeattr", (unsigned long long)part, (unsigned long long)id);
+		ltfsmsg(ATF0100D, "writeattr", (unsigned long long)part, (unsigned long long)id);
 
 		/* Create attribute record */
 		fname = _filedebug_make_attrname(state, part, id);
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30064E);
+			ltfsmsg(ATF0065E);
 			return -EDEV_NO_MEMORY;
 		}
 		fd = open(fname,
@@ -2095,14 +2095,14 @@ int filedebug_write_attribute(void *device, const tape_partition_t part
 				  S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 		free(fname);
 		if (fd < 0) {
-			ltfsmsg(LTFS_ERR, 30065E, errno);
+			ltfsmsg(ATF0066E, errno);
 			return -EDEV_CM_PERM;
 		}
 
 		/* write and close the file */
 		written = write(fd, buf, size);
 		if (written < 0) {
-			ltfsmsg(LTFS_ERR, 30066E, errno);
+			ltfsmsg(ATF0067E, errno);
 			close(fd);
 			return -EDEV_CM_PERM;
 		}
@@ -2151,7 +2151,7 @@ int filedebug_set_compression(void *device, bool enable_compression, struct tc_p
 {
 	struct filedebug_data *state = (struct filedebug_data *)device;
 	if (!state->ready) {
-		ltfsmsg(LTFS_ERR, 30067E);
+		ltfsmsg(ATF0068E);
 		return -EDEV_NOT_READY;
 	}
 	pos->block = state->current_position.block;
@@ -2214,7 +2214,7 @@ int filedebug_search_eod(struct filedebug_data *state, int partition)
 		/* check for a record */
 		fname = _filedebug_make_current_filename(state, '.');
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30068E);
+			ltfsmsg(ATF0069E);
 			return -EDEV_NO_MEMORY;
 		}
 		fname_len = strlen(fname);
@@ -2223,7 +2223,7 @@ int filedebug_search_eod(struct filedebug_data *state, int partition)
 			fname[fname_len-1] = rec_suffixes[i];
 			f[i] = _filedebug_check_file(fname);
 			if (f[i] < 0) {
-				ltfsmsg(LTFS_ERR, 30069E, f[i]);
+				ltfsmsg(ATF0070E, f[i]);
 				free(fname);
 				return f[i];
 			}
@@ -2240,7 +2240,7 @@ int filedebug_search_eod(struct filedebug_data *state, int partition)
 		if (state->conf.dummy_io) {
 			dp = opendir(state->dirname);
 			if (! dp) {
-				ltfsmsg(LTFS_ERR, 30004E, state->dirname);
+				ltfsmsg(ATF0005E, state->dirname);
 				return 0;
 			}
 
@@ -2255,7 +2255,7 @@ int filedebug_search_eod(struct filedebug_data *state, int partition)
 						state->eod[partition] = 0;
 						ret = _filedebug_write_eod(state);
 						if (ret < 0) {
-							ltfsmsg(LTFS_ERR, 30070E, ret);
+							ltfsmsg(ATF0071E, ret);
 							closedir(dp);
 							return ret;
 						}
@@ -2268,7 +2268,7 @@ int filedebug_search_eod(struct filedebug_data *state, int partition)
 	} else {
 		ret = _filedebug_write_eod(state);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30070E, ret);
+			ltfsmsg(ATF0071E, ret);
 			return ret;
 		}
 	}
@@ -2295,14 +2295,14 @@ int _filedebug_write_eod(struct filedebug_data *state)
 	/* remove any existing record at this position */
 	ret = _filedebug_remove_current_record(state);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 30071E, ret);
+		ltfsmsg(ATF0072E, ret);
 		return ret;
 	}
 
 	/* create EOD record */
 	fname = _filedebug_make_current_filename(state, 'E');
 	if (!fname) {
-		ltfsmsg(LTFS_ERR, 30072E);
+		ltfsmsg(ATF0073E);
 		return -EDEV_NO_MEMORY;
 	}
 	fd = open(fname,
@@ -2310,7 +2310,7 @@ int _filedebug_write_eod(struct filedebug_data *state)
 			  S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 	free(fname);
 	if (fd < 0 || close(fd) < 0) {
-		ltfsmsg(LTFS_ERR, 30073E, errno);
+		ltfsmsg(ATF0074E, errno);
 		return -EDEV_RW_PERM;
 	}
 
@@ -2319,7 +2319,7 @@ int _filedebug_write_eod(struct filedebug_data *state)
 		for (i=state->current_position.block+1; i<=state->eod[state->current_position.partition]; ++i) {
 			ret = _filedebug_remove_record(state, state->current_position.partition, i);
 			if (ret < 0) {
-				ltfsmsg(LTFS_ERR, 30074E, ret);
+				ltfsmsg(ATF0075E, ret);
 				return ret;
 			}
 		}
@@ -2354,7 +2354,7 @@ int _filedebug_remove_record(const struct filedebug_data *state,
 
 	fname = _filedebug_make_filename(state, partition, blknum, '.');
 	if (!fname) {
-		ltfsmsg(LTFS_ERR, 30075E);
+		ltfsmsg(ATF0076E);
 		return -EDEV_NO_MEMORY;
 	}
 	fname_len = strlen(fname);
@@ -2363,7 +2363,7 @@ int _filedebug_remove_record(const struct filedebug_data *state,
 		fname[fname_len-1] = rec_suffixes[i];
 		ret = unlink(fname);
 		if (ret < 0 && errno != ENOENT) {
-			ltfsmsg(LTFS_ERR, 30076E, errno);
+			ltfsmsg(ATF0077E, errno);
 			free(fname);
 			return -EDEV_RW_PERM;
 		}
@@ -2421,7 +2421,7 @@ char *_filedebug_make_filename(const struct filedebug_data *state,
 	int ret;
 	ret = asprintf(&fname, "%s/%d_%"PRIu64"_%c", state->dirname, part, pos, type);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return NULL;
 	}
 	return fname;
@@ -2438,7 +2438,7 @@ char *_filedebug_make_attrname(const struct filedebug_data *state, int part, int
 	int ret;
 	ret = asprintf(&fname, "%s/attr_%d_%x", state->dirname, part, id);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return NULL;
 	}
 	return fname;
@@ -2467,7 +2467,7 @@ int _filedebug_space_fm(struct filedebug_data *state, uint64_t count, bool back)
 	while (1) {
 		if (!back &&
 			state->current_position.block == state->eod[state->current_position.partition]) {
-			ltfsmsg(LTFS_ERR, 30077E);
+			ltfsmsg(ATF0078E);
 			return -EDEV_EOD_DETECTED;
 		}
 
@@ -2478,13 +2478,13 @@ int _filedebug_space_fm(struct filedebug_data *state, uint64_t count, bool back)
 
 		fname = _filedebug_make_current_filename(state, rec_suffixes[SUFFIX_FILEMARK]);
 		if (!fname) {
-			ltfsmsg(LTFS_ERR, 30078E);
+			ltfsmsg(ATF0079E);
 			return -EDEV_NO_MEMORY;
 		}
 		ret = _filedebug_check_file(fname);
 		free(fname);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 30079E, ret);
+			ltfsmsg(ATF0080E, ret);
 			return ret;
 		} else if (ret > 0) {
 			++fm_count;
@@ -2497,7 +2497,7 @@ int _filedebug_space_fm(struct filedebug_data *state, uint64_t count, bool back)
 
 		if (back) {
 			if (state->current_position.block == 0) {
-				ltfsmsg(LTFS_ERR, 30080E);
+				ltfsmsg(ATF0081E);
 				return -EDEV_BOP_DETECTED;
 			}
 			--state->current_position.block;
@@ -2624,13 +2624,13 @@ int filedebug_get_device_list(struct tc_drive_info *buf, int count)
 	/* Create a file to indicate current directory of drive link (for tape file backend) */
 	asprintf(&filename, "%s/ltfs%ld", DRIVE_LIST_DIR, original_pid);
 	if (!filename) {
-		ltfsmsg(LTFS_ERR, 10001E, "filechanger_data drive file name");
+		ltfsmsg(ALC0002E, "filechanger_data drive file name");
 		return -LTFS_NO_MEMORY;
 	}
-	ltfsmsg(LTFS_INFO, 30081I, filename);
+	ltfsmsg(ATF0082I, filename);
 	infile = fopen(filename, "r");
 	if (!infile) {
-		ltfsmsg(LTFS_INFO, 30082I, filename);
+		ltfsmsg(ATF0083I, filename);
 		return 0;
 	} else {
 		devdir = fgets(line, sizeof(line), infile);
@@ -2640,10 +2640,10 @@ int filedebug_get_device_list(struct tc_drive_info *buf, int count)
 		free(filename);
 	}
 
-	ltfsmsg(LTFS_INFO, 30083I, devdir);
+	ltfsmsg(ATF0084I, devdir);
 	dp = opendir(devdir);
 	if (! dp) {
-		ltfsmsg(LTFS_ERR, 30004E, devdir);
+		ltfsmsg(ATF0005E, devdir);
 		return 0;
 	}
 
@@ -2654,7 +2654,7 @@ int filedebug_get_device_list(struct tc_drive_info *buf, int count)
 		if (buf && deventries < count) {
 			tmp = strdup(entry->d_name);
 			if (! *tmp) {
-				ltfsmsg(LTFS_ERR, 10001E, "filedebug_get_device_list");
+				ltfsmsg(ALC0002E, "filedebug_get_device_list");
 				return -ENOMEM;
 			}
 
@@ -2681,7 +2681,7 @@ int filedebug_get_device_list(struct tc_drive_info *buf, int count)
 			buf[deventries].target  = 0;
 			buf[deventries].lun     = -1;
 
-			ltfsmsg(LTFS_DEBUG, 30084D, buf[deventries].name, buf[deventries].vendor,
+			ltfsmsg(ATF0085D, buf[deventries].name, buf[deventries].vendor,
 					buf[deventries].model, buf[deventries].serial_number);
 
 			free(tmp);

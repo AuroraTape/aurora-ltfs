@@ -1,0 +1,303 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// Fallback messages. These messages do not have unique IDs; they are printed when
+	// the message function receives an unrecognized unique ID or fails to
+	// generate a message for a known unique ID.
+	// These messages are accessed by key, not by index: so they may be
+	// reordered, but they should not be renamed.
+	fallback_messages:table {
+		notfound:string { "(no message found)." }
+		overflow:string { "(message too long)." }
+	}
+
+	// LTFS internal error codes (LTFS_* constants)
+	messages:table {
+		prefix:string { "AEI" }
+
+		AEI0001E:string { "Unexpected NULL function argument." }
+		AEI0002E:string { "Memory allocation failed." }
+		AEI0003E:string { "Attempted to lock or unlock an uninitialized mutex." }
+		AEI0004E:string { "Attempted to unlock an already unlocked mutex." }
+		AEI0005E:string { "Invalid device data structure." }
+		AEI0006E:string { "Invalid partition number requested." }
+		AEI0007E:string { "A libxml2 call failed." }
+		AEI0008E:string { "Device is not ready." }
+		AEI0009E:string { "No medium is present in the device." }
+		AEI0010E:string { "Device does not support the formatted block size." }
+		AEI0011E:string { "Locate operation resulted in an unexpected position." }
+		AEI0012E:string { "Medium contains only one partition." }
+		AEI0013E:string { "Invalid partition label." }
+		AEI0014E:string { "Partition labels do not match." }
+		AEI0015E:string { "Invalid XML index or index back chain pointer. Recovery might be possible." }
+		AEI0016E:string { "Volume is inconsistent, but recoverable." }
+		AEI0017E:string { "Unsupported medium or medium cannot be partitioned." }
+		AEI0018E:string { "Index generation mismatch between the cached copy and the tape." }
+		AEI0019E:string { "MAM cache is invalid." }
+		AEI0020E:string { "Index cache is invalid." }
+		AEI0021E:string { "Empty name rule encountered during policy parsing." }
+		AEI0022E:string { "Mutex initialization failed." }
+		AEI0023E:string { "Generic error for an invalid function argument." }
+		AEI0024E:string { "A path name component is too long." }
+		AEI0025E:string { "No such file or directory exists." }
+		AEI0026E:string { "Path cannot be UTF-8 encoded or contains invalid characters." }
+		AEI0027E:string { "Like LTFS_INVALID_PATH, but for paths the caller expects to exist." }
+		AEI0028E:string { "Cannot remove the existing target path." }
+		AEI0029E:string { "Cannot remove the non-empty directory." }
+		AEI0030E:string { "Cannot remove the root directory." }
+		AEI0031E:string { "Cannot move the directory because of the MacFUSE bug." }
+		AEI0032E:string { "Cannot rename files or directories in the directory." }
+		AEI0033E:string { "Block read from tape is smaller than expected." }
+		AEI0034E:string { "Operation is only valid on files." }
+		AEI0035E:string { "Medium has no EOD in one partition." }
+		AEI0036E:string { "Medium has no EOD in both partitions." }
+		AEI0037E:string { "Unexpected value detected in LTFS." }
+		AEI0038E:string { "Unsupported method call." }
+		AEI0039E:string { "The ANSI Label may be valid but the length is wrong." }
+		AEI0040E:string { "Not a valid tape. Remove cartridge directory." }
+		AEI0041E:string { "Failed to find an extended attribute." }
+		AEI0042E:string { "Failed to set signal handler." }
+		AEI0043E:string { "Catch signals to terminate process." }
+		AEI0044E:string { "Unsupported format version is detected in the index." }
+		AEI0045E:string { "Received an unexpected error from ICU." }
+		AEI0046E:string { "Error while loading a plug-in." }
+		AEI0047E:string { "Error while unloading a plug-in." }
+		AEI0048E:string { "Cannot modify read-only extended attribute." }
+		AEI0049E:string { "User should not overwrite the existing extended attribute." }
+		AEI0050E:string { "User-provided buffer is too small." }
+		AEI0051E:string { "Volume is in read-only mode." }
+		AEI0052E:string { "Volume is full." }
+		AEI0053E:string { "Extended attribute value is too large." }
+		AEI0054E:string { "Index search failed." }
+		AEI0055E:string { "Requested extended attribute namespace is not supported." }
+		AEI0056E:string { "Configuration file parsing failed." }
+		AEI0057E:string { "Plug-in does not implement a required function." }
+		AEI0058E:string { "Requested plug-in is not known." }
+		AEI0059E:string { "Cannot parse policy string." }
+		AEI0060E:string { "Operation is valid only on directories." }
+		AEI0061E:string { "Failed to find the target tape volume." }
+		AEI0062E:string { "Cannot change the data placement policy." }
+		AEI0063E:string { "Block size is too small." }
+		AEI0064E:string { "Bar code has the wrong length." }
+		AEI0065E:string { "Bar code contains invalid characters." }
+		AEI0066E:string { "Insufficient number of drives available to move between tapes." }
+		AEI0067E:string { "Device lock request denied." }
+		AEI0068E:string { "Medium revalidation in progress." }
+		AEI0069E:string { "Medium revalidation failed." }
+		AEI0070E:string { "Library is in the full slot condition." }
+		AEI0071E:string { "Library is in the slot shortage condition." }
+		AEI0072E:string { "Library is in an error condition." }
+		AEI0073E:string { "Unexpected tape medium found." }
+		AEI0074E:string { "No home slot is assigned." }
+		AEI0075E:string { "Attempt to move active cartridge to IE slot." }
+		AEI0076E:string { "There are no IE slots available." }
+		AEI0077E:string { "Cannot move the tape to the requested location: failed to specify a valid target." }
+		AEI0078E:string { "Unsupported cartridge in LTFS." }
+		AEI0079E:string { "Cartridge is stuck in the drive." }
+		AEI0080E:string { "The operation is not allowed." }
+		AEI0081E:string { "This operation is not allowed on a duplicate cartridge." }
+		AEI0082E:string { "This operation is not allowed on an unsupported cartridge." }
+		AEI0083E:string { "This operation is not allowed on an inaccessible cartridge." }
+		AEI0084E:string { "This operation is not allowed on an unformatted cartridge." }
+		AEI0085E:string { "This operation is not allowed on an invalid cartridge." }
+		AEI0086E:string { "This operation is not allowed on a cartridge with an error." }
+		AEI0087E:string { "This operation is not allowed on a cartridge with a critical error." }
+		AEI0088E:string { "This operation is not allowed on a cleaning cartridge." }
+		AEI0089E:string { "This operation is not allowed on a read-only cartridge." }
+		AEI0090E:string { "This cartridge is already included in the file system." }
+		AEI0091E:string { "This cartridge is not included in the file system." }
+		AEI0092E:string { "Cannot move the cartridge to the IE slot: the cartridge must be removed from the file system." }
+		AEI0093E:string { "This operation is not allowed on a cartridge without a bar code." }
+		AEI0094E:string { "Cannot remove the drive: 'Critical' cartridge is loaded." }
+		AEI0095E:string { "Cannot add the drive: the drive is already added." }
+		AEI0096E:string { "Unexpected inventory rebuild error (have to manage within LTFS itself)." }
+		AEI0097E:string { "Library failed to get inventory. Try to unmount LTFS and re-mount LTFS again." }
+		AEI0098E:string { "Operation needs to be restarted." }
+		AEI0099E:string { "No target drive is found." }
+		AEI0100E:string { "No supported filesystem type for dcache is in this system." }
+		AEI0101E:string { "The disk image already exists." }
+		AEI0102E:string { "The disk image is already mounted." }
+		AEI0103E:string { "The disk image is not mounted." }
+		AEI0104E:string { "/etc/mtab is not a regular file." }
+		AEI0105E:string { "Failed to open /etc/mtab." }
+		AEI0106E:string { "Failed to lock /etc/mtab." }
+		AEI0107E:string { "Failed to seek /etc/mtab." }
+		AEI0108E:string { "Failed to update /etc/mtab." }
+		AEI0109E:string { "Failed to flush /etc/mtab." }
+		AEI0110E:string { "Failed to unlock /etc/mtab." }
+		AEI0111E:string { "Failed to close /etc/mtab." }
+		AEI0112E:string { "Failed to copy /etc/mtab to temporary file." }
+		AEI0113E:string { "Failed to open the temporary file for /etc/mtab." }
+		AEI0114E:string { "Failed to seek the temporary file for /etc/mtab." }
+		AEI0115E:string { "Failed to create a directory tree for the disk image." }
+		AEI0116E:string { "Failed to cache dentry due to limitation of host filesystem." }
+		AEI0117E:string { "The disk image reached the maximum size." }
+		AEI0118E:string { "Cannot find data key." }
+		AEI0119E:string { "A function is called in invalid sequence." }
+		AEI0120E:string { "Cannot update the root directory." }
+		AEI0121E:string { "Conflicting symlink tag and extent tag in XML." }
+		AEI0122E:string { "Failed to initialize the network connection of admin channel." }
+		AEI0123E:string { "Insufficient number of drives available for the operation." }
+		AEI0124E:string { "Invalid volume serial number." }
+		AEI0125E:string { "Volume has no space to write a file." }
+		AEI0126E:string { "Volume is in physical and/or logical write protect mode." }
+		AEI0127E:string { "Write error has previously occurred on the current mount." }
+		AEI0128E:string { "Unexpected length of barcode label is set on the cartridge." }
+		AEI0129E:string { "Conversion from string to value has failed, may be an invalid string." }
+		AEI0130E:string { "Failed to initialize admin session." }
+		AEI0131E:string { "Invalid message on admin_channel." }
+		AEI0132E:string { "Invalid password to log in via admin_channel." }
+		AEI0133E:string { "Login credentials are not yet valid." }
+		AEI0134E:string { "Deep recovery cannot be performed to a WORM cartridge." }
+		AEI0135E:string { "WORM cartridge cannot be rollbacked." }
+		AEI0136E:string { "Salvage list is valid only for WORM cartridge." }
+		AEI0137E:string { "Cartridge is already formatted." }
+		AEI0138E:string { "Placement policy cannot be set to WORM cartridge." }
+		AEI0139E:string { "Specified block size is not correct." }
+		AEI0140E:string { "Specified volume name is not correct." }
+		AEI0141E:string { "Specified placement policy is not correct." }
+		AEI0142E:string { "Need to specify a generation to be rollbacked." }
+		AEI0143E:string { "Specified generation is not correct." }
+		AEI0144E:string { "Rollback target generation is not specified." }
+		AEI0145E:string { "Multiple target indexes were found on the cartridge." }
+		AEI0146E:string { "Salvage list is not required for this cartridge." }
+		AEI0147E:string { "This operation is not allowed for worm enabled entry." }
+		AEI0148E:string { "Specified cartridge has opened files." }
+		AEI0149E:string { "The inventory is being rebuilt." }
+		AEI0150E:string { "There is another LE process using the library." }
+		AEI0151E:string { "Cannot find cartridge." }
+		AEI0152E:string { "Cannot lock cache files." }
+		AEI0153E:string { "Cannot unlock cache files." }
+		AEI0154E:string { "Error in file operation(open,stat,truncate,etc)." }
+		AEI0155E:string { "Read error (cartridge repository)." }
+		AEI0156E:string { "Write error (cartridge repository)." }
+		AEI0157E:string { "Invalid operation(invalid arg, op, etc)." }
+		AEI0158E:string { "Error in file operation (mkdir,stat,rename, etc)." }
+		AEI0159E:string { "Cannot use the cartridge." }
+		AEI0160E:string { "Cannot find lock entry." }
+		AEI0161E:string { "Cannot mount/unmount." }
+		AEI0162E:string { "Cannot find device." }
+		AEI0163E:string { "Failed to set/get Extended Attribute." }
+		AEI0164E:string { "Failed to perform file tree walk." }
+		AEI0165E:string { "Failed to update time stamp." }
+		AEI0166E:string { "Block device is required." }
+		AEI0167E:string { "Disk quota exceeded." }
+		AEI0168E:string { "Too many open files in system." }
+		AEI0169E:string { "Link dir exists." }
+		AEI0170E:string { "No dmap entry." }
+		AEI0171E:string { "Host filesystem returns recoverable error." }
+		AEI0172E:string { "No additional cache space." }
+		AEI0173E:string { "Write file mark attempt at BOP partition 0." }
+		AEI0174E:string { "I/O error on cache operation." }
+		AEI0175E:string { "Cache files are corrupted and discarded." }
+		AEI0176E:string { "Long write lock is acquired." }
+		AEI0177E:string { "Incompatible cache file is detected." }
+		AEI0178E:string { "Dcache is not initialized yet." }
+		AEI0179E:string { "The multi-node config file is locked." }
+		AEI0180E:string { "Failed to create POSIX message queue." }
+		AEI0181E:string { "Failed to fork process." }
+		AEI0182E:string { "No ACK message is received from child process." }
+		AEI0183E:string { "Node type detection is failed." }
+		AEI0184E:string { "Invalid message is detected in node detection." }
+		AEI0185E:string { "Failed to degate other nodes." }
+		AEI0186E:string { "Failed to operate against a cluster-wide lock." }
+		AEI0187E:string { "Received a request against an unmounted cartridge." }
+		AEI0188E:string { "Read only combination of density code and drive generation." }
+		AEI0189E:string { "Drive selection is needed again." }
+		AEI0190E:string { "Mutex is already locked." }
+		AEI0191E:string { "This tape is already being used." }
+		AEI0192E:string { "The tape is already removed." }
+		AEI0193E:string { "You need to move tape to a storage slot first before the operation." }
+		AEI0194E:string { "The operation needs to be started again." }
+		AEI0195E:string { "Locate returns write-perm error." }
+		AEI0196E:string { "Failed to open a stats DB." }
+		AEI0197E:string { "There is no trailing FM after an index." }
+		AEI0198E:string { "Failed to update safename." }
+		AEI0199E:string { "Unwritten file contents exists in sync." }
+		AEI0200E:string { "Error happens in reading XML node." }
+		AEI0201E:string { "Error happens in reading XML const value." }
+		AEI0202E:string { "Unexpected node type is detected." }
+		AEI0203E:string { "Unexpected XML document end is detected." }
+		AEI0204E:string { "Cannot detect if a tag is empty or not." }
+		AEI0205E:string { "The tag is empty." }
+		AEI0206E:string { "Error skipping unrecognized tag." }
+		AEI0207E:string { "Could not find required tag." }
+		AEI0208E:string { "Duplicated tag is detected." }
+		AEI0209E:string { "XML tag is not closed correctly." }
+		AEI0210E:string { "Cannot save the tag." }
+		AEI0211E:string { "Unexpected top tag in the XML document." }
+		AEI0212E:string { "Unexpected encoding is detected." }
+		AEI0213E:string { "Failed to get attribute of the top tag." }
+		AEI0214E:string { "Wrong UUID is detected." }
+		AEI0215E:string { "Cannot parse generation number correctly." }
+		AEI0216E:string { "Cannot parse index's updatetime correctly." }
+		AEI0217E:string { "Wrong tape position of index or label is detected." }
+		AEI0218E:string { "Wrong tape position of previous index is detected." }
+		AEI0219E:string { "Unexpected policyupdate value is detected." }
+		AEI0220E:string { "Wrong policy value is detected." }
+		AEI0221E:string { "Too long index comment." }
+		AEI0222E:string { "Wrong maxuid tag is detected." }
+		AEI0223E:string { "Unexpected readonly value is detected in a dir." }
+		AEI0224E:string { "Unexpected timestamp in dir mtime." }
+		AEI0225E:string { "Unexpected timestamp in dir creation time." }
+		AEI0226E:string { "Unexpected timestamp in dir atime." }
+		AEI0227E:string { "Unexpected timestamp in dir ctime." }
+		AEI0228E:string { "Unexpected timestamp in dir backup time." }
+		AEI0229E:string { "Unexpected xattr type." }
+		AEI0230E:string { "Unexpected xattr size." }
+		AEI0231E:string { "Unexpected UID number." }
+		AEI0232E:string { "UID number validation is failed." }
+		AEI0233E:string { "Unexpected readonly value is detected in a file." }
+		AEI0234E:string { "Unexpected timestamp in file mtime." }
+		AEI0235E:string { "Unexpected timestamp in file creation time." }
+		AEI0236E:string { "Unexpected timestamp in file atime." }
+		AEI0237E:string { "Unexpected timestamp in file ctime." }
+		AEI0238E:string { "Unexpected timestamp in file backup time." }
+		AEI0239E:string { "Unexpected file size value." }
+		AEI0240E:string { "Unexpected partition ID." }
+		AEI0241E:string { "Unexpected startblock." }
+		AEI0242E:string { "Unexpected offset." }
+		AEI0243E:string { "Unexpected bytecount." }
+		AEI0244E:string { "Unexpected fileoffset." }
+		AEI0245E:string { "Extent list is overlapped." }
+		AEI0246E:string { "Extent list is longer than file size." }
+		AEI0247E:string { "Unexpected timestamp in tape format time in a label." }
+		AEI0248E:string { "Unexpected partition map in a label." }
+		AEI0249E:string { "Unexpected blocksize in a label." }
+		AEI0250E:string { "Unexpected compression in a label." }
+		AEI0251E:string { "Unsupported index type is specified." }
+	}
+}

@@ -128,14 +128,14 @@ static inline int _open_output_file(tape_partition_t   part,
 	ret = asprintf(&fname, "%s/ltfs-index-%u-%llu.xml", base_path,
 				   (unsigned int) part, (unsigned long long)start_pos);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19532E);
+		ltfsmsg(AIX0033E);
 		return -1;
 	}
 
-	ltfsmsg(LTFS_INFO, 19547I, fname);
+	ltfsmsg(AIX0048I, fname);
 	ret = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19533E, fname, errno);
+		ltfsmsg(AIX0034E, fname, errno);
 	}
 
 	free(fname);
@@ -168,13 +168,13 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 
 	buf = malloc(blocksize);
 	if (!buf) {
-		ltfsmsg(LTFS_ERR, 19516E);
+		ltfsmsg(AIX0017E);
 		return -LTFS_NO_MEMORY;
 	}
 
 	ret = tape_seek(vol->device, &pos);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19517E, (unsigned int)part, (unsigned long long)start_pos, ret);
+		ltfsmsg(AIX0018E, (unsigned int)part, (unsigned long long)start_pos, ret);
 		return ret;
 	}
 
@@ -183,13 +183,13 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 
 		ret = tape_get_position(vol->device, &pos);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 19518E, ret);
+			ltfsmsg(AIX0019E, ret);
 			break;
 		}
 
 		nread = tape_read(vol->device, buf, blocksize, true, vol->kmi_handle);
 		if (nread < 0) {
-			ltfsmsg(LTFS_ERR, 19519E,
+			ltfsmsg(AIX0020E,
 					(unsigned int)pos.partition, (unsigned long long)pos.block, nread);
 			ret = nread;
 			break;
@@ -200,7 +200,7 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 		strncpy(check_buf, buf, KEY_MAX_OFFSET);
 		key = strstr(check_buf, "<ltfsindex");
 		if (key && (key - buf < 0x30)) {
-			ltfsmsg(LTFS_ERR, 19529I,
+			ltfsmsg(AIX0030I,
 					(unsigned int)pos.partition, (unsigned long long)(pos.block - 1));
 
 			fd = _open_output_file(pos.partition, pos.block - 1, base_path);
@@ -213,7 +213,7 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 			if (nwrite == nread) {
 				index_len += nread;
 			} else {
-				ltfsmsg(LTFS_ERR, 19536E, nwrite, errno);
+				ltfsmsg(AIX0037E, nwrite, errno);
 				_close_output_file(fd);
 				return -LTFS_CACHE_IO;
 			}
@@ -222,10 +222,10 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 				nread = tape_read(vol->device, buf, blocksize, true, vol->kmi_handle);
 				if (nread == -EDEV_EOD_DETECTED) {
 					ret = nread;
-					ltfsmsg(LTFS_ERR, 19538E,
+					ltfsmsg(AIX0039E,
 							(unsigned int)pos.partition,
 							(unsigned long long)(pos.block));
-					ltfsmsg(LTFS_INFO, 19539I, (unsigned long long)index_len);
+					ltfsmsg(AIX0040I, (unsigned long long)index_len);
 					break;
 				}
 
@@ -235,20 +235,20 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 					if (nwrite == nread) {
 						index_len += nread;
 					} else {
-						ltfsmsg(LTFS_ERR, 19536E, nwrite, errno);
+						ltfsmsg(AIX0037E, nwrite, errno);
 						_close_output_file(fd);
 						return -LTFS_CACHE_IO;
 					}
 					pos.block++;
 				} else if (!nread) {
 					/* Detect a FM (the end of the index), do nothing */
-					ltfsmsg(LTFS_INFO, 19537I,
+					ltfsmsg(AIX0038I,
 							(unsigned int)pos.partition,
 							(unsigned long long)(pos.block));
-					ltfsmsg(LTFS_INFO, 19539I, (unsigned long long)index_len);
+					ltfsmsg(AIX0040I, (unsigned long long)index_len);
 					break;
 				} else {
-					ltfsmsg(LTFS_ERR, 19519E,
+					ltfsmsg(AIX0020E,
 							(unsigned int)pos.partition, (unsigned long long)pos.block, nread);
 					ret = nread;
 					break;
@@ -259,12 +259,12 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 		} else {
 			/* seek to next FM */
 			if (key)
-				ltfsmsg(LTFS_INFO, 19530I,
+				ltfsmsg(AIX0031I,
 						(unsigned int)pos.partition,
 						(unsigned long long)(pos.block - 1),
 						(int)(key - buf));
 			else
-				ltfsmsg(LTFS_INFO, 19530I,
+				ltfsmsg(AIX0031I,
 						(unsigned int)pos.partition,
 						(unsigned long long)(pos.block - 1),
 						(int)0);
@@ -273,7 +273,7 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 			if (nread > 0) {
 				ret = tape_spacefm(vol->device, 1);
 				if (ret < 0) {
-					ltfsmsg(LTFS_ERR, 19531E, (unsigned int)part, (unsigned long long)start_pos, ret);
+					ltfsmsg(AIX0032E, (unsigned int)part, (unsigned long long)start_pos, ret);
 					break;
 				}
 			}
@@ -283,9 +283,9 @@ static int ltfs_capture_index_raw(tape_partition_t   part,
 	if (ret == -EDEV_EOD_DETECTED) {
 		ret = tape_get_position(vol->device, &pos);
 		if (!ret) {
-			ltfsmsg(LTFS_INFO, 19534I,(unsigned int)pos.partition, (unsigned long long)pos.block);
+			ltfsmsg(AIX0035I,(unsigned int)pos.partition, (unsigned long long)pos.block);
 		} else {
-			ltfsmsg(LTFS_INFO, 19535I, ret);
+			ltfsmsg(AIX0036I, ret);
 		}
 		ret = 0;
 	}
@@ -302,14 +302,14 @@ static int _capture(struct indextool_opts *opt, struct ltfs_volume *vol)
 	tape_partition_t p;
 
 	if (opt->partition == PART_BOTH) {
-		ltfsmsg(LTFS_INFO, 19504I);
+		ltfsmsg(AIX0005I);
 		for (p = 0; p < 2; p++) {
 			r = ltfs_capture_index_raw(p, 5, opt->blocksize, opt->out_dir, vol);
 			if (!ret)
 				ret = r;
 		}
 	} else {
-		ltfsmsg(LTFS_INFO, 19505I, (unsigned int)opt->partition, (unsigned long long)opt->start_pos);
+		ltfsmsg(AIX0006I, (unsigned int)opt->partition, (unsigned long long)opt->start_pos);
 		ret = ltfs_capture_index_raw(opt->partition, opt->start_pos, opt->blocksize, opt->out_dir, vol);
 	}
 
@@ -318,7 +318,7 @@ static int _capture(struct indextool_opts *opt, struct ltfs_volume *vol)
 
 static int _indextool_validate_options(char *prg_name, struct indextool_opts *opt)
 {
-	ltfsmsg(LTFS_DEBUG, 19525D);
+	ltfsmsg(AIX0026D);
 
 	/* Validate filename and devname and decide a operation mode*/
 	if (opt->filename) {
@@ -326,23 +326,23 @@ static int _indextool_validate_options(char *prg_name, struct indextool_opts *op
 	} else if (opt->devname) {
 		opt->mode = OP_CAPTURE;
 	} else {
-		ltfsmsg(LTFS_ERR, 19526E);
+		ltfsmsg(AIX0027E);
 		return 1;
 	}
 
 	/* Validate partition */
 	if (opt->partition != PART_BOTH && opt->partition != 0 && opt->partition != 1) {
-		ltfsmsg(LTFS_ERR, 19540E);
+		ltfsmsg(AIX0041E);
 		return 1;
 	}
 
 	/* Validate start position */
 	if (opt->start_pos < START_POS) {
-		ltfsmsg(LTFS_ERR, 19548E, (unsigned long long)opt->start_pos);
+		ltfsmsg(AIX0049E, (unsigned long long)opt->start_pos);
 		return 1;
 	}
 
-	ltfsmsg(LTFS_DEBUG, 19527D);
+	ltfsmsg(AIX0028D);
 	return 0;
 }
 
@@ -350,15 +350,15 @@ static int check_index(struct ltfs_volume *vol, struct indextool_opts *opt, void
 {
 	int ret = 0;
 
-	ltfsmsg(LTFS_INFO, 19543I, opt->filename);
+	ltfsmsg(AIX0044I, opt->filename);
 
 	vol->label->blocksize = opt->blocksize;
 	ret = xml_schema_from_file(opt->filename, vol->index, vol);
 
 	if (!ret) {
-		ltfsmsg(LTFS_INFO, 19544I);
+		ltfsmsg(AIX0045I);
 	} else {
-		ltfsmsg(LTFS_ERR, 19545E, ret);
+		ltfsmsg(AIX0046E, ret);
 	}
 
 	return ret;
@@ -371,40 +371,40 @@ static int capture_index(struct ltfs_volume *vol, struct indextool_opts *opt, vo
 	struct libltfs_plugin kmi; /* key manager interface backend */
 
 	/* load the backend, open the tape device, and load a tape */
-	ltfsmsg(LTFS_DEBUG, 19506D);
+	ltfsmsg(AIX0007D);
 	ret = plugin_load(&backend, "tape", opt->backend_path, opt->config);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19508E, opt->backend_path);
+		ltfsmsg(AIX0009E, opt->backend_path);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 	if (opt->kmi_backend_name) {
 		ret = plugin_load(&kmi, "kmi", opt->kmi_backend_name, opt->config);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 19509E, opt->kmi_backend_name);
+			ltfsmsg(AIX0010E, opt->kmi_backend_name);
 			return INDEXTOOL_OPERATIONAL_ERROR;
 		}
 	}
 	ret = ltfs_device_open(opt->devname, backend.ops, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19510E, opt->devname, ret);
+		ltfsmsg(AIX0011E, opt->devname, ret);
 		ret = INDEXTOOL_OPERATIONAL_ERROR;
 		goto out_unload_backend;
 	}
 	ret = ltfs_parse_tape_backend_opts(args, vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19513E);
+		ltfsmsg(AIX0014E);
 		goto out_unload_backend;
 	}
 	if (opt->kmi_backend_name) {
 		ret = kmi_init(&kmi, vol);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 19511E, opt->devname, ret);
+			ltfsmsg(AIX0012E, opt->devname, ret);
 			goto out_unload_backend;
 		}
 
 		ret = ltfs_parse_kmi_backend_opts(args, vol);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 19512E);
+			ltfsmsg(AIX0013E);
 			goto out_unload_backend;
 		}
 
@@ -419,7 +419,7 @@ static int capture_index(struct ltfs_volume *vol, struct indextool_opts *opt, vo
 
 		for (i = 0; i < a->argc && a->argv[i]; ++i) {
 			if (!strcmp(a->argv[i], "-o")) {
-				ltfsmsg(LTFS_ERR, 19514E, a->argv[i], a->argv[i + 1] ? a->argv[i + 1] : "");
+				ltfsmsg(AIX0015E, a->argv[i], a->argv[i + 1] ? a->argv[i + 1] : "");
 				ret = INDEXTOOL_USAGE_SYNTAX_ERROR;
 				goto out_unload_backend;
 			}
@@ -429,7 +429,7 @@ static int capture_index(struct ltfs_volume *vol, struct indextool_opts *opt, vo
 	ltfs_load_tape(vol);
 	ret = ltfs_wait_device_ready(vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19515E);
+		ltfsmsg(AIX0016E);
 		ret = INDEXTOOL_OPERATIONAL_ERROR;
 		goto out_close;
 	}
@@ -438,33 +438,33 @@ static int capture_index(struct ltfs_volume *vol, struct indextool_opts *opt, vo
 	vol->set_pew = false;
 	ret = ltfs_setup_device(vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19515E);
+		ltfsmsg(AIX0016E);
 		ret = INDEXTOOL_OPERATIONAL_ERROR;
 		goto out_close;
 	}
-	ltfsmsg(LTFS_DEBUG, 19507D);
+	ltfsmsg(AIX0008D);
 
 	/* Capture_index */
 	ret = _capture(opt, vol);
 
 	/* close the tape device and unload the backend */
-	ltfsmsg(LTFS_DEBUG, 19520D);
+	ltfsmsg(AIX0021D);
 
 out_close:
 	ltfs_device_close(vol);
 	ltfs_volume_free(&vol);
 	ltfs_unset_signal_handlers();
 	if (ret == INDEXTOOL_NO_ERRORS)
-		ltfsmsg(LTFS_DEBUG, 19522D);
+		ltfsmsg(AIX0023D);
 out_unload_backend:
 	if (ret == INDEXTOOL_NO_ERRORS) {
 		ret = plugin_unload(&backend);
 		if (ret < 0)
-			ltfsmsg(LTFS_WARN, 19521W);
+			ltfsmsg(AIX0022W);
 		if (opt->kmi_backend_name) {
 			ret = plugin_unload(&kmi);
 			if (ret < 0)
-				ltfsmsg(LTFS_WARN, 19528W);
+				ltfsmsg(AIX0029W);
 		}
 		ret = INDEXTOOL_NO_ERRORS;
 	} else {
@@ -474,14 +474,14 @@ out_unload_backend:
 	}
 
 	if (ret == INDEXTOOL_NO_ERRORS)
-		ltfsmsg(LTFS_INFO, 19524I);
+		ltfsmsg(AIX0025I);
 	else
-		ltfsmsg(LTFS_INFO, 19523I, ret);
+		ltfsmsg(AIX0024I, ret);
 
 	return ret;
 }
 
-static void show_usage(char *appname, struct config_file *config, bool full)
+static void show_usage(char *appname, struct config_file *config)
 {
 	struct libltfs_plugin backend;
 	const char *default_backend;
@@ -497,28 +497,28 @@ static void show_usage(char *appname, struct config_file *config, bool full)
 		devname = strdup("<devname>");
 
 	fprintf(stderr, "\n");
-	ltfsresult(19900I, appname);  /* Usage: %s <options> */
+	ltfsresult(AIX0050I, appname);  /* Usage: %s <options> */
 	fprintf(stderr, "\n");
-	ltfsresult(19901I);           /* Available options are: */
-	ltfsresult(19902I);                                                /* -d, --device=<name> */
-	ltfsresult(19903I);                                                /* -p, --partition=<0|1> */
-	ltfsresult(19904I, START_POS);                                     /* -s, --start-pos */
-	ltfsresult(19905I, OUTPUT_DIR);                                    /* -output-dir */
-	ltfsresult(19906I, LTFS_DEFAULT_BLOCKSIZE);                        /* -b, --blocksize */
-	ltfsresult(19907I, LTFS_CONFIG_FILE);                              /* -i, --config=<file> */
-	ltfsresult(19908I, default_backend);                               /* -e, --backend */
-	ltfsresult(19909I, config_file_get_default_plugin("kmi", config)); /* --kmi-backend */
-	ltfsresult(19910I);           /* -q, --quiet */
-	ltfsresult(19911I);           /* -t, --trace */
-	ltfsresult(19912I);           /* -V, --version */
-	ltfsresult(19913I);           /* -h, --help */
+	ltfsresult(AIX0051I);           /* Available options are: */
+	ltfsresult(AIX0052I);                                                /* -d, --device=<name> */
+	ltfsresult(AIX0053I);                                                /* -p, --partition=<0|1> */
+	ltfsresult(AIX0054I, START_POS);                                     /* -s, --start-pos */
+	ltfsresult(AIX0055I, OUTPUT_DIR);                                    /* -output-dir */
+	ltfsresult(AIX0056I, LTFS_DEFAULT_BLOCKSIZE);                        /* -b, --blocksize */
+	ltfsresult(AIX0057I, LTFS_CONFIG_FILE);                              /* -i, --config=<file> */
+	ltfsresult(AIX0058I, default_backend);                               /* -e, --backend */
+	ltfsresult(AIX0059I, config_file_get_default_plugin("kmi", config)); /* --kmi-backend */
+	ltfsresult(AIX0060I);           /* -q, --quiet */
+	ltfsresult(AIX0061I);           /* -t, --trace */
+	ltfsresult(AIX0062I);           /* -V, --version */
+	ltfsresult(AIX0063I);           /* -h, --help */
 	fprintf(stderr, "\n");
 	plugin_usage(appname, "driver", config);
 	fprintf(stderr, "\n");
 	plugin_usage(appname, "kmi", config);
 	fprintf(stderr, "\n");
-	ltfsresult(19914I); /* Usage example: */
-	ltfsresult(19915I, appname, devname, 0);
+	ltfsresult(AIX0064I); /* Usage example: */
+	ltfsresult(AIX0065I, appname, devname, 0);
 	free(devname);
 }
 
@@ -562,21 +562,21 @@ int main(int argc, char **argv)
 #endif
 	ret = ltfs_init(LTFS_INFO, true, false);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10000E, ret);
+		ltfsmsg(ALC0001E, ret);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 
 	/*  Setup signal handler to terminate cleanly */
 	ret = ltfs_set_signal_handlers();
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10013E);
+		ltfsmsg(ALC0012E);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 
 	/* Register messages with libltfs */
 	ret = ltfsprintf_load_plugin("bin_altfsindextool", bin_altfsindextool_dat, &message_handle);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10012E, ret);
+		ltfsmsg(ALC0011E, ret);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 
@@ -602,7 +602,7 @@ int main(int argc, char **argv)
 	/* Load configuration file */
 	ret = config_file_load(config_file, &opt.config);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 10008E, ret);
+		ltfsmsg(ALC0009E, ret);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 
@@ -651,15 +651,15 @@ int main(int argc, char **argv)
 				opt.syslogtrace = true;
 				break;
 			case 'h':
-				show_usage(argv[0], opt.config, false);
+				show_usage(argv[0], opt.config);
 				return 0;
 			case 'V':
-				ltfsresult(19546I, "ltfsindextool", PACKAGE_VERSION);
-				ltfsresult(19546I, "LTFS Format Specification", LTFS_INDEX_VERSION_STR);
+				ltfsresult(AIX0047I, "ltfsindextool", PACKAGE_VERSION);
+				ltfsresult(AIX0047I, "LTFS Format Specification", LTFS_INDEX_VERSION_STR);
 				return 0;
 			case '?':
 			default:
-				show_usage(argv[0], opt.config, false);
+				show_usage(argv[0], opt.config);
 				return INDEXTOOL_USAGE_SYNTAX_ERROR;
 		}
 	}
@@ -675,7 +675,7 @@ int main(int argc, char **argv)
 	if (! opt.backend_path) {
 		const char *default_backend = config_file_get_default_plugin("tape", opt.config);
 		if (! default_backend) {
-			ltfsmsg(LTFS_ERR, 10009E);
+			ltfsmsg(ALC0010E);
 			return INDEXTOOL_OPERATIONAL_ERROR;
 		}
 		opt.backend_path = strdup(default_backend);
@@ -692,8 +692,8 @@ int main(int argc, char **argv)
 
 	/* Set the logging level */
 	if (opt.quiet && opt.trace) {
-		ltfsmsg(LTFS_ERR, 9012E);
-		show_usage(argv[0], opt.config, false);
+		ltfsmsg(AIX0066E);
+		show_usage(argv[0], opt.config);
 		return 1;
 	} else if (opt.quiet) {
 		log_level = LTFS_WARN;
@@ -712,7 +712,7 @@ int main(int argc, char **argv)
 	ltfs_set_syslog_level(syslog_level);
 
 	/* Starting ltfsindextool */
-	ltfsmsg(LTFS_INFO, 19500I, PACKAGE_NAME, PACKAGE_VERSION, log_level);
+	ltfsmsg(AIX0001I, PACKAGE_NAME, PACKAGE_VERSION, log_level);
 
 	/* Show command line arguments */
 	for (i = 0, cmd_args_len = 0 ; i < argc; i++) {
@@ -721,7 +721,7 @@ int main(int argc, char **argv)
 	cmd_args = calloc(1, cmd_args_len + 1);
 	if (!cmd_args) {
 		/* Memory allocation failed */
-		ltfsmsg(LTFS_ERR, 10001E, "ltfsindextool (arguments)");
+		ltfsmsg(ALC0002E, "ltfsindextool (arguments)");
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 	strcat(cmd_args, argv[0]);
@@ -729,12 +729,12 @@ int main(int argc, char **argv)
 		strcat(cmd_args, " ");
 		strcat(cmd_args, argv[i]);
 	}
-	ltfsmsg(LTFS_INFO, 19542I, cmd_args);
+	ltfsmsg(AIX0043I, cmd_args);
 	free(cmd_args);
 
 	/* Show build time information */
-	ltfsmsg(LTFS_INFO, 19502I, BUILD_SYS_FOR);
-	ltfsmsg(LTFS_INFO, 19503I, BUILD_SYS_GCC);
+	ltfsmsg(AIX0003I, BUILD_SYS_FOR);
+	ltfsmsg(AIX0004I, BUILD_SYS_GCC);
 
 	/* Show run time information */
 	show_runtime_system_info();
@@ -742,7 +742,7 @@ int main(int argc, char **argv)
 	/* Actually mkltfs logic starts here */
 	ret = ltfs_volume_alloc("dummy", &vol);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 19501E);
+		ltfsmsg(AIX0002E);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
 
@@ -754,7 +754,7 @@ int main(int argc, char **argv)
 			ret = capture_index(vol, &opt, &args);
 			break;
 		default:
-			ltfsmsg(LTFS_ERR, 19541E);
+			ltfsmsg(AIX0042E);
 			ret = PROG_USAGE_SYNTAX_ERROR;
 			break;
 	}

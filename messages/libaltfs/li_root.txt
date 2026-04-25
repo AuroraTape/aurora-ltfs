@@ -1,0 +1,82 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// libaltfs interface (ltfs_fsops)
+	messages:table {
+		prefix:string { "ALI" }
+
+		ALI0001E:string { "Cannot open file: failed to format the path (%d)." }
+		ALI0002E:string { "Cannot set times: device is not ready." }
+		ALI0003E:string { "Cannot set read-only flag: device is not ready." }
+		ALI0004E:string { "Cannot create: device is not ready." }
+		ALI0005E:string { "Cannot create: failed to format the path (%d)." }
+		ALI0006E:string { "Cannot create: path lookup failed (%d)." }
+		ALI0007E:string { "Cannot unlink: device is not ready." }
+		ALI0008E:string { "Cannot unlink: failed to format the path (%d)." }
+		ALI0009E:string { "Cannot unlink: path lookup failed (%d)." }
+		ALI0010E:string { "Cannot rename: device is not ready." }
+		ALI0011E:string { "Cannot rename: failed to format the source path (%d)." }
+		ALI0012E:string { "Cannot rename: failed to format the destination path (%d)." }
+		ALI0013E:string { "Cannot rename: path lookup failed for source (%d)." }
+		ALI0014E:string { "Cannot rename: path lookup failed for destination (%d)." }
+		ALI0015E:string { "Cannot truncate: length must not be negative." }
+		ALI0016E:string { "Cannot truncate: device is not ready." }
+		ALI0017E:string { "Cannot set extended attribute: device is not ready." }
+		ALI0018E:string { "Cannot set extended attribute: failed to format the path (%d)." }
+		ALI0019E:string { "Cannot set extended attribute: failed to format the name (%d)." }
+		ALI0020E:string { "Cannot set extended attribute: failed to validate the name (%d)." }
+		ALI0021E:string { "Cannot set extended attribute: failed to look up the path (%d)." }
+		ALI0022E:string { "Cannot get extended attribute: failed to format the path (%d)." }
+		ALI0023E:string { "Cannot get extended attribute: failed to format the name (%d)." }
+		ALI0024E:string { "Cannot get extended attribute: failed to validate the name (%d)." }
+		ALI0025E:string { "Cannot get extended attribute: failed to look up the path (%d)." }
+		ALI0026E:string { "Cannot list extended attributes: failed to format the path (%d)." }
+		ALI0027E:string { "Cannot list extended attributes: failed to look up the path (%d)." }
+		ALI0028E:string { "Cannot remove extended attribute: device is not ready." }
+		ALI0029E:string { "Cannot remove extended attribute: failed to format the path (%d)." }
+		ALI0030E:string { "Cannot remove extended attribute: failed to format the name (%d)." }
+		ALI0031E:string { "Cannot remove extended attribute: failed to validate the name (%d)." }
+		ALI0032E:string { "Cannot remove extended attribute: failed to look up the path (%d)." }
+		ALI0033E:string { "Cannot create file or directory: failed to allocate dentry." }
+		ALI0034I:string { "Cannot move directory: Directory move is prohibited because of a MacFUSE bug." }
+		ALI0035D:string { "Making a symlink '%s' target '%s'." }
+		ALI0036D:string { "Symlink EA prefix value is (%s)." }
+		ALI0037D:string { "Path changed from '%s' to '%s'." }
+		ALI0038E:string { "Cannot set extended attribute: failed to flush (%d)." }
+		ALI0039W:string { "%s is out of range in setting time (%s:%llu sec=%lld)." }
+		ALI0040E:string { "WORM related error (%s)." }
+	}
+}

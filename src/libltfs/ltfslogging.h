@@ -60,30 +60,46 @@ extern int ltfs_log_level;
 extern int ltfs_syslog_level;
 extern bool ltfs_print_thread_id;
 
+/**
+ * Derive log level from the severity character at position 7 of a message ID string.
+ * Message IDs follow the format A[CC][NNNN][S] where S is E/W/I/D.
+ */
+static inline int ltfsmsg_level(const char *id)
+{
+	char sev = id[7];
+	switch (sev) {
+		case 'E': return LTFS_ERR;
+		case 'W': return LTFS_WARN;
+		case 'I': return LTFS_INFO;
+		case 'D': return LTFS_DEBUG;
+		default:  return LTFS_ERR;
+	}
+}
+
 /* Wrapper for ltfsmsg_internal. It only invokes the message print function if the requested
  * log level is not too verbose. */
 #ifdef MSG_CHECK
 #include "ltfsmsg.h"
-#define ltfsmsg(level, id, ...)					\
+#define ltfsmsg(id, ...)					\
 	do {										\
-		printf(LTFS ## id, ##__VA_ARGS__);		\
+		printf(id, ##__VA_ARGS__);		\
 	} while(0)
 #else
-#define ltfsmsg(level, id, ...) \
+#define ltfsmsg(id, ...) \
 	do { \
-		if (level <= ltfs_log_level) \
-			ltfsmsg_internal(true, level, NULL, #id, ##__VA_ARGS__);	\
+		if (ltfsmsg_level(#id) <= ltfs_log_level) \
+			ltfsmsg_internal(true, ltfsmsg_level(#id), NULL, #id, ##__VA_ARGS__);	\
 	} while (0)
 #endif
 
 /* CAUTION: ltfsmsg_buffer takes message ID as a text literal */
 /* Wrapper for ltfsmsg_internal. It only invokes the message print function if the requested
  * log level is not too verbose. */
-#define ltfsmsg_buffer(level, id, buffer, ...)	\
+#define ltfsmsg_buffer(id, buffer, ...)	\
 	do { \
 		*buffer = NULL; \
-		if (level <= ltfs_log_level) \
-			ltfsmsg_internal(true, level, buffer, id, ##__VA_ARGS__);	\
+		if (ltfsmsg_level(id) <= ltfs_log_level) \
+			ltfsmsg_internal(true, ltfsmsg_level(id), buffer, id, ##__VA_ARGS__);	\
 	} while (0)
 
 /* Wrapper for ltfsmsg_internal that prints a message without the LTFSnnnnn prefix. It
@@ -91,7 +107,7 @@ extern bool ltfs_print_thread_id;
 #ifdef MSG_CHECK
 #define ltfsresult(id, ...)						\
 	do {										\
-		printf(LTFS ## id, ##__VA_ARGS__);		\
+		printf(id, ##__VA_ARGS__);		\
 	} while(0)
 #else
 #define ltfsresult(id, ...)						\
@@ -106,7 +122,7 @@ extern bool ltfs_print_thread_id;
 #define CHECK_ARG_NULL(var, ret) \
 	do { \
 		if (! (var)) { \
-			ltfsmsg(LTFS_ERR, 10005E, #var, __FUNCTION__); \
+			ltfsmsg(ALC0006E, #var, __FUNCTION__); \
 			return ret; \
 		} \
 	} while (0)

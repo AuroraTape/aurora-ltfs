@@ -62,7 +62,7 @@ static int _allocate_jentry(struct jentry **e, char *path, struct dentry* d)
 
 	ent = calloc(1, sizeof(struct jentry));
 	if (!ent) {
-		ltfsmsg(LTFS_ERR, 10001E, "allocating a jentry");
+		ltfsmsg(ALC0002E, "allocating a jentry");
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -117,7 +117,7 @@ int incj_create(char *ppath, struct dentry *d, struct ltfs_volume *vol)
 	/* Create full path of created object and jentry */
 	len = asprintf(&full_path, "%s/%s", ppath, d->name.name);
 	if (len < 0) {
-		ltfsmsg(LTFS_ERR, 10001E, "full path of a jentry");
+		ltfsmsg(ALC0002E, "full path of a jentry");
 		vol->journal_err = true;
 		return -LTFS_NO_MEMORY;
 	}
@@ -137,7 +137,7 @@ int incj_create(char *ppath, struct dentry *d, struct ltfs_volume *vol)
 	if (d->isdir) {
 		jdir = calloc(1, sizeof(struct jcreated_entry));
 		if (!jdir) {
-			ltfsmsg(LTFS_ERR, 10001E, "allocating a jcreated_entry");
+			ltfsmsg(ALC0002E, "allocating a jcreated_entry");
 			return -LTFS_NO_MEMORY;
 		}
 
@@ -252,7 +252,7 @@ int incj_rmfile(char *path, struct dentry *d, struct ltfs_volume *vol)
 	/* Create full path of deleted object and jentry */
 	full_path = strdup(path);
 	if (!full_path) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a path for deleted file");
+		ltfsmsg(ALC0002E, "duplicating a path for deleted file");
 		vol->journal_err = true;
 		return -LTFS_NO_MEMORY;
 	}
@@ -267,7 +267,7 @@ int incj_rmfile(char *path, struct dentry *d, struct ltfs_volume *vol)
 	ent->name.percent_encode = d->name.percent_encode;
 	ent->name.name = strdup(d->name.name);
 	if (!ent->name.name) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a name of deleted file");
+		ltfsmsg(ALC0002E, "duplicating a name of deleted file");
 		vol->journal_err = true;
 		return -LTFS_NO_MEMORY;
 	}
@@ -329,7 +329,7 @@ int incj_rmdir(char *path, struct dentry *d, struct ltfs_volume *vol)
 	/* Create full path of created object and jentry */
 	full_path = strdup(path);
 	if (!full_path) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a path of deleted directory");
+		ltfsmsg(ALC0002E, "duplicating a path of deleted directory");
 		vol->journal_err = true;
 		return -LTFS_NO_MEMORY;
 	}
@@ -344,7 +344,7 @@ int incj_rmdir(char *path, struct dentry *d, struct ltfs_volume *vol)
 	ent->name.percent_encode = d->name.percent_encode;
 	ent->name.name = strdup(d->name.name);
 	if (!ent->name.name) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a name of deleted directory");
+		ltfsmsg(ALC0002E, "duplicating a name of deleted directory");
 		vol->journal_err = true;
 		return -LTFS_NO_MEMORY;
 	}
@@ -404,7 +404,7 @@ static inline int dig_path(char *p, struct ltfs_index *idx)
 
 	path = strdup(p);
 	if (! path) {
-		ltfsmsg(LTFS_ERR, 10001E, "dig_path: path");
+		ltfsmsg(ALC0002E, "dig_path: path");
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -485,13 +485,13 @@ int incj_create_path_helper(const char *dpath, struct incj_path_helper **pm, str
 
 	ipm = calloc(1, sizeof(struct incj_path_helper));
 	if (!ipm) {
-		ltfsmsg(LTFS_ERR, 10001E, "allocating a path helper");
+		ltfsmsg(ALC0002E, "allocating a path helper");
 		return -LTFS_NO_MEMORY;
 	}
 
 	if (dpath[0] != '/') {
 		/* Provided path must be a absolute path */
-		ltfsmsg(LTFS_ERR, 17302E, dpath);
+		ltfsmsg(ALJ0045E, dpath);
 		free(ipm);
 		return -LTFS_INVALID_PATH;
 	}
@@ -506,7 +506,7 @@ int incj_create_path_helper(const char *dpath, struct incj_path_helper **pm, str
 
 	wp = strdup(dpath);
 	if (!wp) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a directory path for path helper");
+		ltfsmsg(ALC0002E, "duplicating a directory path for path helper");
 		free(ipm);
 		return -LTFS_NO_MEMORY;
 	}
@@ -514,7 +514,7 @@ int incj_create_path_helper(const char *dpath, struct incj_path_helper **pm, str
 	for (dname = strtok_r(wp, "/", &tmp); dname != NULL; dname = strtok_r(NULL, "/", &tmp)) {
 		ret = incj_push_directory(dname, ipm);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 17305E, ret);
+			ltfsmsg(ALJ0046E, ret);
 			free(wp);
 			incj_destroy_path_helper(ipm);
 			return ret;
@@ -555,14 +555,14 @@ int incj_push_directory(char *name, struct incj_path_helper *pm)
 
 	ipelm = calloc(1, sizeof(struct incj_path_element));
 	if (!ipelm) {
-		ltfsmsg(LTFS_ERR, 10001E, "allocating a path element on push");
+		ltfsmsg(ALC0002E, "allocating a path element on push");
 		return -LTFS_NO_MEMORY;
 	}
 
 	/* Set name field of new path element */
 	ipelm->name = strdup(name);
 	if (!ipelm->name) {
-		ltfsmsg(LTFS_ERR, 10001E, "duplicating a path of pushing directory");
+		ltfsmsg(ALC0002E, "duplicating a path of pushing directory");
 		incj_destroy_path_helper(pm);
 		return -LTFS_NO_MEMORY;
 	}
@@ -575,7 +575,7 @@ int incj_push_directory(char *name, struct incj_path_helper *pm)
 
 	ret = fs_directory_lookup(parent, name, &ipelm->d);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 17306E, ret);
+		ltfsmsg(ALJ0047E, ret);
 		free(ipelm->name);
 		free(ipelm);
 		incj_destroy_path_helper(pm);

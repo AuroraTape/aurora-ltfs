@@ -205,7 +205,7 @@ enum ltfs_index_type {
 #define INTERRUPTED_GOTO(rc, label)				\
 	do{											\
 		if (ltfs_is_interrupted()) {			\
-			ltfsmsg(LTFS_INFO, 17159I);		\
+			ltfsmsg(ALP0092I);		\
 			rc = -LTFS_INTERRUPTED;				\
 			goto label;							\
 		}										\
@@ -214,7 +214,7 @@ enum ltfs_index_type {
 #define INTERRUPTED_RETURN()					\
 	do{											\
 		if (ltfs_is_interrupted()) {			\
-			ltfsmsg(LTFS_INFO, 17159I);		\
+			ltfsmsg(ALP0092I);		\
 			return -LTFS_INTERRUPTED;			\
 		}										\
 	}while (0)

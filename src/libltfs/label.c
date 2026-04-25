@@ -64,7 +64,7 @@ int label_alloc(struct ltfs_label **label)
 
 	newlabel = calloc(1, sizeof(struct ltfs_label));
 	if (!newlabel) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 	newlabel->version = LTFS_LABEL_VERSION;
@@ -101,53 +101,53 @@ int label_compare(struct ltfs_label *label1, struct ltfs_label *label2)
 	CHECK_ARG_NULL(label2, -LTFS_NULL_ARG);
 
 	if (strncmp(label1->barcode, label2->barcode, 6)) {
-		ltfsmsg(LTFS_ERR, 11182E);
+		ltfsmsg(ALJ0023E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (strncmp(label1->vol_uuid, label2->vol_uuid, 36)) {
-		ltfsmsg(LTFS_ERR, 11183E);
+		ltfsmsg(ALJ0024E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->format_time.tv_sec != label2->format_time.tv_sec ||
 		label1->format_time.tv_nsec != label2->format_time.tv_nsec) {
-		ltfsmsg(LTFS_ERR, 11184E);
+		ltfsmsg(ALJ0025E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->blocksize != label2->blocksize) {
-		ltfsmsg(LTFS_ERR, 11185E);
+		ltfsmsg(ALJ0026E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->enable_compression != label2->enable_compression) {
-		ltfsmsg(LTFS_ERR, 11186E);
+		ltfsmsg(ALJ0027E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (! ltfs_is_valid_partid(label1->partid_dp) ||
 			   ! ltfs_is_valid_partid(label1->partid_ip)) {
-		ltfsmsg(LTFS_ERR, 11187E);
+		ltfsmsg(ALJ0028E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->partid_dp == label1->partid_ip) {
-		ltfsmsg(LTFS_ERR, 11188E);
+		ltfsmsg(ALJ0029E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label2->partid_dp != label1->partid_dp ||
 			   label2->partid_ip != label1->partid_ip) {
-		ltfsmsg(LTFS_ERR, 11189E);
+		ltfsmsg(ALJ0030E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if ((label1->this_partition != label1->partid_dp &&
 			    label1->this_partition != label1->partid_ip) ||
 			   (label2->this_partition != label1->partid_dp &&
 			    label2->this_partition != label1->partid_ip)) {
-		ltfsmsg(LTFS_ERR, 11190E);
+		ltfsmsg(ALJ0031E);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->this_partition == label2->this_partition) {
-		ltfsmsg(LTFS_ERR, 11191E, label1->this_partition);
+		ltfsmsg(ALJ0032E, label1->this_partition);
 		return -LTFS_LABEL_MISMATCH;
 
 	} else if (label1->version != label2->version) {
-		ltfsmsg(LTFS_ERR, 11197E);
+		ltfsmsg(ALJ0034E);
 		return -LTFS_LABEL_MISMATCH;
 	}
 
@@ -156,7 +156,7 @@ int label_compare(struct ltfs_label *label1, struct ltfs_label *label2)
 		tmp = label1->barcode;
 		while (*tmp) {
 			if ((*tmp < '0' || *tmp > '9') && (*tmp < 'A' || *tmp > 'Z')) {
-				ltfsmsg(LTFS_ERR, 11192E);
+				ltfsmsg(ALJ0033E);
 				return -LTFS_LABEL_MISMATCH;
 			}
 			++tmp;
