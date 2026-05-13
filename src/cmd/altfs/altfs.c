@@ -58,6 +58,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
+#include <locale.h>
 
 #include "ltfs_fuse.h"
 #include "libltfs/ltfs.h"
@@ -181,11 +182,9 @@ void usage(char *progname, struct ltfs_fuse_data *priv)
 	const char *default_driver = config_file_get_default_plugin("tape", priv->config);
 
 	fprintf(stderr, "\n");
-	ltfsresult(AFS0099I, progname);                    /* usage: %s mountpoint [options] */
-	fprintf(stderr, "\n");
 	single_drive_advanced_usage(default_driver, priv);
 	fprintf(stderr, "\n");
-	plugin_usage(progname, "driver", priv->config);
+	plugin_usage(progname, "tape", priv->config);
 	plugin_usage(progname, "kmi", priv->config);
 }
 
@@ -524,16 +523,38 @@ int main(int argc, char **argv)
 	priv->allow_other = (geteuid() == 0) ? 1 : 0;
 	priv->pid_orig = getpid();
 
-	/* Check for LANG variable and set it to en_US.UTF-8 if it is unset. */
+	/* Check for LANG variable and set it to a working UTF-8 locale if it is unset or
+	 * pointing at an uninstalled locale. Otherwise libfuse's iconv module help calls
+	 * strdup(NULL) when LC_ALL/LANG cannot be loaded, which segfaults `altfs -h`. */
 	lang = getenv("LANG");
+	if (lang && ! setlocale(LC_ALL, lang)) {
+		fprintf(stderr, "LTFS9015W The locale '%s' is not available; falling back. Set LANG to an installed locale to suppress this warning.\n", lang);
+		lang = NULL;
+	}
 	if (! lang) {
-		fprintf(stderr, "LTFS9015W Setting the locale to 'en_US.UTF-8'. If this is wrong, please set the LANG environment variable before starting ltfs.\n");
-		ret = setenv("LANG", "en_US.UTF-8", 1);
+		static const char * const lang_candidates[] = {
+			"en_US.UTF-8", "C.UTF-8", "C.utf8", "C", NULL
+		};
+		const char *chosen = NULL;
+
+		for (i = 0; lang_candidates[i]; ++i) {
+			if (setlocale(LC_ALL, lang_candidates[i])) {
+				chosen = lang_candidates[i];
+				break;
+			}
+		}
+		if (! chosen) {
+			fprintf(stderr, "LTFS9016E Cannot set the LANG environment variable\n");
+			return 1;
+		}
+		fprintf(stderr, "LTFS9015W Setting the locale to '%s'. If this is wrong, please set the LANG environment variable before starting ltfs.\n", chosen);
+		ret = setenv("LANG", chosen, 1);
 		if (ret) {
 			fprintf(stderr, "LTFS9016E Cannot set the LANG environment variable\n");
 			return 1;
 		}
 	}
+	setlocale(LC_ALL, "C");
 
 	/* Start up libltfs with the default logging level. User overrides are
 	 * processed later, after command line parsing. */

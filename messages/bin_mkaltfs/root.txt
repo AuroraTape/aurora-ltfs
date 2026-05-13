@@ -38,61 +38,61 @@ root:table {
 	messages:table {
 		prefix:string { "AMK" }
 
-		AMK0001I:string { "Starting mkltfs, %s version %s, log level %d." }
-		AMK0002E:string { "Cannot allocate LTFS volume structure." }
-		AMK0003E:string { "Option validation failed." }
-		AMK0004I:string { "Formatting device \'%s\'." }
-		AMK0005I:string { "LTFS volume blocksize: %lu." }
-		AMK0006I:string { "Index partition placement policy: %s." }
-		AMK0007D:string { "Opening the device." }
-		AMK0008D:string { "Device opened." }
-		AMK0009E:string { "Cannot open backend \'%s\'." }
-		AMK0010E:string { "Cannot open device \'%s\' (%d)." }
-		AMK0011I:string { "Creating data partition %c on SCSI partition %d." }
-		AMK0012I:string { "Creating index partition %c on SCSI partition %d." }
-		AMK0013E:string { "Failed to format the medium." }
-		AMK0014I:string { "Volume UUID is: %s." }
-		AMK0015E:string { "Cannot set policy override flag in the index (%d)." }
-		AMK0016E:string { "Cannot parse data placement rules (%d)." }
-		AMK0017I:string { "Volume capacity is %llu GB." }
-		AMK0018D:string { "Closing the device." }
-		AMK0019W:string { "Cannot unload backend." }
-		AMK0020D:string { "Device closed." }
-		AMK0021I:string { "Formatting failed." }
-		AMK0022I:string { "Medium formatted successfully." }
-		AMK0023D:string { "Validating command line options." }
-		AMK0024E:string { "Device name must use the \'%s\' option." }
-		AMK0025E:string { "Block size must be at least %d." }
-		AMK0026E:string { "Tape serial must be 6 characters." }
-		AMK0027E:string { "Tape serial must contain only ASCII digits and capital letters." }
-		AMK0028E:string { "Volume name must conform to file name rules." }
-		AMK0029E:string { "Cannot format data placement rules (%d)." }
-		AMK0030D:string { "Command line options are valid." }
-		AMK0031E:string { "Failed to unformat the medium." }
-		AMK0032I:string { "Unformatting failed." }
-		AMK0033I:string { "Medium unformatted successfully." }
-		AMK0034I:string { "Launched by \"%s\"." }
-		AMK0035I:string { "%s." }
-		AMK0036I:string { "GCC version is %s." }
-		AMK0037E:string { "Cannot set up tape device." }
-		AMK0038E:string { "Formatting was canceled by the user." }
-		AMK0039E:string { "Unformatting was canceled by the user." }
-		AMK0040E:string { "Medium is already formatted (%d)." }
-		AMK0041I:string { "Need to specify -f or --force option to format this medium." }
-                AMK0042I:string { "Checking the medium (%s)." }
-		AMK0043E:string { "Cannot open key manager interface backend \'%s\'." }
-		AMK0044W:string { "Cannot unload key manager interface backend." }
-		AMK0045E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)." }
-		AMK0046E:string { "Key manager interface backend option parsing failed." }
-		AMK0047E:string { "Tape backend option parsing failed." }
-		AMK0048E:string { "Unknown option '%s %s'." }
-		AMK0049E:string { "Failed to decrypt the medium." }
-		AMK0050I:string { "Need to specify the correct data key or -f option to format this medium." }
-        AMK0051E:string { "Cannot set the tape attribute: %s." }
-		AMK0052I:string { "%s version %s." }
-                AMK0053E:string { "Index criteria update is not allowed on this medium." }
-                AMK0054E:string { "Failed to format the medium due to WORM error." }
-                AMK0055E:string { "Failed to unformat the medium due to WORM error." }
+		AMK0001I:string { "Starting mkltfs, %s version %s, log level %d" }
+		AMK0002E:string { "Cannot allocate LTFS volume structure" }
+		AMK0003E:string { "Option validation failed" }
+		AMK0004I:string { "Formatting device \'%s\'" }
+		AMK0005I:string { "LTFS volume blocksize: %lu" }
+		AMK0006I:string { "Index partition placement policy: %s" }
+		AMK0007D:string { "Opening the device" }
+		AMK0008D:string { "Device opened" }
+		AMK0009E:string { "Cannot open backend \'%s\'" }
+		AMK0010E:string { "Cannot open device \'%s\' (%d)" }
+		AMK0011I:string { "Creating data partition %c on SCSI partition %d" }
+		AMK0012I:string { "Creating index partition %c on SCSI partition %d" }
+		AMK0013E:string { "Failed to format the medium" }
+		AMK0014I:string { "Volume UUID is: %s" }
+		AMK0015E:string { "Cannot set policy override flag in the index (%d)" }
+		AMK0016E:string { "Cannot parse data placement rules (%d)" }
+		AMK0017I:string { "Volume capacity is %llu GB" }
+		AMK0018D:string { "Closing the device" }
+		AMK0019W:string { "Cannot unload backend" }
+		AMK0020D:string { "Device closed" }
+		AMK0021I:string { "Formatting failed" }
+		AMK0022I:string { "Medium formatted successfully" }
+		AMK0023D:string { "Validating command line options" }
+		AMK0024E:string { "Device name must use the \'%s\' option" }
+		AMK0025E:string { "Block size must be at least %d" }
+		AMK0026E:string { "Tape serial must be 6 characters" }
+		AMK0027E:string { "Tape serial must contain only ASCII digits and capital letters" }
+		AMK0028E:string { "Volume name must conform to file name rules" }
+		AMK0029E:string { "Cannot format data placement rules (%d)" }
+		AMK0030D:string { "Command line options are valid" }
+		AMK0031E:string { "Failed to unformat the medium" }
+		AMK0032I:string { "Unformatting failed" }
+		AMK0033I:string { "Medium unformatted successfully" }
+		AMK0034I:string { "Launched by \"%s\"" }
+		AMK0035I:string { "%s" }
+		AMK0036I:string { "GCC version is %s" }
+		AMK0037E:string { "Cannot set up tape device" }
+		AMK0038E:string { "Formatting was canceled by the user" }
+		AMK0039E:string { "Unformatting was canceled by the user" }
+		AMK0040E:string { "Medium is already formatted (%d)" }
+		AMK0041I:string { "Need to specify -f or --force option to format this medium" }
+                AMK0042I:string { "Checking the medium (%s)" }
+		AMK0043E:string { "Cannot open key manager interface backend \'%s\'" }
+		AMK0044W:string { "Cannot unload key manager interface backend" }
+		AMK0045E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)" }
+		AMK0046E:string { "Key manager interface backend option parsing failed" }
+		AMK0047E:string { "Tape backend option parsing failed" }
+		AMK0048E:string { "Unknown option '%s %s'" }
+		AMK0049E:string { "Failed to decrypt the medium" }
+		AMK0050I:string { "Need to specify the correct data key or -f option to format this medium" }
+        AMK0051E:string { "Cannot set the tape attribute: %s" }
+		AMK0052I:string { "%s version %s" }
+                AMK0053E:string { "Index criteria update is not allowed on this medium" }
+                AMK0054E:string { "Failed to format the medium due to WORM error" }
+                AMK0055E:string { "Failed to unformat the medium due to WORM error" }
 
 		// Help messages
 		AMK0056I:string { "Usage: %s <options>" }
@@ -122,6 +122,6 @@ root:table {
 		AMK0080I:string { "      --destructive         Use destructive format/unformat. This operation takes longer time\n                            in the LTO9 drive or later because of the media optimization procedure" }
 
 		// Messages relocated from libaltfs
-		AMK0081E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"." }
+		AMK0081E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
 	}
 }

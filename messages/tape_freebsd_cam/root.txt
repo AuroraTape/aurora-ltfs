@@ -45,7 +45,7 @@ root:table {
 		ATC0002D:string { "IOCTL: pos = 0x%02x%02x%02x%02x %s" }
 		ATC0003I:string { "IOCTL: %s %d returns %d (generic %d) %s" }
 		ATC0004D:string { "IOCTL: no sense info" }
-		ATC0005D:string { "IOCTL: %s %d expected error %d. retry the operation."}
+		ATC0005D:string { "IOCTL: %s %d expected error %d. retry the operation"}
 		ATC0006I:string { "Cannot get sense (%d)" }
 		ATC0007I:string { "Error on %s: %s (%d) %s"}
 		ATC0008E:string { "Error on %s: msg = NULL (%d) %s"}
@@ -62,15 +62,15 @@ root:table {
 		ATC0019I:string { "Firmware revision is %s" }
 		ATC0020I:string { "Drive serial is %s" }
 		ATC0021I:string { "Pseudo-error on %s" }
-		ATC0022I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
+		ATC0022I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive" }
 
 		ATC0023D:string { "Read block: file mark detected" }
 		ATC0024I:string { "Read block: overlength condition is detected. residual = %d, actual = %d" }
 		ATC0025D:string { "Read block: underlength condition is detected. shortage = %d, actual = %d" }
-		ATC0026E:string { "Logical block protection error on read." }
+		ATC0026E:string { "Logical block protection error on read" }
 		ATC0027W:string { "Received low space warning (early warning) in %s" }
 		ATC0028W:string { "Received low space warning (programmable early warning) in %s" }
-		ATC0029E:string { "Logical block protection error on write." }
+		ATC0029E:string { "Logical block protection error on write" }
 		ATC0030D:string { "EOD detected (%s): ignore sense" }
 		ATC0031I:string { "Unrecognized space type" }
 		ATC0032I:string { "Cannot space: count value %d of the space command is too large" }
@@ -99,8 +99,8 @@ root:table {
 
 		ATC0054I:string { "Saving drive dump to %s" }
 		ATC0055W:string { "Cannot retrieve drive dump: failed to create dump file (%d)" }
-		ATC0056D:string { "Total dump data length is %lld." }
-		ATC0057D:string { "Total number of transfers is %d." }
+		ATC0056D:string { "Total dump data length is %lld" }
+		ATC0057D:string { "Total number of transfers is %d" }
 		ATC0058D:string { "Transferring dump data" }
 		ATC0059W:string { "Cannot retrieve drive dump: failed to read buffer (%d)" }
 		ATC0060W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)" }
@@ -108,7 +108,7 @@ root:table {
 		ATC0062W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d" }
 		ATC0063I:string { "Taking drive dump in buffer" }
 		ATC0064I:string { "Forcing drive dump" }
-		ATC0065I:string { "Failed to get cartridge status. The cartridge is not loaded."}
+		ATC0065I:string { "Failed to get cartridge status. The cartridge is not loaded"}
 
 		ATC0066D:string { "Backend %s %s" }
 		ATC0067D:string { "Backend %s: %d %s" }

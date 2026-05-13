@@ -44,23 +44,23 @@ root:table {
 		// Message IDs 15500-15009 are reserved for the crypto direct plugins.
 		// DO NOT add messages with those IDs to this file.
 
-		AKF0001D:string { "Flat File plug-in initialized." }
-		AKF0002D:string { "Flat File plug-in uninitialized." }
-		AKF0003E:string { "Flat File plug-in failed to parse options." }
-		AKF0004E:string { "Flat File plug-in failed to open the file (%s, %d)." }
-		AKF0005E:string { "Flat File plug-in detected key format violation." }
+		AKF0001D:string { "Flat File plug-in initialized" }
+		AKF0002D:string { "Flat File plug-in uninitialized" }
+		AKF0003E:string { "Flat File plug-in failed to parse options" }
+		AKF0004E:string { "Flat File plug-in failed to open the file (%s, %d)" }
+		AKF0005E:string { "Flat File plug-in detected key format violation" }
 
 		// for LTFS specific format
-		AKF0006E:string { "Encryption key format violation (%s): %s." }
-		AKF0007E:string { "Cannot find data key." }
-		AKF0008E:string { "Option parsing for the key manager interface backend failed (%d)." }
-		AKF0009E:string { "Invalid sequence error (%d,%d): %s." }
-		AKF0010E:string { "Failed to parse data key and/or data key identifier." }
-		AKF0011E:string { "Cannot find data key of the data key identifier." }
+		AKF0006E:string { "Encryption key format violation (%s): %s" }
+		AKF0007E:string { "Cannot find data key" }
+		AKF0008E:string { "Option parsing for the key manager interface backend failed (%d)" }
+		AKF0009E:string { "Invalid sequence error (%d,%d): %s" }
+		AKF0010E:string { "Failed to parse data key and/or data key identifier" }
+		AKF0011E:string { "Cannot find data key of the data key identifier" }
 		AKF0012I:string { "Key manager interface flatfile plug-in options:\n"
 						"    -o kmi_dki_for_format=<DKi>\n"
 						"                              Data key identifier to format a cartridge\n"
 						"    -o kmi_dk_list=FILE\n"
-						"                              Data key and data key identifier pairs' list file\n\n." }
+						"                              Data key and data key identifier pairs' list file\n" }
 	}
 }

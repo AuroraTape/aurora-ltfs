@@ -38,40 +38,40 @@ root:table {
 	messages:table {
 		prefix:string { "ALF" }
 
-		ALF0001E:string { "Cannot set extended attribute: failed to look up the xattr (%d)." }
-		ALF0002E:string { "Cannot get extended attribute: NULL value with non-zero size." }
-		ALF0003E:string { "Cannot get extended attribute: failed to look for virtual xattrs (%d)." }
-		ALF0004E:string { "Cannot get extended attribute: failed to look up the xattr (%d)." }
-		ALF0005E:string { "Cannot list extended attributes: NULL output buffer with a non-zero size." }
-		ALF0006E:string { "Cannot list extended attributes: failed to list real xattrs (%d)." }
-		ALF0007E:string { "Cannot remove extended attribute: failed to look up the xattr (%d)." }
-		ALF0008E:string { "Cannot list physical xattrs: failed to generate namespace prefix (%d)." }
-		ALF0009E:string { "Cannot list physical xattrs: failed to convert key to system locale (%d)." }
-		ALF0010E:string { "Cannot get attribute %s: failed to generate the time string." }
-		ALF0011E:string { "Cannot validate extended attribute value: code point iteration failed." }
-		ALF0012E:string { "Cannot validate name: failed to iterate code point." }
-		ALF0013E:string { "Cannot fold string case: failed to get output buffer size (%d)." }
-		ALF0014E:string { "Cannot fold string case: failed to fill output buffer (%d)." }
-		ALF0015E:string { "Cannot apply NFC: failed to get output buffer size (%d)." }
-		ALF0016E:string { "Cannot apply NFC: failed to fill output buffer (%d)." }
-		ALF0017E:string { "Cannot apply NFD: failed to get output buffer size (%d)." }
-		ALF0018E:string { "Cannot apply NFD: failed to fill output buffer (%d)." }
-		ALF0019E:string { "Cannot convert UTF-8 to UTF-16: failed to get output buffer size (%d)." }
-		ALF0020E:string { "Cannot convert UTF-8 to UTF-16: failed to fill output buffer (%d)." }
-		ALF0021E:string { "Cannot convert UTF-16 to UTF-8: failed to get output buffer size (%d)." }
-		ALF0022E:string { "Cannot convert UTF-16 to UTF-8: failed to fill output buffer (%d)." }
-		ALF0023E:string { "Cannot convert system locale to UTF-16: failed to open converter (%d)." }
-		ALF0024E:string { "Cannot convert system locale to UTF-16: failed to set up converter (%d)." }
-		ALF0025E:string { "Cannot convert system locale to UTF-16: failed to get output buffer size (%d) for '%s'." }
-		ALF0026E:string { "Cannot convert system locale to UTF-16: failed to fill output buffer (%d) for '%s'." }
-		ALF0027E:string { "Cannot convert UTF-8 to system locale: failed to get output buffer size (%d)." }
-		ALF0028E:string { "Cannot convert UTF-8 to system locale: failed to fill output buffer (%d)." }
-		ALF0029E:string { "Commit message must be 65536 bytes or less." }
-		ALF0030E:string { "Cannot add the key to hash table at %s (%d)." }
-		ALF0031E:string { "Cannot search the key from hash table at %s (%d)." }
-		ALF0032W:string { "Unable to delete dentry '%s': it still has outstanding references." }
-		ALF0033W:string { "%s is out of range in setting xattr (%s:%llu %s)." }
-		ALF0034W:string { "%s is out of range in getting xattr (%s:%llu sec = %lld)." }
-		ALF0035I:string { "WORM status updated (%s=>%d) '%s'." }
+		ALF0001E:string { "Cannot set extended attribute: failed to look up the xattr (%d)" }
+		ALF0002E:string { "Cannot get extended attribute: NULL value with non-zero size" }
+		ALF0003E:string { "Cannot get extended attribute: failed to look for virtual xattrs (%d)" }
+		ALF0004E:string { "Cannot get extended attribute: failed to look up the xattr (%d)" }
+		ALF0005E:string { "Cannot list extended attributes: NULL output buffer with a non-zero size" }
+		ALF0006E:string { "Cannot list extended attributes: failed to list real xattrs (%d)" }
+		ALF0007E:string { "Cannot remove extended attribute: failed to look up the xattr (%d)" }
+		ALF0008E:string { "Cannot list physical xattrs: failed to generate namespace prefix (%d)" }
+		ALF0009E:string { "Cannot list physical xattrs: failed to convert key to system locale (%d)" }
+		ALF0010E:string { "Cannot get attribute %s: failed to generate the time string" }
+		ALF0011E:string { "Cannot validate extended attribute value: code point iteration failed" }
+		ALF0012E:string { "Cannot validate name: failed to iterate code point" }
+		ALF0013E:string { "Cannot fold string case: failed to get output buffer size (%d)" }
+		ALF0014E:string { "Cannot fold string case: failed to fill output buffer (%d)" }
+		ALF0015E:string { "Cannot apply NFC: failed to get output buffer size (%d)" }
+		ALF0016E:string { "Cannot apply NFC: failed to fill output buffer (%d)" }
+		ALF0017E:string { "Cannot apply NFD: failed to get output buffer size (%d)" }
+		ALF0018E:string { "Cannot apply NFD: failed to fill output buffer (%d)" }
+		ALF0019E:string { "Cannot convert UTF-8 to UTF-16: failed to get output buffer size (%d)" }
+		ALF0020E:string { "Cannot convert UTF-8 to UTF-16: failed to fill output buffer (%d)" }
+		ALF0021E:string { "Cannot convert UTF-16 to UTF-8: failed to get output buffer size (%d)" }
+		ALF0022E:string { "Cannot convert UTF-16 to UTF-8: failed to fill output buffer (%d)" }
+		ALF0023E:string { "Cannot convert system locale to UTF-16: failed to open converter (%d)" }
+		ALF0024E:string { "Cannot convert system locale to UTF-16: failed to set up converter (%d)" }
+		ALF0025E:string { "Cannot convert system locale to UTF-16: failed to get output buffer size (%d) for '%s'" }
+		ALF0026E:string { "Cannot convert system locale to UTF-16: failed to fill output buffer (%d) for '%s'" }
+		ALF0027E:string { "Cannot convert UTF-8 to system locale: failed to get output buffer size (%d)" }
+		ALF0028E:string { "Cannot convert UTF-8 to system locale: failed to fill output buffer (%d)" }
+		ALF0029E:string { "Commit message must be 65536 bytes or less" }
+		ALF0030E:string { "Cannot add the key to hash table at %s (%d)" }
+		ALF0031E:string { "Cannot search the key from hash table at %s (%d)" }
+		ALF0032W:string { "Unable to delete dentry '%s': it still has outstanding references" }
+		ALF0033W:string { "%s is out of range in setting xattr (%s:%llu %s)" }
+		ALF0034W:string { "%s is out of range in getting xattr (%s:%llu sec = %lld)" }
+		ALF0035I:string { "WORM status updated (%s=>%d) '%s'" }
 	}
 }

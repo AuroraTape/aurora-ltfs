@@ -41,8 +41,8 @@ root:table {
 	messages:table {
 		prefix:string { "AIF" }
 
-		AIF0001I:string { "FCFS I/O scheduler initialized." }
-		AIF0002I:string { "FCFS I/O scheduler uninitialized." }
+		AIF0001I:string { "FCFS I/O scheduler initialized" }
+		AIF0002I:string { "FCFS I/O scheduler uninitialized" }
 	}
 }
 

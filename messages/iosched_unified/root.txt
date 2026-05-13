@@ -41,27 +41,27 @@ root:table {
 	messages:table {
 		prefix:string { "AIU" }
 
-		AIU0001E:string { "Cannot initialize scheduler: failed to initialize cache manager." }
-		AIU0002E:string { "Cannot initialize scheduler: failed to initialize mutex %s (%d)." }
-		AIU0003E:string { "Cannot initialize scheduler: failed to initialize condition variable %s (%d)." }
-		AIU0004E:string { "Cannot initialize scheduler: failed to create thread %s (%d)." }
-		AIU0005E:string { "Failed to initialize mutex in scheduler private data (%d)." }
-		AIU0006E:string { "Cannot write: failed to allocate scheduler private data (%d)." }
-		AIU0007E:string { "Invalid back pointer to the dentry in the dentry_priv structure." }
-		AIU0008E:string { "Invalid request_state received when updating the queue membership (%d)." }
-		AIU0009W:string { "Index partition writer: failed to write data to the tape (%d)." }
-		AIU0010W:string { "Data partition writer: failed to write data to the tape (%d)." }
-		AIU0011D:string { "Unified I/O scheduler initialized." }
-		AIU0012D:string { "Unified I/O scheduler uninitialized." }
-		AIU0013E:string { "Cannot write: failed to allocate a cache block (%d)." }
-		AIU0014E:string { "Cannot write: failed to allocate a write request." }
-		AIU0015E:string { "Cannot flush: failed to write to data partition (%d)." }
-		AIU0016E:string { "Aborting full flush: flushing dentry '%s' failed (%d)." }
-		AIU0017W:string { "Failed to save index partition extents for a dentry (%d)." }
-		AIU0018W:string { "Freeing a dentry priv with outstanding write requests. This is a bug." }
-		AIU0019I:string { "Clean up extents and append index at index partition (%d)." }
-		AIU0020I:string { "Truncate extents larger than position (%d, %lld), block size = %ld." }
-		AIU0021E:string { "Write perm handling error : %s (%d)." }
-		AIU0022I:string { "Error position is larger than last index position: (%d, %lld), last index = %lld." }
+		AIU0001E:string { "Cannot initialize scheduler: failed to initialize cache manager" }
+		AIU0002E:string { "Cannot initialize scheduler: failed to initialize mutex %s (%d)" }
+		AIU0003E:string { "Cannot initialize scheduler: failed to initialize condition variable %s (%d)" }
+		AIU0004E:string { "Cannot initialize scheduler: failed to create thread %s (%d)" }
+		AIU0005E:string { "Failed to initialize mutex in scheduler private data (%d)" }
+		AIU0006E:string { "Cannot write: failed to allocate scheduler private data (%d)" }
+		AIU0007E:string { "Invalid back pointer to the dentry in the dentry_priv structure" }
+		AIU0008E:string { "Invalid request_state received when updating the queue membership (%d)" }
+		AIU0009W:string { "Index partition writer: failed to write data to the tape (%d)" }
+		AIU0010W:string { "Data partition writer: failed to write data to the tape (%d)" }
+		AIU0011D:string { "Unified I/O scheduler initialized" }
+		AIU0012D:string { "Unified I/O scheduler uninitialized" }
+		AIU0013E:string { "Cannot write: failed to allocate a cache block (%d)" }
+		AIU0014E:string { "Cannot write: failed to allocate a write request" }
+		AIU0015E:string { "Cannot flush: failed to write to data partition (%d)" }
+		AIU0016E:string { "Aborting full flush: flushing dentry '%s' failed (%d)" }
+		AIU0017W:string { "Failed to save index partition extents for a dentry (%d)" }
+		AIU0018W:string { "Freeing a dentry priv with outstanding write requests. This is a bug" }
+		AIU0019I:string { "Clean up extents and append index at index partition (%d)" }
+		AIU0020I:string { "Truncate extents larger than position (%d, %lld), block size = %ld" }
+		AIU0021E:string { "Write perm handling error : %s (%d)" }
+		AIU0022I:string { "Error position is larger than last index position: (%d, %lld), last index = %lld" }
 	}
 }

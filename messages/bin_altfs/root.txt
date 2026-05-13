@@ -38,110 +38,109 @@ root:table {
 	messages:table {
 		prefix:string { "AFS" }
 
-		AFS0001I:string { "LTFS starting, %s version %s, log level %d." }
-		AFS0002E:string { "Cannot enable FUSE option %s (%d)." }
-		AFS0003E:string { "Cannot set up permissions (%d)." }
-		AFS0004E:string { "min_pool_size (%d) cannot be greater than max_pool_size (%d)." }
-		AFS0005E:string { "Cannot create work directory (%d)." }
-		AFS0006E:string { "Path \'%s\' exists, but is not a directory." }
-		AFS0007E:string { "Invalid umask \'%s\' (must be 3 octal digits, such as 022)." }
-		AFS0008E:string { "Invalid fmask \'%s\' (must be 3 octal digits, such as 022)." }
-		AFS0009E:string { "Invalid dmask \'%s\' (must be 3 octal digits, such as 022)." }
-		AFS0010E:string { "The backend \'%s\' does not have a default device. Specify one using the \"-o devname=\" option." }
-		AFS0011E:string { "Cannot allocate LTFS volume structure." }
-		AFS0012E:string { "Tape backend option parsing failed." }
-		AFS0013E:string { "Cannot mount the volume from %s." }
-		AFS0014W:string { "Volume does not allow index criteria override. Ignoring user-specified criteria." }
-		AFS0015E:string { "Cannot format data placement rules (%d)." }
-		AFS0016E:string { "Cannot parse data placement rules (%d)." }
-		AFS0017E:string { "Cannot get read-only status of the medium." }
-		AFS0018I:string { "Medium is write protected. Mounting read-only." }
-		AFS0019E:string { "Cannot flush file data to the medium. Data might be lost (%s)." }
-		AFS0020E:string { "Cannot set extended attribute: position option must be zero." }
-		AFS0021E:string { "Cannot get extended attribute: position option must be zero." }
-		AFS0022D:string { "Cannot read directory: no buffer space." }
-		AFS0023E:string { "Cannot read directory: convert to system locale failed (%s, %d)." }
-		AFS0024W:string { "Cannot initialize I/O scheduler. The scheduler is disabled. Performance might decrease and memory usage might increase." }
-		AFS0025I:string { "Ready to receive file system requests." }
-		AFS0026D:string { "FUSE fgetattr for \'%s\'." }
-		AFS0027D:string { "FUSE getattr for \'%s\'." }
-		AFS0028D:string { "FUSE open file \'%s\' (%s)." }
-		AFS0029D:string { "FUSE open directory \'%s\'." }
-		AFS0030D:string { "FUSE release directory \'%s\'." }
-		AFS0031D:string { "FUSE release file \'%s\'." }
-		AFS0032D:string { "FUSE fsync \'%s\'." }
-		AFS0033D:string { "FUSE flush \'%s\'." }
-		AFS0034D:string { "FUSE set times \'%s\'." }
-		AFS0035D:string { "FUSE chmod \'%s\'." }
-		AFS0036D:string { "FUSE create file \'%s\'." }
-		AFS0037D:string { "FUSE mkdir \'%s\'." }
-		AFS0038D:string { "FUSE truncate \'%s\' (length=%lld)." }
-		AFS0039D:string { "FUSE ftruncate \'%s\' (length=%lld)." }
-		AFS0040D:string { "FUSE unlink \'%s\'." }
-		AFS0041D:string { "FUSE rmdir \'%s\'." }
-		AFS0042D:string { "FUSE rename \'%s\' to \'%s\'." }
-		AFS0043D:string { "FUSE readdir \'%s\'." }
-		AFS0044D:string { "FUSE write \'%s\' (offset=%lld, count=%zu)." }
-		AFS0045D:string { "FUSE read \'%s\' (offset=%lld, count=%zu)." }
-		AFS0046D:string { "FUSE setxattr \'%s\' (name=\'%s\', size=%zu)." }
-		AFS0047D:string { "FUSE getxattr \'%s\' (name=\'%s\')." }
-		AFS0048D:string { "FUSE listxattr \'%s\'." }
-		AFS0049D:string { "FUSE removexattr \'%s\' (name=\'%s\')." }
-		AFS0050E:string { "Failed to load tape drive plug-in (%d)." }
-		AFS0051E:string { "Failed to load I/O scheduler plug-in (%d)." }
-		AFS0052E:string { "No driver plug-in configured and no default found." }
-		AFS0053E:string { "Failed to load kmi plug-in (%d)." }
-		AFS0054I:string { "%s version %s." }
-		AFS0055E:string { "Failed to convert the sync time (%s)." }
-		AFS0056E:string { "Unknown type of sync (%s)." }
-		AFS0057I:string { "Sync time is 0. Set sync type \"none\"." }
-		AFS0058I:string { "Sync type is \"%s\", Sync time is %ld sec." }
-		AFS0059I:string { "Sync type is \"%s\"." }
-		AFS0060E:string { "Unexpected sync type (%d)." }
-		AFS0061E:string { "Sync time should be a positive value." }
-		AFS0062E:string { "Failed to convert the sync time because it is too big or too small (%s)." }
-		AFS0063E:string { "Specified sync time is too big or too small (%ld)." }
-		AFS0064I:string { "Medium has no space to write data. Mounting as read-only." }
-		AFS0065I:string { "Rollback mount is specified. Mounting as read-only at generation %d." }
-		AFS0066I:string { "Index partition has no space to write index. Mounting as read-only." }
-		AFS0067I:string { "Data partition has no space to write index. Mounting as read-only." }
-		AFS0068E:string { "Cannot set up tape drive." }
-		AFS0069I:string { "Attempting to mount the cartridge without EOD existence check." }
-		AFS0070I:string { "The cartridge will be mounted as read-only." }
-		AFS0071I:string { "Medium is Read-Only in this device." }
-		AFS0072E:string { "Invalid uid \'%s\' (must be a positive integer or valid user name)." }
-		AFS0073E:string { "Invalid gid \'%s\' (must be a positive integer or valid group name)." }
-		AFS0074E:string { "Could not initialize the kmi plug-in." }
-		AFS0075E:string { "KMI backend option parsing failed." }
-		AFS0076E:string { "Invalid generation for rollback mount is specified. %s." }
-		AFS0077I:string { "Symbolic link type is (%s)." }
-		AFS0078E:string { "Unknown type of symbolic link (%s)." }
-		AFS0079E:string { "Cannot get mount point (%d)." }
-		AFS0080I:string { "Set the tape device write-anywhere mode to avoid cartridge ejection." }
+		AFS0001I:string { "LTFS starting, %s version %s, log level %d" }
+		AFS0002E:string { "Cannot enable FUSE option %s (%d)" }
+		AFS0003E:string { "Cannot set up permissions (%d)" }
+		AFS0004E:string { "min_pool_size (%d) cannot be greater than max_pool_size (%d)" }
+		AFS0005E:string { "Cannot create work directory (%d)" }
+		AFS0006E:string { "Path \'%s\' exists, but is not a directory" }
+		AFS0007E:string { "Invalid umask \'%s\' (must be 3 octal digits, such as 022)" }
+		AFS0008E:string { "Invalid fmask \'%s\' (must be 3 octal digits, such as 022)" }
+		AFS0009E:string { "Invalid dmask \'%s\' (must be 3 octal digits, such as 022)" }
+		AFS0010E:string { "The backend \'%s\' does not have a default device. Specify one using the \"-o devname=\" option" }
+		AFS0011E:string { "Cannot allocate LTFS volume structure" }
+		AFS0012E:string { "Tape backend option parsing failed" }
+		AFS0013E:string { "Cannot mount the volume from %s" }
+		AFS0014W:string { "Volume does not allow index criteria override. Ignoring user-specified criteria" }
+		AFS0015E:string { "Cannot format data placement rules (%d)" }
+		AFS0016E:string { "Cannot parse data placement rules (%d)" }
+		AFS0017E:string { "Cannot get read-only status of the medium" }
+		AFS0018I:string { "Medium is write protected. Mounting read-only" }
+		AFS0019E:string { "Cannot flush file data to the medium. Data might be lost (%s)" }
+		AFS0020E:string { "Cannot set extended attribute: position option must be zero" }
+		AFS0021E:string { "Cannot get extended attribute: position option must be zero" }
+		AFS0022D:string { "Cannot read directory: no buffer space" }
+		AFS0023E:string { "Cannot read directory: convert to system locale failed (%s, %d)" }
+		AFS0024W:string { "Cannot initialize I/O scheduler. The scheduler is disabled. Performance might decrease and memory usage might increase" }
+		AFS0025I:string { "Ready to receive file system requests" }
+		AFS0026D:string { "FUSE fgetattr for \'%s\'" }
+		AFS0027D:string { "FUSE getattr for \'%s\'" }
+		AFS0028D:string { "FUSE open file \'%s\' (%s)" }
+		AFS0029D:string { "FUSE open directory \'%s\'" }
+		AFS0030D:string { "FUSE release directory \'%s\'" }
+		AFS0031D:string { "FUSE release file \'%s\'" }
+		AFS0032D:string { "FUSE fsync \'%s\'" }
+		AFS0033D:string { "FUSE flush \'%s\'" }
+		AFS0034D:string { "FUSE set times \'%s\'" }
+		AFS0035D:string { "FUSE chmod \'%s\'" }
+		AFS0036D:string { "FUSE create file \'%s\'" }
+		AFS0037D:string { "FUSE mkdir \'%s\'" }
+		AFS0038D:string { "FUSE truncate \'%s\' (length=%lld)" }
+		AFS0039D:string { "FUSE ftruncate \'%s\' (length=%lld)" }
+		AFS0040D:string { "FUSE unlink \'%s\'" }
+		AFS0041D:string { "FUSE rmdir \'%s\'" }
+		AFS0042D:string { "FUSE rename \'%s\' to \'%s\'" }
+		AFS0043D:string { "FUSE readdir \'%s\'" }
+		AFS0044D:string { "FUSE write \'%s\' (offset=%lld, count=%zu)" }
+		AFS0045D:string { "FUSE read \'%s\' (offset=%lld, count=%zu)" }
+		AFS0046D:string { "FUSE setxattr \'%s\' (name=\'%s\', size=%zu)" }
+		AFS0047D:string { "FUSE getxattr \'%s\' (name=\'%s\')" }
+		AFS0048D:string { "FUSE listxattr \'%s\'" }
+		AFS0049D:string { "FUSE removexattr \'%s\' (name=\'%s\')" }
+		AFS0050E:string { "Failed to load tape drive plug-in (%d)" }
+		AFS0051E:string { "Failed to load I/O scheduler plug-in (%d)" }
+		AFS0052E:string { "No driver plug-in configured and no default found" }
+		AFS0053E:string { "Failed to load kmi plug-in (%d)" }
+		AFS0054I:string { "%s version %s" }
+		AFS0055E:string { "Failed to convert the sync time (%s)" }
+		AFS0056E:string { "Unknown type of sync (%s)" }
+		AFS0057I:string { "Sync time is 0. Set sync type \"none\"" }
+		AFS0058I:string { "Sync type is \"%s\", Sync time is %ld sec" }
+		AFS0059I:string { "Sync type is \"%s\"" }
+		AFS0060E:string { "Unexpected sync type (%d)" }
+		AFS0061E:string { "Sync time should be a positive value" }
+		AFS0062E:string { "Failed to convert the sync time because it is too big or too small (%s)" }
+		AFS0063E:string { "Specified sync time is too big or too small (%ld)" }
+		AFS0064I:string { "Medium has no space to write data. Mounting as read-only" }
+		AFS0065I:string { "Rollback mount is specified. Mounting as read-only at generation %d" }
+		AFS0066I:string { "Index partition has no space to write index. Mounting as read-only" }
+		AFS0067I:string { "Data partition has no space to write index. Mounting as read-only" }
+		AFS0068E:string { "Cannot set up tape drive" }
+		AFS0069I:string { "Attempting to mount the cartridge without EOD existence check" }
+		AFS0070I:string { "The cartridge will be mounted as read-only" }
+		AFS0071I:string { "Medium is Read-Only in this device" }
+		AFS0072E:string { "Invalid uid \'%s\' (must be a positive integer or valid user name)" }
+		AFS0073E:string { "Invalid gid \'%s\' (must be a positive integer or valid group name)" }
+		AFS0074E:string { "Could not initialize the kmi plug-in" }
+		AFS0075E:string { "KMI backend option parsing failed" }
+		AFS0076E:string { "Invalid generation for rollback mount is specified. %s" }
+		AFS0077I:string { "Symbolic link type is (%s)" }
+		AFS0078E:string { "Unknown type of symbolic link (%s)" }
+		AFS0079E:string { "Cannot get mount point (%d)" }
+		AFS0080I:string { "Set the tape device write-anywhere mode to avoid cartridge ejection" }
 
-		AFS0081I:string { "Launched by \"%s\"." }
-		AFS0082I:string { "%s." }
-		AFS0083I:string { "GCC version is %s." }
-		AFS0084E:string { "Minimum pool size must be a positive number." }
-		AFS0085E:string { "Maximum pool size must be a positive number." }
-		AFS0086I:string { "Initial setup completed successfully." }
-		AFS0087I:string { "Invoke 'mount' command to check the result of final setup." }
-		AFS0088I:string { "Specified mount point is listed if succeeded." }
-		AFS0089E:string { "Cannot initialize the open file table." }
-		AFS0090E:string { "Invalid scsi_append_only_mode option: %s." }
-		AFS0091E:string { "This medium is not supported (%d)." }
-		AFS0092I:string { "Metadata only rollback mount is specified. Mounting as meta read-only from %s." }
-		AFS0093E:string { "Unexpected option is specified for read only mount (%d)." }
-		AFS0094I:string { "Rollback mount from index file is specified. Mounting as read-only from %s." }
-		AFS0095W:string { "Cannot access directory %s, disabled index capture mode (%d)." }
+		AFS0081I:string { "Launched by \"%s\"" }
+		AFS0082I:string { "%s" }
+		AFS0083I:string { "GCC version is %s" }
+		AFS0084E:string { "Minimum pool size must be a positive number" }
+		AFS0085E:string { "Maximum pool size must be a positive number" }
+		AFS0086I:string { "Initial setup completed successfully" }
+		AFS0087I:string { "Invoke 'mount' command to check the result of final setup" }
+		AFS0088I:string { "Specified mount point is listed if succeeded" }
+		AFS0089E:string { "Cannot initialize the open file table" }
+		AFS0090E:string { "Invalid scsi_append_only_mode option: %s" }
+		AFS0091E:string { "This medium is not supported (%d)" }
+		AFS0092I:string { "Metadata only rollback mount is specified. Mounting as meta read-only from %s" }
+		AFS0093E:string { "Unexpected option is specified for read only mount (%d)" }
+		AFS0094I:string { "Rollback mount from index file is specified. Mounting as read-only from %s" }
+		AFS0095W:string { "Cannot access directory %s, disabled index capture mode (%d)" }
 		AFS0096I:string { "Index will be captured at %s at update" }
-		AFS0097I:string { "Index will not be captured." }
-		AFS0098W:string { "The main function of FUSE returned error (%d)." }
+		AFS0097I:string { "Index will not be captured" }
+		AFS0098W:string { "The main function of FUSE returned error (%d)" }
 
 		// 14150 - 14199 are reserved for LE+
 
 		// Help messages
-		AFS0099I:string { "usage: %s mountpoint [options]" }
 		AFS0100I:string { "LTFS options:" }
 		AFS0101I:string { "    -o devname=<dev>          Tape device (default: %s)" }
 		AFS0102I:string { "    -o devname=<dev>          Tape device" }
@@ -223,9 +222,9 @@ root:table {
 		AFS0136I:string { "    -o syslogtrace            Enable diagnostic output to stderr and syslog(same as verbose=303)" }
 
 		// Messages relocated from libaltfs
-		AFS0137E:string { "Failed to parse command line options." }
-		AFS0138E:string { "Invalid option \'%s\'." }
-		AFS0139E:string { "Cannot create work directory \'%s\': %s." }
+		AFS0137E:string { "Failed to parse command line options" }
+		AFS0138E:string { "Invalid option \'%s\'" }
+		AFS0139E:string { "Cannot create work directory \'%s\': %s" }
 		// Reserved 14468I
 	}
 }

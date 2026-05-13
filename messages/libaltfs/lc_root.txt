@@ -38,20 +38,20 @@ root:table {
 	messages:table {
 		prefix:string { "ALC" }
 
-		ALC0001E:string { "Failed to initialize libltfs (%d)." }
-		ALC0002E:string { "Memory allocation failed (%s)." }
-		ALC0003E:string { "Cannot initialize mutex (%d)." }
-		ALC0004E:string { "Cannot initialize condition variable (%d)." }
-		ALC0005E:string { "Cannot open device \'%s\'." }
-		ALC0006E:string { "Null argument (%s) to %s." }
-		ALC0007W:string { "Null argument (%s) to %s." }
-		ALC0008E:string { "Not yet implemented (%s)." }
-		ALC0009E:string { "Failed to load the configuration file (%d)." }
-		ALC0010E:string { "No driver plug-in specified and no default found." }
-		ALC0011E:string { "Failed to register messages with libltfs (%d)." }
-		ALC0012E:string { "Failed to set up signal handler." }
-		ALC0013E:string { "Failed to clean up signal handler." }
-		ALC0015E:string { "Error on %s: %s (%d, %d)." }
-		ALC0016D:string { "xattr: %s: %s (%d, %d)." }
+		ALC0001E:string { "Failed to initialize libltfs (%d)" }
+		ALC0002E:string { "Memory allocation failed (%s)" }
+		ALC0003E:string { "Cannot initialize mutex (%d)" }
+		ALC0004E:string { "Cannot initialize condition variable (%d)" }
+		ALC0005E:string { "Cannot open device \'%s\'" }
+		ALC0006E:string { "Null argument (%s) to %s" }
+		ALC0007W:string { "Null argument (%s) to %s" }
+		ALC0008E:string { "Not yet implemented (%s)" }
+		ALC0009E:string { "Failed to load the configuration file (%d)" }
+		ALC0010E:string { "No driver plug-in specified and no default found" }
+		ALC0011E:string { "Failed to register messages with libltfs (%d)" }
+		ALC0012E:string { "Failed to set up signal handler" }
+		ALC0013E:string { "Failed to clean up signal handler" }
+		ALC0015E:string { "Error on %s: %s (%d, %d)" }
+		ALC0016D:string { "xattr: %s: %s (%d, %d)" }
 	}
 }

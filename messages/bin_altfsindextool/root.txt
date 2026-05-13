@@ -38,55 +38,55 @@ root:table {
 	messages:table {
 		prefix:string { "AIX" }
 		end_id: int { 19989 }
-		AIX0001I:string { "Starting ltfsindextool, %s version %s, log level %d." }
-		AIX0002E:string { "Cannot allocate LTFS volume structure." }
-		AIX0003I:string { "%s." }
-		AIX0004I:string { "GCC version is %s." }
-		AIX0005I:string { "Capture all indexes from both partitions." }
-		AIX0006I:string { "Capture all indexes from (%u, %llu)." }
-		AIX0007D:string { "Opening the device." }
-		AIX0008D:string { "Device opened." }
-		AIX0009E:string { "Cannot open backend \'%s\'." }
-		AIX0010E:string { "Cannot open key manager interface backend \'%s\'." }
-		AIX0011E:string { "Cannot open device \'%s\' (%d)." }
-		AIX0012E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)." }
-		AIX0013E:string { "Key manager interface backend option parsing failed." }
-		AIX0014E:string { "Tape backend option parsing failed." }
-		AIX0015E:string { "Unknown option '%s %s'." }
-		AIX0016E:string { "Cannot set up tape device." }
-		AIX0017E:string { "Cannot allocate the read buffer." }
-		AIX0018E:string { "Cannot seek to the start position (%u, %llu, %d)." }
-		AIX0019E:string { "Cannot get the current position (%d)." }
-		AIX0020E:string { "Cannot read a block (%u, %llu, %ld)." }
-		AIX0021D:string { "Closing the device." }
-		AIX0022W:string { "Cannot unload backend." }
-		AIX0023D:string { "Device closed." }
-		AIX0024I:string { "Failed to capture index (%d)." }
-		AIX0025I:string { "Captured indexes successfully." }
-		AIX0026D:string { "Validating command line options." }
-		AIX0027E:string { "File name to check or device name to capture must be specified." }
-		AIX0028D:string { "Command line options are valid." }
-		AIX0029W:string { "Cannot unload key manager interface backend." }
-		AIX0030I:string { "Reading an index from (%u, %llu)." }
-		AIX0031I:string { "Block in (%u, %llu) does not look like an index, seek to next position (%d)." }
-		AIX0032E:string { "Cannot seek to the next position (%u, %llu, %d)." }
-		AIX0033E:string { "Cannot allocate the file name." }
-		AIX0034E:string { "Cannot open the file %s (%d)." }
-		AIX0035I:string { "Reached EOD (%u, %llu)." }
-		AIX0036I:string { "Reached EOD but cannot get the position (%d)." }
-		AIX0037E:string { "Cannot write a block (%ld, %d)." }
-		AIX0038I:string { "Detected the end of the index (%u, %llu)." }
-		AIX0039E:string { "Detected the EOD in the middle of index (%u, %llu)." }
-		AIX0040I:string { "Wrote an index, length is %llu." }
-		AIX0041E:string { "Partition number must be 0 or 1." }
-		AIX0042E:string { "Operation mode is wrong." }
-		AIX0043I:string { "Launched by \"%s\"." }
-		AIX0044I:string { "Checking the index file \"%s\"." }
-		AIX0045I:string { "Checked the index successfully." }
-		AIX0046E:string { "Failed to check the index (%d)." }
-		AIX0047I:string { "%s version %s." }
+		AIX0001I:string { "Starting ltfsindextool, %s version %s, log level %d" }
+		AIX0002E:string { "Cannot allocate LTFS volume structure" }
+		AIX0003I:string { "%s" }
+		AIX0004I:string { "GCC version is %s" }
+		AIX0005I:string { "Capture all indexes from both partitions" }
+		AIX0006I:string { "Capture all indexes from (%u, %llu)" }
+		AIX0007D:string { "Opening the device" }
+		AIX0008D:string { "Device opened" }
+		AIX0009E:string { "Cannot open backend \'%s\'" }
+		AIX0010E:string { "Cannot open key manager interface backend \'%s\'" }
+		AIX0011E:string { "Cannot open device \'%s\' (%d)" }
+		AIX0012E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)" }
+		AIX0013E:string { "Key manager interface backend option parsing failed" }
+		AIX0014E:string { "Tape backend option parsing failed" }
+		AIX0015E:string { "Unknown option '%s %s'" }
+		AIX0016E:string { "Cannot set up tape device" }
+		AIX0017E:string { "Cannot allocate the read buffer" }
+		AIX0018E:string { "Cannot seek to the start position (%u, %llu, %d)" }
+		AIX0019E:string { "Cannot get the current position (%d)" }
+		AIX0020E:string { "Cannot read a block (%u, %llu, %ld)" }
+		AIX0021D:string { "Closing the device" }
+		AIX0022W:string { "Cannot unload backend" }
+		AIX0023D:string { "Device closed" }
+		AIX0024I:string { "Failed to capture index (%d)" }
+		AIX0025I:string { "Captured indexes successfully" }
+		AIX0026D:string { "Validating command line options" }
+		AIX0027E:string { "File name to check or device name to capture must be specified" }
+		AIX0028D:string { "Command line options are valid" }
+		AIX0029W:string { "Cannot unload key manager interface backend" }
+		AIX0030I:string { "Reading an index from (%u, %llu)" }
+		AIX0031I:string { "Block in (%u, %llu) does not look like an index, seek to next position (%d)" }
+		AIX0032E:string { "Cannot seek to the next position (%u, %llu, %d)" }
+		AIX0033E:string { "Cannot allocate the file name" }
+		AIX0034E:string { "Cannot open the file %s (%d)" }
+		AIX0035I:string { "Reached EOD (%u, %llu)" }
+		AIX0036I:string { "Reached EOD but cannot get the position (%d)" }
+		AIX0037E:string { "Cannot write a block (%ld, %d)" }
+		AIX0038I:string { "Detected the end of the index (%u, %llu)" }
+		AIX0039E:string { "Detected the EOD in the middle of index (%u, %llu)" }
+		AIX0040I:string { "Wrote an index, length is %llu" }
+		AIX0041E:string { "Partition number must be 0 or 1" }
+		AIX0042E:string { "Operation mode is wrong" }
+		AIX0043I:string { "Launched by \"%s\"" }
+		AIX0044I:string { "Checking the index file \"%s\"" }
+		AIX0045I:string { "Checked the index successfully" }
+		AIX0046E:string { "Failed to check the index (%d)" }
+		AIX0047I:string { "%s version %s" }
 		AIX0048I:string { "Creating an index file: %s" }
-		AIX0049E:string { "Start position shall be 5 or larger (%llu)." }
+		AIX0049E:string { "Start position shall be 5 or larger (%llu)" }
 
 		// Help messages
 		AIX0050I:string { "Usage: %s [options] [filename]" }
@@ -107,6 +107,6 @@ root:table {
 		AIX0065I:string { "  %s --device=%s -p=%d" }
 
 		// Messages relocated from libaltfs
-		AIX0066E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"." }
+		AIX0066E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
 	}
 }

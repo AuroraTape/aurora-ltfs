@@ -212,13 +212,19 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 	struct libltfs_plugin pl = {0};
 	char **backends;
 	int ret, i;
+	int saved_log_level;
 
 	backends = config_file_get_plugins(type, config);
 	if (! backends) {
-		if (! strcmp(type, "driver"))
+		if (! strcmp(type, "tape"))
 			ltfsresult(AFS0102I); /* -o devname=<dev> */
 		return;
 	}
+
+	/* Suppress plugin-load info chatter while printing help. */
+	saved_log_level = ltfs_log_level;
+	if (ltfs_log_level > LTFS_WARN)
+		ltfs_log_level = LTFS_WARN;
 
 	for (i = 0; backends[i] != NULL; ++i) {
 		ret = plugin_load(&pl, type, backends[i], config);
@@ -227,6 +233,8 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 		print_help_message(progname, pl.ops, type);
 		plugin_unload(&pl);
 	}
+
+	ltfs_log_level = saved_log_level;
 
 	for (i = 0; backends[i] != NULL; ++i)
 		free(backends[i]);

@@ -39,100 +39,100 @@ root:table {
 		prefix:string { "ACK" }
 		end_id: int { 16499 }
 
-		ACK0001I:string { "Starting ltfsck, %s version %s, log level %d." }
-		ACK0002E:string { "Cannot allocate LTFS volume structure." }
-		ACK0003E:string { "Option validation failed." }
-		ACK0004E:string { "Must provide search criteria using -g." }
-		ACK0005E:string { "Unexpected condition: str_gen is not specified." }
-		ACK0006E:string { "Invalid generation number %s." }
-		ACK0007I:string { "Rolling back to generation %d." }
-		ACK0008E:string { "Must provide device name." }
-		ACK0009E:string { "Cannot load backend \'%s\' (%d)." }
-		ACK0010E:string { "Cannot open device \'%s\'." }
-		ACK0011I:string { "Checking LTFS file system on \'%s\'." }
-		ACK0012I:string { "Rolling back LTFS file system on \'%s\'." }
-		ACK0013E:string { "Invalid search mode." }
-		ACK0014I:string { "Verify rollback point on \'%s\'." }
-		ACK0015I:string { "Listing LTFS file system rollback points on \'%s\'." }
-		ACK0016E:string { "Invalid operation mode." }
-		ACK0017W:string { "Failed to close the device (%d)." }
-		ACK0018E:string { "Volume is inconsistent and was not corrected." }
-		ACK0019I:string { "Volume is consistent." }
-		ACK0020I:string { "LTFS volume information:." }
-		ACK0021I:string { "Volser (bar code) : %s." }
-		ACK0022I:string { "Volume UUID     : %s." }
-		ACK0023I:string { "Format time     : %04d-%02d-%02d %02d:%02d:%02d.%09ld %s." }
-		ACK0024I:string { "Block size      : %lu." }
-		ACK0025I:string { "Compression     : %s." }
-		ACK0026I:string { "Index partition : ID = %c, SCSI Partition = %u." }
-		ACK0027I:string { "Data partition  : ID = %c, SCSI Partition = %u." }
-		ACK0028I:string { "Data placement policy information:." }
-		ACK0029I:string { "Size threshold : %llu." }
-		ACK0030I:string { "Name pattern   : %s." }
-		ACK0031I:string { "Policy update  : %s." }
-		//Unused 16042E:string { "Cannot traverse indexes: callback function failed (%d)." }
-		ACK0032D:string { "Erasing history from (%c, %llu)." }
-		ACK0033D:string { "Rolling back %s: (%c, %llu)." }
-		ACK0034D:string { "Erase history: spacing to end of index." }
-		ACK0035E:string { "Cannot erase history: failed to space forward 1 file mark (%d)." }
-		ACK0036D:string { "Erase history: spacing back and writing a file mark." }
-		ACK0037E:string { "Cannot erase history: failed to space back 1 file mark (%d)." }
-		ACK0038E:string { "Cannot erase history: failed to write a file mark (%d)." }
-		ACK0039E:string { "Cannot roll back the data partition: failed to erase history (%d)." }
-		ACK0040E:string { "Cannot roll back the data partition: failed to write an index (%d)." }
-		ACK0041E:string { "Cannot roll back: the medium is read-only." }
-		ACK0042I:string { "Rolling back from the index partition." }
-		ACK0043E:string { "Cannot roll back the index partition: failed to erase history (%d)." }
-		ACK0044E:string { "Cannot roll back the index partition: failed to write an index (%d)." }
-		ACK0045E:string { "Cannot roll back: invalid partition ID %c." }
-		ACK0046I:string { "Rolling back from the data partition." }
-		ACK0047I:string { "Specified rollback point is the current index. The volume is consistent. No operation is required." }
-		ACK0048I:string { "Rolling back based on the following index chain." }
-		ACK0049E:string { "Cannot roll back: found 2 or more target indexes in one partition (%d)." }
-		ACK0050E:string { "Cannot roll back: failed to load the volume (%d)." }
-		ACK0051E:string { "Cannot roll back: failed to traverse the index partition (%d)." }
-		ACK0052E:string { "Cannot roll back: failed to traverse the data partition (%d)." }
-		ACK0053E:string { "Cannot roll back: failed to find indexes." }
-		ACK0054E:string { "Cannot list rollback points: failed to load the volume (%d)." }
-		ACK0055E:string { "Cannot list rollback points: failed to traverse the index partition (%d)." }
-		ACK0056E:string { "Cannot list rollback points: failed to traverse the data partition (%d)." }
-		ACK0057E:string { "Cannot roll back: failed to save index partition append position (%d)." }
-		ACK0058E:string { "Cannot check volume (%d)." }
-		ACK0059D:string { "Latest index generation is %d (%c, %llu)." }
-		ACK0060I:string { "Saving latest index to data partition to save history." }
-		ACK0061I:string { "List indexes in forward direction strategy." }
-		ACK0062I:string { "List indexes in backward direction strategy." }
-		ACK0063E:string { "Unexpected traverse strategy." }
-		ACK0064I:string { "Volume is rolled back successfully." }
-		ACK0065E:string { "Volume is inconsistent. Try to recover consistency with ltfsck first." }
-		ACK0066I:string { "Launched by \"%s\"." }
-		ACK0067I:string { "%s." }
-		ACK0068I:string { "GCC version is %s." }
-		ACK0069E:string { "Cannot recover missing EOD (%d)." }
-		ACK0070E:string { "Cannot set up tape drive (%s)." }
-		ACK0071E:string { "Cannot recover the cartridge with ltfsck." }
-		ACK0072E:string { "CM in the cartridge might be corrupted. Try to run ltfs with the \"-o force_mount_no_eod\" option." }
+		ACK0001I:string { "Starting ltfsck, %s version %s, log level %d" }
+		ACK0002E:string { "Cannot allocate LTFS volume structure" }
+		ACK0003E:string { "Option validation failed" }
+		ACK0004E:string { "Must provide search criteria using -g" }
+		ACK0005E:string { "Unexpected condition: str_gen is not specified" }
+		ACK0006E:string { "Invalid generation number %s" }
+		ACK0007I:string { "Rolling back to generation %d" }
+		ACK0008E:string { "Must provide device name" }
+		ACK0009E:string { "Cannot load backend \'%s\' (%d)" }
+		ACK0010E:string { "Cannot open device \'%s\'" }
+		ACK0011I:string { "Checking LTFS file system on \'%s\'" }
+		ACK0012I:string { "Rolling back LTFS file system on \'%s\'" }
+		ACK0013E:string { "Invalid search mode" }
+		ACK0014I:string { "Verify rollback point on \'%s\'" }
+		ACK0015I:string { "Listing LTFS file system rollback points on \'%s\'" }
+		ACK0016E:string { "Invalid operation mode" }
+		ACK0017W:string { "Failed to close the device (%d)" }
+		ACK0018E:string { "Volume is inconsistent and was not corrected" }
+		ACK0019I:string { "Volume is consistent" }
+		ACK0020I:string { "LTFS volume information:" }
+		ACK0021I:string { "Volser (bar code) : %s" }
+		ACK0022I:string { "Volume UUID     : %s" }
+		ACK0023I:string { "Format time     : %04d-%02d-%02d %02d:%02d:%02d.%09ld %s" }
+		ACK0024I:string { "Block size      : %lu" }
+		ACK0025I:string { "Compression     : %s" }
+		ACK0026I:string { "Index partition : ID = %c, SCSI Partition = %u" }
+		ACK0027I:string { "Data partition  : ID = %c, SCSI Partition = %u" }
+		ACK0028I:string { "Data placement policy information:" }
+		ACK0029I:string { "Size threshold : %llu" }
+		ACK0030I:string { "Name pattern   : %s" }
+		ACK0031I:string { "Policy update  : %s" }
+		//Unused 16042E:string { "Cannot traverse indexes: callback function failed (%d)" }
+		ACK0032D:string { "Erasing history from (%c, %llu)" }
+		ACK0033D:string { "Rolling back %s: (%c, %llu)" }
+		ACK0034D:string { "Erase history: spacing to end of index" }
+		ACK0035E:string { "Cannot erase history: failed to space forward 1 file mark (%d)" }
+		ACK0036D:string { "Erase history: spacing back and writing a file mark" }
+		ACK0037E:string { "Cannot erase history: failed to space back 1 file mark (%d)" }
+		ACK0038E:string { "Cannot erase history: failed to write a file mark (%d)" }
+		ACK0039E:string { "Cannot roll back the data partition: failed to erase history (%d)" }
+		ACK0040E:string { "Cannot roll back the data partition: failed to write an index (%d)" }
+		ACK0041E:string { "Cannot roll back: the medium is read-only" }
+		ACK0042I:string { "Rolling back from the index partition" }
+		ACK0043E:string { "Cannot roll back the index partition: failed to erase history (%d)" }
+		ACK0044E:string { "Cannot roll back the index partition: failed to write an index (%d)" }
+		ACK0045E:string { "Cannot roll back: invalid partition ID %c" }
+		ACK0046I:string { "Rolling back from the data partition" }
+		ACK0047I:string { "Specified rollback point is the current index. The volume is consistent. No operation is required" }
+		ACK0048I:string { "Rolling back based on the following index chain" }
+		ACK0049E:string { "Cannot roll back: found 2 or more target indexes in one partition (%d)" }
+		ACK0050E:string { "Cannot roll back: failed to load the volume (%d)" }
+		ACK0051E:string { "Cannot roll back: failed to traverse the index partition (%d)" }
+		ACK0052E:string { "Cannot roll back: failed to traverse the data partition (%d)" }
+		ACK0053E:string { "Cannot roll back: failed to find indexes" }
+		ACK0054E:string { "Cannot list rollback points: failed to load the volume (%d)" }
+		ACK0055E:string { "Cannot list rollback points: failed to traverse the index partition (%d)" }
+		ACK0056E:string { "Cannot list rollback points: failed to traverse the data partition (%d)" }
+		ACK0057E:string { "Cannot roll back: failed to save index partition append position (%d)" }
+		ACK0058E:string { "Cannot check volume (%d)" }
+		ACK0059D:string { "Latest index generation is %d (%c, %llu)" }
+		ACK0060I:string { "Saving latest index to data partition to save history" }
+		ACK0061I:string { "List indexes in forward direction strategy" }
+		ACK0062I:string { "List indexes in backward direction strategy" }
+		ACK0063E:string { "Unexpected traverse strategy" }
+		ACK0064I:string { "Volume is rolled back successfully" }
+		ACK0065E:string { "Volume is inconsistent. Try to recover consistency with ltfsck first" }
+		ACK0066I:string { "Launched by \"%s\"" }
+		ACK0067I:string { "%s" }
+		ACK0068I:string { "GCC version is %s" }
+		ACK0069E:string { "Cannot recover missing EOD (%d)" }
+		ACK0070E:string { "Cannot set up tape drive (%s)" }
+		ACK0071E:string { "Cannot recover the cartridge with ltfsck" }
+		ACK0072E:string { "CM in the cartridge might be corrupted. Try to run ltfs with the \"-o force_mount_no_eod\" option" }
 		// unused 16095
-		ACK0073W:string { "Both EODs are missing. Attempt to list index information." }
-		ACK0074E:string { "Both EODs are missing. Roll back operation is not permitted." }
-		ACK0075E:string { "Cannot roll back the cartridge: found unsupported index version." }
-		ACK0076E:string { "Use the latest version of LTFS software." }
-		ACK0077E:string { "Cannot recover the cartridge: found unsupported index version." }
-		ACK0078E:string { "Please use the latest version of LTFS software or --deep-recovery option." }
-		ACK0079E:string { "Cannot open key manager interface backend \'%s\'." }
-		ACK0080W:string { "Cannot unload key manager interface backend." }
-		ACK0081E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)." }
-		ACK0082E:string { "Key manager interface backend option parsing failed." }
-		ACK0083E:string { "Tape backend option parsing failed." }
-		ACK0084E:string { "Unknown option '%s %s'." }
-		ACK0085I:string { "%s version %s." }
-		ACK0086E:string { "This operation is not allowed on this medium (%s)." }
-		ACK0087E:string { "The --salvage-rollback-points option was specified against a normal cartridge." }
-		ACK0088I:string { "The recovery process is skipped because of a locked cartridge (%d)." }
-		ACK0089W:string { "Cannot rename %s to %s (%d)." }
-		ACK0090W:string { "Cannot access directory %s, disabled index capture mode (%d)." }
-		ACK0091I:string { "Index will be captured in %s." }
-		ACK0092I:string { "Index will not be captured." }
+		ACK0073W:string { "Both EODs are missing. Attempt to list index information" }
+		ACK0074E:string { "Both EODs are missing. Roll back operation is not permitted" }
+		ACK0075E:string { "Cannot roll back the cartridge: found unsupported index version" }
+		ACK0076E:string { "Use the latest version of LTFS software" }
+		ACK0077E:string { "Cannot recover the cartridge: found unsupported index version" }
+		ACK0078E:string { "Please use the latest version of LTFS software or --deep-recovery option" }
+		ACK0079E:string { "Cannot open key manager interface backend \'%s\'" }
+		ACK0080W:string { "Cannot unload key manager interface backend" }
+		ACK0081E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)" }
+		ACK0082E:string { "Key manager interface backend option parsing failed" }
+		ACK0083E:string { "Tape backend option parsing failed" }
+		ACK0084E:string { "Unknown option '%s %s'" }
+		ACK0085I:string { "%s version %s" }
+		ACK0086E:string { "This operation is not allowed on this medium (%s)" }
+		ACK0087E:string { "The --salvage-rollback-points option was specified against a normal cartridge" }
+		ACK0088I:string { "The recovery process is skipped because of a locked cartridge (%d)" }
+		ACK0089W:string { "Cannot rename %s to %s (%d)" }
+		ACK0090W:string { "Cannot access directory %s, disabled index capture mode (%d)" }
+		ACK0091I:string { "Index will be captured in %s" }
+		ACK0092I:string { "Index will not be captured" }
 
 		// Help messages
 		ACK0093I:string { "Usage: %s [options] filesys" }
@@ -165,6 +165,6 @@ root:table {
 		ACK0116I:string { "      --salvage-rollback-points   List the rollback points of the cartridge that has no EOD" }
 
 		// Messages relocated from libaltfs
-		ACK0117E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"." }
+		ACK0117E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
 	}
 }

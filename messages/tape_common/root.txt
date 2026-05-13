@@ -38,19 +38,19 @@ root:table {
 	messages:table {
 		prefix:string { "ATM" }
 
-		ATM0001W:string { "Unsupported SCSI OP code 0x%02x." }
-		ATM0002D:string { "SCSI timeout (op_code 0x%02x, timeout = %d)." }
-		ATM0003W:string { "Unknown SCSI OP code 0x%02x, use default timeout." }
-		ATM0004E:string { "CRC check failed: Len = %d, Actual CRC = %08x, Expected CRC = %08x." }
-		ATM0005D:string { "CRC: %s ,Len = %d, CRC = %08x." }
-		ATM0006W:string { "The timeout table is not configured: SCSI OP code 0x%02x. Use the default timeout." }
-		ATM0007D:string { "Is medium mountable: six-character bar code %s." }
-		ATM0008E:string { "Is medium mountable: invalid bar code %s." }
-		ATM0009I:string { "Is medium mountable: unsupported medium %s is detected." }
-		ATM0010D:string { "WORM cartridge is loaded." }
-		ATM0011W:string { "No IP address was found. Use host name based reservation key." }
+		ATM0001W:string { "Unsupported SCSI OP code 0x%02x" }
+		ATM0002D:string { "SCSI timeout (op_code 0x%02x, timeout = %d)" }
+		ATM0003W:string { "Unknown SCSI OP code 0x%02x, use default timeout" }
+		ATM0004E:string { "CRC check failed: Len = %d, Actual CRC = %08x, Expected CRC = %08x" }
+		ATM0005D:string { "CRC: %s ,Len = %d, CRC = %08x" }
+		ATM0006W:string { "The timeout table is not configured: SCSI OP code 0x%02x. Use the default timeout" }
+		ATM0007D:string { "Is medium mountable: six-character bar code %s" }
+		ATM0008E:string { "Is medium mountable: invalid bar code %s" }
+		ATM0009I:string { "Is medium mountable: unsupported medium %s is detected" }
+		ATM0010D:string { "WORM cartridge is loaded" }
+		ATM0011W:string { "No IP address was found. Use host name based reservation key" }
 		ATM0012W:string { "Cannot fetch network I/F information. Use host name based reservation key. (%d)" }
-		ATM0013W:string { "Drive firmware must be updated. Upgrading to %s or later is recommended." }
-		ATM0014W:string { "Drive firmware level does not correctly detect the EOD status." }
+		ATM0013W:string { "Drive firmware must be updated. Upgrading to %s or later is recommended" }
+		ATM0014W:string { "Drive firmware level does not correctly detect the EOD status" }
 	}
 }

@@ -41,14 +41,14 @@ root:table {
 	messages:table {
 		prefix:string { "AKS" }
 
-		AKS0001D:string { "Simple plug-in initialized." }
-		AKS0002D:string { "Simple plug-in uninitialized." }
-		AKS0003E:string { "Encryption key format violation (%s): %s." }
-		AKS0004E:string { "Cannot find data key." }
-		AKS0005E:string { "Option parsing for the key manager interface backend failed (%d)." }
-		AKS0006E:string { "Invalid sequence error (%d,%d): %s." }
-		AKS0007E:string { "Failed to parse data key and/or data key identifier." }
-		AKS0008E:string { "Cannot find data key of the data key identifier." }
+		AKS0001D:string { "Simple plug-in initialized" }
+		AKS0002D:string { "Simple plug-in uninitialized" }
+		AKS0003E:string { "Encryption key format violation (%s): %s" }
+		AKS0004E:string { "Cannot find data key" }
+		AKS0005E:string { "Option parsing for the key manager interface backend failed (%d)" }
+		AKS0006E:string { "Invalid sequence error (%d,%d): %s" }
+		AKS0007E:string { "Failed to parse data key and/or data key identifier" }
+		AKS0008E:string { "Cannot find data key of the data key identifier" }
 		AKS0009I:string { "Key manager interface simple plug-in options:\n"
 			"    -o kmi_dk=<DK>\n"
 			"                              Data key\n"
@@ -59,6 +59,6 @@ root:table {
 			"    -o kmi_dki_for_format=<DKi>\n"
 			"                              Data key identifier to format a cartridge\n"
 			"    -o kmi_dk_list=<DK>:<DKi>/<DK>:<DKi>/.../<DK>:<DKi>\n"
-			"                              Data key and data key identifier pairs' list\n\n." }
+			"                              Data key and data key identifier pairs' list\n" }
 	}
 }

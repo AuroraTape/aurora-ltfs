@@ -82,9 +82,6 @@ struct open_order {
 	int   channel;
 };
 
-/* Default device name */
-const char *default_device = "0";
-
 /* Global values */
 struct sg_global_data global_data;
 
@@ -4465,7 +4462,7 @@ int sg_get_device_list(struct tc_drive_info *buf, int count)
 
 void sg_help_message(const char *progname)
 {
-	ltfsresult(ATG0107I, default_device);
+	ltfsresult(ATG0107I);
 }
 
 int sg_parse_opts(void *device, void *opt_args)
@@ -4497,9 +4494,25 @@ int sg_parse_opts(void *device, void *opt_args)
 
 const char *sg_default_device_name(void)
 {
-	const char *devname;
-	devname = default_device;
-	return devname;
+	static char cached[PATH_MAX];
+	static const char *result = NULL;
+	static bool resolved = false;
+	struct tc_drive_info info;
+
+	if (resolved)
+		return result;
+	resolved = true;
+
+	memset(&info, 0, sizeof(info));
+	/* sg_get_device_list filters to Sequential Access devices via INQUIRY,
+	 * so the first match is the first SCSI tape device on the host. */
+	if (sg_get_device_list(&info, 1) <= 0)
+		return NULL;
+
+	strncpy(cached, info.name, sizeof(cached) - 1);
+	cached[sizeof(cached) - 1] = '\0';
+	result = cached;
+	return result;
 }
 
 static int _cdb_spin(void *device, const uint16_t sps, unsigned char **buffer, size_t * const size)

@@ -38,287 +38,287 @@ root:table {
 	messages:table {
 		prefix:string { "ALB" }
 
-		ALB0001E:string { "Logging initialization failed." }
-		ALB0002E:string { "Cannot instantiate LTFS volume: failed to allocate device data." }
-		ALB0003E:string { "Cannot instantiate LTFS volume: failed to allocate label data." }
-		ALB0004E:string { "Cannot instantiate LTFS volume: failed to allocate index data." }
-		ALB0005E:string { "Cannot retrieve device capacity data (%d)." }
-		ALB0006E:string { "Cannot take the device lock (%s)." }
-		ALB0007I:string { "Mounting the volume from %s." }
-		ALB0008E:string { "Cannot read volume: failed to load the tape." }
-		ALB0009D:string { "Tape is loaded." }
-		ALB0010D:string { "Reading partition labels." }
-		ALB0011E:string { "Cannot read volume: failed to read partition labels." }
-		ALB0012E:string { "Cannot read volume: failed to set medium compression." }
-		ALB0013E:string { "Cannot read volume: block size is %lu, but the device only supports a block size of %u." }
-		ALB0014D:string { "Loading the tape." }
-		ALB0015D:string { "Partition labels are valid." }
-		ALB0016D:string { "Reading MAM parameters." }
-		ALB0017W:string { "VCR MAM parameter is not usable. Mounting will take longer." }
-		ALB0018W:string { "The index partition MAM parameter is not usable. Mounting will take longer." }
-		ALB0019W:string { "The data partition MAM parameter is not usable. Mounting will take longer." }
-		ALB0020D:string { "Done reading MAM parameters." }
-		ALB0021D:string { "Checking volume consistency." }
-		ALB0022E:string { "Cannot mount volume: seek to index failed on the data partition." }
-		ALB0023E:string { "Cannot mount volume: read index failed on the data partition." }
-		ALB0024I:string { "Restoring volume consistency by writing an index to the index partition." }
-		ALB0025E:string { "Cannot mount volume: seek to index failed on the index partition." }
-		ALB0026E:string { "Cannot mount volume: read index failed on the index partition." }
-		ALB0027D:string { "Volume is consistent." }
-		ALB0028I:string { "Performing a full medium consistency check." }
-		ALB0029E:string { "Cannot mount volume: medium consistency check failed." }
-		ALB0030D:string { "Consistency check finished." }
-		ALB0031E:string { "Cannot mount volume: failed to save the append position for the index partition." }
-		ALB0032I:string { "Volume mounted successfully. %s : Gen = %lld / (%c, %lld) -> (%c, %lld) / %s." }
-		ALB0033D:string { "Unmounting the volume." }
-		ALB0034E:string { "Cannot unmount: failed to write an index." }
-		ALB0035I:string { "Volume unmounted successfully." }
-		ALB0036E:string { "Cannot open file: path lookup failed (%d)." }
-		ALB0037E:string { "Cannot write blocks: invalid partition identifier." }
-		ALB0038E:string { "Cannot write blocks: multiple repetitions specified with an irregular buffer size." }
-		ALB0039E:string { "Cannot write blocks: failed to write an index while switching partitions (%d)." }
-		ALB0040E:string { "Cannot write blocks: locate append position failed on partition %c." }
-		ALB0041E:string { "Cannot write blocks: failed to determine medium position (%d)." }
-		ALB0042E:string { "Cannot write blocks: failed to write to the medium (%d)." }
-		ALB0043E:string { "Cannot write: failed to write blocks to the medium (%d)." }
-		ALB0044E:string { "Cannot write index: failed to locate append position on partition %c (%d)." }
-		ALB0045E:string { "Cannot write index: failed to determine medium position (%d)." }
-		ALB0046E:string { "Cannot write index: failed to write file mark (%d)." }
-		ALB0047E:string { "Cannot write index: failed to generate and write XML data (%d). The medium might be in an inconsistent state; unmount and run ltfsck." }
-		ALB0048E:string { "Cannot read: failed to determine medium position (%d)." }
-		ALB0049E:string { "Cannot read: failed to locate (%d) to partition %c, record %llu." }
-		ALB0050E:string { "Cannot read: expected %u bytes from cache, but received %lu bytes." }
-		ALB0051E:string { "Cannot read: failed to get a block from the medium (%d)." }
-		ALB0052E:string { "Cannot read: expected %u bytes from the medium, but received %u bytes." }
-		ALB0053W:string { "Data partition identifier requested on an uninitialized volume." }
-		ALB0054W:string { "Index partition identifier requested on an uninitialized volume." }
-		ALB0055E:string { "Cannot format: failed to load the medium (%d)." }
-		ALB0056E:string { "Cannot format: the medium is write protected." }
-		ALB0057E:string { "Cannot format: requested block size is %lu bytes, but the device only supports %u." }
-		ALB0058I:string { "Partitioning the medium." }
-		ALB0059E:string { "Cannot format: failed to partition the medium (%d)." }
-		ALB0060E:string { "Cannot format: failed to set the medium compression (%d)." }
-		ALB0061I:string { "Writing label to partition %c." }
-		ALB0062E:string { "Cannot format: failed to locate (%d) to partition %u, block 0." }
-		ALB0063E:string { "Cannot format: failed to write ANSI label (%d) on partition %u." }
-		ALB0064E:string { "Cannot format: failed to write file mark after ANSI label (%d) on partition %u." }
-		ALB0065E:string { "Cannot format: failed to generate LTFS label." }
-		ALB0066E:string { "Cannot format: failed to write XML label (%d) on partition %u." }
-		ALB0067E:string { "Cannot format: failed to write file mark after XML label (%d) on partition %u." }
-		ALB0068E:string { "Cannot allocate index data: failed to initialize mutex (%d)." }
-		ALB0069E:string { "Cannot allocate index data: failed to allocate root dentry." }
-		ALB0070E:string { "Cannot read labels: failed to allocate label data (%d)." }
-		ALB0071E:string { "Failed to read label (%d) from partition 0." }
-		ALB0072E:string { "Failed to read label (%d) from partition 1." }
-		ALB0073E:string { "Cannot verify labels: comparison failed (%d)." }
-		ALB0074E:string { "Cannot read label (%d): failed to seek to block 0 (partition %lu)." }
-		ALB0075E:string { "Cannot read ANSI label: read failed (%d)." }
-		ALB0076E:string { "Cannot read ANSI label: expected 80 bytes, but received %d." }
-		ALB0077E:string { "The ANSI label indicates this is not an LTFS volume." }
-		ALB0078E:string { "The ANSI label is too long (%d)." }
-		ALB0079E:string { "Cannot read LTFS label: read failed (%d)." }
-		ALB0080E:string { "Cannot read LTFS label: parsing failed (%d)." }
-		ALB0081E:string { "Cannot read partition label: failed to space forward over the trailing file mark (%d)." }
-		ALB0082E:string { "Cannot read partition label: failed to find the trailing file mark." }
-		ALB0083E:string { "Cannot read index: failed to determine medium position (%d)." }
-		ALB0084W:string { "Cannot read index: failed to read and parse XML data (%d)." }
-		ALB0085W:string { "This index belongs to a different volume." }
-		ALB0086W:string { "Cannot read index: self-pointer mismatch." }
-		ALB0087E:string { "Cannot read index: failed to space forward 1 file mark (%d)." }
-		ALB0088E:string { "Cannot locate index: failed to locate to EOD (%d)." }
-		ALB0089E:string { "Cannot locate index: failed to determine medium position (%d)." }
-		ALB0090E:string { "Cannot locate index: failed to space back 1 file mark (%d)." }
-		ALB0091E:string { "Cannot locate index: failed to space forward 1 file mark (%d)." }
-		ALB0092E:string { "Cannot locate index: failed to space back 2 file marks (%d)." }
-		ALB0093D:string { "No index found. Space back and try again." }
-		ALB0094E:string { "Index partition contains a back pointer, but no index found on the data partition." }
-		ALB0095E:string { "Index partition back pointer is invalid." }
-		ALB0096E:string { "Missing required index partition back pointer." }
-		ALB0097E:string { "Cannot create lost and found directory: failed to allocate directory data." }
-		ALB0098W:string { "Ignoring unexpected file mark in partition %lu." }
-		ALB0099E:string { "Cannot populate lost and found directory: failed to allocate file data." }
-		ALB0100E:string { "Cannot create lost and found directory: seek failed (%d)." }
-		ALB0101E:string { "Cannot check medium: seek index failed on the data partition (%d)." }
-		ALB0102E:string { "Cannot check medium: seek index failed on the index partition (%d)." }
-		ALB0103E:string { "Cannot check medium: failed to locate to EOD on the data partition (%d)." }
-		ALB0104E:string { "Cannot check medium: failed to locate to EOD on the index partition (%d)." }
-		ALB0105E:string { "Cannot check medium: failed to write a file mark to the data partition (%d)." }
-		ALB0106E:string { "Cannot check medium: failed to write a file mark to the index partition (%d)." }
-		ALB0107E:string { "Cannot check medium: pointer verification failed (%d)." }
-		ALB0108E:string { "Medium check failed: extra blocks detected. Run ltfsck." }
-		ALB0109E:string { "Medium check failed: detected invalid extents." }
-		ALB0110E:string { "Cannot check medium: failed to save index partition append position (%d)." }
-		ALB0111I:string { "Generating lost and found directory." }
-		ALB0112E:string { "Cannot restore medium consistency: failed to generate lost and found (%d)." }
-		ALB0113E:string { "Cannot check medium: failed to allocate index data (%d)." }
-		ALB0114I:string { "Erasing bad blocks from the index partition." }
-		ALB0115I:string { "Preserve existing unreferred data blocks in the data partition, put the latest index at %llu." }
-		ALB0116E:string { "Cannot restore medium consistency: failed to save data partition append position (%d)." }
-		ALB0117E:string { "Cannot restore medium consistency: failed to save index partition append position (%d)." }
-		ALB0118I:string { "Writing index(es) to restore consistency." }
-		ALB0119E:string { "A simple fix is possible to restore the consistency of the tape." }
-		ALB0120E:string { "Rerun the consistency check with simple fixes enabled." }
-		ALB0121I:string { "Updating MAM coherency data." }
-		ALB0122D:string { "libltfs write to \'%s\': offset = %lld, count = %llu." }
-		ALB0123E:string { "No index found in the medium." }
-		ALB0124D:string { "libltfs read from \'%s\': offset = %lld, count = %llu." }
-		ALB0125I:string { "Appending a file mark to the data partition." }
-		ALB0126I:string { "Appending a file mark to the index partition." }
-		ALB0127I:string { "No index found in the index partition." }
-		ALB0128I:string { "No index found in the data partition." }
-		ALB0129I:string { "Writing index to partition %c." }
-		ALB0130E:string { "Cannot write index to partition %c (%d)." }
-		ALB0131I:string { "Ejecting cartridge." }
-		ALB0132E:string { "Failed to eject the cartridge (%s)." }
-		ALB0133I:string { "Eject successful." }
-		ALB0134E:string { "Cannot read partition label: check for file mark after the ANSI label failed (%d)." }
-		ALB0135E:string { "Cannot read partition label: failed to find a file mark after the ANSI label." }
-		ALB0136E:string { "Cannot read index: failed to allocate index structure (%d)." }
-		ALB0137E:string { "Cannot read volume: unsupported medium." }
-		ALB0138E:string { "Cannot format: unsupported medium." }
-		ALB0139E:string { "Cannot get read-only state of partition: invalid partition identifier." }
-		ALB0140W:string { "All unique IDs for volume %s are used. No new files or directories can be created for the volume." }
-		ALB0141W:string { "Cannot set the traversal mode: failed to get a valid selection %d." }
-		ALB0142E:string { "Cannot format: failed to reset capacity proportion (%d)." }
+		ALB0001E:string { "Logging initialization failed" }
+		ALB0002E:string { "Cannot instantiate LTFS volume: failed to allocate device data" }
+		ALB0003E:string { "Cannot instantiate LTFS volume: failed to allocate label data" }
+		ALB0004E:string { "Cannot instantiate LTFS volume: failed to allocate index data" }
+		ALB0005E:string { "Cannot retrieve device capacity data (%d)" }
+		ALB0006E:string { "Cannot take the device lock (%s)" }
+		ALB0007I:string { "Mounting the volume from %s" }
+		ALB0008E:string { "Cannot read volume: failed to load the tape" }
+		ALB0009D:string { "Tape is loaded" }
+		ALB0010D:string { "Reading partition labels" }
+		ALB0011E:string { "Cannot read volume: failed to read partition labels" }
+		ALB0012E:string { "Cannot read volume: failed to set medium compression" }
+		ALB0013E:string { "Cannot read volume: block size is %lu, but the device only supports a block size of %u" }
+		ALB0014D:string { "Loading the tape" }
+		ALB0015D:string { "Partition labels are valid" }
+		ALB0016D:string { "Reading MAM parameters" }
+		ALB0017W:string { "VCR MAM parameter is not usable. Mounting will take longer" }
+		ALB0018W:string { "The index partition MAM parameter is not usable. Mounting will take longer" }
+		ALB0019W:string { "The data partition MAM parameter is not usable. Mounting will take longer" }
+		ALB0020D:string { "Done reading MAM parameters" }
+		ALB0021D:string { "Checking volume consistency" }
+		ALB0022E:string { "Cannot mount volume: seek to index failed on the data partition" }
+		ALB0023E:string { "Cannot mount volume: read index failed on the data partition" }
+		ALB0024I:string { "Restoring volume consistency by writing an index to the index partition" }
+		ALB0025E:string { "Cannot mount volume: seek to index failed on the index partition" }
+		ALB0026E:string { "Cannot mount volume: read index failed on the index partition" }
+		ALB0027D:string { "Volume is consistent" }
+		ALB0028I:string { "Performing a full medium consistency check" }
+		ALB0029E:string { "Cannot mount volume: medium consistency check failed" }
+		ALB0030D:string { "Consistency check finished" }
+		ALB0031E:string { "Cannot mount volume: failed to save the append position for the index partition" }
+		ALB0032I:string { "Volume mounted successfully. %s : Gen = %lld / (%c, %lld) -> (%c, %lld) / %s" }
+		ALB0033D:string { "Unmounting the volume" }
+		ALB0034E:string { "Cannot unmount: failed to write an index" }
+		ALB0035I:string { "Volume unmounted successfully" }
+		ALB0036E:string { "Cannot open file: path lookup failed (%d)" }
+		ALB0037E:string { "Cannot write blocks: invalid partition identifier" }
+		ALB0038E:string { "Cannot write blocks: multiple repetitions specified with an irregular buffer size" }
+		ALB0039E:string { "Cannot write blocks: failed to write an index while switching partitions (%d)" }
+		ALB0040E:string { "Cannot write blocks: locate append position failed on partition %c" }
+		ALB0041E:string { "Cannot write blocks: failed to determine medium position (%d)" }
+		ALB0042E:string { "Cannot write blocks: failed to write to the medium (%d)" }
+		ALB0043E:string { "Cannot write: failed to write blocks to the medium (%d)" }
+		ALB0044E:string { "Cannot write index: failed to locate append position on partition %c (%d)" }
+		ALB0045E:string { "Cannot write index: failed to determine medium position (%d)" }
+		ALB0046E:string { "Cannot write index: failed to write file mark (%d)" }
+		ALB0047E:string { "Cannot write index: failed to generate and write XML data (%d). The medium might be in an inconsistent state; unmount and run ltfsck" }
+		ALB0048E:string { "Cannot read: failed to determine medium position (%d)" }
+		ALB0049E:string { "Cannot read: failed to locate (%d) to partition %c, record %llu" }
+		ALB0050E:string { "Cannot read: expected %u bytes from cache, but received %lu bytes" }
+		ALB0051E:string { "Cannot read: failed to get a block from the medium (%d)" }
+		ALB0052E:string { "Cannot read: expected %u bytes from the medium, but received %u bytes" }
+		ALB0053W:string { "Data partition identifier requested on an uninitialized volume" }
+		ALB0054W:string { "Index partition identifier requested on an uninitialized volume" }
+		ALB0055E:string { "Cannot format: failed to load the medium (%d)" }
+		ALB0056E:string { "Cannot format: the medium is write protected" }
+		ALB0057E:string { "Cannot format: requested block size is %lu bytes, but the device only supports %u" }
+		ALB0058I:string { "Partitioning the medium" }
+		ALB0059E:string { "Cannot format: failed to partition the medium (%d)" }
+		ALB0060E:string { "Cannot format: failed to set the medium compression (%d)" }
+		ALB0061I:string { "Writing label to partition %c" }
+		ALB0062E:string { "Cannot format: failed to locate (%d) to partition %u, block 0" }
+		ALB0063E:string { "Cannot format: failed to write ANSI label (%d) on partition %u" }
+		ALB0064E:string { "Cannot format: failed to write file mark after ANSI label (%d) on partition %u" }
+		ALB0065E:string { "Cannot format: failed to generate LTFS label" }
+		ALB0066E:string { "Cannot format: failed to write XML label (%d) on partition %u" }
+		ALB0067E:string { "Cannot format: failed to write file mark after XML label (%d) on partition %u" }
+		ALB0068E:string { "Cannot allocate index data: failed to initialize mutex (%d)" }
+		ALB0069E:string { "Cannot allocate index data: failed to allocate root dentry" }
+		ALB0070E:string { "Cannot read labels: failed to allocate label data (%d)" }
+		ALB0071E:string { "Failed to read label (%d) from partition 0" }
+		ALB0072E:string { "Failed to read label (%d) from partition 1" }
+		ALB0073E:string { "Cannot verify labels: comparison failed (%d)" }
+		ALB0074E:string { "Cannot read label (%d): failed to seek to block 0 (partition %lu)" }
+		ALB0075E:string { "Cannot read ANSI label: read failed (%d)" }
+		ALB0076E:string { "Cannot read ANSI label: expected 80 bytes, but received %d" }
+		ALB0077E:string { "The ANSI label indicates this is not an LTFS volume" }
+		ALB0078E:string { "The ANSI label is too long (%d)" }
+		ALB0079E:string { "Cannot read LTFS label: read failed (%d)" }
+		ALB0080E:string { "Cannot read LTFS label: parsing failed (%d)" }
+		ALB0081E:string { "Cannot read partition label: failed to space forward over the trailing file mark (%d)" }
+		ALB0082E:string { "Cannot read partition label: failed to find the trailing file mark" }
+		ALB0083E:string { "Cannot read index: failed to determine medium position (%d)" }
+		ALB0084W:string { "Cannot read index: failed to read and parse XML data (%d)" }
+		ALB0085W:string { "This index belongs to a different volume" }
+		ALB0086W:string { "Cannot read index: self-pointer mismatch" }
+		ALB0087E:string { "Cannot read index: failed to space forward 1 file mark (%d)" }
+		ALB0088E:string { "Cannot locate index: failed to locate to EOD (%d)" }
+		ALB0089E:string { "Cannot locate index: failed to determine medium position (%d)" }
+		ALB0090E:string { "Cannot locate index: failed to space back 1 file mark (%d)" }
+		ALB0091E:string { "Cannot locate index: failed to space forward 1 file mark (%d)" }
+		ALB0092E:string { "Cannot locate index: failed to space back 2 file marks (%d)" }
+		ALB0093D:string { "No index found. Space back and try again" }
+		ALB0094E:string { "Index partition contains a back pointer, but no index found on the data partition" }
+		ALB0095E:string { "Index partition back pointer is invalid" }
+		ALB0096E:string { "Missing required index partition back pointer" }
+		ALB0097E:string { "Cannot create lost and found directory: failed to allocate directory data" }
+		ALB0098W:string { "Ignoring unexpected file mark in partition %lu" }
+		ALB0099E:string { "Cannot populate lost and found directory: failed to allocate file data" }
+		ALB0100E:string { "Cannot create lost and found directory: seek failed (%d)" }
+		ALB0101E:string { "Cannot check medium: seek index failed on the data partition (%d)" }
+		ALB0102E:string { "Cannot check medium: seek index failed on the index partition (%d)" }
+		ALB0103E:string { "Cannot check medium: failed to locate to EOD on the data partition (%d)" }
+		ALB0104E:string { "Cannot check medium: failed to locate to EOD on the index partition (%d)" }
+		ALB0105E:string { "Cannot check medium: failed to write a file mark to the data partition (%d)" }
+		ALB0106E:string { "Cannot check medium: failed to write a file mark to the index partition (%d)" }
+		ALB0107E:string { "Cannot check medium: pointer verification failed (%d)" }
+		ALB0108E:string { "Medium check failed: extra blocks detected. Run ltfsck" }
+		ALB0109E:string { "Medium check failed: detected invalid extents" }
+		ALB0110E:string { "Cannot check medium: failed to save index partition append position (%d)" }
+		ALB0111I:string { "Generating lost and found directory" }
+		ALB0112E:string { "Cannot restore medium consistency: failed to generate lost and found (%d)" }
+		ALB0113E:string { "Cannot check medium: failed to allocate index data (%d)" }
+		ALB0114I:string { "Erasing bad blocks from the index partition" }
+		ALB0115I:string { "Preserve existing unreferred data blocks in the data partition, put the latest index at %llu" }
+		ALB0116E:string { "Cannot restore medium consistency: failed to save data partition append position (%d)" }
+		ALB0117E:string { "Cannot restore medium consistency: failed to save index partition append position (%d)" }
+		ALB0118I:string { "Writing index(es) to restore consistency" }
+		ALB0119E:string { "A simple fix is possible to restore the consistency of the tape" }
+		ALB0120E:string { "Rerun the consistency check with simple fixes enabled" }
+		ALB0121I:string { "Updating MAM coherency data" }
+		ALB0122D:string { "libltfs write to \'%s\': offset = %lld, count = %llu" }
+		ALB0123E:string { "No index found in the medium" }
+		ALB0124D:string { "libltfs read from \'%s\': offset = %lld, count = %llu" }
+		ALB0125I:string { "Appending a file mark to the data partition" }
+		ALB0126I:string { "Appending a file mark to the index partition" }
+		ALB0127I:string { "No index found in the index partition" }
+		ALB0128I:string { "No index found in the data partition" }
+		ALB0129I:string { "Writing index to partition %c" }
+		ALB0130E:string { "Cannot write index to partition %c (%d)" }
+		ALB0131I:string { "Ejecting cartridge" }
+		ALB0132E:string { "Failed to eject the cartridge (%s)" }
+		ALB0133I:string { "Eject successful" }
+		ALB0134E:string { "Cannot read partition label: check for file mark after the ANSI label failed (%d)" }
+		ALB0135E:string { "Cannot read partition label: failed to find a file mark after the ANSI label" }
+		ALB0136E:string { "Cannot read index: failed to allocate index structure (%d)" }
+		ALB0137E:string { "Cannot read volume: unsupported medium" }
+		ALB0138E:string { "Cannot format: unsupported medium" }
+		ALB0139E:string { "Cannot get read-only state of partition: invalid partition identifier" }
+		ALB0140W:string { "All unique IDs for volume %s are used. No new files or directories can be created for the volume" }
+		ALB0141W:string { "Cannot set the traversal mode: failed to get a valid selection %d" }
+		ALB0142E:string { "Cannot format: failed to reset capacity proportion (%d)" }
 		ALB0143I:string { "Revalidation process of the medium is starting. (%s)" }
 		ALB0144E:string { "Medium revalidation failed (%d). Unmount the tape before continuing. (%s)" }
-		ALB0145E:string { "Cannot format: failed to get data key (%d)." }
-		ALB0146E:string { "Cannot format: failed to set data key (%d)." }
-		ALB0147E:string { "Symbolic link might be replaced by data file. Use ltfsck for recovery." }
-		ALB0148E:string { "Cannot write index: failed to flush buffered data (%d)." }
-		ALB0149E:string { "Failed to seek index: seek invalid partition (%c, %c)." }
-		ALB0150E:string { "Failed to recover tape: cannot write the index to an invalid position in the data partition (%lld, %lld, %d)." }
-		ALB0151I:string { "Loading cartridge." }
-		ALB0152E:string { "Failed to load the cartridge (%s)." }
-		ALB0153I:string { "Load successful." }
-		ALB0154I:string { "A cartridge with write-perm error is detected on %s. Seek the newest index (IP: Gen = %llu, VCR = %llu) (DP: Gen = %llu, VCR = %llu) (VCR = %llu)." }
-		ALB0155I:string { "Remove extent : %s (%llu, %llu)." }
-		ALB0156I:string { "Update index-dirty flag (%d) - %s (0x%p)." }
-		ALB0157I:string { "Syncing index of %s %s." }
+		ALB0145E:string { "Cannot format: failed to get data key (%d)" }
+		ALB0146E:string { "Cannot format: failed to set data key (%d)" }
+		ALB0147E:string { "Symbolic link might be replaced by data file. Use ltfsck for recovery" }
+		ALB0148E:string { "Cannot write index: failed to flush buffered data (%d)" }
+		ALB0149E:string { "Failed to seek index: seek invalid partition (%c, %c)" }
+		ALB0150E:string { "Failed to recover tape: cannot write the index to an invalid position in the data partition (%lld, %lld, %d)" }
+		ALB0151I:string { "Loading cartridge" }
+		ALB0152E:string { "Failed to load the cartridge (%s)" }
+		ALB0153I:string { "Load successful" }
+		ALB0154I:string { "A cartridge with write-perm error is detected on %s. Seek the newest index (IP: Gen = %llu, VCR = %llu) (DP: Gen = %llu, VCR = %llu) (VCR = %llu)" }
+		ALB0155I:string { "Remove extent : %s (%llu, %llu)" }
+		ALB0156I:string { "Update index-dirty flag (%d) - %s (0x%p)" }
+		ALB0157I:string { "Syncing index of %s %s" }
 		ALB0158I:string { "Revalidation process is successfully done. (%s)" }
-		ALB0159E:string { "Failed to get the volume lock status (%d)." }
-		ALB0160I:string { "Try to write an index on the IP on %s because of a permanent write error on the DP." }
-		ALB0161I:string { "Tape %s is frozen successfully because of a permanent write error on the DP." }
-		ALB0162E:string { "Failed to freeze tape %s because of permanent write errors on the IP and DP." }
-		ALB0163E:string { "Tape %s is frozen by the previous index on the tape. Some metadata will be lost during the unmount operation." }
-		ALB0164W:string { "Incremental index: Delete UID mismatch, skipping (%s)." }
-		ALB0165W:string { "Incremental index: Application completed with errors (%d)." }
-		ALB0166W:string { "Incremental index from tape: Entry missing name, skipping (entry %d)." }
-		ALB0167W:string { "Incremental index from tape: Failed to apply operation for entry (%s)." }
-		ALB0168W:string { "Incremental index from tape: Application completed with errors (%d)." }
-		ALB0169E:string { "Incremental index: Parent directory not found for CREATE (%s)." }
-		ALB0170E:string { "Incremental index: Parent is not a directory (%s)." }
-		ALB0171I:string { "Incremental index: Object already exists, skipping CREATE (%s)." }
-		ALB0172E:string { "Incremental index: Failed to allocate dentry (%s)." }
-		ALB0173E:string { "Incremental index: Target object not found for MODIFY (%s)." }
-		ALB0174E:string { "Incremental index: UID mismatch for MODIFY operation (%s)." }
-		ALB0175E:string { "Incremental index: Cannot delete root directory (%s)." }
-		ALB0176E:string { "Incremental index: Failed to parse incremental index XML (%d)." }
-		ALB0177I:string { "Incremental index: No entries in incremental index." }
-		ALB0178I:string { "Incremental index: Applying incremental index with %d entries." }
-		ALB0179I:string { "Incremental index: Applied successfully (%d entries)." }
-		ALB0180E:string { "Incremental index: Failed to read from tape (%d)." }
-		ALB0181I:string { "Incremental index: No entries in incremental index from tape." }
-		ALB0182I:string { "Incremental index: Applying from tape with %d entries." }
-		ALB0183I:string { "Incremental index: Applied successfully from tape (%d entries)." }
-		ALB0184E:string { "Incremental index recovery: Failed to seek to start position (%d)." }
-		ALB0185I:string { "Incremental index recovery: No incremental indexes found after full index." }
-		ALB0186I:string { "Incremental index recovery: Applied %d incremental index(es), writing full index." }
-		ALB0187E:string { "Incremental index recovery: Failed to write full index to data partition (%d)." }
-		ALB0188E:string { "Incremental index recovery: Failed to write full index to index partition (%d)." }
-		ALB0189I:string { "Incremental index recovery: Recovery complete." }
-		ALB0190E:string { "Failed to grab the device lock (%s)." }
-		ALB0191I:string { "Syncing index of %s (Reason: %s) %s." }
-		ALB0192E:string { "Failed to sync index." }
-		ALB0193I:string { "Synced index of %s (%d) %s." }
-		ALB0194I:string { "Unpartitioning the medium." }
-		ALB0195E:string { "Cannot unformat: failed to unpartition the medium (%d)." }
+		ALB0159E:string { "Failed to get the volume lock status (%d)" }
+		ALB0160I:string { "Try to write an index on the IP on %s because of a permanent write error on the DP" }
+		ALB0161I:string { "Tape %s is frozen successfully because of a permanent write error on the DP" }
+		ALB0162E:string { "Failed to freeze tape %s because of permanent write errors on the IP and DP" }
+		ALB0163E:string { "Tape %s is frozen by the previous index on the tape. Some metadata will be lost during the unmount operation" }
+		ALB0164W:string { "Incremental index: Delete UID mismatch, skipping (%s)" }
+		ALB0165W:string { "Incremental index: Application completed with errors (%d)" }
+		ALB0166W:string { "Incremental index from tape: Entry missing name, skipping (entry %d)" }
+		ALB0167W:string { "Incremental index from tape: Failed to apply operation for entry (%s)" }
+		ALB0168W:string { "Incremental index from tape: Application completed with errors (%d)" }
+		ALB0169E:string { "Incremental index: Parent directory not found for CREATE (%s)" }
+		ALB0170E:string { "Incremental index: Parent is not a directory (%s)" }
+		ALB0171I:string { "Incremental index: Object already exists, skipping CREATE (%s)" }
+		ALB0172E:string { "Incremental index: Failed to allocate dentry (%s)" }
+		ALB0173E:string { "Incremental index: Target object not found for MODIFY (%s)" }
+		ALB0174E:string { "Incremental index: UID mismatch for MODIFY operation (%s)" }
+		ALB0175E:string { "Incremental index: Cannot delete root directory (%s)" }
+		ALB0176E:string { "Incremental index: Failed to parse incremental index XML (%d)" }
+		ALB0177I:string { "Incremental index: No entries in incremental index" }
+		ALB0178I:string { "Incremental index: Applying incremental index with %d entries" }
+		ALB0179I:string { "Incremental index: Applied successfully (%d entries)" }
+		ALB0180E:string { "Incremental index: Failed to read from tape (%d)" }
+		ALB0181I:string { "Incremental index: No entries in incremental index from tape" }
+		ALB0182I:string { "Incremental index: Applying from tape with %d entries" }
+		ALB0183I:string { "Incremental index: Applied successfully from tape (%d entries)" }
+		ALB0184E:string { "Incremental index recovery: Failed to seek to start position (%d)" }
+		ALB0185I:string { "Incremental index recovery: No incremental indexes found after full index" }
+		ALB0186I:string { "Incremental index recovery: Applied %d incremental index(es), writing full index" }
+		ALB0187E:string { "Incremental index recovery: Failed to write full index to data partition (%d)" }
+		ALB0188E:string { "Incremental index recovery: Failed to write full index to index partition (%d)" }
+		ALB0189I:string { "Incremental index recovery: Recovery complete" }
+		ALB0190E:string { "Failed to grab the device lock (%s)" }
+		ALB0191I:string { "Syncing index of %s (Reason: %s) %s" }
+		ALB0192E:string { "Failed to sync index" }
+		ALB0193I:string { "Synced index of %s (%d) %s" }
+		ALB0194I:string { "Unpartitioning the medium" }
+		ALB0195E:string { "Cannot unformat: failed to unpartition the medium (%d)" }
 		ALB0196I:string { "Tape Device list:" }
-		ALB0197I:string { "Device Name = %s, Vendor ID = %s, Product ID = %s, Serial Number = %s, Product Name =%s." }
-		ALB0198E:string { "Traverse(%c): cannot read index from %d (%c)." }
-		ALB0199E:string { "Traverse(%c): cannot locate to the next index position (%c)." }
-		ALB0200I:string { "Traverse(%c): find target generation %d (%c)." }
-		ALB0201D:string { "Traverse(%c): cannot find target generation %d (%c)." }
-		ALB0202E:string { "Traverse: cannot find target generation %d." }
-		ALB0203D:string { "Traverse(%c): find generation %d (%c)." }
-		ALB0204E:string { "Traverse(%c): callback function failed %d (%c)." }
-		ALB0205E:string { "Traverse(%c): cannot locate to the first index position (%c)." }
-		ALB0206E:string { "Traverse(%c): cannot locate to the last index position (%c)." }
-		ALB0207I:string { "Device Name = %s (%d.%d.%d.%d), Vendor ID = %s, Product ID = %s, Serial Number = %s, Product Name =%s." }
-		ALB0208E:string { "Version mismatch of MAM, IP=%d, DP=%d." }
-		ALB0209E:string { "Cannot find partition id \'%c\'(0x%x)." }
-		ALB0210E:string { "Failed to detect the final index or the final record." }
-		ALB0211I:string { "The MAM was written by PGA1 or earlier." }
-		ALB0212I:string { "The MAM was written by PGA2 or later." }
-		ALB0213I:string { "Starting EOD recovery (GA/PGA1)." }
-		ALB0214I:string { "Starting EOD recovery: reading an index from (%llu, %llu)." }
-		ALB0215I:string { "Searching the final index in IP." }
-		ALB0216E:string { "Failed to search the final index in IP." }
-		ALB0217I:string { "Detecting the final record in DP." }
-		ALB0218E:string { "Failed to search the final index in DP." }
-		ALB0219I:string { "Seeking to the final index in %s (%llu, %llu)." }
-		ALB0220E:string { "Failed to seek to the final index in %s (%d)." }
-		ALB0221I:string { "Reading the final index in %s (%llu, %llu)." }
-		ALB0222E:string { "Failed to read the final index in %s (%d)." }
-		ALB0223E:string { "Unexpected generation value (Gen = %d, MAM IP = %d, MAM DP = %d)." }
-		ALB0224I:string { "Seeking to the final record in %s (%llu, %llu)." }
-		ALB0225E:string { "Failed to seek to the final record in %s (%d)." }
-		ALB0226E:string { "Unexpected EOD status (%d, %d)." }
-		ALB0227E:string { "Failed to recover EOD status (%d)." }
-		ALB0228I:string { "Recovered EOD status successfully (%d)." }
-		ALB0229I:string { "Starting a deep recovery operation: missing EOD." }
-		ALB0230E:string { "Tape backend does not support missing EOD detection." }
-		ALB0231I:string { "Both EODs are detected. A deep recovery operation is unnecessary." }
-		ALB0232E:string { "Both EODs are missing." }
-		ALB0233I:string { "EOD of %s(%d) is missing." }
-		ALB0234E:string { "The MAM of %s is not usable." }
-		ALB0235W:string { "Tape backend does not support missing EOD detection." }
-		ALB0236E:string { "EOD of %s(%d) is missing. A deep recovery operation is required." }
-		ALB0237I:string { "Attempting to mount a cartridge without EOD status check." }
-		ALB0238E:string { "Use ltfsck with the --deep-recovery option." }
-		ALB0239I:string { "Changing the drive setting %s." }
-		ALB0240I:string { "Maximum device block size is %d." }
-		ALB0241I:string { "EOD information (%s) is corrupted." }
-		ALB0242I:string { "Trying a simple recovery that requires several minutes to complete." }
-		ALB0243I:string { "Resetting the medium's capacity proportion." }
-		ALB0244D:string { "Coherency Data: %s (%lld, %lld, %lld, %u, %s, %c)." }
-		ALB0245E:string { "Cannot read volume: failed to get capacity data (%d)." }
-		ALB0246E:string { "Cannot read volume: medium is not partitioned." }
-		ALB0247D:string { "Writing schema to disk: UUID='%s', barcode='%s'." }
-		ALB0248E:string { "Error writing XML schema to file '%s' on the disk." }
-		ALB0249E:string { "Error changing index cache file's permission (%d)." }
-		ALB0250E:string { "Cannot read LTFS label: max transfer length is shorter than max LTFS label length (%d)." }
-		ALB0251I:string { "Starting a long wipe operation. This can take over 3 hours." }
-		ALB0252E:string { "Failed to wipe the medium (%d)." }
-		ALB0253E:string { "Use the ltfsck command with the --salvage-rollback-points option and select the latest index from the list\n           Then use the ltfs command with the -o rollback-mount-no-eod option by specifying the generation." }
-		ALB0254I:string { "Encountered the last data on the tape (%d). The last read index generation is %d." }
-		ALB0255E:string { "Failed to initialize file system component (%d)." }
-		ALB0256I:string { "Writing index of %s to %c (Reason: %s, %lld files) %s." }
-		ALB0257I:string { "Wrote index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)." }
-		ALB0258E:string { "Cannot get tape parameters: %s (%d)." }
-		ALB0259E:string { "This cartridge cannot be reformatted in the drive (0x%02x, %d)." }
-		ALB0260E:string { "A critical error happened while parsing an index (%d). Stop seeking the latest index." }
-		ALB0261I:string { "Recover an index on %s from (%c, %llu)." }
-		ALB0262I:string { "The index on %s is newer, but MAM shows a permanent write error happened on %s." }
-		ALB0263I:string { "Skip writing the index because of %s." }
-		ALB0264I:string { "Failed to create RAO output file: %s (%d)." }
-		ALB0265I:string { "Failed to write to RAO output file: %s (%d)." }
-		ALB0266I:string { "Written length to RAO output file is unexpected: %s (Actual %ld, Expected %ld)." }
-		ALB0267I:string { "Failed to open RAO input file: %s (%d)." }
-		ALB0268I:string { "Failed to get the length of the RAO input file: %s (%d)." }
-		ALB0269I:string { "Failed to read from RAO input file: %s (%d)." }
-		ALB0270I:string { "Read length from RAO input file is unexpected: %s (Actual %ld, Expected %ld)." }
-		ALB0271I:string { "Detected unmatched VCR value between MAM and VCR (%llu, %llu)." }
-		ALB0272I:string { "Searching the final index in %s." }
-		ALB0273E:string { "Failed to search the final index in %s (%d)." }
-		ALB0274I:string { "VCR value is matched between %s-MAM and VCR (%llu)." }
-		ALB0275I:string { "Making R/O mount from the location (%c, %llu)." }
-		ALB0276I:string { "Detected the final indexes (IP: Gen = %llu, Pos = %llu) (DP: Gen = %llu, Pos = %llu)." }
-		ALB0277I:string { "Skip parsing the final index on IP." }
-		ALB0278I:string { "Partitioning the medium with the destructive method." }
-		ALB0279I:string { "Unpartitioning the medium with the destructive method." }
-		ALB0280E:string { "UUID in the index does not match the label." }
-		ALB0281I:string { "Wrote inc-index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)." }
-		ALB0282I:string { "Info inc-index, Gen = %lld, Full Part = %c, Full Pos = %lld, Back Part = %c, Back Pos = %lld)." }
+		ALB0197I:string { "Device Name = %s, Vendor ID = %s, Product ID = %s, Serial Number = %s, Product Name =%s" }
+		ALB0198E:string { "Traverse(%c): cannot read index from %d (%c)" }
+		ALB0199E:string { "Traverse(%c): cannot locate to the next index position (%c)" }
+		ALB0200I:string { "Traverse(%c): find target generation %d (%c)" }
+		ALB0201D:string { "Traverse(%c): cannot find target generation %d (%c)" }
+		ALB0202E:string { "Traverse: cannot find target generation %d" }
+		ALB0203D:string { "Traverse(%c): find generation %d (%c)" }
+		ALB0204E:string { "Traverse(%c): callback function failed %d (%c)" }
+		ALB0205E:string { "Traverse(%c): cannot locate to the first index position (%c)" }
+		ALB0206E:string { "Traverse(%c): cannot locate to the last index position (%c)" }
+		ALB0207I:string { "Device Name = %s (%d.%d.%d.%d), Vendor ID = %s, Product ID = %s, Serial Number = %s, Product Name =%s" }
+		ALB0208E:string { "Version mismatch of MAM, IP=%d, DP=%d" }
+		ALB0209E:string { "Cannot find partition id \'%c\'(0x%x)" }
+		ALB0210E:string { "Failed to detect the final index or the final record" }
+		ALB0211I:string { "The MAM was written by PGA1 or earlier" }
+		ALB0212I:string { "The MAM was written by PGA2 or later" }
+		ALB0213I:string { "Starting EOD recovery (GA/PGA1)" }
+		ALB0214I:string { "Starting EOD recovery: reading an index from (%llu, %llu)" }
+		ALB0215I:string { "Searching the final index in IP" }
+		ALB0216E:string { "Failed to search the final index in IP" }
+		ALB0217I:string { "Detecting the final record in DP" }
+		ALB0218E:string { "Failed to search the final index in DP" }
+		ALB0219I:string { "Seeking to the final index in %s (%llu, %llu)" }
+		ALB0220E:string { "Failed to seek to the final index in %s (%d)" }
+		ALB0221I:string { "Reading the final index in %s (%llu, %llu)" }
+		ALB0222E:string { "Failed to read the final index in %s (%d)" }
+		ALB0223E:string { "Unexpected generation value (Gen = %d, MAM IP = %d, MAM DP = %d)" }
+		ALB0224I:string { "Seeking to the final record in %s (%llu, %llu)" }
+		ALB0225E:string { "Failed to seek to the final record in %s (%d)" }
+		ALB0226E:string { "Unexpected EOD status (%d, %d)" }
+		ALB0227E:string { "Failed to recover EOD status (%d)" }
+		ALB0228I:string { "Recovered EOD status successfully (%d)" }
+		ALB0229I:string { "Starting a deep recovery operation: missing EOD" }
+		ALB0230E:string { "Tape backend does not support missing EOD detection" }
+		ALB0231I:string { "Both EODs are detected. A deep recovery operation is unnecessary" }
+		ALB0232E:string { "Both EODs are missing" }
+		ALB0233I:string { "EOD of %s(%d) is missing" }
+		ALB0234E:string { "The MAM of %s is not usable" }
+		ALB0235W:string { "Tape backend does not support missing EOD detection" }
+		ALB0236E:string { "EOD of %s(%d) is missing. A deep recovery operation is required" }
+		ALB0237I:string { "Attempting to mount a cartridge without EOD status check" }
+		ALB0238E:string { "Use ltfsck with the --deep-recovery option" }
+		ALB0239I:string { "Changing the drive setting %s" }
+		ALB0240I:string { "Maximum device block size is %d" }
+		ALB0241I:string { "EOD information (%s) is corrupted" }
+		ALB0242I:string { "Trying a simple recovery that requires several minutes to complete" }
+		ALB0243I:string { "Resetting the medium's capacity proportion" }
+		ALB0244D:string { "Coherency Data: %s (%lld, %lld, %lld, %u, %s, %c)" }
+		ALB0245E:string { "Cannot read volume: failed to get capacity data (%d)" }
+		ALB0246E:string { "Cannot read volume: medium is not partitioned" }
+		ALB0247D:string { "Writing schema to disk: UUID='%s', barcode='%s'" }
+		ALB0248E:string { "Error writing XML schema to file '%s' on the disk" }
+		ALB0249E:string { "Error changing index cache file's permission (%d)" }
+		ALB0250E:string { "Cannot read LTFS label: max transfer length is shorter than max LTFS label length (%d)" }
+		ALB0251I:string { "Starting a long wipe operation. This can take over 3 hours" }
+		ALB0252E:string { "Failed to wipe the medium (%d)" }
+		ALB0253E:string { "Use the ltfsck command with the --salvage-rollback-points option and select the latest index from the list\n           Then use the ltfs command with the -o rollback-mount-no-eod option by specifying the generation" }
+		ALB0254I:string { "Encountered the last data on the tape (%d). The last read index generation is %d" }
+		ALB0255E:string { "Failed to initialize file system component (%d)" }
+		ALB0256I:string { "Writing index of %s to %c (Reason: %s, %lld files) %s" }
+		ALB0257I:string { "Wrote index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)" }
+		ALB0258E:string { "Cannot get tape parameters: %s (%d)" }
+		ALB0259E:string { "This cartridge cannot be reformatted in the drive (0x%02x, %d)" }
+		ALB0260E:string { "A critical error happened while parsing an index (%d). Stop seeking the latest index" }
+		ALB0261I:string { "Recover an index on %s from (%c, %llu)" }
+		ALB0262I:string { "The index on %s is newer, but MAM shows a permanent write error happened on %s" }
+		ALB0263I:string { "Skip writing the index because of %s" }
+		ALB0264I:string { "Failed to create RAO output file: %s (%d)" }
+		ALB0265I:string { "Failed to write to RAO output file: %s (%d)" }
+		ALB0266I:string { "Written length to RAO output file is unexpected: %s (Actual %ld, Expected %ld)" }
+		ALB0267I:string { "Failed to open RAO input file: %s (%d)" }
+		ALB0268I:string { "Failed to get the length of the RAO input file: %s (%d)" }
+		ALB0269I:string { "Failed to read from RAO input file: %s (%d)" }
+		ALB0270I:string { "Read length from RAO input file is unexpected: %s (Actual %ld, Expected %ld)" }
+		ALB0271I:string { "Detected unmatched VCR value between MAM and VCR (%llu, %llu)" }
+		ALB0272I:string { "Searching the final index in %s" }
+		ALB0273E:string { "Failed to search the final index in %s (%d)" }
+		ALB0274I:string { "VCR value is matched between %s-MAM and VCR (%llu)" }
+		ALB0275I:string { "Making R/O mount from the location (%c, %llu)" }
+		ALB0276I:string { "Detected the final indexes (IP: Gen = %llu, Pos = %llu) (DP: Gen = %llu, Pos = %llu)" }
+		ALB0277I:string { "Skip parsing the final index on IP" }
+		ALB0278I:string { "Partitioning the medium with the destructive method" }
+		ALB0279I:string { "Unpartitioning the medium with the destructive method" }
+		ALB0280E:string { "UUID in the index does not match the label" }
+		ALB0281I:string { "Wrote inc-index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)" }
+		ALB0282I:string { "Info inc-index, Gen = %lld, Full Part = %c, Full Pos = %lld, Back Part = %c, Back Pos = %lld)" }
 	}
 }
