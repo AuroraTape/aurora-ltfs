@@ -142,22 +142,21 @@ root:table {
 
 		// Help messages
 		AFS0099I:string { "LTFS options:" }
-		AFS0100I:string { "    -o devname=<dev>          Tape device (default: %s)" }
-		AFS0101I:string { "    -o devname=<dev>          Tape device" }
-		AFS0102I:string { "    -o work_directory=<dir>   LTFS work directory (default: %s)" }
-		AFS0103I:string { "    -o trace                  Enable diagnostic output (same as verbose=3)" }
-		AFS0104I:string { "    -V, --version             Output version information and exit" }
-		AFS0105I:string { "    -h, --help                Display this help and exit" }
-		AFS0106I:string { "    -o config_file=<file>     Configuration file (default: %s)" }
-		AFS0107I:string { "    -o atime                  Update index if only access times have changed" }
-		AFS0108I:string { "    -o tape_backend=<name>    tape backend to use (default: %s)" }
-		AFS0109I:string { "    -o iosched_backend=<name> I/O scheduler implementation to use (default: %s, use \"none\" to disable)" }
-		AFS0110I:string { "    -o umask=<mode>           Override default permission mask (3 octal digits, default: 000)" }
-		AFS0111I:string { "    -o fmask=<mode>           Override file permission mask (3 octal digits, default: 000)" }
-		AFS0112I:string { "    -o dmask=<mode>           Override directory permission mask (3 octal digits, default: 000)" }
-		AFS0113I:string { "    -o min_pool_size=<num>    Minimum write cache pool size. Cache objects are 1 MB each (default: %d)" }
-		AFS0114I:string { "    -o max_pool_size=<num>    Maximum write cache pool size. Cache objects are 1 MB each (default: %d)" }
-		AFS0115I:string { "    -o rules=<rules>          Rules for choosing files to write to the index partition.\n"
+		AFS0100I:string { "    -o devname=<dev>          Tape device" }
+		AFS0101I:string { "    -o work_directory=<dir>   LTFS work directory (default: %s)" }
+		AFS0102I:string { "    -o trace                  Enable diagnostic output (same as verbose=3)" }
+		AFS0103I:string { "    -V, --version             Output version information and exit" }
+		AFS0104I:string { "    -h, --help                Display this help and exit" }
+		AFS0105I:string { "    -o config_file=<file>     Configuration file (default: %s)" }
+		AFS0106I:string { "    -o atime                  Update index if only access times have changed" }
+		AFS0107I:string { "    -o tape_backend=<name>    tape backend to use (default: %s)" }
+		AFS0108I:string { "    -o iosched_backend=<name> I/O scheduler implementation to use (default: %s, use \"none\" to disable)" }
+		AFS0109I:string { "    -o umask=<mode>           Override default permission mask (3 octal digits, default: 000)" }
+		AFS0110I:string { "    -o fmask=<mode>           Override file permission mask (3 octal digits, default: 000)" }
+		AFS0111I:string { "    -o dmask=<mode>           Override directory permission mask (3 octal digits, default: 000)" }
+		AFS0112I:string { "    -o min_pool_size=<num>    Minimum write cache pool size. Cache objects are 1 MB each (default: %d)" }
+		AFS0113I:string { "    -o max_pool_size=<num>    Maximum write cache pool size. Cache objects are 1 MB each (default: %d)" }
+		AFS0114I:string { "    -o rules=<rules>          Rules for choosing files to write to the index partition.\n"
 				   		"                              The syntax of the rule argument is:\n"
 						"                              size=1M\n"
 						"                              size=1M/name=pattern\n"
@@ -168,11 +167,11 @@ root:table {
 						"                              suffixes. Name patterns might contain the special characters\n"
 						"                              '?' (match any single character) and '*' (match zero or more\n"
 						"                              characters)" }
-		AFS0116I:string { "    -o quiet                  Disable informational messages (same as verbose=1)" }
-		AFS0117I:string { "    -o fulltrace              Enable full call tracing (same as verbose=4)" }
-		AFS0118I:string { "    -o eject                  Eject the cartridge after unmount" }
+		AFS0115I:string { "    -o quiet                  Disable informational messages (same as verbose=1)" }
+		AFS0116I:string { "    -o fulltrace              Enable full call tracing (same as verbose=4)" }
+		AFS0117I:string { "    -o eject                  Eject the cartridge after unmount" }
 		// Reserved 14426I
-		AFS0119I:string { "    -o sync_type=<type>       Specify sync type (default: time@5)\n                              <type> should be specified as follows:\n                              time@min:  LTFS attempts to write an index each 'min' minutes.\n                                         min should be a decimal number from 1 to %ld\n"
+		AFS0118I:string { "    -o sync_type=<type>       Specify sync type (default: time@5)\n                              <type> should be specified as follows:\n                              time@min:  LTFS attempts to write an index each 'min' minutes.\n                                         min should be a decimal number from 1 to %ld\n"
 						"                                         It is equivalent to \"-o sync_type=unmount\" when 0 is specified\n"
 						"                                         (default: min=5)\n"
 						"                              close:     LTFS attempts to write an index when a file is closed\n"
@@ -186,45 +185,45 @@ root:table {
 		// Reserved 14433E
 		// Reserved 14434E
 		// Reserved 14435I
-		AFS0120I:string { "    -o device_list            Show available tape devices" }
-		AFS0121I:string { "    -o rollback_mount=<gen|index_file>  Attempt to mount on previous index generation on tape or specified index file (read-only mount)" }
+		AFS0119I:string { "    -o device_list            Show available tape devices" }
+		AFS0120I:string { "    -o rollback_mount=<gen|index_file>  Attempt to mount on previous index generation on tape or specified index file (read-only mount)" }
 		// Reserved 14438I
-		AFS0122I:string { "    -o noeject                Do not eject the cartridge after unmount (default)" }
-		AFS0123I:string { "    -o noatime                Do not update index if only access times have changed (default)" }
-		AFS0124I:string { "    -o verbose=<num>          Override output verbosity directly (default: %d)" }
+		AFS0121I:string { "    -o noeject                Do not eject the cartridge after unmount (default)" }
+		AFS0122I:string { "    -o noatime                Do not update index if only access times have changed (default)" }
+		AFS0123I:string { "    -o verbose=<num>          Override output verbosity directly (default: %d)" }
 		// Reserved 14442I
-		AFS0125I:string { "    -o force_mount_no_eod     Skip EOD existence check when mounting (read-only mount)\n"
+		AFS0124I:string { "    -o force_mount_no_eod     Skip EOD existence check when mounting (read-only mount)\n"
                         "                              Only use for a CM corrupted medium" }
 		// Reserved 14444I
 		// Reserved 14445I
 		// Reserved 14446I
 		// Reserved 14447I
-		AFS0126I:string { "    -o release_device         Clear device reservation (should be specified with -o devname)" }
+		AFS0125I:string { "    -o release_device         Clear device reservation (should be specified with -o devname)" }
 		// Reserved 14449I
 		// Reserved 14450I
 		// Reserved 14451I
 		// Reserved 14454I
-		AFS0127I:string { "    -o kmi_backend=<name>     Key manager interface implementation to use (default: %s, use \"none\" to disable)" }
-		AFS0128I:string { "    -o capture_index=<dir>    Capture index to the specified directory by dir when index is updated" }
+		AFS0126I:string { "    -o kmi_backend=<name>     Key manager interface implementation to use (default: %s, use \"none\" to disable)" }
+		AFS0127I:string { "    -o capture_index=<dir>    Capture index to the specified directory by dir when index is updated" }
 		// Reserved 14457I
 		// Reserved 14458I
 		// Reserved 14459I
 		// Reserved 14460I
-		AFS0129I:string { "    -o symlink_type=<type>    Specify symbolic link type (default: posix)\n"
+		AFS0128I:string { "    -o symlink_type=<type>    Specify symbolic link type (default: posix)\n"
 				        "                              <type> should be specified with one of the following values:\n"
 						"                              posix:  LTFS behavior is same as standard symbolic link\n"
 						"                              live:   LTFS replaces mount point path by current mount point" }
 		// Reserved 14462I
-		AFS0130I:string { "    -o scsi_append_only_mode=<on|off>  Set the tape device append-only mode (default=on)" }
+		AFS0129I:string { "    -o scsi_append_only_mode=<on|off>  Set the tape device append-only mode (default=on)" }
 		// Reserved 14464I
 		// Reserved 14465I
 		// Reserved 14466I
-		AFS0131I:string { "    -o syslogtrace            Enable diagnostic output to stderr and syslog(same as verbose=303)" }
+		AFS0130I:string { "    -o syslogtrace            Enable diagnostic output to stderr and syslog(same as verbose=303)" }
 
 		// Messages relocated from libaltfs
-		AFS0132E:string { "Failed to parse command line options" }
-		AFS0133E:string { "Invalid option \'%s\'" }
-		AFS0134E:string { "Cannot create work directory \'%s\': %s" }
+		AFS0131E:string { "Failed to parse command line options" }
+		AFS0132E:string { "Invalid option \'%s\'" }
+		AFS0133E:string { "Cannot create work directory \'%s\': %s" }
 		// Reserved 14468I
 	}
 }
