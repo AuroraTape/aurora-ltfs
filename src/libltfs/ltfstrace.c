@@ -596,7 +596,7 @@ int ltfs_dump(char *fname, const char *work_dir)
 
 	fork_pid = fork();
 	if (fork_pid < 0) {
-		ltfsmsg(ALG0038E);
+		ltfsmsg(ALG0036E);
 	} else  if (fork_pid == 0) {
 		args[num_args++] = "/usr/bin/gcore";
 		args[num_args++] = "-o";

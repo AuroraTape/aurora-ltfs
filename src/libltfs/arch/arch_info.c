@@ -69,7 +69,7 @@ void show_runtime_system_info(void)
 
 	fd = open("/proc/version", O_RDONLY);
 	if( fd == -1) {
-		ltfsmsg(ALG0028W);
+		ltfsmsg(ALG0026W);
 	} else {
 		memset(kernel_version, 0, sizeof(kernel_version));
 		read(fd, kernel_version, sizeof(kernel_version));
@@ -94,7 +94,7 @@ void show_runtime_system_info(void)
 			strcat(kernel_version, " unknown");
 #endif
 		}
-		ltfsmsg(ALG0029I, kernel_version);
+		ltfsmsg(ALG0027I, kernel_version);
 		close(fd);
 	}
 
@@ -114,14 +114,14 @@ void show_runtime_system_info(void)
 				strcat(path, dent->d_name);
 				fd = open(path, O_RDONLY);
 				if( fd == -1) {
-					ltfsmsg(ALG0030W);
+					ltfsmsg(ALG0028W);
 				} else {
 					if (fstat(fd, &stat_rel) != -1 && S_ISREG(stat_rel.st_mode)) {
 						memset(destribution, 0, sizeof(destribution));
 						read(fd, destribution, sizeof(destribution));
 						if((tmp = strchr(destribution, '\n')) != NULL)
 							*tmp = '\0';
-						ltfsmsg(ALG0031I, destribution);
+						ltfsmsg(ALG0029I, destribution);
 					}
 
 					close(fd);
@@ -144,7 +144,7 @@ void show_runtime_system_info(void)
 	mib[1] = KERN_VERSION;
 
 	if (sysctl(mib, 2, NULL, &len, NULL, 0) == -1) {
-		ltfsmsg(ALG0032W, "Length check");
+		ltfsmsg(ALG0030W, "Length check");
 		return;
 	}
 
@@ -156,9 +156,9 @@ void show_runtime_system_info(void)
 	}
 
 	if (sysctl(mib, 2, kernel_version, &len, NULL, 0) == -1)
-		ltfsmsg(ALG0032W, "Getting kernel version");
+		ltfsmsg(ALG0030W, "Getting kernel version");
 	else if (len > 0)
-		ltfsmsg(ALG0029I, kernel_version);
+		ltfsmsg(ALG0027I, kernel_version);
 
 	free(kernel_version);
 
@@ -167,12 +167,12 @@ void show_runtime_system_info(void)
 #elif defined(mingw_PLATFORM)
 {
 	/* Windows kernel detection is not supported yet*/
-	ltfsmsg(ALG0029I, "Windows");
+	ltfsmsg(ALG0027I, "Windows");
 	return;
 }
 #else
 {
-	ltfsmsg(ALG0029I, "Unknown kernel");
+	ltfsmsg(ALG0027I, "Unknown kernel");
 	return;
 }
 #endif

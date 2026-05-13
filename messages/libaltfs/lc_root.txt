@@ -51,7 +51,7 @@ root:table {
 		ALC0011E:string { "Failed to register messages with libltfs (%d)" }
 		ALC0012E:string { "Failed to set up signal handler" }
 		ALC0013E:string { "Failed to clean up signal handler" }
-		ALC0015E:string { "Error on %s: %s (%d, %d)" }
-		ALC0016D:string { "xattr: %s: %s (%d, %d)" }
+		ALC0014E:string { "Error on %s: %s (%d, %d)" }
+		ALC0015D:string { "xattr: %s: %s (%d, %d)" }
 	}
 }

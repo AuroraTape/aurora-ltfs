@@ -695,7 +695,7 @@ int _config_file_remove_plugin(char *saveptr, struct config_file *config)
 	/* Read the plugin type */
 	tok = strtok_r(NULL, " \t\r\n", &saveptr);
 	if (! tok) {
-		ltfsmsg(ALG0026E);
+		ltfsmsg(ALG0024E);
 		return -LTFS_CONFIG_INVALID;
 	}
 
@@ -708,7 +708,7 @@ int _config_file_remove_plugin(char *saveptr, struct config_file *config)
 	/* Read the plugin name */
 	tok = strtok_r(NULL, " \t\r\n", &saveptr);
 	if (! tok) {
-		ltfsmsg(ALG0026E);
+		ltfsmsg(ALG0024E);
 		free(type);
 		return -LTFS_CONFIG_INVALID;
 	}
@@ -723,7 +723,7 @@ int _config_file_remove_plugin(char *saveptr, struct config_file *config)
 	/* Make sure there's no end of line garbage */
 	tok = strtok_r(NULL, " \t\r\n", &saveptr);
 	if (tok) {
-		ltfsmsg(ALG0026E);
+		ltfsmsg(ALG0024E);
 		free(type);
 		free(name);
 		return -LTFS_CONFIG_INVALID;

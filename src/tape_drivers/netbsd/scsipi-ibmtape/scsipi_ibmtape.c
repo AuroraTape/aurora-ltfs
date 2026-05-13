@@ -203,8 +203,8 @@ static int _set_lbp(void *device, bool enable)
 	}
 
 	/* set logical block protection */
-	ltfsmsg(ATG0101D, "LBP Enable", enable, "");
-	ltfsmsg(ATG0101D, "LBP Method", lbp_method, "");
+	ltfsmsg(ATG0100D, "LBP Enable", enable, "");
+	ltfsmsg(ATG0100D, "LBP Method", lbp_method, "");
 	ret = scsipi_ibmtape_modesense(device, TC_MP_CTRL, TC_MP_PC_CURRENT,
 							   TC_MP_SUB_DP_CTRL, buf, sizeof(buf));
 	if (ret < 0)
@@ -398,13 +398,13 @@ static int _take_dump(struct scsipi_ibmtape_data *priv, bool capture_unforced)
 			, tm_now->tm_sec);
 
 	if (capture_unforced) {
-		ltfsmsg(ATG0063I);
+		ltfsmsg(ATG0062I);
 		strcpy(fname, fname_base);
 		strcat(fname, ".dmp");
 		_get_dump(priv, fname);
 	}
 
-	ltfsmsg(ATG0064I);
+	ltfsmsg(ATG0063I);
 	_cdb_force_dump(priv);
 	strcpy(fname, fname_base);
 	strcat(fname, "_f.dmp");
@@ -654,12 +654,12 @@ static int _reconnect_device(void *device)
 	ret = _raw_tur(priv->dev.fd);
 	if (ret == -EDEV_RESERVATION_CONFLICT) {
 		/* Select another path, recover reservation */
-		ltfsmsg(ATG0071I, priv->drive_serial);
+		ltfsmsg(ATG0070I, priv->drive_serial);
 		_register_key(priv, priv->key);
 		ret = _cdb_pro(device, PRO_ACT_PREEMPT_ABORT, PRO_TYPE_EXCLUSIVE,
 					   priv->key, priv->key);
 		if (!ret) {
-			ltfsmsg(ATG0074I, priv->drive_serial);
+			ltfsmsg(ATG0073I, priv->drive_serial);
 			_clear_por(priv);
 			ret = -EDEV_NEED_FAILOVER;
 		}
@@ -670,17 +670,17 @@ static int _reconnect_device(void *device)
 		f_ret = _fetch_reservation_key(device, &r_info);
 		if (f_ret == -EDEV_NO_RESERVATION_HOLDER) {
 			/* Real POR may happens */
-			ltfsmsg(ATG0072I, priv->drive_serial);
+			ltfsmsg(ATG0071I, priv->drive_serial);
 			_register_key(priv, priv->key);
 			ret = scsipi_ibmtape_reserve(device);
 			if (!ret) {
-				ltfsmsg(ATG0074I, priv->drive_serial);
+				ltfsmsg(ATG0073I, priv->drive_serial);
 				_clear_por(priv);
 				ret = -EDEV_REAL_POWER_ON_RESET;
 			}
 		} else {
 			/* Select same path */
-			ltfsmsg(ATG0073I, priv->drive_serial);
+			ltfsmsg(ATG0072I, priv->drive_serial);
 			_clear_por(priv);
 			ret = -EDEV_NEED_FAILOVER;
 		}
@@ -696,9 +696,9 @@ static int _process_errors(struct scsipi_ibmtape_data *priv, int ret, char *msg,
 
 	if (print) {
 		if (msg != NULL) {
-			ltfsmsg(ATG0065I, cmd, msg, ret, priv->devname);
+			ltfsmsg(ATG0064I, cmd, msg, ret, priv->devname);
 		} else {
-			ltfsmsg(ATG0066E, cmd, ret, priv->devname);
+			ltfsmsg(ATG0065E, cmd, ret, priv->devname);
 		}
 	}
 
@@ -732,7 +732,7 @@ static int _cdb_read_buffer(void *device, int id, unsigned char *buf, size_t off
 	char cmd_desc[COMMAND_DESCRIPTION_LENGTH] = "READ_BUFFER";
 	char *msg = NULL;
 
-	ltfsmsg(ATG0101D, "read buffer", id, priv->drive_serial);
+	ltfsmsg(ATG0100D, "read buffer", id, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -787,7 +787,7 @@ static int _cdb_force_dump(struct scsipi_ibmtape_data *priv)
 
 	unsigned char buf[SENDDIAG_BUF_LEN];
 
-	ltfsmsg(ATG0101D, "force dump", 0, priv->drive_serial);
+	ltfsmsg(ATG0100D, "force dump", 0, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -993,13 +993,13 @@ static int _cdb_pro(void *device,
 			memset(&r_info, 0x00, sizeof(r_info));
 			f_ret = _fetch_reservation_key(device, &r_info);
 			if (!f_ret) {
-				ltfsmsg(ATG0068W, r_info.hint, priv->drive_serial);
-				ltfsmsg(ATG0069W,
+				ltfsmsg(ATG0067W, r_info.hint, priv->drive_serial);
+				ltfsmsg(ATG0068W,
 						r_info.wwid[0], r_info.wwid[1], r_info.wwid[2], r_info.wwid[3],
 						r_info.wwid[6], r_info.wwid[5], r_info.wwid[6], r_info.wwid[7],
 						priv->drive_serial);
 			} else {
-				ltfsmsg(ATG0068W, "unknown host (reserve command)", priv->drive_serial);
+				ltfsmsg(ATG0067W, "unknown host (reserve command)", priv->drive_serial);
 			}
 		} else {
 			ret_ep = _process_errors(device, ret, msg, cmd_desc, true, true);
@@ -1167,7 +1167,7 @@ int scsipi_ibmtape_inquiry_page(void *device, unsigned char page, struct tc_inq_
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_INQUIRYPAGE));
-	ltfsmsg(ATG0101D, "inquiry", page, priv->drive_serial);
+	ltfsmsg(ATG0100D, "inquiry", page, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -1249,7 +1249,7 @@ int scsipi_ibmtape_test_unit_ready(void *device)
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_TUR));
-	ltfsmsg(ATG0100D, "test unit ready", priv->drive_serial);
+	ltfsmsg(ATG0099D, "test unit ready", priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -1428,19 +1428,19 @@ static inline int _handle_block_allocation_failure(void *device, struct tc_posit
 	struct tc_position tmp_pos = {0, 0};
 
 	/* Sleep 3 secs to wait garbage correction in kernel side and retry */
-	ltfsmsg(ATG0079W, ++(*retry));
+	ltfsmsg(ATG0078W, ++(*retry));
 	sleep(3);
 
 	ret = scsipi_ibmtape_readpos(device, &tmp_pos);
 	if (ret == DEVICE_GOOD && pos->partition == tmp_pos.partition) {
 		if (pos->block == tmp_pos.block) {
 			/* Command is not reached to the drive */
-			ltfsmsg(ATG0080I, op,
+			ltfsmsg(ATG0079I, op,
 					(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 			ret = -EDEV_RETRY;
 		} else if (pos->block == tmp_pos.block - 1) {
 			/* The drive received the command */
-			ltfsmsg(ATG0081I, op,
+			ltfsmsg(ATG0080I, op,
 					(unsigned int)pos->partition, (unsigned long long)pos->block,
 					(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 			ret = scsipi_ibmtape_space(device, 1, TC_SPACE_B, pos);
@@ -1451,29 +1451,29 @@ static inline int _handle_block_allocation_failure(void *device, struct tc_posit
 					ret = -EDEV_RETRY;
 				} else if (!ret) {
 					/* Skip back was successfully done, but not a expected position */
-					ltfsmsg(ATG0084W, op,
+					ltfsmsg(ATG0083W, op,
 							(unsigned int)pos->partition, (unsigned long long)pos->block,
 							(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 					ret = -LTFS_BAD_LOCATE;
 				} else {
-					ltfsmsg(ATG0083W, op, ret,
+					ltfsmsg(ATG0082W, op, ret,
 							(unsigned int)pos->partition, (unsigned long long)pos->block,
 							(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 				}
 			} else {
-				ltfsmsg(ATG0085W, op, ret,
+				ltfsmsg(ATG0084W, op, ret,
 							(unsigned int)pos->partition, (unsigned long long)pos->block,
 							(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 			}
 		} else {
 			/* Unexpected position */
-			ltfsmsg(ATG0082W, op, ret,
+			ltfsmsg(ATG0081W, op, ret,
 					(unsigned int)pos->partition, (unsigned long long)pos->block,
 					(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 			ret = -EDEV_BUFFER_ALLOCATE_ERROR;
 		}
 	} else
-		ltfsmsg(ATG0083W, op, ret,
+		ltfsmsg(ATG0082W, op, ret,
 				(unsigned int)pos->partition, (unsigned long long)pos->block,
 				(unsigned int)tmp_pos.partition, (unsigned long long)tmp_pos.block);
 
@@ -1490,12 +1490,12 @@ int scsipi_ibmtape_read(void *device, char *buf, size_t size,
 	int retry_count = 0;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_READ));
-	ltfsmsg(ATG0103D, "read", size, priv->drive_serial);
+	ltfsmsg(ATG0102D, "read", size, priv->drive_serial);
 
 	if (priv->force_readperm) {
 		priv->read_counter++;
 		if (priv->read_counter > priv->force_readperm) {
-			ltfsmsg(ATG0076I, "read");
+			ltfsmsg(ATG0075I, "read");
 			ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_READ));
 			if (priv->force_errortype)
 				return -EDEV_NO_SENSE;
@@ -1656,19 +1656,19 @@ int scsipi_ibmtape_write(void *device, const char *buf, size_t count, struct tc_
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITE));
 
-	ltfsmsg(ATG0103D, "write", count, priv->drive_serial);
+	ltfsmsg(ATG0102D, "write", count, priv->drive_serial);
 
 	if ( priv->force_writeperm ) {
 		priv->write_counter++;
 		if ( priv->write_counter > priv->force_writeperm ) {
-			ltfsmsg(ATG0076I, "write");
+			ltfsmsg(ATG0075I, "write");
 			ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_WRITE));
 			if (priv->force_errortype)
 				return -EDEV_NO_SENSE;
 			else
 				return -EDEV_WRITE_PERM;
 		} else if ( priv->write_counter > (priv->force_writeperm - THRESHOLD_FORCE_WRITE_NO_WRITE) ) {
-			ltfsmsg(ATG0077I);
+			ltfsmsg(ATG0076I);
 			pos->block++;
 			ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_WRITE));
 			return DEVICE_GOOD;
@@ -1726,7 +1726,7 @@ int scsipi_ibmtape_writefm(void *device, size_t count, struct tc_position *pos, 
 	bool ew = false, pew = false;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITEFM));
-	ltfsmsg(ATG0102D, "write file marks", count, priv->drive_serial);
+	ltfsmsg(ATG0101D, "write file marks", count, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -1822,7 +1822,7 @@ int scsipi_ibmtape_rewind(void *device, struct tc_position *pos)
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_REWIND));
-	ltfsmsg(ATG0105D, "rewind", (unsigned long long)0, (unsigned long long)0, priv->drive_serial);
+	ltfsmsg(ATG0104D, "rewind", (unsigned long long)0, (unsigned long long)0, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -1889,7 +1889,7 @@ int scsipi_ibmtape_locate(void *device, struct tc_position dest, struct tc_posit
 	bool pc = false;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_LOCATE));
-	ltfsmsg(ATG0105D, "locate",
+	ltfsmsg(ATG0104D, "locate",
 			(unsigned long long)dest.partition,
 			(unsigned long long)dest.block,
 			priv->drive_serial);
@@ -1983,23 +1983,23 @@ int scsipi_ibmtape_space(void *device, size_t count, TC_SPACE_TYPE type, struct 
 	cdb[0] = SPACE16;
 	switch(type) {
 		case TC_SPACE_EOD:
-			ltfsmsg(ATG0100D, "space to EOD", priv->drive_serial);
+			ltfsmsg(ATG0099D, "space to EOD", priv->drive_serial);
 			cdb[1] = 0x03;
 			break;
 		case TC_SPACE_FM_F:
-			ltfsmsg(ATG0104D, "space forward file marks", (unsigned long long)count,
+			ltfsmsg(ATG0103D, "space forward file marks", (unsigned long long)count,
 					priv->drive_serial);
 			cdb[1] = 0x01;
 			ltfs_u64tobe(cdb + 4, count);
 			break;
 		case TC_SPACE_FM_B:
-			ltfsmsg(ATG0104D, "space back file marks", (unsigned long long)count,
+			ltfsmsg(ATG0103D, "space back file marks", (unsigned long long)count,
 					priv->drive_serial);
 			cdb[1] = 0x01;
 			ltfs_u64tobe(cdb + 4, -count);
 			break;
 		case TC_SPACE_F:
-			ltfsmsg(ATG0104D, "space forward records", (unsigned long long)count,
+			ltfsmsg(ATG0103D, "space forward records", (unsigned long long)count,
 					priv->drive_serial);
 			cdb[1] = 0x00;
 			ltfs_u64tobe(cdb + 4, count);
@@ -2108,9 +2108,9 @@ int scsipi_ibmtape_erase(void *device, struct tc_position *pos, bool long_erase)
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_ERASE));
 	if (long_erase)
-		ltfsmsg(ATG0100D, "long erase", priv->drive_serial);
+		ltfsmsg(ATG0099D, "long erase", priv->drive_serial);
 	else
-		ltfsmsg(ATG0100D, "short erase", priv->drive_serial);
+		ltfsmsg(ATG0099D, "short erase", priv->drive_serial);
 
 	get_current_timespec(&ts_start);
 
@@ -2275,7 +2275,7 @@ int scsipi_ibmtape_load(void *device, struct tc_position *pos)
 	unsigned char buf[TC_MP_SUPPORTEDPAGE_SIZE];
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_LOAD));
-	ltfsmsg(ATG0100D, "load", priv->drive_serial);
+	ltfsmsg(ATG0099D, "load", priv->drive_serial);
 
 	ret = _cdb_load_unload(device, true);
 
@@ -2317,7 +2317,7 @@ int scsipi_ibmtape_load(void *device, struct tc_position *pos)
 		(void)scsipi_ibmtape_medium_configuration(device);
 
 	if (priv->cart_type == 0x00) {
-		ltfsmsg(ATG0067W);
+		ltfsmsg(ATG0066W);
 		ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_LOAD));
 		return 0;
 	}
@@ -2337,7 +2337,7 @@ int scsipi_ibmtape_unload(void *device, struct tc_position *pos)
 	struct scsipi_ibmtape_data *priv = (struct scsipi_ibmtape_data*)device;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_UNLOAD));
-	ltfsmsg(ATG0100D, "unload", priv->drive_serial);
+	ltfsmsg(ATG0099D, "unload", priv->drive_serial);
 
 	ret = _cdb_load_unload(device, false);
 
@@ -2412,7 +2412,7 @@ int scsipi_ibmtape_readpos(void *device, struct tc_position *pos)
 		pos->early_warning = buf[0] & 0x40;
 		pos->programmable_early_warning = buf[0] & 0x01;
 
-		ltfsmsg(ATG0106D, "readpos", (unsigned long long)pos->partition,
+		ltfsmsg(ATG0105D, "readpos", (unsigned long long)pos->partition,
 				(unsigned long long)pos->block, (unsigned long long)pos->filemarks,
 				priv->drive_serial);
 	} else {
@@ -2439,7 +2439,7 @@ int scsipi_ibmtape_setcap(void *device, uint16_t proportion)
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_SETCAP));
-	ltfsmsg(ATG0101D, "setcap", proportion, priv->drive_serial);
+	ltfsmsg(ATG0100D, "setcap", proportion, priv->drive_serial);
 
 	if (IS_ENTERPRISE(priv->drive_type)) {
 		unsigned char buf[TC_MP_MEDIUM_SENSE_SIZE];
@@ -2512,7 +2512,7 @@ int scsipi_ibmtape_format(void *device, TC_FORMAT_TYPE format, const char *vol_n
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_FORMAT));
-	ltfsmsg(ATG0100D, "format", priv->drive_serial);
+	ltfsmsg(ATG0099D, "format", priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -2618,7 +2618,7 @@ int scsipi_ibmtape_remaining_capacity(void *device, struct tc_remaining_cap *cap
 			if (cap->remaining_p1 < global_data.capacity_offset)
 				cap_offset = cap->remaining_p1;
 
-			ltfsmsg(ATG0078I, 1,
+			ltfsmsg(ATG0077I, 1,
 					(unsigned long long)cap->remaining_p1,
 					(unsigned long long)global_data.capacity_offset,
 					priv->drive_serial);
@@ -2671,7 +2671,7 @@ int scsipi_ibmtape_remaining_capacity(void *device, struct tc_remaining_cap *cap
 			if (cap->remaining_p1 < global_data.capacity_offset)
 				cap_offset = cap->remaining_p1;
 
-			ltfsmsg(ATG0078I, 1,
+			ltfsmsg(ATG0077I, 1,
 					(unsigned long long)cap->remaining_p1,
 					(unsigned long long)global_data.capacity_offset,
 					priv->drive_serial);
@@ -2687,9 +2687,9 @@ int scsipi_ibmtape_remaining_capacity(void *device, struct tc_remaining_cap *cap
 		ret = DEVICE_GOOD;
 	}
 
-	ltfsmsg(ATG0105D, "capacity part0", (unsigned long long)cap->remaining_p0,
+	ltfsmsg(ATG0104D, "capacity part0", (unsigned long long)cap->remaining_p0,
 			(unsigned long long)cap->max_p0, priv->drive_serial);
-	ltfsmsg(ATG0105D, "capacity part1", (unsigned long long)cap->remaining_p1,
+	ltfsmsg(ATG0104D, "capacity part1", (unsigned long long)cap->remaining_p1,
 			(unsigned long long)cap->max_p1, priv->drive_serial);
 
 out:
@@ -2713,7 +2713,7 @@ int scsipi_ibmtape_logsense(void *device, const uint8_t page, const uint8_t subp
 	unsigned int len = 0;
 	unsigned char *inner_buf = NULL;
 
-	ltfsmsg(ATG0105D, "logsense", page, subpage, priv->drive_serial);
+	ltfsmsg(ATG0104D, "logsense", page, subpage, priv->drive_serial);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_LOGSENSE));
 
 	inner_buf = calloc(1, MAXLP_SIZE); /* Assume max length of LP is 0xFFFF */
@@ -2781,7 +2781,7 @@ int scsipi_ibmtape_modesense(void *device, const unsigned char page, const TC_MP
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_MODESENSE));
-	ltfsmsg(ATG0101D, "modesense", page, priv->drive_serial);
+	ltfsmsg(ATG0100D, "modesense", page, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -2833,7 +2833,7 @@ int scsipi_ibmtape_modeselect(void *device, unsigned char *buf, const size_t siz
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_MODESELECT));
-	ltfsmsg(ATG0100D, "modeselect", priv->drive_serial);
+	ltfsmsg(ATG0099D, "modeselect", priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -2876,7 +2876,7 @@ int scsipi_ibmtape_reserve(void *device)
 	struct scsipi_ibmtape_data *priv = (struct scsipi_ibmtape_data*)device;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_RESERVEUNIT));
-	ltfsmsg(ATG0100D, "reserve (PRO)", priv->drive_serial);
+	ltfsmsg(ATG0099D, "reserve (PRO)", priv->drive_serial);
 
 start:
 	ret = _cdb_pro(device, PRO_ACT_RESERVE, PRO_TYPE_EXCLUSIVE,
@@ -2888,7 +2888,7 @@ start:
 		   ret == -EDEV_REGISTRATION_PREEMPTED ||
 		   ret == -EDEV_RESERVATION_CONFLICT)
 		) {
-		ltfsmsg(ATG0070I, priv->drive_serial);
+		ltfsmsg(ATG0069I, priv->drive_serial);
 		_register_key(device, priv->key);
 		count++;
 		goto start;
@@ -2909,7 +2909,7 @@ int scsipi_ibmtape_release(void *device)
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_RELEASEUNIT));
 
-	ltfsmsg(ATG0100D, "release (PRO)", priv->drive_serial);
+	ltfsmsg(ATG0099D, "release (PRO)", priv->drive_serial);
 
 	/* Issue release command even if no reservation is made */
 	ret = _cdb_pro(device, PRO_ACT_RELEASE, PRO_TYPE_EXCLUSIVE,
@@ -2980,7 +2980,7 @@ int scsipi_ibmtape_prevent_medium_removal(void *device)
 	struct scsipi_ibmtape_data *priv = (struct scsipi_ibmtape_data*)device;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_PREVENTM));
-	ltfsmsg(ATG0100D, "prevent medium removal", priv->drive_serial);
+	ltfsmsg(ATG0099D, "prevent medium removal", priv->drive_serial);
 	ret = _cdb_prevent_allow_medium_removal(device, true);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_PREVENTM));
 
@@ -2993,7 +2993,7 @@ int scsipi_ibmtape_allow_medium_removal(void *device)
 	struct scsipi_ibmtape_data *priv = (struct scsipi_ibmtape_data*)device;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_ALLOWMREM));
-	ltfsmsg(ATG0100D, "allow medium removal", priv->drive_serial);
+	ltfsmsg(ATG0099D, "allow medium removal", priv->drive_serial);
 	ret = _cdb_prevent_allow_medium_removal(device, false);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_ALLOWMREM));
 
@@ -3014,7 +3014,7 @@ int scsipi_ibmtape_write_attribute(void *device, const tape_partition_t part,
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITEATTR));
-	ltfsmsg(ATG0104D, "writeattr", (unsigned long long)part,
+	ltfsmsg(ATG0103D, "writeattr", (unsigned long long)part,
 			priv->drive_serial);
 
 	/* Prepare the buffer to transfer */
@@ -3083,7 +3083,7 @@ int scsipi_ibmtape_read_attribute(void *device, const tape_partition_t part,
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_READATTR));
-	ltfsmsg(ATG0105D, "readattr", (unsigned long long)part, (unsigned long long)id, priv->drive_serial);
+	ltfsmsg(ATG0104D, "readattr", (unsigned long long)part, (unsigned long long)id, priv->drive_serial);
 
 	/* Prepare the buffer to transfer */
 	uint32_t len = 0;
@@ -3172,7 +3172,7 @@ int scsipi_ibmtape_allow_overwrite(void *device, const struct tc_position pos)
 	char *msg = NULL;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_ALLOWOVERW));
-	ltfsmsg(ATG0105D, "allow overwrite", (unsigned long long)pos.partition, (unsigned long long)pos.block, priv->drive_serial);
+	ltfsmsg(ATG0104D, "allow overwrite", (unsigned long long)pos.partition, (unsigned long long)pos.block, priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -3273,7 +3273,7 @@ int scsipi_ibmtape_set_default(void *device)
 	/* Disable Read across EOD on the enterprise drive */
 	if (IS_ENTERPRISE(priv->drive_type)) {
 		unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE];
-		ltfsmsg(ATG0100D, __FUNCTION__, "Disabling read across EOD");
+		ltfsmsg(ATG0099D, __FUNCTION__, "Disabling read across EOD");
 		ret = scsipi_ibmtape_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
 		if (ret < 0) {
 			ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_SETDEFAULT));
@@ -3293,10 +3293,10 @@ int scsipi_ibmtape_set_default(void *device)
 
 	/* set logical block protection */
 	if (global_data.crc_checking) {
-		ltfsmsg(ATG0100D, __FUNCTION__, "Setting LBP");
+		ltfsmsg(ATG0099D, __FUNCTION__, "Setting LBP");
 		ret = _set_lbp(device, true);
 	} else {
-		ltfsmsg(ATG0100D, __FUNCTION__, "Resetting LBP");
+		ltfsmsg(ATG0099D, __FUNCTION__, "Resetting LBP");
 		ret = _set_lbp(device, false);
 	}
 
@@ -3685,7 +3685,7 @@ static int _cdb_read_block_limits(void *device) {
 
 	unsigned char buf[BLOCKLEN_DATA_SIZE];
 
-	ltfsmsg(ATG0100D, "read block limits", priv->drive_serial);
+	ltfsmsg(ATG0099D, "read block limits", priv->drive_serial);
 
 	/* Zero out the CDB and the result buffer */
 	ret = init_scsireq(&req);
@@ -3911,14 +3911,14 @@ int scsipi_ibmtape_get_device_list(struct tc_drive_info *buf, int count)
 		/* Get the device back to blocking mode */
 		flags = fcntl(dev.fd, F_GETFL, 0);
 		if (flags < 0) {
-			ltfsmsg(ATG0075I, "get", flags);
+			ltfsmsg(ATG0074I, "get", flags);
 			close(dev.fd);
 			continue;
 		}
 		flags = (flags & (~O_NONBLOCK));
 		flags = fcntl(dev.fd, F_SETFL, 0);
 		if (flags < 0) {
-			ltfsmsg(ATG0075I, "set", flags);
+			ltfsmsg(ATG0074I, "set", flags);
 			close(dev.fd);
 			continue;
 		}
@@ -3954,7 +3954,7 @@ int scsipi_ibmtape_get_device_list(struct tc_drive_info *buf, int count)
 
 void scsipi_ibmtape_help_message(const char *progname)
 {
-	ltfsresult(ATG0107I, default_device);
+	ltfsresult(ATG0106I, default_device);
 }
 
 int scsipi_ibmtape_parse_opts(void *device, void *opt_args)
@@ -4106,7 +4106,7 @@ static void ltfsmscsipi_keyalias(const char * const title, const unsigned char *
 	else
 		sprintf(s, "keyalias: NULL");
 
-	ltfsmsg(ATG0100D, title, s);
+	ltfsmsg(ATG0099D, title, s);
 }
 
 static bool is_ame(void *device)
@@ -4117,7 +4117,7 @@ static bool is_ame(void *device)
 	if (ret != 0) {
 		char message[100] = {0};
 		sprintf(message, "failed to get MP %02Xh (%d)", TC_MP_READ_WRITE_CTRL, ret);
-		ltfsmsg(ATG0100D, __FUNCTION__, message);
+		ltfsmsg(ATG0099D, __FUNCTION__, message);
 
 		return false; /* Consider that the encryption method is not AME */
 	} else {
@@ -4151,7 +4151,7 @@ static bool is_ame(void *device)
 				break;
 		}
 		sprintf(message, "Encryption Method is %s (0x%02X)", method, encryption_method);
-		ltfsmsg(ATG0100D, __FUNCTION__, message);
+		ltfsmsg(ATG0099D, __FUNCTION__, message);
 
 		if (encryption_method != 0x50) {
 			ltfsmsg(ATG0043E, method, encryption_method);
@@ -4296,7 +4296,7 @@ static void show_hex_dump(const char * const title, const uint8_t * const buf, c
 		p += sprintf(p, "%c", isprint(buf[i-j]) ? buf[i-j] : '.');
 	}
 
-	ltfsmsg(ATG0100D, title, s);
+	ltfsmsg(ATG0099D, title, s);
 }
 
 int scsipi_ibmtape_get_keyalias(void *device, unsigned char **keyalias)
@@ -4547,7 +4547,7 @@ int scsipi_ibmtape_get_next_block_to_xfer(void *device, struct tc_position *pos)
 		pos->partition = (tape_partition_t)buf[1];
 		pos->block     = ltfs_betou64(buf + 16);
 
-		ltfsmsg(ATG0106D, "next-block-to-xfer",
+		ltfsmsg(ATG0105D, "next-block-to-xfer",
 				(unsigned long long)pos->partition, (unsigned long long)pos->block, (unsigned long long)0, priv->drive_serial);
 	} else {
 		ret_ep = _process_errors(device, ret, msg, cmd_desc, true, true);

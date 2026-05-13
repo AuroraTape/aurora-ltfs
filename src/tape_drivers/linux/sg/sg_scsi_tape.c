@@ -89,7 +89,7 @@ static int sg_sense2errno(sg_io_hdr_t *req, uint32_t *s, char **msg)
 		rc = -EDEV_HARDWARE_ERROR;
 
 	if (rc == -EDEV_UNKNOWN) {
-		ltfsmsg(ATG0089I, sense_value);
+		ltfsmsg(ATG0088I, sense_value);
 	}
 
 	return rc;

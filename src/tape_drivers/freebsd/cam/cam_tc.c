@@ -1245,7 +1245,7 @@ static int camtape_get_next_block_to_xfer(void *device, struct tc_position *pos)
 	else {
 		pos->partition = ext_data.partition;
 		pos->block = scsi_8btou64(ext_data.last_object);
-		ltfsmsg(ATG0106D, "next-block-to-xfer",
+		ltfsmsg(ATG0105D, "next-block-to-xfer",
 				(unsigned long long) pos->block, 0, 0, softc->drive_serial);
 	}
 

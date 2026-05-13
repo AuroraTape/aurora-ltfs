@@ -140,38 +140,38 @@ static struct fuse_opt ltfs_options[] = {
 
 void single_drive_advanced_usage(const char *default_driver, struct ltfs_fuse_data *priv)
 {
-	ltfsresult(AFS0100I);                              /* LTFS options: */
-	ltfsresult(AFS0102I);                              /* -o devname=<dev> */
-	ltfsresult(AFS0111I, LTFS_CONFIG_FILE);            /* -o config_file=<file> */
-	ltfsresult(AFS0103I, LTFS_DEFAULT_WORK_DIR);       /* -o work_directory=<dir> */
-	ltfsresult(AFS0112I);                              /* -o atime */
-	ltfsresult(AFS0128I);                              /* -o noatime */
-	ltfsresult(AFS0113I, default_driver);              /* -o tape_backend=<name> */
-	ltfsresult(AFS0114I, config_file_get_default_plugin("iosched", priv->config)); /* -o iosched_backend=<name> */
-	ltfsresult(AFS0132I, config_file_get_default_plugin("kmi", priv->config));     /* -o kmi_backend=<name> */
-	ltfsresult(AFS0115I);                              /* -o umask=<mode> */
-	ltfsresult(AFS0116I);                              /* -o fmask=<mode> */
-	ltfsresult(AFS0117I);                              /* -o dmask=<mode> */
-	ltfsresult(AFS0118I, LTFS_MIN_CACHE_SIZE_DEFAULT); /* -o min_pool_size=<num> */
-	ltfsresult(AFS0119I, LTFS_MAX_CACHE_SIZE_DEFAULT); /* -o max_pool_size=<num> */
-	ltfsresult(AFS0120I);                              /* -o rules=<rule[,rule]> */
-	ltfsresult(AFS0121I);                              /* -o quiet */
-	ltfsresult(AFS0104I);                              /* -o trace */
-	ltfsresult(AFS0136I);                              /* -o syslogtrace */
-	ltfsresult(AFS0122I);                              /* -o fulltrace */
-	ltfsresult(AFS0129I, LTFS_INFO);                   /* -o verbose=<num> */
-	ltfsresult(AFS0123I);                              /* -o eject */
-	ltfsresult(AFS0127I);                              /* -o noeject */
-	ltfsresult(AFS0124I, LONG_MAX / 60);               /* -o sync_type=type */
-	ltfsresult(AFS0130I);                              /* -o force_mount_no_eod */
-	ltfsresult(AFS0125I);                              /* -o device_list */
-	ltfsresult(AFS0126I);                              /* -o rollback_mount */
-	ltfsresult(AFS0131I);                              /* -o release_device */
-	ltfsresult(AFS0134I);                              /* -o symlink_type=type */
-	ltfsresult(AFS0133I);                              /* -o capture_index */
-	ltfsresult(AFS0135I);                              /* -o scsi_append_only_mode=<on|off> */
-	ltfsresult(AFS0105I);                              /* -V, --version */
-	ltfsresult(AFS0106I);                              /* -h, --help */
+	ltfsresult(AFS0099I);                              /* LTFS options: */
+	ltfsresult(AFS0101I);                              /* -o devname=<dev> */
+	ltfsresult(AFS0106I, LTFS_CONFIG_FILE);            /* -o config_file=<file> */
+	ltfsresult(AFS0102I, LTFS_DEFAULT_WORK_DIR);       /* -o work_directory=<dir> */
+	ltfsresult(AFS0107I);                              /* -o atime */
+	ltfsresult(AFS0123I);                              /* -o noatime */
+	ltfsresult(AFS0108I, default_driver);              /* -o tape_backend=<name> */
+	ltfsresult(AFS0109I, config_file_get_default_plugin("iosched", priv->config)); /* -o iosched_backend=<name> */
+	ltfsresult(AFS0127I, config_file_get_default_plugin("kmi", priv->config));     /* -o kmi_backend=<name> */
+	ltfsresult(AFS0110I);                              /* -o umask=<mode> */
+	ltfsresult(AFS0111I);                              /* -o fmask=<mode> */
+	ltfsresult(AFS0112I);                              /* -o dmask=<mode> */
+	ltfsresult(AFS0113I, LTFS_MIN_CACHE_SIZE_DEFAULT); /* -o min_pool_size=<num> */
+	ltfsresult(AFS0114I, LTFS_MAX_CACHE_SIZE_DEFAULT); /* -o max_pool_size=<num> */
+	ltfsresult(AFS0115I);                              /* -o rules=<rule[,rule]> */
+	ltfsresult(AFS0116I);                              /* -o quiet */
+	ltfsresult(AFS0103I);                              /* -o trace */
+	ltfsresult(AFS0131I);                              /* -o syslogtrace */
+	ltfsresult(AFS0117I);                              /* -o fulltrace */
+	ltfsresult(AFS0124I, LTFS_INFO);                   /* -o verbose=<num> */
+	ltfsresult(AFS0118I);                              /* -o eject */
+	ltfsresult(AFS0122I);                              /* -o noeject */
+	ltfsresult(AFS0119I, LONG_MAX / 60);               /* -o sync_type=type */
+	ltfsresult(AFS0125I);                              /* -o force_mount_no_eod */
+	ltfsresult(AFS0120I);                              /* -o device_list */
+	ltfsresult(AFS0121I);                              /* -o rollback_mount */
+	ltfsresult(AFS0126I);                              /* -o release_device */
+	ltfsresult(AFS0129I);                              /* -o symlink_type=type */
+	ltfsresult(AFS0128I);                              /* -o capture_index */
+	ltfsresult(AFS0130I);                              /* -o scsi_append_only_mode=<on|off> */
+	ltfsresult(AFS0104I);                              /* -V, --version */
+	ltfsresult(AFS0105I);                              /* -h, --help */
 	/* TODO: future use for WORM */
 	/* set worm rollback flag and rollback_str by this option */
 	/* ltfsresult(14468I); */ /* -o rollback_mount_no_eod */
@@ -351,7 +351,7 @@ int ltfs_parse_options(void *priv_data, const char *arg, int key, struct fuse_ar
 			}
 			if (! valid_fuse_option && key == FUSE_OPT_KEY_OPT && arg && arg[0] == '-') {
 				/* invalid option */
-				ltfsmsg(AFS0138E, arg);
+				ltfsmsg(AFS0133E, arg);
 			} else
 				break;
 			/* fall through */
@@ -386,7 +386,7 @@ int mkdir_p(const char *path, mode_t mode)
 		if (*ptr == '\0' || last) {
 			ret = mkdir(buf, mode);
 			if (ret && errno != EEXIST) {
-				ltfsmsg(AFS0139E, path, strerror(errno));
+				ltfsmsg(AFS0134E, path, strerror(errno));
 				return 1;
 			}
 			if (! last)
@@ -581,7 +581,7 @@ int main(int argc, char **argv)
 	priv->first_parsing_pass = true;
 	ret = fuse_opt_parse(&args, priv, ltfs_options_pass1, ltfs_parse_options);
 	if (ret < 0) {
-		ltfsmsg(AFS0137E);
+		ltfsmsg(AFS0132E);
 		return 1;
 	}
 
@@ -611,7 +611,7 @@ int main(int argc, char **argv)
 	priv->first_parsing_pass = false;
 	ret = fuse_opt_parse(&args, priv, ltfs_options, ltfs_parse_options);
 	if (ret < 0) {
-		ltfsmsg(AFS0137E);
+		ltfsmsg(AFS0132E);
 		return 1;
 	}
 

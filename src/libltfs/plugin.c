@@ -217,7 +217,7 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 	backends = config_file_get_plugins(type, config);
 	if (! backends) {
 		if (! strcmp(type, "tape"))
-			ltfsresult(AFS0102I); /* -o devname=<dev> */
+			ltfsresult(AFS0101I); /* -o devname=<dev> */
 		return;
 	}
 

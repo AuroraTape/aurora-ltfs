@@ -99,52 +99,52 @@ root:table {
 		ATG0059W:string { "Cannot retrieve drive dump: failed to read buffer (%d)" }
 		ATG0060W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)" }
 		ATG0061W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d" }
-		ATG0063I:string { "Taking drive dump in buffer" }
-		ATG0064I:string { "Forcing drive dump" }
-		ATG0065I:string { "%s returns %s (%d) %s" }
-		ATG0066E:string { "%s returns msg = NULL (%d) %s" }
-		ATG0067W:string { "Failed to get medium type code: medium type check is skipped" }
-		ATG0068W:string { "The drive is already reserved: %s (%s)" }
-		ATG0069W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)" }
-		ATG0070I:string { "Retry to reserve from key registration (%s)" }
-		ATG0071I:string { "Successfully reopened drive %s with another path. Preempting the reservation" }
-		ATG0072I:string { "A power-on-reset happened on drive %s" }
-		ATG0073I:string { "Successfully reopened drive %s with the same path" }
-		ATG0074I:string { "Drive %s is successfully reserved" }
-		ATG0075I:string { "Cannot %s device flag (%d)" }
-		ATG0076I:string { "Pseudo-error on %s" }
-		ATG0077I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive" }
-		ATG0078I:string { "Raw capacity info of partition %d (%llu - %llu) %s" }
-		ATG0079W:string { "Detect ENOMEM in ioctl() call. Wait 3 seconds and retry (%d)" }
-		ATG0080I:string { "Retrying the %s operation at (%u, %llu)" }
-		ATG0081I:string { "Retrying the %s operation at (%u, %llu) with skip back, because the command was already run (%u, %llu)" }
-		ATG0082W:string { "Unexpected current position for %s operation (%d). (%u, %llu), (%u, %llu) " }
-		ATG0083W:string { "Position confirmation for %s operation retry has failed (%d). (%u, %llu), (%u, %llu)" }
-		ATG0084W:string { "Unexpected position after skip back for a %s operation. (%u, %llu), (%u, %llu)" }
-		ATG0085W:string { "Skip back for %s operation has failed (%d). (%u, %llu), (%u, %llu)" }
-		ATG0086I:string { "Cannot get the reserved buffer size of %s" }
-		ATG0087I:string { "The reserved buffer size of %s is %d" }
-		ATG0088I:string { "Failed to get the cartridge status. The cartridge is not loaded" }
-		ATG0089I:string { "Received an unknown sense code %06x" }
-		ATG0090I:string { "Opening a tape device for drive serial %s" }
-		ATG0091I:string { "Cannot fetch the reservation key (%s, %d)" }
-		ATG0092I:string { "Changer %s isn't reserved from any nodes" }
-		ATG0093I:string { "Changer %s was reserved from this node and can be reserved from the current path" }
-		ATG0094I:string { "Changer %s was reserved from this node but failed to reserve from the current path" }
-		ATG0095I:string { "Changer %s was reserved from another node (%s)" }
-		ATG0096I:string { "Setting up timeout values from %s" }
-		ATG0097I:string { "Have unstable TUR response, start over (Cur = %d, Prev = %d)" }
-		ATG0098I:string { "Capturing a stable TUR at line %d" }
-		ATG0099W:string { "Cannot retrieve drive dump: failed to communicate with drive. Tried (%d) times" }
+		ATG0062I:string { "Taking drive dump in buffer" }
+		ATG0063I:string { "Forcing drive dump" }
+		ATG0064I:string { "%s returns %s (%d) %s" }
+		ATG0065E:string { "%s returns msg = NULL (%d) %s" }
+		ATG0066W:string { "Failed to get medium type code: medium type check is skipped" }
+		ATG0067W:string { "The drive is already reserved: %s (%s)" }
+		ATG0068W:string { "WWPID of reservation: x%02x%02x%02x%02x%02x%02x%02x%02x (%s)" }
+		ATG0069I:string { "Retry to reserve from key registration (%s)" }
+		ATG0070I:string { "Successfully reopened drive %s with another path. Preempting the reservation" }
+		ATG0071I:string { "A power-on-reset happened on drive %s" }
+		ATG0072I:string { "Successfully reopened drive %s with the same path" }
+		ATG0073I:string { "Drive %s is successfully reserved" }
+		ATG0074I:string { "Cannot %s device flag (%d)" }
+		ATG0075I:string { "Pseudo-error on %s" }
+		ATG0076I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive" }
+		ATG0077I:string { "Raw capacity info of partition %d (%llu - %llu) %s" }
+		ATG0078W:string { "Detect ENOMEM in ioctl() call. Wait 3 seconds and retry (%d)" }
+		ATG0079I:string { "Retrying the %s operation at (%u, %llu)" }
+		ATG0080I:string { "Retrying the %s operation at (%u, %llu) with skip back, because the command was already run (%u, %llu)" }
+		ATG0081W:string { "Unexpected current position for %s operation (%d). (%u, %llu), (%u, %llu) " }
+		ATG0082W:string { "Position confirmation for %s operation retry has failed (%d). (%u, %llu), (%u, %llu)" }
+		ATG0083W:string { "Unexpected position after skip back for a %s operation. (%u, %llu), (%u, %llu)" }
+		ATG0084W:string { "Skip back for %s operation has failed (%d). (%u, %llu), (%u, %llu)" }
+		ATG0085I:string { "Cannot get the reserved buffer size of %s" }
+		ATG0086I:string { "The reserved buffer size of %s is %d" }
+		ATG0087I:string { "Failed to get the cartridge status. The cartridge is not loaded" }
+		ATG0088I:string { "Received an unknown sense code %06x" }
+		ATG0089I:string { "Opening a tape device for drive serial %s" }
+		ATG0090I:string { "Cannot fetch the reservation key (%s, %d)" }
+		ATG0091I:string { "Changer %s isn't reserved from any nodes" }
+		ATG0092I:string { "Changer %s was reserved from this node and can be reserved from the current path" }
+		ATG0093I:string { "Changer %s was reserved from this node but failed to reserve from the current path" }
+		ATG0094I:string { "Changer %s was reserved from another node (%s)" }
+		ATG0095I:string { "Setting up timeout values from %s" }
+		ATG0096I:string { "Have unstable TUR response, start over (Cur = %d, Prev = %d)" }
+		ATG0097I:string { "Capturing a stable TUR at line %d" }
+		ATG0098W:string { "Cannot retrieve drive dump: failed to communicate with drive. Tried (%d) times" }
 
-		ATG0100D:string { "Backend %s %s" }
-		ATG0101D:string { "Backend %s: %d %s" }
-		ATG0102D:string { "Backend %s: %zu %s" }
-		ATG0103D:string { "Backend %s: %zu bytes %s" }
-		ATG0104D:string { "Backend %s: %llu %s" }
-		ATG0105D:string { "Backend %s: (%llu, %llu) %s" }
-		ATG0106D:string { "Backend %s: (%llu, %llu) FM = %llu %s" }
-		ATG0107I:string { "sg tape backend for IBM tape options:\n    -o devname=<dev>           tape device (default: first SCSI tape device found)\n"
+		ATG0099D:string { "Backend %s %s" }
+		ATG0100D:string { "Backend %s: %d %s" }
+		ATG0101D:string { "Backend %s: %zu %s" }
+		ATG0102D:string { "Backend %s: %zu bytes %s" }
+		ATG0103D:string { "Backend %s: %llu %s" }
+		ATG0104D:string { "Backend %s: (%llu, %llu) %s" }
+		ATG0105D:string { "Backend %s: (%llu, %llu) FM = %llu %s" }
+		ATG0106I:string { "sg tape backend for IBM tape options:\n    -o devname=<dev>           tape device (default: first SCSI tape device found)\n"
 						"    -o autodump                enable autodump (default)\n"
 						"    -o noautodump              disable autodump\n"
 						"    -o scsi_lbprotect=<on|off> enable drive logical block protection (default=off)\n" }

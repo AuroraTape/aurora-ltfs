@@ -68,21 +68,21 @@ root:table {
 		ALG0018E:string { "Unknown default %s \'%s\'" }
 		ALG0019E:string { "Cannot load messages: failed to get message table (%d)" }
 		ALG0020E:string { "Cannot load messages: failed to determine first message ID (ures_getByKey: %d)" }
-		ALG0022E:string { "Cannot load messages: failed to open resource bundle (%d)" }
-		ALG0023E:string { "Cannot load messages: failed to register message data (%d)" }
-		ALG0025E:string { "Cannot load messages for libltfs (%d)" }
-		ALG0026E:string { "Cannot parse configuration file: \'-plugin\' directive must be followed by a plug-in type and name" }
-		ALG0027W:string { "Unknown log level (%d), forced the level to (%d)" }
-		ALG0028W:string { "Cannot get kernel version" }
-		ALG0029I:string { "Kernel version: %s" }
-		ALG0030W:string { "Cannot get distribution information" }
-		ALG0031I:string { "Distribution: %s" }
-		ALG0032W:string { "sysctl system call failed (%s)" }
-		ALG0033W:string { "Time conversion is overflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
-		ALG0034W:string { "Time conversion is underflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
-		ALG0035E:string { "Called releaseread_mrsw with zero or less count" }
-		ALG0036I:string { "Stack[%02d]: %p, %s" }
-		ALG0037I:string { "Stack[%02d]: %p" }
-		ALG0038E:string { "Failed to kick gcore" }
+		ALG0021E:string { "Cannot load messages: failed to open resource bundle (%d)" }
+		ALG0022E:string { "Cannot load messages: failed to register message data (%d)" }
+		ALG0023E:string { "Cannot load messages for libltfs (%d)" }
+		ALG0024E:string { "Cannot parse configuration file: \'-plugin\' directive must be followed by a plug-in type and name" }
+		ALG0025W:string { "Unknown log level (%d), forced the level to (%d)" }
+		ALG0026W:string { "Cannot get kernel version" }
+		ALG0027I:string { "Kernel version: %s" }
+		ALG0028W:string { "Cannot get distribution information" }
+		ALG0029I:string { "Distribution: %s" }
+		ALG0030W:string { "sysctl system call failed (%s)" }
+		ALG0031W:string { "Time conversion is overflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
+		ALG0032W:string { "Time conversion is underflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
+		ALG0033E:string { "Called releaseread_mrsw with zero or less count" }
+		ALG0034I:string { "Stack[%02d]: %p, %s" }
+		ALG0035I:string { "Stack[%02d]: %p" }
+		ALG0036E:string { "Failed to kick gcore" }
 	}
 }

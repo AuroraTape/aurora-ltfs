@@ -614,7 +614,7 @@ int ltfs_fuse_utimens(const char *path, const struct timespec ts[2])
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_UTIMENS), ret, id.uid);
 
 	if (ret)
-		ltfsmsg(ALC0015E, "utimens", path, 0, 0);
+		ltfsmsg(ALC0014E, "utimens", path, 0, 0);
 
 	return errormap_fuse_error(ret);
 }
@@ -638,7 +638,7 @@ int ltfs_fuse_chmod(const char *path, mode_t mode)
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_CHMOD), ret, id.uid);
 
 	if (ret)
-		ltfsmsg(ALC0015E, "chmod", path, mode, 0);
+		ltfsmsg(ALC0014E, "chmod", path, mode, 0);
 
 	return errormap_fuse_error(ret);
 }

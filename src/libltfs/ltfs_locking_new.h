@@ -87,9 +87,9 @@ static inline void backtrace_info(void)
 
 	for(i = 0; i < back_num; ++i)  {
 		if (funcs && funcs[i])
-			ltfsmsg(ALG0036I, (int)i, address[i], funcs[i]);
+			ltfsmsg(ALG0034I, (int)i, address[i], funcs[i]);
 		else
-			ltfsmsg(ALG0037I, (int)i, address[i]);
+			ltfsmsg(ALG0035I, (int)i, address[i]);
 	}
 
 	if (funcs) free(funcs);

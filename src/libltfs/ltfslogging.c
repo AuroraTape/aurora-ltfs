@@ -190,7 +190,7 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 			ret = ltfsprintf_load_plugin(libaltfs_bundles[bi].name,
 				libaltfs_bundles[bi].data, (void **)&pl);
 			if (ret < 0) {
-				fprintf(stderr, "ALG0025E Cannot load messages for libltfs/%s (%d)\n",
+				fprintf(stderr, "ALG0023E Cannot load messages for libltfs/%s (%d)\n",
 					libaltfs_bundles[bi].name, ret);
 				ltfsprintf_finish();
 				return ret;
@@ -211,13 +211,13 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 	/* Load internal_error sub-component message bundles */
 	ret = ltfsprintf_load_plugin("ei", ei_dat, (void **)&pl);
 	if (ret < 0) {
-		fprintf(stderr, "ALG0025E Cannot load messages for internal_error/ei (%d)\n", ret);
+		fprintf(stderr, "ALG0023E Cannot load messages for internal_error/ei (%d)\n", ret);
 		ltfsprintf_finish();
 		return ret;
 	}
 	ret = ltfsprintf_load_plugin("ed", ed_dat, (void **)&pl);
 	if (ret < 0) {
-		fprintf(stderr, "ALG0025E Cannot load messages for internal_error/ed (%d)\n", ret);
+		fprintf(stderr, "ALG0023E Cannot load messages for internal_error/ed (%d)\n", ret);
 		ltfsprintf_finish();
 		return ret;
 	}
@@ -225,7 +225,7 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 	/* Load the tape_common message bundle */
 	ret = ltfsprintf_load_plugin("tape_common", tape_common_dat, (void **)&pl);
 	if (ret < 0) {
-		fprintf(stderr, "ALG0025E Cannot load messages for tape backend common messages (%d)\n", ret);
+		fprintf(stderr, "ALG0023E Cannot load messages for tape backend common messages (%d)\n", ret);
 		ltfsprintf_finish();
 		return ret;
 	}
@@ -267,11 +267,11 @@ void ltfsprintf_finish()
 int ltfsprintf_set_log_level(int log_level)
 {
 	if (log_level < LTFS_ERR) {
-		fprintf(stderr, "ALG0027W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_ERR);
+		fprintf(stderr, "ALG0025W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_ERR);
 		log_level = LTFS_ERR;
 	}
 	else if (log_level > LTFS_TRACE) {
-		fprintf(stderr, "ALG0027W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_TRACE);
+		fprintf(stderr, "ALG0025W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_TRACE);
 		log_level = LTFS_TRACE;
 	}
 	else {
@@ -293,9 +293,9 @@ int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **me
 	udata_setAppData(bundle_name, bundle_data, &err);
 	if (U_FAILURE(err)) {
 		if (libaltfs_dat_init)
-			ltfsmsg(ALG0023E, err);
+			ltfsmsg(ALG0022E, err);
 		else
-			fprintf(stderr, "ALG0023E Cannot load messages: failed to register message data (%d)\n", err);
+			fprintf(stderr, "ALG0022E Cannot load messages: failed to register message data (%d)\n", err);
 		return -1;
 	}
 #endif
@@ -313,9 +313,9 @@ int ltfsprintf_load_plugin(const char *bundle_name, void *bundle_data, void **me
 	pl->bundle_root = ures_open(bundle_name, NULL, &err);
 	if (U_FAILURE(err)) {
 		if (libaltfs_dat_init)
-			ltfsmsg(ALG0022E, err);
+			ltfsmsg(ALG0021E, err);
 		else
-			fprintf(stderr, "ALG0022E Cannot load messages: failed to open resource bundle (%d)\n", err);
+			fprintf(stderr, "ALG0021E Cannot load messages: failed to open resource bundle (%d)\n", err);
 		free(pl);
 		return -1;
 	}

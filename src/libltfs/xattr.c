@@ -1236,7 +1236,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 				new = UNLOCKED_MAM;
 
 			if (vol->file_open_count != 0) {
-				ltfsmsg(ALC0016D, "_xattr_set_virtual", "file open", vol->file_open_count, 0);
+				ltfsmsg(ALC0015D, "_xattr_set_virtual", "file open", vol->file_open_count, 0);
 				return -LTFS_XATTR_ERR;
 			}
 

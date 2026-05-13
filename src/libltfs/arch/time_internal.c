@@ -86,10 +86,10 @@ ltfs_time_t ltfs_timegm(struct tm *t)
 
 	if (sizeof(time_t) == 4) {
 		if (rel > LONG_MAX)
-			ltfsmsg(ALG0033W, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday
+			ltfsmsg(ALG0031W, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday
 					, t->tm_hour, t->tm_min, t->tm_sec);
 		if (rel < LONG_MIN)
-			ltfsmsg(ALG0034W, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday
+			ltfsmsg(ALG0032W, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday
 					, t->tm_hour, t->tm_min, t->tm_sec);
 	}
 
