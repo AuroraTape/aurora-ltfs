@@ -25,7 +25,10 @@ RUN dnf install -y \
     icu \
     libuuid-devel \
     diffutils \
-    docbook-utils
+    docbook-utils \
+    redhat-rpm-config \
+    annobin \
+    gcc-plugin-annobin
 
 # Install development and debugging tools
 RUN dnf install -y \
