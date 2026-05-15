@@ -324,16 +324,9 @@ fi
 dnl
 dnl Check for ICU
 dnl
-AC_MSG_CHECKING(ICU version)
-ICU_MODULE_VERSION="`pkg-config --modversion icu-i18n 2> /dev/null`";
-ICU_MODULE_CFLAGS="`pkg-config --cflags icu-i18n 2> /dev/null`";
-ICU_MODULE_LIBS="`pkg-config --libs icu-i18n 2> /dev/null`";
-AC_MSG_RESULT([$ICU_MODULE_VERSION])
-
-if test -z "$ICU_MODULE_VERSION"
-then
-    PKG_CHECK_MODULES([ICU_MODULE], [icu-uc >= 0.21])
-fi
+PKG_CHECK_EXISTS([icu-i18n],
+    [PKG_CHECK_MODULES([ICU_MODULE], [icu-i18n])],
+    [PKG_CHECK_MODULES([ICU_MODULE], [icu-uc >= 0.21])])
 
 AC_MSG_CHECKING([for using ICU6x (unorm2) functions forcibly])
 AC_ARG_ENABLE([icu_6x],
@@ -347,14 +340,11 @@ if test "x${icu_6x}" = "xyes"
 then
     AM_EXTRA_CPPFLAGS="${AM_EXTRA_CPPFLAGS} -D USE_UNORM2"
 else
-    AC_MSG_CHECKING(for using unorm2 functions)
-    if test "${ICU_MODULE_VERSION%%.*}" -ge "56"
-    then
-        AM_EXTRA_CPPFLAGS="${AM_EXTRA_CPPFLAGS} -D USE_UNORM2"
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_RESULT(no)
-    fi
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $ICU_MODULE_CFLAGS"
+    AC_CHECK_HEADER([unicode/unorm2.h],
+        [AM_EXTRA_CPPFLAGS="${AM_EXTRA_CPPFLAGS} -D USE_UNORM2"])
+    CFLAGS="$save_CFLAGS"
 fi
 
 dnl
