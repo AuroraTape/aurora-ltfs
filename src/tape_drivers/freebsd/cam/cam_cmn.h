@@ -601,10 +601,10 @@ static inline void camtape_process_errors(struct camtape_data *softc, int rc, ch
 	bool nonforced_dump = false;
 
 	if (msg != NULL) {
-		ltfsmsg(LTFS_INFO, 31213I, cmd, msg, rc, softc->drive_serial);
+		ltfsmsg(ATC0007I, cmd, msg, rc, softc->drive_serial);
 		free(msg);
 	} else
-		ltfsmsg(LTFS_ERR, 31214E, cmd, rc, softc->drive_serial);
+		ltfsmsg(ATC0008E, cmd, rc, softc->drive_serial);
 
 	if (softc) {
 		if ( take_dump &&

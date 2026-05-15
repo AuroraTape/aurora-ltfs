@@ -1,0 +1,88 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// Fallback messages. These messages do not have unique IDs; they are printed when
+	// the message function receives an unrecognized unique ID or fails to
+	// generate a message for a known unique ID.
+	// These messages are accessed by key, not by index: so they may be
+	// reordered, but they should not be renamed.
+	fallback_messages:table {
+		notfound:string { "(no message found)" }
+		overflow:string { "(message too long)" }
+	}
+
+	// libaltfs general infrastructure (logging, tracing, config)
+	messages:table {
+		prefix:string { "ALG" }
+
+		ALG0001E:string { "Cannot load resource \"fallback_messages\" (ures_getByKey: %d)" }
+		ALG0002E:string { "Cannot open output converter (ucnv_open: %d)" }
+		ALG0003E:string { "Cannot get current time (%d)" }
+		ALG0004E:string { "Base64 decoder: empty input" }
+		ALG0005E:string { "Base64 decoder: invalid character in the input" }
+		ALG0006E:string { "Base64 decoder: input length is not a multiple of 4" }
+		ALG0007E:string { "Cannot parse configuration file: \'default\' directive must be followed by a plug-in type and name" }
+		ALG0008E:string { "Cannot get library path: unknown plug-in type \'%s\' or plug-in name \'%s\'" }
+		ALG0009E:string { "Cannot open configuration file \'%s\' (%d)" }
+		ALG0010E:string { "Cannot parse configuration file: line too long" }
+		ALG0011E:string { "Cannot parse configuration file: \'-default\' directive must be followed by a plug-in type" }
+		ALG0012E:string { "Cannot parse configuration file: unknown plug-in type \'%s\' in \'-default\' directive" }
+		ALG0013E:string { "Cannot parse configuration file: \'option\' directive must be followed by an option type and LTFS mount option" }
+		ALG0014E:string { "Cannot parse configuration file: \'%s\' directive must be followed by a valid %s name" }
+		ALG0015E:string { "Cannot parse configuration file: \'plug-in\' directive must be followed by a plug-in type, name, and library path" }
+		ALG0016W:string { "Ignoring unknown configuration directive \'%s\'" }
+		ALG0017W:string { "Cannot find the %s plug-in \'%s\' at \'%s\'" }
+		ALG0018E:string { "Unknown default %s \'%s\'" }
+		ALG0019E:string { "Cannot load messages: failed to get message table (%d)" }
+		ALG0020E:string { "Cannot load messages: failed to determine first message ID (ures_getByKey: %d)" }
+		ALG0021E:string { "Cannot load messages: failed to open resource bundle (%d)" }
+		ALG0022E:string { "Cannot load messages: failed to register message data (%d)" }
+		ALG0023E:string { "Cannot load messages for libltfs (%d)" }
+		ALG0024E:string { "Cannot parse configuration file: \'-plugin\' directive must be followed by a plug-in type and name" }
+		ALG0025W:string { "Unknown log level (%d), forced the level to (%d)" }
+		ALG0026W:string { "Cannot get kernel version" }
+		ALG0027I:string { "Kernel version: %s" }
+		ALG0028W:string { "Cannot get distribution information" }
+		ALG0029I:string { "Distribution: %s" }
+		ALG0030W:string { "sysctl system call failed (%s)" }
+		ALG0031W:string { "Time conversion is overflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
+		ALG0032W:string { "Time conversion is underflowed. (%04d-%02d-%02dT%02d:%02d:%02dZ)" }
+		ALG0033E:string { "Called releaseread_mrsw with zero or less count" }
+		ALG0034I:string { "Stack[%02d]: %p, %s" }
+		ALG0035I:string { "Stack[%02d]: %p" }
+		ALG0036E:string { "Failed to kick gcore" }
+	}
+}

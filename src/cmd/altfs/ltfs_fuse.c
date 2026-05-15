@@ -92,12 +92,12 @@ struct ltfs_file_handle *_new_ltfs_file_handle(struct file_info *fi)
 	int ret;
 	struct ltfs_file_handle *file = calloc(1, sizeof(struct ltfs_file_handle));
 	if (! file) {
-		ltfsmsg(LTFS_ERR, 10001E, "file structure");
+		ltfsmsg(ALC0002E, "file structure");
 		return NULL;
 	}
 	ret = ltfs_mutex_init(&file->lock);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10002E, ret);
+		ltfsmsg(ALC0003E, ret);
 		free(file);
 		return NULL;
 	}
@@ -119,19 +119,19 @@ static struct file_info *_new_file_info(const char *path)
 	int ret;
 	struct file_info *fi = calloc(1, sizeof(struct file_info));
 	if (! fi) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return NULL;
 	}
 	ret = ltfs_mutex_init(&fi->lock);
 	if (ret) {
-		ltfsmsg(LTFS_ERR, 10002E, ret);
+		ltfsmsg(ALC0003E, ret);
 		free(fi);
 		return NULL;
 	}
 	if (path) {
 		fi->path = strdup(path);
 		if (! fi->path) {
-			ltfsmsg(LTFS_ERR, 10001E, "_new_file_info: path");
+			ltfsmsg(ALC0002E, "_new_file_info: path");
 			ltfs_mutex_destroy(&fi->lock);
 			free(fi);
 			return NULL;
@@ -268,7 +268,7 @@ int ltfs_fuse_fgetattr(const char *path, struct stat *stbuf, struct fuse_file_in
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_FGETATTR), (uint64_t)fi, 0);
 
-	ltfsmsg(LTFS_DEBUG3, 14030D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0026D, _dentry_name(path, file->file_info));
 
 	ret = ltfs_fsops_getattr(file->file_info->dentry_handle, &attr, priv->data);
 
@@ -290,7 +290,7 @@ int ltfs_fuse_getattr(const char *path, struct stat *stbuf)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_GETATTR), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG3, 14031D, path);
+	ltfsmsg(AFS0027D, path);
 
 	ret = ltfs_fsops_getattr_path(path, &attr, &id, priv->data);
 
@@ -368,11 +368,11 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_OPEN), (uint64_t)fi->flags, 0);
 
 	if ((fi->flags & O_WRONLY) == O_WRONLY)
-		ltfsmsg(LTFS_DEBUG, 14032D, path, "write-only");
+		ltfsmsg(AFS0028D, path, "write-only");
 	else if ((fi->flags & O_RDWR) == O_RDWR)
-		ltfsmsg(LTFS_DEBUG, 14032D, path, "read-write");
+		ltfsmsg(AFS0028D, path, "read-write");
 	else /* read-only */
-		ltfsmsg(LTFS_DEBUG, 14032D, path, "read-only");
+		ltfsmsg(AFS0028D, path, "read-only");
 	open_write = (((fi->flags & O_WRONLY) == O_WRONLY) || ((fi->flags & O_RDWR) == O_RDWR));
 
 	/* Open the file */
@@ -434,7 +434,7 @@ int ltfs_fuse_release(const char *path, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_RELEASE), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14035D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0031D, _dentry_name(path, file->file_info));
 
 	uid = ((struct dentry *)(file->file_info->dentry_handle))->uid;
 
@@ -474,7 +474,7 @@ int ltfs_fuse_opendir(const char *path, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_OPENDIR), (uint64_t)fi->flags, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14033D, path);
+	ltfsmsg(AFS0029D, path);
 
 	open_write = (((fi->flags & O_WRONLY) == O_WRONLY) || ((fi->flags & O_RDWR) == O_RDWR));
 
@@ -515,7 +515,7 @@ int ltfs_fuse_releasedir(const char *path, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_RELEASEDIR), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14034D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0030D, _dentry_name(path, file->file_info));
 
 	uid = ((struct dentry *)(file->file_info->dentry_handle))->uid;
 
@@ -549,7 +549,7 @@ static int _ltfs_fuse_do_flush(struct ltfs_file_handle *file, struct ltfs_fuse_d
 	if (dirty) {
 		ret = ltfs_fsops_flush(file->file_info->dentry_handle, false, priv->data);
 		if (ret < 0)
-			ltfsmsg(LTFS_ERR, 14022E, caller);
+			ltfsmsg(AFS0019E, caller);
 		else {
 			ltfs_mutex_lock(&file->lock);
 			file->dirty = false;
@@ -569,7 +569,7 @@ int ltfs_fuse_fsync(const char *path, int isdatasync, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_FSYNC), (uint64_t)isdatasync, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14036D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0032D, _dentry_name(path, file->file_info));
 	uid = ((struct dentry *)(file->file_info->dentry_handle))->uid;
 	ret = _ltfs_fuse_do_flush(file, priv, __FUNCTION__);
 
@@ -587,7 +587,7 @@ int ltfs_fuse_flush(const char *path, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_FLUSH), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14037D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0033D, _dentry_name(path, file->file_info));
 	uid = ((struct dentry *)(file->file_info->dentry_handle))->uid;
 	ret = _ltfs_fuse_do_flush(file, priv, __FUNCTION__);
 
@@ -608,13 +608,13 @@ int ltfs_fuse_utimens(const char *path, const struct timespec ts[2])
 	tsTmp[0] = ltfs_timespec_from_timespec(&ts[0]);
 	tsTmp[1] = ltfs_timespec_from_timespec(&ts[1]);
 
-	ltfsmsg(LTFS_DEBUG, 14038D, path);
+	ltfsmsg(AFS0034D, path);
 	ret = ltfs_fsops_utimens_path(path, tsTmp, &id, priv->data);
 
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_UTIMENS), ret, id.uid);
 
 	if (ret)
-		ltfsmsg(LTFS_ERR, 10020E, "utimens", path, 0, 0);
+		ltfsmsg(ALC0014E, "utimens", path, 0, 0);
 
 	return errormap_fuse_error(ret);
 }
@@ -632,13 +632,13 @@ int ltfs_fuse_chmod(const char *path, mode_t mode)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_CHMOD), (uint64_t)mode, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14039D, path);
+	ltfsmsg(AFS0035D, path);
 	ret = ltfs_fsops_set_readonly_path(path, new_readonly, &id, priv->data);
 
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_CHMOD), ret, id.uid);
 
 	if (ret)
-		ltfsmsg(LTFS_ERR, 10020E, "chmod", path, mode, 0);
+		ltfsmsg(ALC0014E, "chmod", path, mode, 0);
 
 	return errormap_fuse_error(ret);
 }
@@ -666,7 +666,7 @@ int ltfs_fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_CREATE), (uint64_t)fi->flags, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14040D, path);
+	ltfsmsg(AFS0036D, path);
 
 	readonly = ! (mode & priv->file_mode & 0222);
 
@@ -738,7 +738,7 @@ int ltfs_fuse_mkdir(const char *path, mode_t mode)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_MKDIR), (uint64_t)mode, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14041D, path);
+	ltfsmsg(AFS0037D, path);
 
 	ret = ltfs_fsops_create(path, true, false, false, (struct dentry **)&dentry_handle, priv->data);
 	if (ret == 0) {
@@ -759,7 +759,7 @@ int ltfs_fuse_truncate(const char *path, off_t length)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_TRUNCATE), (uint64_t)length, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14042D, path, (long long)length);
+	ltfsmsg(AFS0038D, path, (long long)length);
 
 	ret = ltfs_fsops_truncate_path(path, length, &id, priv->data);
 
@@ -776,7 +776,7 @@ int ltfs_fuse_ftruncate(const char *path, off_t length, struct fuse_file_info *f
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_FTRUNCATE), (uint64_t)length, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14043D, _dentry_name(path, file->file_info), (long long) length);
+	ltfsmsg(AFS0039D, _dentry_name(path, file->file_info), (long long) length);
 
 	ret = ltfs_fsops_truncate(file->file_info->dentry_handle, length, priv->data);
 
@@ -794,7 +794,7 @@ int ltfs_fuse_unlink(const char *path)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_UNLINK), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14044D, path);
+	ltfsmsg(AFS0040D, path);
 
 	ret = ltfs_fsops_unlink(path, &id, priv->data);
 
@@ -811,7 +811,7 @@ int ltfs_fuse_rmdir(const char *path)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_RMDIR), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14045D, path);
+	ltfsmsg(AFS0041D, path);
 
 	ret = ltfs_fsops_unlink(path, &id, priv->data);
 
@@ -828,7 +828,7 @@ int ltfs_fuse_rename(const char *from, const char *to)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_RENAME), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14046D, from, to);
+	ltfsmsg(AFS0042D, from, to);
 
 	ret = ltfs_fsops_rename(from, to, &id, priv->data);
 
@@ -845,7 +845,7 @@ int _ltfs_fuse_filldir(void *buf, const char *name, void *priv)
 
 	ret = pathname_unformat(name, &new_name);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 14027E, "unformat", ret);
+		ltfsmsg(AFS0023E, "unformat", ret);
 		return ret;
 	}
 
@@ -854,7 +854,7 @@ int _ltfs_fuse_filldir(void *buf, const char *name, void *priv)
 
 	ret = pathname_nfd_normalize(name, &new_name);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 14027E, "nfd", ret);
+		ltfsmsg(AFS0023E, "nfd", ret);
 		return ret;
 	}
 
@@ -878,16 +878,16 @@ int ltfs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_READDIR), (uint64_t)offset, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14047D, _dentry_name(path, file->file_info));
+	ltfsmsg(AFS0043D, _dentry_name(path, file->file_info));
 
 	if (filler(buf, ".",  NULL, 0)) {
 		/* No buffer space */
-		ltfsmsg(LTFS_DEBUG, 14026D);
+		ltfsmsg(AFS0022D);
 		return -ENOBUFS;
 	}
 	if (filler(buf, "..", NULL, 0)) {
 		/* No buffer space */
-		ltfsmsg(LTFS_DEBUG, 14026D);
+		ltfsmsg(AFS0022D);
 		return -ENOBUFS;
 	}
 
@@ -908,7 +908,7 @@ int ltfs_fuse_write(const char *path, const char *buf, size_t size, off_t offset
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_WRITE), (uint64_t)offset, (uint64_t)size);
 
-	ltfsmsg(LTFS_DEBUG3, 14048D, _dentry_name(path, file->file_info), (long long)offset, size);
+	ltfsmsg(AFS0044D, _dentry_name(path, file->file_info), (long long)offset, size);
 
 	ret = ltfs_fsops_write(file->file_info->dentry_handle, buf, size, offset, true, priv->data);
 
@@ -940,7 +940,7 @@ int ltfs_fuse_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_READ), (uint64_t)offset, (uint64_t)size);
 
-	ltfsmsg(LTFS_DEBUG3, 14049D, _dentry_name(path, file->file_info), (long long)offset, size);
+	ltfsmsg(AFS0045D, _dentry_name(path, file->file_info), (long long)offset, size);
 
 	ret = ltfs_fsops_read(file->file_info->dentry_handle, buf, size, offset, priv->data);
 
@@ -964,7 +964,7 @@ int ltfs_fuse_setxattr(const char *path, const char *name, const char *value, si
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_SETXATTR), (uint64_t)size, 0);
 
-	ltfsmsg(LTFS_DEBUG3, 14050D, path, name, size);
+	ltfsmsg(AFS0046D, path, name, size);
 
 	/* position argument is only supported for resource forks
 	 * on OS X, and we have no resource forks
@@ -973,7 +973,7 @@ int ltfs_fuse_setxattr(const char *path, const char *name, const char *value, si
 #ifdef __APPLE__
 	if (position) {
 		/* Position argument must be zero */
-		ltfsmsg(LTFS_ERR, 14023E);
+		ltfsmsg(AFS0020E);
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_SETXATTR), -EINVAL, 0);
 		return -EINVAL;
 	}
@@ -999,7 +999,7 @@ int ltfs_fuse_getxattr(const char *path, const char *name, char *value, size_t s
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_GETXATTR), (uint64_t)size, 0);
 
-	ltfsmsg(LTFS_DEBUG3, 14051D, path, name);
+	ltfsmsg(AFS0047D, path, name);
 
 	/* position argument is only supported for resource forks
 	 * on OS X, and we have no resource forks
@@ -1008,7 +1008,7 @@ int ltfs_fuse_getxattr(const char *path, const char *name, char *value, size_t s
 #ifdef __APPLE__
 	if (position) {
 		/* Position argument must be zero */
-		ltfsmsg(LTFS_ERR, 14024E);
+		ltfsmsg(AFS0021E);
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_GETXATTR), -EINVAL, 0);
 		return -EINVAL;
 	}
@@ -1036,7 +1036,7 @@ int ltfs_fuse_listxattr(const char *path, char *list, size_t size)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_LISTXATTR), (uint64_t)size, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14052D, path);
+	ltfsmsg(AFS0048D, path);
 
 	ret = ltfs_fsops_listxattr(path, list, size, &id, priv->data);
 
@@ -1053,7 +1053,7 @@ int ltfs_fuse_removexattr(const char *path, const char *name)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_REMOVEXATTR), 0, 0);
 
-	ltfsmsg(LTFS_DEBUG, 14053D, path, name);
+	ltfsmsg(AFS0049D, path, name);
 
 	ret = ltfs_fsops_removexattr(path, name, &id, priv->data);
 
@@ -1092,7 +1092,7 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 	 */
 	if (iosched_init(&priv->iosched_plugin, priv->data) < 0) {
 		/* I/O scheduler disabled. Performance down, memory usage up. */
-		ltfsmsg(LTFS_WARN, 14028W);
+		ltfsmsg(AFS0024W);
 	}
 
 	/* fill in fixed filesystem stats */
@@ -1132,7 +1132,7 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 	stats->f_fsid = LTFS_SUPER_MAGIC;                  /* Ignored by FUSE */
 	stats->f_namemax = LTFS_FILENAME_MAX;
 
-	ltfsmsg(LTFS_INFO, 14029I);
+	ltfsmsg(AFS0025I);
 #endif /* mingw_PLATFORM */
 
 	/* Kick timer thread for sync by time */

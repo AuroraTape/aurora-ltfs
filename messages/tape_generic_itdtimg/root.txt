@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the file backend.
@@ -38,45 +38,44 @@
 // so be sure to make a note in messages/ltfs/root.txt whenever an ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 31000 }
-		end_id:int { 31199 }
+		prefix:string { "ATI" }
 
-		31000I:string { "Opening a device through generic itdtimage driver (%s)." }
-		31001E:string { "Failed to open %s: %s (%llu)." }
-		31002E:string { "Failed to seek to %lld (%s, %lld)." }
-		31003I:string { "Closing device through generic itdtimage driver (%s)." }
-		31004D:string { "Backend read: %llu bytes (from position=(%u, %llu), FMs %llu)." }
-		31005E:string { "Cannot read: unit not ready." }
-		31006E:string { "Cannot rewind: unit not ready." }
-		31007E:string { "Cannot locate: unit not ready." }
-		31008E:string { "Cannot locate: invalid partition %lu." }
-		31009E:string { "Cannot space: unit not ready." }
-		31010E:string { "Cannot space: Unrecognized space type." }
-		31011D:string { "state: CurrPosPart=%lld CurrPosBlck=%lld CurrPosFM=%lld Reserved=%d Locked=%d Ready=%d." }
-		31012E:string { "Cannot read position: unit not ready." }
-		31013E:string { "Cannot set capacity: must issue command from partition 0, block 0." }
-		31014E:string { "Cannot format: must issue command from partition 0, block 0." }
-		31015E:string { "Cannot format: unknown format type." }
-		31016E:string { "Cannot get remaining capacity: unit not ready." }
-		31017E:string { "Device already reserved." }
-		31018E:string { "Cannot lock medium: unit not ready." }
-		31019E:string { "Cannot unlock medium: unit not ready." }
-		31020D:string { "Read attribute: %d %x." }
-		31021E:string { "Cannot erase: unit not ready." }
-		31022D:string { "Erase partition %lu." }
+		ATI0001I:string { "Opening a device through generic itdtimage driver (%s)" }
+		ATI0002E:string { "Failed to open %s: %s (%llu)" }
+		ATI0003E:string { "Failed to seek to %lld (%s, %lld)" }
+		ATI0004I:string { "Closing device through generic itdtimage driver (%s)" }
+		ATI0005D:string { "Backend read: %llu bytes (from position=(%u, %llu), FMs %llu)" }
+		ATI0006E:string { "Cannot read: unit not ready" }
+		ATI0007E:string { "Cannot rewind: unit not ready" }
+		ATI0008E:string { "Cannot locate: unit not ready" }
+		ATI0009E:string { "Cannot locate: invalid partition %lu" }
+		ATI0010E:string { "Cannot space: unit not ready" }
+		ATI0011E:string { "Cannot space: Unrecognized space type" }
+		ATI0012D:string { "state: CurrPosPart=%lld CurrPosBlck=%lld CurrPosFM=%lld Reserved=%d Locked=%d Ready=%d" }
+		ATI0013E:string { "Cannot read position: unit not ready" }
+		ATI0014E:string { "Cannot set capacity: must issue command from partition 0, block 0" }
+		ATI0015E:string { "Cannot format: must issue command from partition 0, block 0" }
+		ATI0016E:string { "Cannot format: unknown format type" }
+		ATI0017E:string { "Cannot get remaining capacity: unit not ready" }
+		ATI0018E:string { "Device already reserved" }
+		ATI0019E:string { "Cannot lock medium: unit not ready" }
+		ATI0020E:string { "Cannot unlock medium: unit not ready" }
+		ATI0021D:string { "Read attribute: %d %x" }
+		ATI0022E:string { "Cannot erase: unit not ready" }
+		ATI0023D:string { "Erase partition %lu" }
 		// unused 31023
-		31024E:string { "Cannot set compression: unit not ready." }
-		31025E:string { "Cannot space %s: tried to space over BOT." }
-		31026I:string { "Getting the device directory (%s)." }
-		31027I:string { "No device directory is specified (%s)." }
-		31028I:string { "Scanning the devices directory (%s)." }
-		31029E:string { "Cannot open the device directory (%s)." }
-		31030D:string { "Found a device (%s, %s, %s, %s)." }
+		ATI0024E:string { "Cannot set compression: unit not ready" }
+		ATI0025E:string { "Cannot space %s: tried to space over BOT" }
+		ATI0026I:string { "Getting the device directory (%s)" }
+		ATI0027I:string { "No device directory is specified (%s)" }
+		ATI0028I:string { "Scanning the devices directory (%s)" }
+		ATI0029E:string { "Cannot open the device directory (%s)" }
+		ATI0030D:string { "Found a device (%s, %s, %s, %s)" }
 
-		31195D:string { "Backend %s." }
-		31196D:string { "Backend %s: %llu." }
-		31197D:string { "Backend %s: (%llu, %llu)." }
-		31198D:string { "Backend %s: (%llu, %llu) FM = %llu." }
-		31199I:string { "itdtimg backend options:\n    -o devname=<dev>          tape device (default=%s)\n." }
+		ATI0031D:string { "Backend %s" }
+		ATI0032D:string { "Backend %s: %llu" }
+		ATI0033D:string { "Backend %s: (%llu, %llu)" }
+		ATI0034D:string { "Backend %s: (%llu, %llu) FM = %llu" }
+		ATI0035I:string { "itdtimg backend options:\n    -o devname=<dev>          tape device (default=%s)\n" }
 	}
 }

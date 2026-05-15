@@ -354,7 +354,7 @@ int is_supported_tape(unsigned char type, unsigned char density, bool *is_worm)
 		if(type == supported_cart[i]) {
 			if(IS_WORM_MEDIUM(type)) {
 				/* Detect WORM cartridge */
-				ltfsmsg(LTFS_DEBUG, 39809D);
+				ltfsmsg(ATM0010D);
 				*is_worm = true;
 			}
 			ret = 0;
@@ -461,7 +461,7 @@ int get_timeout(struct timeout_tape* table, int op_code)
 	struct timeout_tape *out = NULL;
 
 	if (!table) {
-		ltfsmsg(LTFS_WARN, 39802W, op_code);
+		ltfsmsg(ATM0003W, op_code);
 		return DEFAULT_TIMEOUT;
 	}
 
@@ -469,14 +469,14 @@ int get_timeout(struct timeout_tape* table, int op_code)
 
 	if (out) {
 		if (out->timeout == -1) {
-			ltfsmsg(LTFS_WARN, 39800W, op_code);
+			ltfsmsg(ATM0001W, op_code);
 			return -1;
 		} else {
-			ltfsmsg(LTFS_DEBUG3, 39801D, op_code, out->timeout);
+			ltfsmsg(ATM0002D, op_code, out->timeout);
 			return out->timeout;
 		}
 	} else {
-		ltfsmsg(LTFS_WARN, 39805W, op_code);
+		ltfsmsg(ATM0006W, op_code);
 		return DEFAULT_TIMEOUT;
 	}
 }

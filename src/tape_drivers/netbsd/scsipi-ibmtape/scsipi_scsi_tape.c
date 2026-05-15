@@ -195,7 +195,7 @@ int scsipi_issue_cdb_command(struct scsipi_tape *device, scsireq_t *req,
 	 * the command requested was not accepted by the driver
 	 */
 	if (status != 0) {
-		ltfsmsg(LTFS_INFO, 30200I, req->cmd[0], errno);
+		ltfsmsg(ATG0001I, req->cmd[0], errno);
 		if (msg) *msg = "Busy on the driver";
 		ret = -EDEV_DRIVER_ERROR;
 		goto out;
@@ -222,7 +222,7 @@ int scsipi_issue_cdb_command(struct scsipi_tape *device, scsireq_t *req,
 		break;
 
 	default:
-		ltfsmsg(LTFS_INFO, 30244I, req->status, req->retsts);
+		ltfsmsg(ATG0045I, req->status, req->retsts);
 		if (msg) *msg = "Busy on the driver";
 		ret = -EDEV_DRIVER_ERROR;
 		goto out;
@@ -235,17 +235,17 @@ int scsipi_issue_cdb_command(struct scsipi_tape *device, scsireq_t *req,
 		if (req->senselen_used) {
 			uint32_t sense = 0;
 			ret = scsipi_sense2errno(req, &sense, msg);
-			ltfsmsg(LTFS_DEBUG, 30201D, sense, *msg);
+			ltfsmsg(ATG0002D, sense, *msg);
 		} else {
 			ret = -EDEV_NO_SENSE;
-			ltfsmsg(LTFS_DEBUG, 30202D, "nosense");
+			ltfsmsg(ATG0003D, "nosense");
 		}
 	}
 
 	if (is_expected_error(device, req->cmd, ret)) {
-		ltfsmsg(LTFS_DEBUG, 30204D, desc, req->cmd[0], ret);
+		ltfsmsg(ATG0005D, desc, req->cmd[0], ret);
 	} else {
-		ltfsmsg(LTFS_INFO, 30205I, desc, req->cmd[0], ret);
+		ltfsmsg(ATG0006I, desc, req->cmd[0], ret);
 	}
 
 out:
@@ -299,7 +299,7 @@ int scsipi_get_drive_identifier(struct scsipi_tape *device, scsi_device_identifi
 
 	ret = _inquiry_low(device, 0, inquiry_buf, MAX_INQ_LEN);
 	if( ret < 0 ) {
-		ltfsmsg(LTFS_INFO, 30206I, ret);
+		ltfsmsg(ATG0007I, ret);
 		return ret;
 	}
 
@@ -316,7 +316,7 @@ int scsipi_get_drive_identifier(struct scsipi_tape *device, scsi_device_identifi
 
 	ret = _inquiry_low(device, 0x80, inquiry_buf, MAX_INQ_LEN);
 	if( ret < 0 ) {
-		ltfsmsg(LTFS_INFO, 30206I, ret);
+		ltfsmsg(ATG0007I, ret);
 		return ret;
 	}
 

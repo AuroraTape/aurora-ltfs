@@ -262,7 +262,7 @@ static int _create_table_tape(struct timeout_tape **result,
 	entry->timeout = override->timeout;
 	HASH_ADD_INT(*result, op_code, entry);
 	if (! *result) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 

@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,80 +30,83 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for ltfsindextool.
 root:table {
 	messages:table {
-		start_id:int { 19500 }
+		prefix:string { "AIX" }
 		end_id: int { 19989 }
-		19500I:string { "Starting ltfsindextool, %s version %s, log level %d." }
-		19501E:string { "Cannot allocate LTFS volume structure." }
-		19502I:string { "%s." }
-		19503I:string { "GCC version is %s." }
-		19504I:string { "Capture all indexes from both partitions." }
-		19505I:string { "Capture all indexes from (%u, %llu)." }
-		19506D:string { "Opening the device." }
-		19507D:string { "Device opened." }
-		19508E:string { "Cannot open backend \'%s\'." }
-		19509E:string { "Cannot open key manager interface backend \'%s\'." }
-		19510E:string { "Cannot open device \'%s\' (%d)." }
-		19511E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)." }
-		19512E:string { "Key manager interface backend option parsing failed." }
-		19513E:string { "Tape backend option parsing failed." }
-		19514E:string { "Unknown option '%s %s'." }
-		19515E:string { "Cannot set up tape device." }
-		19516E:string { "Cannot allocate the read buffer." }
-		19517E:string { "Cannot seek to the start position (%u, %llu, %d)." }
-		19518E:string { "Cannot get the current position (%d)." }
-		19519E:string { "Cannot read a block (%u, %llu, %ld)." }
-		19520D:string { "Closing the device." }
-		19521W:string { "Cannot unload backend." }
-		19522D:string { "Device closed." }
-		19523I:string { "Failed to capture index (%d)." }
-		19524I:string { "Captured indexes successfully." }
-		19525D:string { "Validating command line options." }
-		19526E:string { "File name to check or device name to capture must be specified." }
-		19527D:string { "Command line options are valid." }
-		19528W:string { "Cannot unload key manager interface backend." }
-		19529I:string { "Reading an index from (%u, %llu)." }
-		19530I:string { "Block in (%u, %llu) does not look like an index, seek to next position (%d)." }
-		19531E:string { "Cannot seek to the next position (%u, %llu, %d)." }
-		19532E:string { "Cannot allocate the file name." }
-		19533E:string { "Cannot open the file %s (%d)." }
-		19534I:string { "Reached EOD (%u, %llu)." }
-		19535I:string { "Reached EOD but cannot get the position (%d)." }
-		19536E:string { "Cannot write a block (%ld, %d)." }
-		19537I:string { "Detected the end of the index (%u, %llu)." }
-		19538E:string { "Detected the EOD in the middle of index (%u, %llu)." }
-		19539I:string { "Wrote an index, length is %llu." }
-		19540E:string { "Partition number must be 0 or 1." }
-		19541E:string { "Operation mode is wrong." }
-		19542I:string { "Launched by \"%s\"." }
-		19543I:string { "Checking the index file \"%s\"." }
-		19544I:string { "Checked the index successfully." }
-		19545E:string { "Failed to check the index (%d)." }
-		19546I:string { "%s version %s." }
-		19547I:string { "Creating an index file: %s" }
-		19548E:string { "Start position shall be 5 or larger (%llu)." }
+		AIX0001I:string { "Starting ltfsindextool, %s version %s, log level %d" }
+		AIX0002E:string { "Cannot allocate LTFS volume structure" }
+		AIX0003I:string { "%s" }
+		AIX0004I:string { "GCC version is %s" }
+		AIX0005I:string { "Capture all indexes from both partitions" }
+		AIX0006I:string { "Capture all indexes from (%u, %llu)" }
+		AIX0007D:string { "Opening the device" }
+		AIX0008D:string { "Device opened" }
+		AIX0009E:string { "Cannot open backend \'%s\'" }
+		AIX0010E:string { "Cannot open key manager interface backend \'%s\'" }
+		AIX0011E:string { "Cannot open device \'%s\' (%d)" }
+		AIX0012E:string { "Could not initialize the key manager interface plug-in. \'%s\' (%d)" }
+		AIX0013E:string { "Key manager interface backend option parsing failed" }
+		AIX0014E:string { "Tape backend option parsing failed" }
+		AIX0015E:string { "Unknown option '%s %s'" }
+		AIX0016E:string { "Cannot set up tape device" }
+		AIX0017E:string { "Cannot allocate the read buffer" }
+		AIX0018E:string { "Cannot seek to the start position (%u, %llu, %d)" }
+		AIX0019E:string { "Cannot get the current position (%d)" }
+		AIX0020E:string { "Cannot read a block (%u, %llu, %ld)" }
+		AIX0021D:string { "Closing the device" }
+		AIX0022W:string { "Cannot unload backend" }
+		AIX0023D:string { "Device closed" }
+		AIX0024I:string { "Failed to capture index (%d)" }
+		AIX0025I:string { "Captured indexes successfully" }
+		AIX0026D:string { "Validating command line options" }
+		AIX0027E:string { "File name to check or device name to capture must be specified" }
+		AIX0028D:string { "Command line options are valid" }
+		AIX0029W:string { "Cannot unload key manager interface backend" }
+		AIX0030I:string { "Reading an index from (%u, %llu)" }
+		AIX0031I:string { "Block in (%u, %llu) does not look like an index, seek to next position (%d)" }
+		AIX0032E:string { "Cannot seek to the next position (%u, %llu, %d)" }
+		AIX0033E:string { "Cannot allocate the file name" }
+		AIX0034E:string { "Cannot open the file %s (%d)" }
+		AIX0035I:string { "Reached EOD (%u, %llu)" }
+		AIX0036I:string { "Reached EOD but cannot get the position (%d)" }
+		AIX0037E:string { "Cannot write a block (%ld, %d)" }
+		AIX0038I:string { "Detected the end of the index (%u, %llu)" }
+		AIX0039E:string { "Detected the EOD in the middle of index (%u, %llu)" }
+		AIX0040I:string { "Wrote an index, length is %llu" }
+		AIX0041E:string { "Partition number must be 0 or 1" }
+		AIX0042E:string { "Operation mode is wrong" }
+		AIX0043I:string { "Launched by \"%s\"" }
+		AIX0044I:string { "Checking the index file \"%s\"" }
+		AIX0045I:string { "Checked the index successfully" }
+		AIX0046E:string { "Failed to check the index (%d)" }
+		AIX0047I:string { "%s version %s" }
+		AIX0048I:string { "Creating an index file: %s" }
+		AIX0049E:string { "Start position shall be 5 or larger (%llu)" }
 
 		// Help messages
-		19900I:string { "Usage: %s [options] [filename]" }
-		19901I:string { "Available options are:" }
-		19902I:string { "  -d, --device=<name>        Tape device (Capture index to specified file when this option is specified. Otherwise run check process with specified file)" }
-		19903I:string { "  -p, --partition=<part_num> Partition number 0 or 1, capture both partitions if not specified" }
-		19904I:string { "  -s, --start-pos=<block>    Block number to start capturing (default: %d)" }
-		19905I:string { "      --output-dir=<dir>     Directory to store captured indexes (default: \'%s\')" }
-		19906I:string { "  -b, --blocksize=<num>      Specify the LTFS record size (default: %d)" }
-		19907I:string { "  -i, --config=<file>        Use the specified configuration file (default: %s)" }
-		19908I:string { "  -e, --backend=<name>       Use the specified tape device backend (default: %s)" }
-		19909I:string { "      --kmi-backend=<name>   Use the specified key manager interface backend (default: %s)" }
-		19910I:string { "  -q, --quiet                Suppress progress information and general messages" }
-		19911I:string { "  -t, --trace                Enable function call tracing" }
-		19912I:string { "  -V, --version             Version information" }
-		19913I:string { "  -h, --help                 This help" }
-		19914I:string { "Usage example:" }
-		19915I:string { "  %s --device=%s -p=%d" }
+		AIX0050I:string { "Usage: %s [options] [filename]" }
+		AIX0051I:string { "Available options are:" }
+		AIX0052I:string { "  -d, --device=<name>        Tape device (Capture index to specified file when this option is specified. Otherwise run check process with specified file)" }
+		AIX0053I:string { "  -p, --partition=<part_num> Partition number 0 or 1, capture both partitions if not specified" }
+		AIX0054I:string { "  -s, --start-pos=<block>    Block number to start capturing (default: %d)" }
+		AIX0055I:string { "      --output-dir=<dir>     Directory to store captured indexes (default: \'%s\')" }
+		AIX0056I:string { "  -b, --blocksize=<num>      Specify the LTFS record size (default: %d)" }
+		AIX0057I:string { "  -i, --config=<file>        Use the specified configuration file (default: %s)" }
+		AIX0058I:string { "  -e, --backend=<name>       Use the specified tape device backend (default: %s)" }
+		AIX0059I:string { "      --kmi-backend=<name>   Use the specified key manager interface backend (default: %s)" }
+		AIX0060I:string { "  -q, --quiet                Suppress progress information and general messages" }
+		AIX0061I:string { "  -t, --trace                Enable function call tracing" }
+		AIX0062I:string { "  -V, --version             Version information" }
+		AIX0063I:string { "  -h, --help                 This help" }
+		AIX0064I:string { "Usage example:" }
+		AIX0065I:string { "  %s --device=%s -p=%d" }
+
+		// Messages relocated from libaltfs
+		AIX0066E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
 	}
 }

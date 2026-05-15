@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,28 +30,27 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Common Messages for the tape backend.
 root:table {
 	messages:table {
-		start_id:int { 39800 }
-		end_id:int { 39999 }
+		prefix:string { "ATM" }
 
-		39800W:string { "Unsupported SCSI OP code 0x%02x." }
-		39801D:string { "SCSI timeout (op_code 0x%02x, timeout = %d)." }
-		39802W:string { "Unknown SCSI OP code 0x%02x, use default timeout." }
-		39803E:string { "CRC check failed: Len = %d, Actual CRC = %08x, Expected CRC = %08x." }
-		39804D:string { "CRC: %s ,Len = %d, CRC = %08x." }
-		39805W:string { "The timeout table is not configured: SCSI OP code 0x%02x. Use the default timeout." }
-		39806D:string { "Is medium mountable: six-character bar code %s." }
-		39807E:string { "Is medium mountable: invalid bar code %s." }
-		39808I:string { "Is medium mountable: unsupported medium %s is detected." }
-		39809D:string { "WORM cartridge is loaded." }
-		39810W:string { "No IP address was found. Use host name based reservation key." }
-		39811W:string { "Cannot fetch network I/F information. Use host name based reservation key. (%d)" }
-		39812W:string { "Drive firmware must be updated. Upgrading to %s or later is recommended." }
-		39813W:string { "Drive firmware level does not correctly detect the EOD status." }
+		ATM0001W:string { "Unsupported SCSI OP code 0x%02x" }
+		ATM0002D:string { "SCSI timeout (op_code 0x%02x, timeout = %d)" }
+		ATM0003W:string { "Unknown SCSI OP code 0x%02x, use default timeout" }
+		ATM0004E:string { "CRC check failed: Len = %d, Actual CRC = %08x, Expected CRC = %08x" }
+		ATM0005D:string { "CRC: %s ,Len = %d, CRC = %08x" }
+		ATM0006W:string { "The timeout table is not configured: SCSI OP code 0x%02x. Use the default timeout" }
+		ATM0007D:string { "Is medium mountable: six-character bar code %s" }
+		ATM0008E:string { "Is medium mountable: invalid bar code %s" }
+		ATM0009I:string { "Is medium mountable: unsupported medium %s is detected" }
+		ATM0010D:string { "WORM cartridge is loaded" }
+		ATM0011W:string { "No IP address was found. Use host name based reservation key" }
+		ATM0012W:string { "Cannot fetch network I/F information. Use host name based reservation key. (%d)" }
+		ATM0013W:string { "Drive firmware must be updated. Upgrading to %s or later is recommended" }
+		ATM0014W:string { "Drive firmware level does not correctly detect the EOD status" }
 	}
 }

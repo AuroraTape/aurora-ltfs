@@ -840,7 +840,7 @@ static int _create_table_tape(struct timeout_tape **result,
 	entry->timeout = override->timeout;
 	HASH_ADD_INT(*result, op_code, entry);
 	if (! *result) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 
@@ -1114,7 +1114,7 @@ static inline int _is_mountable(const int drive_type,
 				num_table = num_lto_drive_density;
 			}
 		} else {
-			ltfsmsg(LTFS_INFO, 39808I, barcode);
+			ltfsmsg(ATM0009I, barcode);
 			return MEDIUM_CANNOT_ACCESS;
 		}
 	} else {
@@ -1128,7 +1128,7 @@ static inline int _is_mountable(const int drive_type,
 				num_table = num_jaguar_drive_density;
 			}
 		} else {
-			ltfsmsg(LTFS_INFO, 39808I, barcode);
+			ltfsmsg(ATM0009I, barcode);
 			return MEDIUM_CANNOT_ACCESS;
 		}
 	}
@@ -1172,13 +1172,13 @@ int ibm_tape_is_mountable(const int drive_type,
 		switch (bc_len) {
 			case 6:
 				/* Always supported */
-				ltfsmsg(LTFS_DEBUG, 39806D, barcode);
+				ltfsmsg(ATM0007D, barcode);
 				return MEDIUM_WRITABLE;
 			case 8:
 				break;
 			default:
 				// invalid bar code length
-				ltfsmsg(LTFS_ERR, 39807E, barcode);
+				ltfsmsg(ATM0008E, barcode);
 				return MEDIUM_CANNOT_ACCESS;
 				break;
 		}
@@ -1260,9 +1260,9 @@ int ibm_tape_genkey(unsigned char *key)
 			return 0;
 		}
 
-		ltfsmsg(LTFS_WARN, 39810W);
+		ltfsmsg(ATM0011W);
 	} else
-		ltfsmsg(LTFS_WARN, 39811W, errno);
+		ltfsmsg(ATM0012W, errno);
 
 	/* Return host name based key */
 	*key = KEY_PREFIX_HOST;
@@ -1313,21 +1313,21 @@ bool ibm_tape_is_supported_firmware(int drive_type, const unsigned char * const 
 	case DRIVE_LTO5:
 	case DRIVE_LTO5_HH:
 		if (rev < ltfs_betou32(base_firmware_level_lto5)) {
-			ltfsmsg(LTFS_WARN, 39812W, base_firmware_level_lto5);
-			ltfsmsg(LTFS_WARN, 39813W);
+			ltfsmsg(ATM0013W, base_firmware_level_lto5);
+			ltfsmsg(ATM0014W);
 			supported = false;
 		}
 		break;
 	case DRIVE_LTO8:
 	case DRIVE_LTO8_HH:
 		if (rev < ltfs_betou32(base_firmware_level_lto8)) {
-			ltfsmsg(LTFS_WARN, 39812W, base_firmware_level_lto8);
+			ltfsmsg(ATM0013W, base_firmware_level_lto8);
 			supported = false;
 		}
 		break;
 	case DRIVE_TS1140:
 		if (rev < ltfs_betou32(base_firmware_level_ts1140)) {
-			ltfsmsg(LTFS_WARN, 39812W, base_firmware_level_ts1140);
+			ltfsmsg(ATM0013W, base_firmware_level_ts1140);
 			supported = false;
 		}
 		break;

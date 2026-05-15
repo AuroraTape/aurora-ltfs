@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the FreeBSD CAM backend.
@@ -39,86 +39,85 @@
 // ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 31200 }
-		end_id:int { 31399 }
+		prefix:string { "ATC" }
 
-		31206D:string { "IOCTL: sense = %02x/%02x%02x" }
-		31207D:string { "IOCTL: pos = 0x%02x%02x%02x%02x %s" }
-		31208I:string { "IOCTL: %s %d returns %d (generic %d) %s" }
-		31209D:string { "IOCTL: no sense info" }
-		31211D:string { "IOCTL: %s %d expected error %d. retry the operation."}
-		31212I:string { "Cannot get sense (%d)" }
-		31213I:string { "Error on %s: %s (%d) %s"}
-		31214E:string { "Error on %s: msg = NULL (%d) %s"}
-		31218I:string { "Parsing log page: buffer too small, copying %zu bytes from %lx" }
-		31219I:string { "Option parsing for the CAM backend failed (%d)" }
-		31220E:string { "Invalid scsi_lbprotect option: %s" }
-		31223I:string { "Opening a device through CAM driver (%s)" }
-		31224E:string { "%s: medium is already mounted or in use" }
-		31225I:string { "Cannot open device \'%s\' (%d)" }
-		31226W:string { "Device \'%s\' must be opened in read-only mode" }
-		31228I:string { "Product ID is \'%s\'" }
-		31229I:string { "Vendor ID is %s" }
-		31230I:string { "Unsupported Drive \'%s\'" }
-		31232I:string { "Firmware revision is %s" }
-		31233I:string { "Drive serial is %s" }
-		31234I:string { "Pseudo-error on %s" }
-		31235I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
+		ATC0001D:string { "IOCTL: sense = %02x/%02x%02x" }
+		ATC0002D:string { "IOCTL: pos = 0x%02x%02x%02x%02x %s" }
+		ATC0003I:string { "IOCTL: %s %d returns %d (generic %d) %s" }
+		ATC0004D:string { "IOCTL: no sense info" }
+		ATC0005D:string { "IOCTL: %s %d expected error %d. retry the operation"}
+		ATC0006I:string { "Cannot get sense (%d)" }
+		ATC0007I:string { "Error on %s: %s (%d) %s"}
+		ATC0008E:string { "Error on %s: msg = NULL (%d) %s"}
+		ATC0009I:string { "Parsing log page: buffer too small, copying %zu bytes from %lx" }
+		ATC0010I:string { "Option parsing for the CAM backend failed (%d)" }
+		ATC0011E:string { "Invalid scsi_lbprotect option: %s" }
+		ATC0012I:string { "Opening a device through CAM driver (%s)" }
+		ATC0013E:string { "%s: medium is already mounted or in use" }
+		ATC0014I:string { "Cannot open device \'%s\' (%d)" }
+		ATC0015W:string { "Device \'%s\' must be opened in read-only mode" }
+		ATC0016I:string { "Product ID is \'%s\'" }
+		ATC0017I:string { "Vendor ID is %s" }
+		ATC0018I:string { "Unsupported Drive \'%s\'" }
+		ATC0019I:string { "Firmware revision is %s" }
+		ATC0020I:string { "Drive serial is %s" }
+		ATC0021I:string { "Pseudo-error on %s" }
+		ATC0022I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive" }
 
-		31236D:string { "Read block: file mark detected" }
-		31237I:string { "Read block: overlength condition is detected. residual = %d, actual = %d" }
-		31238D:string { "Read block: underlength condition is detected. shortage = %d, actual = %d" }
-		31239E:string { "Logical block protection error on read." }
-		31245W:string { "Received low space warning (early warning) in %s" }
-		31246W:string { "Received low space warning (programmable early warning) in %s" }
-		31247E:string { "Logical block protection error on write." }
-		31248D:string { "EOD detected (%s): ignore sense" }
-		31249I:string { "Unrecognized space type" }
-		31250I:string { "Cannot space: count value %d of the space command is too large" }
-		31251I:string { "A long data wipe is in progress. (%d minutes passed)" }
-		31252I:string { "A long data wipe is in progress. %d %%" }
-		31253W:string { "Failed to get medium type code: medium type check is skipped" }
+		ATC0023D:string { "Read block: file mark detected" }
+		ATC0024I:string { "Read block: overlength condition is detected. residual = %d, actual = %d" }
+		ATC0025D:string { "Read block: underlength condition is detected. shortage = %d, actual = %d" }
+		ATC0026E:string { "Logical block protection error on read" }
+		ATC0027W:string { "Received low space warning (early warning) in %s" }
+		ATC0028W:string { "Received low space warning (programmable early warning) in %s" }
+		ATC0029E:string { "Logical block protection error on write" }
+		ATC0030D:string { "EOD detected (%s): ignore sense" }
+		ATC0031I:string { "Unrecognized space type" }
+		ATC0032I:string { "Cannot space: count value %d of the space command is too large" }
+		ATC0033I:string { "A long data wipe is in progress. (%d minutes passed)" }
+		ATC0034I:string { "A long data wipe is in progress. %d %%" }
+		ATC0035W:string { "Failed to get medium type code: medium type check is skipped" }
 		// Reusable 31254
-		31255I:string { "Unsupported cartridge (0x%x, 0x%x)" }
-		31256I:string { "Invalid format mode (%d)" }
-		31257I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)" }
-		31258I:string { "Cannot get remaining capacity: failed to parse the log page" }
-		31259I:string { "Cannot get remaining capacity: loop index error (%d)" }
-		31260I:string { "Cannot read attribute (%d)" }
-		31261I:string { "Cannot get log page 0x%02x (%d) in %s" }
-		31262I:string { "Cannot parse the log page 0x%02x in %s" }
-		31263E:string { "Failed to open file '%s' (%d)"}
-		31264W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)" }
-		31265W:string { "Cannot get EOD status: failed to parse the log page" }
-		31266W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)" }
-		31267I:string { "Unexpected parameter size for getting active CQ loss write (%d)" }
-		31268I:string { "Cannot allocate memory in %s" }
-		31269E:string { "Encryption method of the drive is not AME but %s (0x%02X)" }
-		31270E:string { "Encryption feature is not supported on the drive: %d" }
-		31271I:string { "Logical block protection is enabled" }
-		31272I:string { "Logical block protection is disabled" }
+		ATC0036I:string { "Unsupported cartridge (0x%x, 0x%x)" }
+		ATC0037I:string { "Invalid format mode (%d)" }
+		ATC0038I:string { "Cannot get remaining capacity: get log page 0x%02x failed (%d)" }
+		ATC0039I:string { "Cannot get remaining capacity: failed to parse the log page" }
+		ATC0040I:string { "Cannot get remaining capacity: loop index error (%d)" }
+		ATC0041I:string { "Cannot read attribute (%d)" }
+		ATC0042I:string { "Cannot get log page 0x%02x (%d) in %s" }
+		ATC0043I:string { "Cannot parse the log page 0x%02x in %s" }
+		ATC0044E:string { "Failed to open file '%s' (%d)"}
+		ATC0045W:string { "Cannot get EOD status: failed to get log page 0x%02x (%d)" }
+		ATC0046W:string { "Cannot get EOD status: failed to parse the log page" }
+		ATC0047W:string { "Cannot get EOD status: value length or partition number is wrong %d - (%d, %d)" }
+		ATC0048I:string { "Unexpected parameter size for getting active CQ loss write (%d)" }
+		ATC0049I:string { "Cannot allocate memory in %s" }
+		ATC0050E:string { "Encryption method of the drive is not AME but %s (0x%02X)" }
+		ATC0051E:string { "Encryption feature is not supported on the drive: %d" }
+		ATC0052I:string { "Logical block protection is enabled" }
+		ATC0053I:string { "Logical block protection is disabled" }
 
-		31278I:string { "Saving drive dump to %s" }
-		31279W:string { "Cannot retrieve drive dump: failed to create dump file (%d)" }
-		31280D:string { "Total dump data length is %lld." }
-		31281D:string { "Total number of transfers is %d." }
-		31282D:string { "Transferring dump data" }
-		31283W:string { "Cannot retrieve drive dump: failed to read buffer (%d)" }
-		31284W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)" }
-		31285D:string { "Transfer %d: wrote %d bytes" }
-		31286W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d" }
-		31287I:string { "Taking drive dump in buffer" }
-		31288I:string { "Forcing drive dump" }
-		31289I:string { "Failed to get cartridge status. The cartridge is not loaded."}
+		ATC0054I:string { "Saving drive dump to %s" }
+		ATC0055W:string { "Cannot retrieve drive dump: failed to create dump file (%d)" }
+		ATC0056D:string { "Total dump data length is %lld" }
+		ATC0057D:string { "Total number of transfers is %d" }
+		ATC0058D:string { "Transferring dump data" }
+		ATC0059W:string { "Cannot retrieve drive dump: failed to read buffer (%d)" }
+		ATC0060W:string { "Cannot retrieve drive dump: failed to write to dump file (%d)" }
+		ATC0061D:string { "Transfer %d: wrote %d bytes" }
+		ATC0062W:string { "Cannot retrieve drive dump: wrote %d bytes out, expected %d" }
+		ATC0063I:string { "Taking drive dump in buffer" }
+		ATC0064I:string { "Forcing drive dump" }
+		ATC0065I:string { "Failed to get cartridge status. The cartridge is not loaded"}
 
-		31392D:string { "Backend %s %s" }
-		31393D:string { "Backend %s: %d %s" }
-		31394D:string { "Backend %s: %llu %s" }
-		31395D:string { "Backend %s: %zu bytes %s" }
-		31396D:string { "Backend %s: %zu %s" }
-		31397D:string { "Backend %s: (%llu, %llu) %s" }
-		31398D:string { "Backend %s: (%llu, %llu) FM = %llu %s" }
-		31399I:string { "CAM backend options:\n"
+		ATC0066D:string { "Backend %s %s" }
+		ATC0067D:string { "Backend %s: %d %s" }
+		ATC0068D:string { "Backend %s: %llu %s" }
+		ATC0069D:string { "Backend %s: %zu bytes %s" }
+		ATC0070D:string { "Backend %s: %zu %s" }
+		ATC0071D:string { "Backend %s: (%llu, %llu) %s" }
+		ATC0072D:string { "Backend %s: (%llu, %llu) FM = %llu %s" }
+		ATC0073I:string { "CAM backend options:\n"
 						"    -o devname=<dev>           tape device (default=%s)\n"
 						"    -o autodump                enable autodump (default)\n"
 						"    -o noautodump              disable autodump\n"

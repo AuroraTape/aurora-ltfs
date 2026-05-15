@@ -1,0 +1,89 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+root:table {
+	// libaltfs index, journal, label
+	messages:table {
+		prefix:string { "ALJ" }
+
+		ALJ0001I:string { "Failed to sync volume (%d). Stop the periodic sync thread" }
+		ALJ0002E:string { "Specified length of buffer is too short. (%lu)" }
+		ALJ0003E:string { "Invalid index criteria option \'%s\'" }
+		ALJ0004E:string { "Duplicate index criteria option \'%s\'" }
+		ALJ0005E:string { "More than one non-numeric character follows the size criterion" }
+		ALJ0006E:string { "Invalid size criterion multiplier \'%c\'" }
+		ALJ0007E:string { "Size= rule must contain a valid size" }
+		ALJ0008E:string { "Size= rule must contain a digit" }
+		ALJ0009E:string { "Cannot parse index criteria: rules are invalid" }
+		ALJ0010E:string { "Cannot parse index criteria: failed to parse name rule (%d)" }
+		ALJ0011E:string { "Cannot parse index criteria: error while seeking name rule" }
+		ALJ0012E:string { "Cannot parse index criteria: failed to parse size rule (%d)" }
+		ALJ0013E:string { "Cannot parse index criteria: error while seeking size rule" }
+		ALJ0014E:string { "Cannot specify a name rule without a size rule" }
+		ALJ0015E:string { "Cannot match name: failed to initialize glob cache (%d)" }
+		ALJ0016E:string { "Cannot match name: failed to prepare for caseless matching (%d)" }
+		ALJ0017E:string { "Cannot prepare glob cache: failed to prepare name for caseless matching (%d)" }
+		ALJ0018E:string { "Cannot match name: match function failed (%d)" }
+		ALJ0019E:string { "Cannot perform matching: failed to open text boundary iterator for criteria (%d)" }
+		ALJ0020E:string { "Cannot perform matching: failed to open text boundary iterator for filename (%d)" }
+		ALJ0021E:string { "Failed to push file name onto a null stack pointer" }
+		ALJ0022E:string { "Failed to pop a file name from a null stack pointer" }
+		ALJ0023E:string { "Comparing labels: tape bar code number mismatch" }
+		ALJ0024E:string { "Comparing labels: volume UUID mismatch" }
+		ALJ0025E:string { "Comparing labels: format time mismatch" }
+		ALJ0026E:string { "Comparing labels: block size mismatch" }
+		ALJ0027E:string { "Comparing labels: compression mismatch" }
+		ALJ0028E:string { "Comparing labels: partition IDs must be lowercase ASCII characters" }
+		ALJ0029E:string { "Comparing labels: partition IDs must be distinct" }
+		ALJ0030E:string { "Comparing labels: partition map mismatch" }
+		ALJ0031E:string { "Comparing labels: unknown partition ID" }
+		ALJ0032E:string { "Comparing labels: partitions have the same ID \'%c\'" }
+		ALJ0033E:string { "Comparing labels: invalid bar code number" }
+		ALJ0034E:string { "Cannot read index: back pointer is corrupt" }
+		ALJ0035E:string { "Data placement rule contains invalid character(s): '%s'" }
+		ALJ0036E:string { "Data placement rule is too long: '%s'" }
+		ALJ0037E:string { "Failed to validate data placement rule (%d)" }
+		ALJ0038E:string { "Empty data placement rule in '%s'" }
+		ALJ0039W:string { "Periodic sync thread failed to flush file data to the medium. Data might be lost (%s)" }
+		ALJ0040D:string { "Sync is done. (%s)" }
+		ALJ0041D:string { "Periodic sync thread initialized" }
+		ALJ0042D:string { "Periodic sync thread uninitialized" }
+		ALJ0043D:string { "Sync is kicked. (%s)" }
+		ALJ0044E:string { "Failed to spawn the periodic sync thread (%d)" }
+		ALJ0045E:string { "Path helper: Provided path must be an absolute path (%s)" }
+		ALJ0046E:string { "Failed to construct a path helper (push: %d)" }
+		ALJ0047E:string { "Failed to find a corresponded directory in path helper (push: %d)" }
+	}
+}

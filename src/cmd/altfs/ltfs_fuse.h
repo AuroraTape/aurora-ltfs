@@ -133,8 +133,6 @@ struct ltfs_fuse_data {
 	char *str_append_only_mode;    /**< option sting of scsi_append_only_mode */
 	int append_only_mode;          /**< Use append-only mode */
 
-	bool advanced_help;            /**< Include standard FUSE options on --help? */
-
 	ltfs_mutex_t file_table_lock; /**< Controls access to 'open_files' */
 	struct file_info *file_table;    /**< Hash table of open file handles */
 };

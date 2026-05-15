@@ -92,14 +92,14 @@ static int convert_option(const unsigned char * const path, unsigned char **dk_l
 	int dk_list_offset = 0;
 	*dk_list = calloc(dk_list_length, sizeof(unsigned char));
 	if (! *dk_list) {
-		ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
 
 	FILE *fp = fopen((const char *) path, "r");
 	if (! fp) {
 		ret = -errno;
-		ltfsmsg(LTFS_ERR, 15553E, path, ret);
+		ltfsmsg(AKF0004E, path, ret);
 		return ret;
 	}
 
@@ -118,7 +118,7 @@ static int convert_option(const unsigned char * const path, unsigned char **dk_l
 
 			void *new_dk_list = realloc(*dk_list, dk_list_length);
 			if (! new_dk_list) {
-				ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+				ltfsmsg(ALC0002E, __FUNCTION__);
 				fclose(fp);
 				return -LTFS_NO_MEMORY;
 			}
@@ -139,7 +139,7 @@ static int convert_option(const unsigned char * const path, unsigned char **dk_l
 			continue;
 		} else {
 			ret = -1;
-			ltfsmsg(LTFS_ERR, 15554E);
+			ltfsmsg(AKF0005E);
 			break;
 		}
 	}
@@ -162,7 +162,7 @@ void *flatfile_init(struct ltfs_volume *vol)
 
 	km = key_format_ltfs_init(vol);
 	if (km)
-		ltfsmsg(LTFS_DEBUG, 15550D);
+		ltfsmsg(AKF0001D);
 
 	return km;
 }
@@ -177,7 +177,7 @@ int flatfile_destroy(void * const kmi_handle)
 	int ret;
 
 	ret = key_format_ltfs_destroy(kmi_handle);
-	ltfsmsg(LTFS_DEBUG, 15551D);
+	ltfsmsg(AKF0002D);
 
 	return ret;
 }
@@ -196,7 +196,7 @@ int flatfile_get_key(unsigned char **keyalias, unsigned char **key, void * const
 	if (priv.dk_list && dk_list == NULL) {
 		int ret = convert_option(priv.dk_list, &dk_list);
 		if (ret < 0) {
-			ltfsmsg(LTFS_ERR, 15552E);
+			ltfsmsg(AKF0003E);
 			if (dk_list) {
 				free(dk_list);
 			}
@@ -221,7 +221,7 @@ int flatfile_get_key(unsigned char **keyalias, unsigned char **key, void * const
  */
 int flatfile_help_message(void)
 {
-	ltfsresult(15568I);
+	ltfsresult(AKF0012I);
 
 	return 0;
 }
@@ -253,7 +253,7 @@ int flatfile_parse_opts(void *opt_args)
 	/* fuse_opt_parse can handle a NULL device parameter just fine */
 	ret = fuse_opt_parse(args, &priv, kmi_flatfile_options, null_parser);
 	if (ret < 0) {
-		ltfsmsg(LTFS_ERR, 15564E, ret);
+		ltfsmsg(AKF0008E, ret);
 		return ret;
 	}
 

@@ -1,9 +1,9 @@
 //
 //
-//  OO_Copyright_BEGIN
+//  AA_Copyright_BEGIN
 //
 //
-//  Copyright 2010, 2020 IBM Corp. All rights reserved.
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 //  POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//  OO_Copyright_END
+//  AA_Copyright_END
 //
 
 // Messages for the file backend.
@@ -38,117 +38,116 @@
 // so be sure to make a note in messages/ltfs/root.txt whenever an ID is allocated here.
 root:table {
 	messages:table {
-		start_id:int { 30000 }
-		end_id:int { 30199 }
+		prefix:string { "ATF" }
 
-		30000I:string { "Opening a device through generic file driver (%s)." }
-		30001I:string { "Opening a redirecting file through generic file driver (%s)." }
-		30002E:string { "Cannot open redirecting file (%s)." }
-		30003I:string { "Opening a directory through generic file driver (%s)." }
-		30004E:string { "Cannot open the device directory (%s)." }
-		30005D:string { "Backend read: %u bytes (from position=(%u, %llu), FMs %llu)." }
-		30006E:string { "Cannot read: unit not ready." }
-		30007E:string { "Pseudo-error on %s." }
-		30008E:string { "Cannot read: already at EOD." }
-		30009E:string { "Cannot read: check for file mark failed (%d)." }
-		30010E:string { "Cannot read: check for record failed (%d)." }
-		30011E:string { "Cannot read: failed to open file (%d)." }
-		30012E:string { "Cannot read: failed to read file (%d)." }
-		30013E:string { "Cannot read: failed to close file (%d)." }
-		30014D:string { "Backend read: returning %zd bytes." }
-		30015E:string { "Cannot read: no block at current position." }
-		30016D:string { "Backend write: %u bytes (at position=(%u, %llu), FMs %llu)." }
-		30017E:string { "Cannot write: unit not ready." }
-		30018E:string { "Cannot write: null input buffer." }
-		30019I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive." }
-		30020E:string { "Cannot write: requested size (%u) exceeds maximum block size (%u)." }
-		30021E:string { "Cannot write: failed to remove current record (%d)." }
-		30022E:string { "Cannot write: failed to set write pass (%d)." }
-		30023E:string { "Cannot write: failed to generate file name." }
-		30024E:string { "Cannot write: failed to create file \'%s\' (%d)." }
-		30025E:string { "Cannot write: failed to write file (%d)." }
-		30026E:string { "Cannot write: failed to close file (%d)." }
-		30027E:string { "Cannot write: failed to update EOD (%d)." }
-		30028D:string { "Backend write file marks: %u (at position=(%u, %llu), FMs %llu)." }
-		30029E:string { "Cannot write file marks: unit not ready." }
-		30030E:string { "Cannot write file marks: failed to set write pass (%d)." }
-		30031E:string { "Cannot write file marks: failed to remove current record (%d)." }
-		30032E:string { "Cannot write file marks: failed to generate file name." }
-		30033E:string { "Cannot write file marks: failed to create file \'%s\' (%d)." }
-		30034E:string { "Cannot write file marks: failed to close file (%d)." }
-		30035E:string { "Cannot write file marks: failed to update EOD (%d)." }
-		30036E:string { "Cannot rewind: unit not ready." }
-		30037E:string { "Cannot locate: unit not ready." }
-		30038E:string { "Cannot locate: invalid partition %lu." }
-		30039E:string { "Cannot locate: failed to generate file name." }
-		30040E:string { "Cannot space: unit not ready." }
-		30041E:string { "Cannot space: Unrecognized space type." }
-		30042E:string { "Cannot space: failed to generate file name." }
-		30043E:string { "Cannot erase: unit not ready." }
-		30044D:string { "Erase partition %lu." }
-		30045E:string { "Cannot get a redirect location (%s)." }
-		30046I:string { "Dummy device shows empty (%s)." }
-		30047E:string { "Cannot find the location pointed by redirecting file (%s)." }
-		30048I:string { "Loading a directory through generic file driver (%s)." }
-		30049E:string { "Cannot allocate memory for cartridge configuration file (%d)." }
-		30050E:string { "Cartridge configuration file is already existed as directory (%d)." }
-		30051E:string { "Cannot load cartridge configuration file (%d)." }
-		30052E:string { "Cannot load: failed to find EOD on partition %u (%d)." }
-		30053E:string { "Cannot load: failed to get write pass." }
-		30054E:string { "Cannot read position: unit not ready." }
-		30055E:string { "Cannot set capacity: must issue command from partition 0, block 0." }
-		30056E:string { "Cannot format: must issue command from partition 0, block 0." }
-		30057E:string { "Cannot format: unknown format type." }
-		30058E:string { "Cannot get remaining capacity: unit not ready." }
-		30059E:string { "Device already reserved." }
-		30060E:string { "Cannot lock medium: unit not ready." }
-		30061E:string { "Cannot unlock medium: unit not ready." }
-		30062W:string { "Cannot read attribute: failed to open file (%d)." }
-		30063W:string { "Cannot read attribute: failed to read file (%d)." }
-		30064E:string { "Cannot write attribute: failed to generate file name." }
-		30065E:string { "Cannot write attribute: failed to create file (%d)." }
-		30066E:string { "Cannot write attribute: failed to write file (%d)." }
-		30067E:string { "Cannot set compression: unit not ready." }
-		30068E:string { "Cannot find EOD: failed to generate file name." }
-		30069E:string { "Cannot find EOD: failed to check for file (%d)." }
-		30070E:string { "Cannot find EOD: failed to update EOD (%d)." }
-		30071E:string { "Cannot update EOD: failed to remove current record (%d)." }
-		30072E:string { "Cannot update EOD: failed to generate file name." }
-		30073E:string { "Cannot update EOD: failed to create file (%d)." }
-		30074E:string { "Cannot update EOD: failed to remove file (%d)." }
-		30075E:string { "Cannot remove record: failed to make file name." }
-		30076E:string { "Cannot remove record: failed to unlink file (%d)." }
-		30077E:string { "Cannot space file marks: tried to space over EOD." }
-		30078E:string { "Cannot space file marks: failed to generate file name." }
-		30079E:string { "Cannot space file marks: failed to check for file (%d)." }
-		30080E:string { "Cannot space file marks: tried to space over BOT." }
-		30081I:string { "Getting the device directory (%s)." }
-		30082I:string { "No device directory is specified (%s)." }
-		30083I:string { "Scanning the devices directory (%s)." }
-		30084D:string { "Found a device (%s, %s, %s, %s)." }
-		30085I:string { "Cartridge is read-only (%d, %s)." }
-		30086I:string { "Cartridge is unsupported (%s, 0x%02x)." }
+		ATF0001I:string { "Opening a device through generic file driver (%s)" }
+		ATF0002I:string { "Opening a redirecting file through generic file driver (%s)" }
+		ATF0003E:string { "Cannot open redirecting file (%s)" }
+		ATF0004I:string { "Opening a directory through generic file driver (%s)" }
+		ATF0005E:string { "Cannot open the device directory (%s)" }
+		ATF0006D:string { "Backend read: %u bytes (from position=(%u, %llu), FMs %llu)" }
+		ATF0007E:string { "Cannot read: unit not ready" }
+		ATF0008E:string { "Pseudo-error on %s" }
+		ATF0009E:string { "Cannot read: already at EOD" }
+		ATF0010E:string { "Cannot read: check for file mark failed (%d)" }
+		ATF0011E:string { "Cannot read: check for record failed (%d)" }
+		ATF0012E:string { "Cannot read: failed to open file (%d)" }
+		ATF0013E:string { "Cannot read: failed to read file (%d)" }
+		ATF0014E:string { "Cannot read: failed to close file (%d)" }
+		ATF0015D:string { "Backend read: returning %zd bytes" }
+		ATF0016E:string { "Cannot read: no block at current position" }
+		ATF0017D:string { "Backend write: %u bytes (at position=(%u, %llu), FMs %llu)" }
+		ATF0018E:string { "Cannot write: unit not ready" }
+		ATF0019E:string { "Cannot write: null input buffer" }
+		ATF0020I:string { "Pseudo-error on write. Good return code, but a record to emulate a write error did not get sent to the drive" }
+		ATF0021E:string { "Cannot write: requested size (%u) exceeds maximum block size (%u)" }
+		ATF0022E:string { "Cannot write: failed to remove current record (%d)" }
+		ATF0023E:string { "Cannot write: failed to set write pass (%d)" }
+		ATF0024E:string { "Cannot write: failed to generate file name" }
+		ATF0025E:string { "Cannot write: failed to create file \'%s\' (%d)" }
+		ATF0026E:string { "Cannot write: failed to write file (%d)" }
+		ATF0027E:string { "Cannot write: failed to close file (%d)" }
+		ATF0028E:string { "Cannot write: failed to update EOD (%d)" }
+		ATF0029D:string { "Backend write file marks: %u (at position=(%u, %llu), FMs %llu)" }
+		ATF0030E:string { "Cannot write file marks: unit not ready" }
+		ATF0031E:string { "Cannot write file marks: failed to set write pass (%d)" }
+		ATF0032E:string { "Cannot write file marks: failed to remove current record (%d)" }
+		ATF0033E:string { "Cannot write file marks: failed to generate file name" }
+		ATF0034E:string { "Cannot write file marks: failed to create file \'%s\' (%d)" }
+		ATF0035E:string { "Cannot write file marks: failed to close file (%d)" }
+		ATF0036E:string { "Cannot write file marks: failed to update EOD (%d)" }
+		ATF0037E:string { "Cannot rewind: unit not ready" }
+		ATF0038E:string { "Cannot locate: unit not ready" }
+		ATF0039E:string { "Cannot locate: invalid partition %lu" }
+		ATF0040E:string { "Cannot locate: failed to generate file name" }
+		ATF0041E:string { "Cannot space: unit not ready" }
+		ATF0042E:string { "Cannot space: Unrecognized space type" }
+		ATF0043E:string { "Cannot space: failed to generate file name" }
+		ATF0044E:string { "Cannot erase: unit not ready" }
+		ATF0045D:string { "Erase partition %lu" }
+		ATF0046E:string { "Cannot get a redirect location (%s)" }
+		ATF0047I:string { "Dummy device shows empty (%s)" }
+		ATF0048E:string { "Cannot find the location pointed by redirecting file (%s)" }
+		ATF0049I:string { "Loading a directory through generic file driver (%s)" }
+		ATF0050E:string { "Cannot allocate memory for cartridge configuration file (%d)" }
+		ATF0051E:string { "Cartridge configuration file is already existed as directory (%d)" }
+		ATF0052E:string { "Cannot load cartridge configuration file (%d)" }
+		ATF0053E:string { "Cannot load: failed to find EOD on partition %u (%d)" }
+		ATF0054E:string { "Cannot load: failed to get write pass" }
+		ATF0055E:string { "Cannot read position: unit not ready" }
+		ATF0056E:string { "Cannot set capacity: must issue command from partition 0, block 0" }
+		ATF0057E:string { "Cannot format: must issue command from partition 0, block 0" }
+		ATF0058E:string { "Cannot format: unknown format type" }
+		ATF0059E:string { "Cannot get remaining capacity: unit not ready" }
+		ATF0060E:string { "Device already reserved" }
+		ATF0061E:string { "Cannot lock medium: unit not ready" }
+		ATF0062E:string { "Cannot unlock medium: unit not ready" }
+		ATF0063W:string { "Cannot read attribute: failed to open file (%d)" }
+		ATF0064W:string { "Cannot read attribute: failed to read file (%d)" }
+		ATF0065E:string { "Cannot write attribute: failed to generate file name" }
+		ATF0066E:string { "Cannot write attribute: failed to create file (%d)" }
+		ATF0067E:string { "Cannot write attribute: failed to write file (%d)" }
+		ATF0068E:string { "Cannot set compression: unit not ready" }
+		ATF0069E:string { "Cannot find EOD: failed to generate file name" }
+		ATF0070E:string { "Cannot find EOD: failed to check for file (%d)" }
+		ATF0071E:string { "Cannot find EOD: failed to update EOD (%d)" }
+		ATF0072E:string { "Cannot update EOD: failed to remove current record (%d)" }
+		ATF0073E:string { "Cannot update EOD: failed to generate file name" }
+		ATF0074E:string { "Cannot update EOD: failed to create file (%d)" }
+		ATF0075E:string { "Cannot update EOD: failed to remove file (%d)" }
+		ATF0076E:string { "Cannot remove record: failed to make file name" }
+		ATF0077E:string { "Cannot remove record: failed to unlink file (%d)" }
+		ATF0078E:string { "Cannot space file marks: tried to space over EOD" }
+		ATF0079E:string { "Cannot space file marks: failed to generate file name" }
+		ATF0080E:string { "Cannot space file marks: failed to check for file (%d)" }
+		ATF0081E:string { "Cannot space file marks: tried to space over BOT" }
+		ATF0082I:string { "Getting the device directory (%s)" }
+		ATF0083I:string { "No device directory is specified (%s)" }
+		ATF0084I:string { "Scanning the devices directory (%s)" }
+		ATF0085D:string { "Found a device (%s, %s, %s, %s)" }
+		ATF0086I:string { "Cartridge is read-only (%d, %s)" }
+		ATF0087I:string { "Cartridge is unsupported (%s, 0x%02x)" }
 		//unused
-		30088I:string { "Unsupported density code (0x%x, 0x%02x)." }
+		ATF0088I:string { "Unsupported density code (0x%x, 0x%02x)" }
 
-		30150E:string { "Cannot parse cartridge configuration file: start document (%d)." }
-		30151E:string { "Cannot parse cartridge configuration file: end document (%d)." }
-		30152E:string { "Cannot parse cartridge configuration file: writer creation." }
-		30153E:string { "Cannot parse cartridge configuration file: writer fail." }
-		30154W:string { "Cannot parse cartridge configuration file: 0-byte output." }
-		30155E:string { "Cannot parse cartridge configuration file: toptag = %s." }
-		30156E:string { "Cannot parse cartridge configuration file: encoding = %s." }
-		30157E:string { "Cannot create xml reader for cartridge configuration file." }
-		30158E:string { "Cannot parse cartridge configuration file: XML." }
+		ATF0089E:string { "Cannot parse cartridge configuration file: start document (%d)" }
+		ATF0090E:string { "Cannot parse cartridge configuration file: end document (%d)" }
+		ATF0091E:string { "Cannot parse cartridge configuration file: writer creation" }
+		ATF0092E:string { "Cannot parse cartridge configuration file: writer fail" }
+		ATF0093W:string { "Cannot parse cartridge configuration file: 0-byte output" }
+		ATF0094E:string { "Cannot parse cartridge configuration file: toptag = %s" }
+		ATF0095E:string { "Cannot parse cartridge configuration file: encoding = %s" }
+		ATF0096E:string { "Cannot create xml reader for cartridge configuration file" }
+		ATF0097E:string { "Cannot parse cartridge configuration file: XML" }
 
-		30195D:string { "Backend %s." }
-		30196D:string { "Backend %s: %llu." }
-		30197D:string { "Backend %s: (%llu, %llu)." }
-		30198D:string { "Backend %s: (%llu, %llu) FM = %llu." }
-		30199I:string { "FILE backend options:\n    -o devname=<dev>          LTFS emulation directory (default=%s)\n"
+		ATF0098D:string { "Backend %s" }
+		ATF0099D:string { "Backend %s: %llu" }
+		ATF0100D:string { "Backend %s: (%llu, %llu)" }
+		ATF0101D:string { "Backend %s: (%llu, %llu) FM = %llu" }
+		ATF0102I:string { "FILE backend options:\n    -o devname=<dev>          LTFS emulation directory (default=%s)\n"
 						"    -o emulate_delays         Emulate delays on seeks\n"
 						"    -o file_readonly          Emulate operation in read-only mode\n"
 						"    -o file_p0_warning=<num>  Set early warning position partition 0\n"
-						"    -o file_p1_warning=<num>  Set early warning position partition 1\n." }
+						"    -o file_p1_warning=<num>  Set early warning position partition 1\n" }
 	}
 }

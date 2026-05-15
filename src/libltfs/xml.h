@@ -108,7 +108,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 #define xml_mktag(val, retval) \
 	do { \
 		if ((val) < 0) { \
-			ltfsmsg(LTFS_ERR, 17042E, __FUNCTION__); \
+			ltfsmsg(ALX0048E, __FUNCTION__); \
 			return (retval); \
 		} \
 	} while (0)
@@ -161,7 +161,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 	do {												\
 		for (i=0; i<ntags_req; ++i) {					\
 			if (! have_required_tags[i]) {				\
-				ltfsmsg(LTFS_ERR, 17000E, parent_tag);	\
+				ltfsmsg(ALX0007E, parent_tag);	\
 				return -LTFS_XML_NO_REQUIRED_TAG;		\
 			}											\
 		}												\
@@ -171,7 +171,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 #define check_required_tag(i)					\
 	do {										\
 		if (have_required_tags[i]) {			\
-			ltfsmsg(LTFS_ERR, 17001E, name);	\
+			ltfsmsg(ALX0008E, name);	\
 			return -LTFS_XML_NO_REQUIRED_TAG;	\
 		}										\
 		have_required_tags[i] = true;			\
@@ -181,7 +181,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 #define check_optional_tag(i)					\
 	do {										\
 		if (have_optional_tags[i]) {			\
-			ltfsmsg(LTFS_ERR, 17002E, name);	\
+			ltfsmsg(ALX0009E, name);	\
 			return -LTFS_XML_DUPLICATED_TAG;	\
 		}										\
 		have_optional_tags[i] = true;			\
@@ -192,10 +192,10 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 	do {												\
 		empty = xmlTextReaderIsEmptyElement(reader);	\
 		if (empty < 0) {								\
-			ltfsmsg(LTFS_ERR, 17003E);					\
+			ltfsmsg(ALX0010E);					\
 			return -LTFS_XML_EMPTY_UNKNOWN;				\
 		} else if (empty > 0) {							\
-			ltfsmsg(LTFS_ERR, 17004E, name);			\
+			ltfsmsg(ALX0011E, name);			\
 			return -LTFS_XML_EMPTY;						\
 		}												\
 	} while (0)
@@ -205,7 +205,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 	do {												\
 		empty = xmlTextReaderIsEmptyElement(reader);	\
 		if (empty < 0) {								\
-			ltfsmsg(LTFS_ERR, 17003E);					\
+			ltfsmsg(ALX0010E);					\
 			return -LTFS_XML_EMPTY_UNKNOWN;				\
 		}												\
 	} while (0)
@@ -214,7 +214,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 #define check_tag_end(tagname)											\
 	do {																\
 		if (xml_next_tag(reader, (tagname), &name, &type) < 0 || type != XML_ELEMENT_DECL) { \
-			ltfsmsg(LTFS_ERR, 17005E, (tagname));						\
+			ltfsmsg(ALX0012E, (tagname));						\
 			return -LTFS_XML_OPEN_TAG;									\
 		}																\
 	} while (0)
@@ -229,7 +229,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 		if (ret < 0)							\
 			return ret;							\
 		if (strlen(value) == 0) {				\
-			ltfsmsg(LTFS_ERR, 17004E, name);	\
+			ltfsmsg(ALX0011E, name);	\
 			return -LTFS_XML_EMPTY;				\
 		}										\
 	} while (0)
@@ -255,7 +255,7 @@ int xml_format_time(struct ltfs_timespec t, char** out);
 /* issue a warning that the tag is unrecognized and will be ignored. */
 #define ignore_unrecognized_tag()						\
 	do {												\
-		ltfsmsg(LTFS_WARN, 17006W, name, parent_tag);	\
+		ltfsmsg(ALX0013W, name, parent_tag);	\
 		if (xml_skip_tag(reader) < 0)					\
 			return -LTFS_XML_SKIP_FAIL;					\
 	} while (0)

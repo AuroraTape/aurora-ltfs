@@ -115,7 +115,7 @@ void increment_openfactor(int host, int channel)
 			if (!ce) {
 				ltfs_mutex_unlock(&table_lock);
 				/* memory allocation error, print error and return */
-				ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+				ltfsmsg(ALC0002E, __FUNCTION__);
 				return;
 			}
 
@@ -133,7 +133,7 @@ void increment_openfactor(int host, int channel)
 		if (!he) {
 			ltfs_mutex_unlock(&table_lock);
 			/* memory allocation error, print error and return */
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			return;
 		}
 
@@ -142,7 +142,7 @@ void increment_openfactor(int host, int channel)
 			ltfs_mutex_unlock(&table_lock);
 			/* memory allocation error, print error and return */
 			free(he);
-			ltfsmsg(LTFS_ERR, 10001E, __FUNCTION__);
+			ltfsmsg(ALC0002E, __FUNCTION__);
 			return;
 		}
 
