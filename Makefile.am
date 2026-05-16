@@ -45,6 +45,8 @@ SUBDIRS = messages src conf init.d man
 # are platform-specific arch shims but are still #include'd
 # unconditionally from sources).
 EXTRA_DIST = \
+	README.md \
+	LICENSE \
 	build-aux/git-version.sh \
 	rpm/altfs.spec \
 	src/cmd/altfs/ltfs_fuse.h \
