@@ -1,0 +1,84 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04
+            container: ubuntu:24.04
+            id: ubuntu2404
+          - name: Rocky Linux 9
+            container: rockylinux:9
+            id: rocky9
+
+    steps:
+      - name: Install dependencies (Ubuntu)
+        if: matrix.id == 'ubuntu2404'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            gcc \
+            pkg-config \
+            libfuse-dev \
+            libxml2-dev \
+            libicu-dev \
+            uuid-dev \
+            icu-devtools \
+            git \
+            ca-certificates
+
+      - name: Install dependencies (Rocky 9)
+        if: matrix.id == 'rocky9'
+        run: |
+          dnf install -y epel-release
+          dnf install -y dnf-plugins-core
+          dnf config-manager --set-enabled crb
+          dnf install -y \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            gcc \
+            pkg-config \
+            fuse-devel \
+            libxml2-devel \
+            libicu-devel \
+            icu \
+            libuuid-devel \
+            diffutils \
+            redhat-rpm-config \
+            annobin \
+            gcc-plugin-annobin \
+            git \
+            ca-certificates
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: configure
+        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install"
+
+      - name: make
+        run: make -j"$(nproc)"
+
+      - name: make install
+        run: make install
