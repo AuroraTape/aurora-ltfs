@@ -1,0 +1,54 @@
+Source: aurora-ltfs
+Section: utils
+Priority: optional
+Maintainer: Atsushi Abe <atsushi.abe@turing-motors.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ autoconf,
+ automake,
+ libtool,
+ pkg-config,
+ libfuse-dev,
+ libxml2-dev,
+ libicu-dev,
+ uuid-dev,
+ icu-devtools
+Standards-Version: 4.6.2
+Homepage: https://github.com/turing-motors/aurora-ltfs
+Rules-Requires-Root: no
+
+Package: altfs
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ libaltfs0 (= ${binary:Version}),
+ fuse
+Description: Aurora LTFS filesystem tools and FUSE daemon
+ Aurora LTFS lets you mount LTFS-formatted tapes as a regular filesystem
+ using FUSE. This package provides the altfs FUSE daemon plus the mkaltfs,
+ altfsck and altfsindextool utilities, along with the tape / iosched / kmi
+ plugins loaded at runtime.
+
+Package: libaltfs0
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: Aurora LTFS shared library
+ Shared library used by Aurora LTFS commands and plugins. This package
+ provides the runtime libaltfs.so.* needed to run altfs/mkaltfs/altfsck.
+
+Package: libaltfs-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends:
+ libaltfs0 (= ${binary:Version}),
+ ${misc:Depends}
+Description: Aurora LTFS development files
+ Header files and pkg-config metadata for building software against
+ libaltfs.

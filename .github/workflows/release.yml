@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    name: Build .deb (Ubuntu 24.04)
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install packaging tools
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential devscripts debhelper dh-autoreconf fakeroot \
+            autoconf automake libtool pkg-config \
+            libfuse-dev libxml2-dev libicu-dev uuid-dev icu-devtools \
+            git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          echo "Building version: $V"
+
+      - name: Embed version into configure.ac
+        run: |
+          sed -i -E "s|^AC_INIT\(.*\)$|AC_INIT([Aurora LTFS], [${VERSION}], [])|" configure.ac
+          grep '^AC_INIT' configure.ac
+
+      - name: Rewrite debian/changelog
+        env:
+          DEBEMAIL: atsushi.abe@turing-motors.com
+          DEBFULLNAME: Aurora Tape Project
+        run: |
+          rm -f debian/changelog
+          dch --create --package aurora-ltfs --newversion "${VERSION}" \
+              --distribution unstable "Release ${VERSION}"
+          dch --release --distribution unstable ""
+          cat debian/changelog
+
+      - name: Build source + binary packages
+        run: |
+          # safe.directory because dpkg-buildpackage may invoke git
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          dpkg-buildpackage -us -uc
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          # dpkg-buildpackage drops outputs into the parent directory.
+          mv ../aurora-ltfs_${VERSION}* out/ 2>/dev/null || true
+          mv ../*.deb out/ 2>/dev/null || true
+          ls -la out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-packages
+          path: out/
+
+  rpm:
+    name: Build .rpm (Rocky Linux 9)
+    runs-on: ubuntu-latest
+    container: rockylinux:9
+    steps:
+      - name: Install build deps
+        run: |
+          dnf install -y epel-release dnf-plugins-core
+          dnf config-manager --set-enabled crb
+          dnf install -y \
+            rpm-build rpmdevtools \
+            autoconf automake libtool make gcc pkg-config \
+            fuse-devel libxml2-devel libicu-devel icu libuuid-devel \
+            diffutils redhat-rpm-config annobin gcc-plugin-annobin \
+            git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          echo "Building version: $V"
+
+      - name: Embed version into configure.ac and spec
+        run: |
+          sed -i -E "s|^AC_INIT\(.*\)$|AC_INIT([Aurora LTFS], [${VERSION}], [])|" configure.ac
+          sed -i -E "s|^Version:.*|Version:        ${VERSION}|" rpm/altfs.spec
+          grep '^AC_INIT' configure.ac
+          grep '^Version:' rpm/altfs.spec
+
+      - name: Build source tarball
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          ./autogen.sh
+          ./configure
+          make dist
+          ls -la aurora-ltfs-*.tar.gz
+
+      - name: rpmbuild (source + binary)
+        run: |
+          rpmdev-setuptree
+          cp aurora-ltfs-${VERSION}.tar.gz ~/rpmbuild/SOURCES/
+          cp rpm/altfs.spec ~/rpmbuild/SPECS/
+          rpmbuild -ba ~/rpmbuild/SPECS/altfs.spec
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find ~/rpmbuild/RPMS ~/rpmbuild/SRPMS -name '*.rpm' -exec cp {} out/ \;
+          ls -la out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rpm-packages
+          path: out/
+
+  release:
+    name: Publish GitHub Release
+    needs: [deb, rpm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release/
+          find artifacts/ -type f -exec mv {} release/ \;
+          ls -la release/
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          fail_on_unmatched_files: true
+          files: release/*

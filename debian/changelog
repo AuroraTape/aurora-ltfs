@@ -1,0 +1,6 @@
+aurora-ltfs (0.0.0~manual) UNRELEASED; urgency=medium
+
+  * Placeholder entry for manual / development builds.
+    Release CI overwrites this with the tag version on tag push.
+
+ -- Atsushi Abe <atsushi.abe@turing-motors.com>  Sat, 16 May 2026 00:00:00 +0000

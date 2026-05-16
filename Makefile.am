@@ -39,6 +39,8 @@ nobase_pkginclude_HEADERS = config.h
 
 SUBDIRS = messages src conf init.d man
 
+EXTRA_DIST = build-aux/git-version.sh rpm/altfs.spec
+
 install-data-local: altfs.pc
 	if [ ! -d $(DESTDIR)$(libdir)/pkgconfig ]; then \
 		mkdir -p $(DESTDIR)$(libdir)/pkgconfig; \

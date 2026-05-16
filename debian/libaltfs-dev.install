@@ -1,0 +1,3 @@
+usr/include/aurora-ltfs/*
+usr/lib/*/libaltfs.so
+usr/lib/*/pkgconfig/altfs.pc
