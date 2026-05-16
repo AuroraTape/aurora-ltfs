@@ -91,3 +91,26 @@ clean-local:
 	rm -rf $(RESOURCES) */work */work_*
 	rm -f ../src/ltfsmsg.h
 	rm -f *.la
+
+# Ship the helper scripts and per-component ICU resource source directories
+# in `make dist` so the rpm build (which consumes the dist tarball) has them.
+EXTRA_DIST = \
+	make_message_src.sh \
+	print_error_messages.py \
+	README \
+	bin_altfs \
+	bin_altfsck \
+	bin_altfsindextool \
+	bin_mkaltfs \
+	internal_error \
+	iosched_fcfs \
+	iosched_unified \
+	kmi_flatfile \
+	kmi_simple \
+	libaltfs \
+	tape_common \
+	tape_freebsd_cam \
+	tape_generic_file \
+	tape_generic_itdtimg \
+	tape_iokit \
+	tape_linux_sg

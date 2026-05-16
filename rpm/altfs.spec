@@ -53,7 +53,7 @@ libaltfs.
 %build
 # The source tarball is produced by `make dist`, so it already contains a
 # generated configure script. No need to bootstrap again here.
-%configure
+%configure --disable-static
 %make_build
 
 %install
