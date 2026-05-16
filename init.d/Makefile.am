@@ -9,4 +9,6 @@ install-data-local:
 		install -m 755 altfs "$(DESTDIR)@datadir@/altfs/altfs"; \
 	fi
 
+EXTRA_DIST = altfs
+
 clean-local:
