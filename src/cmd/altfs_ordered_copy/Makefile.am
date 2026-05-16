@@ -33,4 +33,4 @@
 #  AA_Copyright_END
 #
 
-bin_SCRIPTS = altfs_ordered_copy
+dist_bin_SCRIPTS = altfs_ordered_copy
