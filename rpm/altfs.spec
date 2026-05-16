@@ -51,7 +51,8 @@ libaltfs.
 %autosetup -n %{name}-%{version}
 
 %build
-./autogen.sh
+# The source tarball is produced by `make dist`, so it already contains a
+# generated configure script. No need to bootstrap again here.
 %configure
 %make_build
 
