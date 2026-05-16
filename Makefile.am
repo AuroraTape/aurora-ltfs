@@ -55,7 +55,15 @@ EXTRA_DIST = \
 	src/libltfs/arch/freebsd/freebsd_locking_old.h \
 	src/libltfs/arch/freebsd/xattr.h \
 	src/libltfs/arch/osx/osx_string.h \
+	src/libltfs/arch/osx/osx_string.c \
 	src/tape_drivers/crc32c_crc.h \
+	src/tape_drivers/crc32c_crc.c \
+	src/tape_drivers/reed_solomon_crc.c \
+	src/tape_drivers/vendor_compat.c \
+	src/tape_drivers/ibm_tape.c \
+	src/tape_drivers/hp_tape.c \
+	src/tape_drivers/quantum_tape.c \
+	src/tape_drivers/open_factor.c \
 	src/tape_drivers/hp_tape.h \
 	src/tape_drivers/open_factor.h \
 	src/tape_drivers/quantum_tape.h \
