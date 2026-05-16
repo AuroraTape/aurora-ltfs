@@ -40,3 +40,14 @@ install-data-local:
 
 clean-local:
 	rm -f altfs.conf
+
+# Source / config files needed at build or install time. altfs.conf
+# itself is generated from altfs.conf.in by the rule above, so the
+# template plus all sidecar config files must be in `make dist`.
+EXTRA_DIST = \
+	altfs.conf.in \
+	altfs.conf.local \
+	altfs.service \
+	altfs-log.conf \
+	altfslog \
+	README.md

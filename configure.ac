@@ -36,7 +36,7 @@
 dnl
 dnl LTFS configure.ac.
 dnl
-AC_INIT([Aurora LTFS], [2.5.0.0 (Prelim)], [])
+AC_INIT([Aurora LTFS], m4_esyscmd_s([sh build-aux/git-version.sh]), [])
 AC_CONFIG_SRCDIR([src/cmd/altfs/altfs.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])

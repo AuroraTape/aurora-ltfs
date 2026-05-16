@@ -39,6 +39,49 @@ nobase_pkginclude_HEADERS = config.h
 
 SUBDIRS = messages src conf init.d man
 
+# Packaging helpers, plus headers that exist in the tree but are not
+# registered in any `_HEADERS` variable, so `make dist` would otherwise
+# omit them. These are required by the build on every platform (some
+# are platform-specific arch shims but are still #include'd
+# unconditionally from sources).
+EXTRA_DIST = \
+	README.md \
+	LICENSE \
+	build-aux/git-version.sh \
+	rpm/altfs.spec \
+	src/cmd/altfs/ltfs_fuse.h \
+	src/iosched/cache_manager.h \
+	src/kmi/key_format_ltfs.h \
+	src/libltfs/inc_journal.h \
+	src/libltfs/arch/freebsd/errno.h \
+	src/libltfs/arch/freebsd/freebsd_locking_old.h \
+	src/libltfs/arch/freebsd/xattr.h \
+	src/libltfs/arch/osx/osx_string.h \
+	src/libltfs/arch/osx/osx_string.c \
+	src/tape_drivers/crc32c_crc.h \
+	src/tape_drivers/crc32c_crc.c \
+	src/tape_drivers/reed_solomon_crc.c \
+	src/tape_drivers/vendor_compat.c \
+	src/tape_drivers/ibm_tape.c \
+	src/tape_drivers/hp_tape.c \
+	src/tape_drivers/quantum_tape.c \
+	src/tape_drivers/open_factor.c \
+	src/tape_drivers/hp_tape.h \
+	src/tape_drivers/open_factor.h \
+	src/tape_drivers/quantum_tape.h \
+	src/tape_drivers/reed_solomon_crc.h \
+	src/tape_drivers/vendor_compat.h \
+	src/tape_drivers/freebsd/cam/IBM_tape.h \
+	src/tape_drivers/freebsd/cam/cam_cmn.h \
+	src/tape_drivers/generic/file/filedebug_conf_tc.h \
+	src/tape_drivers/linux/sg/sg_scsi_tape.h \
+	src/tape_drivers/linux/sg/sg_tape.h \
+	src/tape_drivers/netbsd/scsipi-ibmtape/scsipi_ibmtape.h \
+	src/tape_drivers/netbsd/scsipi-ibmtape/scsipi_scsi_tape.h \
+	src/tape_drivers/osx/iokit/iokit_scsi.h \
+	src/tape_drivers/osx/iokit/iokit_service.h \
+	src/tape_drivers/osx/iokit/iokit_tape.h
+
 install-data-local: altfs.pc
 	if [ ! -d $(DESTDIR)$(libdir)/pkgconfig ]; then \
 		mkdir -p $(DESTDIR)$(libdir)/pkgconfig; \
