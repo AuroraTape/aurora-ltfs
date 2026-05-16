@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    # TEMP: validate packaging on this branch without creating a release.
-    # Remove before merging to main.
-    branches:
-      - 'piste/feat/deb'
 
 permissions:
   contents: write
@@ -38,14 +34,9 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Resolve version
+      - name: Resolve version from tag
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            V="${GITHUB_REF_NAME#v}"
-          else
-            # Branch-push dry run: synthesize a valid version string.
-            V="0.0.0~ci.${GITHUB_SHA:0:7}"
-          fi
+          V="${GITHUB_REF_NAME#v}"
           echo "VERSION=$V" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
@@ -75,12 +66,10 @@ jobs:
         run: |
           mkdir -p out
           # dpkg-buildpackage drops outputs into the parent directory.
-          echo "=== contents of parent dir ==="
-          ls -la ..
+          # Note: Ubuntu still uses the .ddeb extension for -dbgsym packages.
           mv ../aurora-ltfs_${VERSION}* out/ 2>/dev/null || true
           mv ../*.deb out/ 2>/dev/null || true
           mv ../*.ddeb out/ 2>/dev/null || true
-          echo "=== contents of out/ ==="
           ls -la out/
 
       - uses: actions/upload-artifact@v4
@@ -106,14 +95,9 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Resolve version
+      - name: Resolve version from tag
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            V="${GITHUB_REF_NAME#v}"
-          else
-            # Branch-push dry run: synthesize a valid version string.
-            V="0.0.0~ci.${GITHUB_SHA:0:7}"
-          fi
+          V="${GITHUB_REF_NAME#v}"
           echo "VERSION=$V" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
