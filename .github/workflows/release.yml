@@ -12,6 +12,13 @@ on:
 permissions:
   contents: write
 
+# Containers (ubuntu:24.04, rockylinux:9) don't have bash as /bin/sh, so
+# GitHub Actions falls back to sh for `run:` steps. Force bash for
+# parameter-expansion features like ${GITHUB_SHA:0:7}.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   deb:
     name: Build .deb (Ubuntu 24.04)
