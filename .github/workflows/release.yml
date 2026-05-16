@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+    # TEMP: validate packaging on this branch without creating a release.
+    # Remove before merging to main.
+    branches:
+      - 'piste/feat/deb'
 
 permissions:
   contents: write
@@ -27,9 +31,14 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Resolve version from tag
+      - name: Resolve version
         run: |
-          V="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            # Branch-push dry run: synthesize a valid version string.
+            V="0.0.0~ci.${GITHUB_SHA:0:7}"
+          fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
@@ -86,9 +95,14 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Resolve version from tag
+      - name: Resolve version
         run: |
-          V="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            # Branch-push dry run: synthesize a valid version string.
+            V="0.0.0~ci.${GITHUB_SHA:0:7}"
+          fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
@@ -129,6 +143,7 @@ jobs:
     name: Publish GitHub Release
     needs: [deb, rpm]
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
         with:
