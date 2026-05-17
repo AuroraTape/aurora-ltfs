@@ -75,10 +75,10 @@ jobs:
         run: ./autogen.sh
 
       - name: configure
-        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install"
+        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install" --enable-warning-as-error
 
       - name: make
-        run: make -j"$(nproc)"
+        run: make -k -j"$(nproc)"
 
       - name: make install
         run: make install
