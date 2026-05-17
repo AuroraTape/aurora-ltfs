@@ -67,6 +67,7 @@ extern "C" {
 #endif
 
 #include <pthread.h>
+#include <sched.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -208,11 +209,7 @@ static inline ltfs_thread_t ltfs_thread_self(void)
 
 static inline int ltfs_thread_yield(void)
 {
-#if defined (__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__)
 	return sched_yield();
-#else
-	return pthread_yield();
-#endif
 }
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__)

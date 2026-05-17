@@ -132,7 +132,7 @@ int incj_create(char *ppath, struct dentry *d, struct ltfs_volume *vol)
 	ent->reason = CREATE;
 	ent->dentry = d;
 
-	HASH_ADD(hh, vol->journal, id, sizeof(struct jentry), ent);
+	HASH_ADD(hh, vol->journal, id, sizeof(struct journal_id), ent);
 
 	if (d->isdir) {
 		jdir = calloc(1, sizeof(struct jcreated_entry));
@@ -162,6 +162,7 @@ int incj_create(char *ppath, struct dentry *d, struct ltfs_volume *vol)
 int incj_modify(char *path, struct dentry *d, struct ltfs_volume *vol)
 {
 	int ret = -1;
+	struct journal_id id;
 	struct jentry *ent = NULL;
 	struct jcreated_entry *jd = NULL;
 
@@ -171,7 +172,9 @@ int incj_modify(char *path, struct dentry *d, struct ltfs_volume *vol)
 	}
 
 	/* Skip journal modification because it is already existed */
-	HASH_FIND(hh, vol->journal, &d->uid, sizeof(struct jentry), ent);
+	id.full_path = path;
+	id.uid       = d->uid;
+	HASH_FIND(hh, vol->journal, &id, sizeof(struct journal_id), ent);
 	if (ent) {
 		return 0;
 	}
@@ -193,7 +196,7 @@ int incj_modify(char *path, struct dentry *d, struct ltfs_volume *vol)
 	ent->reason = MODIFY;
 	ent->dentry = d;
 
-	HASH_ADD(hh, vol->journal, id, sizeof(struct jentry), ent);
+	HASH_ADD(hh, vol->journal, id, sizeof(struct journal_id), ent);
 
 	return 0;
 }
@@ -222,7 +225,7 @@ int incj_rmfile(char *path, struct dentry *d, struct ltfs_volume *vol)
 
 	id.full_path = path;
 	id.uid       = d->uid;
-	HASH_FIND(hh, vol->journal, &id, sizeof(struct jentry), ent);
+	HASH_FIND(hh, vol->journal, &id, sizeof(struct journal_id), ent);
 	if (ent) {
 		if (ent->reason == CREATE) {
 			/*
@@ -272,7 +275,7 @@ int incj_rmfile(char *path, struct dentry *d, struct ltfs_volume *vol)
 		return -LTFS_NO_MEMORY;
 	}
 
-	HASH_ADD(hh, vol->journal, id, sizeof(struct jentry), ent);
+	HASH_ADD(hh, vol->journal, id, sizeof(struct journal_id), ent);
 
 	return 0;
 }
@@ -349,7 +352,7 @@ int incj_rmdir(char *path, struct dentry *d, struct ltfs_volume *vol)
 		return -LTFS_NO_MEMORY;
 	}
 
-	HASH_ADD(hh, vol->journal, id, sizeof(struct jentry), ent);
+	HASH_ADD(hh, vol->journal, id, sizeof(struct journal_id), ent);
 
 	return 0;
 }

@@ -2979,17 +2979,32 @@ void set_tape_attribute(struct ltfs_volume *vol, struct tape_attr *t_attr)
 	}
 
 	/*  APPLICATION VENDOR set */
-	strncpy(t_attr->vender, LTFS_VENDOR_NAME, TC_MAM_APP_VENDER_SIZE);
-	parse_vol(t_attr->vender, strlen(LTFS_VENDOR_NAME), TC_MAM_APP_VENDER_SIZE);
+	{
+		size_t cpy_len = strlen(LTFS_VENDOR_NAME);
+		if (cpy_len > TC_MAM_APP_VENDER_SIZE)
+			cpy_len = TC_MAM_APP_VENDER_SIZE;
+		memcpy(t_attr->vender, LTFS_VENDOR_NAME, cpy_len);
+		parse_vol(t_attr->vender, (int)cpy_len, TC_MAM_APP_VENDER_SIZE);
+	}
 
 	/* APPLICATION NAME set */
-	strncpy(t_attr->app_name, PACKAGE_NAME, TC_MAM_APP_NAME_SIZE);
-	parse_vol(t_attr->app_name, strlen(PACKAGE_NAME), TC_MAM_APP_NAME_SIZE);
+	{
+		size_t cpy_len = strlen(PACKAGE_NAME);
+		if (cpy_len > TC_MAM_APP_NAME_SIZE)
+			cpy_len = TC_MAM_APP_NAME_SIZE;
+		memcpy(t_attr->app_name, PACKAGE_NAME, cpy_len);
+		parse_vol(t_attr->app_name, (int)cpy_len, TC_MAM_APP_NAME_SIZE);
+	}
 
 
 	/* APPLICATION VERSION set */
-	strncpy(t_attr->app_ver, PACKAGE_VERSION, TC_MAM_APP_VERSION_SIZE);
-	parse_vol(t_attr->app_ver, strlen(PACKAGE_VERSION), TC_MAM_APP_VERSION_SIZE);
+	{
+		size_t cpy_len = strlen(PACKAGE_VERSION);
+		if (cpy_len > TC_MAM_APP_VERSION_SIZE)
+			cpy_len = TC_MAM_APP_VERSION_SIZE;
+		memcpy(t_attr->app_ver, PACKAGE_VERSION, cpy_len);
+		parse_vol(t_attr->app_ver, (int)cpy_len, TC_MAM_APP_VERSION_SIZE);
+	}
 
 	/* USER MEDIUM LABEL set */
 	memset(t_attr->medium_label, '\0', TC_MAM_USER_MEDIUM_LABEL_SIZE + 1);

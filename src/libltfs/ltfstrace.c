@@ -486,7 +486,7 @@ int ltfs_header_init(void)
 		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -LTFS_NO_MEMORY;
 	}
-	strncpy(trc_header->signature, LTFS_TRACE_SIGNATURE, strlen(LTFS_TRACE_SIGNATURE));
+	memcpy(trc_header->signature, LTFS_TRACE_SIGNATURE, sizeof(trc_header->signature));
 	trc_header->header_size = sizeof(struct trace_header);
 	trc_header->req_header_offset = sizeof(struct trace_header);
 	trc_header->fn_header_offset = sizeof(struct trace_header) + sizeof(struct request_header) + REQ_TRACE_SIZE;
