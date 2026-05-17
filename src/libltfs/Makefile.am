@@ -69,29 +69,29 @@ libaltfs_la_SOURCES = \
 	arch/errormap.c
 
 libaltfs_la_DEPENDENCIES = \
-	../../messages/liblc_dat.a \
-	../../messages/liblg_dat.a \
-	../../messages/libli_dat.a \
-	../../messages/liblb_dat.a \
-	../../messages/liblp_dat.a \
-	../../messages/liblf_dat.a \
-	../../messages/liblj_dat.a \
-	../../messages/liblx_dat.a \
-	../../messages/libei_dat.a \
-	../../messages/libed_dat.a \
-	../../messages/libtape_common_dat.a
+	../../messages/liblc_dat.la \
+	../../messages/liblg_dat.la \
+	../../messages/libli_dat.la \
+	../../messages/liblb_dat.la \
+	../../messages/liblp_dat.la \
+	../../messages/liblf_dat.la \
+	../../messages/liblj_dat.la \
+	../../messages/liblx_dat.la \
+	../../messages/libei_dat.la \
+	../../messages/libed_dat.la \
+	../../messages/libtape_common_dat.la
 libaltfs_la_LIBADD =
 libaltfs_la_CPPFLAGS = @AM_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ -I ..
 libaltfs_la_LDFLAGS = -version-info 0:0:0 @AM_LDFLAGS@ \
-	../../messages/liblc_dat.a \
-	../../messages/liblg_dat.a \
-	../../messages/libli_dat.a \
-	../../messages/liblb_dat.a \
-	../../messages/liblp_dat.a \
-	../../messages/liblf_dat.a \
-	../../messages/liblj_dat.a \
-	../../messages/liblx_dat.a \
-	../../messages/libei_dat.a \
-	../../messages/libed_dat.a \
-	../../messages/libtape_common_dat.a
+	../../messages/liblc_dat.la \
+	../../messages/liblg_dat.la \
+	../../messages/libli_dat.la \
+	../../messages/liblb_dat.la \
+	../../messages/liblp_dat.la \
+	../../messages/liblf_dat.la \
+	../../messages/liblj_dat.la \
+	../../messages/liblx_dat.la \
+	../../messages/libei_dat.la \
+	../../messages/libed_dat.la \
+	../../messages/libtape_common_dat.la
 

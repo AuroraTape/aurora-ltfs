@@ -39,15 +39,15 @@ BASENAMES = libkmi-simple libkmi-flatfile
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libkmi_simple_la_SOURCES = simple.c key_format_ltfs.c
-libkmi_simple_la_DEPENDENCIES = ../../messages/libkmi_simple_dat.a ../libltfs/libaltfs.la
+libkmi_simple_la_DEPENDENCIES = ../../messages/libkmi_simple_dat.la ../libltfs/libaltfs.la
 libkmi_simple_la_LIBADD = ../libltfs/libaltfs.la
-libkmi_simple_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libkmi_simple_dat.a
+libkmi_simple_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libkmi_simple_dat.la
 libkmi_simple_la_CPPFLAGS = @AM_CPPFLAGS@ -I .. -DKMI_SIMPLE
 
 libkmi_flatfile_la_SOURCES = flatfile.c key_format_ltfs.c
-libkmi_flatfile_la_DEPENDENCIES = ../../messages/libkmi_flatfile_dat.a ../libltfs/libaltfs.la
+libkmi_flatfile_la_DEPENDENCIES = ../../messages/libkmi_flatfile_dat.la ../libltfs/libaltfs.la
 libkmi_flatfile_la_LIBADD = ../libltfs/libaltfs.la
-libkmi_flatfile_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libkmi_flatfile_dat.a
+libkmi_flatfile_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libkmi_flatfile_dat.la
 libkmi_flatfile_la_CPPFLAGS = @AM_CPPFLAGS@ -I ..
 
 install-exec-hook:

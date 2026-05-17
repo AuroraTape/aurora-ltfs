@@ -39,14 +39,14 @@ BASENAMES = libiosched-fcfs libiosched-unified
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libiosched_fcfs_la_SOURCES = fcfs.c
-libiosched_fcfs_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_fcfs_dat.a
-libiosched_fcfs_la_DEPENDENCIES = ../../messages/libiosched_fcfs_dat.a ../libltfs/libaltfs.la
+libiosched_fcfs_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_fcfs_dat.la
+libiosched_fcfs_la_DEPENDENCIES = ../../messages/libiosched_fcfs_dat.la ../libltfs/libaltfs.la
 libiosched_fcfs_la_LIBADD = ../libltfs/libaltfs.la
 libiosched_fcfs_la_CPPFLAGS = @AM_CPPFLAGS@ -I ..
 
 libiosched_unified_la_SOURCES = unified.c cache_manager.c
-libiosched_unified_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_unified_dat.a
-libiosched_unified_la_DEPENDENCIES = ../../messages/libiosched_unified_dat.a ../libltfs/libaltfs.la
+libiosched_unified_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../messages/libiosched_unified_dat.la
+libiosched_unified_la_DEPENDENCIES = ../../messages/libiosched_unified_dat.la ../libltfs/libaltfs.la
 libiosched_unified_la_LIBADD = ../libltfs/libaltfs.la
 libiosched_unified_la_CPPFLAGS = @AM_CPPFLAGS@ -I ..
 

@@ -36,7 +36,7 @@
 bin_PROGRAMS = altfsindextool
 
 altfsindextool_SOURCES = altfsindextool.c
-altfsindextool_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfsindextool_dat.a ../../../messages/libbin_mkaltfs_dat.a
+altfsindextool_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfsindextool_dat.la ../../../messages/libbin_mkaltfs_dat.la
 altfsindextool_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
 altfsindextool_LDADD = ../../libltfs/libaltfs.la
 altfsindextool_LDFLAGS = @AM_LDFLAGS@ -L../../../messages -lbin_altfsindextool_dat

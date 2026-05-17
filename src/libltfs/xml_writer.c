@@ -85,12 +85,12 @@ int xml_format_time(struct ltfs_timespec t, char** out)
 		return -1;
 	}
 
-	timebuf = calloc(31, sizeof(char));
+	timebuf = calloc(64, sizeof(char));
 	if (!timebuf) {
 		ltfsmsg(ALC0002E, __FUNCTION__);
 		return -1;
 	}
-	sprintf(timebuf, "%04d-%02d-%02dT%02d:%02d:%02d.%09ldZ", tm.tm_year+1900, tm.tm_mon+1,
+	snprintf(timebuf, 64, "%04d-%02d-%02dT%02d:%02d:%02d.%09ldZ", tm.tm_year+1900, tm.tm_mon+1,
 			tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, t.tv_nsec);
 	*out = timebuf;
 

@@ -47,30 +47,30 @@
 ######################################################################################
 
 RESOURCES = \
-	libbin_mkaltfs_dat.a \
-	libbin_altfsck_dat.a \
-	libbin_altfsindextool_dat.a \
-	libbin_altfs_dat.a \
-	libkmi_simple_dat.a \
-	libkmi_flatfile_dat.a \
-	libtape_generic_file_dat.a \
-	libtape_generic_itdtimg_dat.a \
-	libtape_linux_sg_dat.a \
-	libtape_iokit_dat.a \
-	libtape_freebsd_cam_dat.a \
-	libiosched_fcfs_dat.a \
-	libiosched_unified_dat.a \
-	liblc_dat.a \
-	liblg_dat.a \
-	libli_dat.a \
-	liblb_dat.a \
-	liblp_dat.a \
-	liblf_dat.a \
-	liblj_dat.a \
-	liblx_dat.a \
-	libei_dat.a \
-	libed_dat.a \
-	libtape_common_dat.a
+	libbin_mkaltfs_dat.la \
+	libbin_altfsck_dat.la \
+	libbin_altfsindextool_dat.la \
+	libbin_altfs_dat.la \
+	libkmi_simple_dat.la \
+	libkmi_flatfile_dat.la \
+	libtape_generic_file_dat.la \
+	libtape_generic_itdtimg_dat.la \
+	libtape_linux_sg_dat.la \
+	libtape_iokit_dat.la \
+	libtape_freebsd_cam_dat.la \
+	libiosched_fcfs_dat.la \
+	libiosched_unified_dat.la \
+	liblc_dat.la \
+	liblg_dat.la \
+	libli_dat.la \
+	liblb_dat.la \
+	liblp_dat.la \
+	liblf_dat.la \
+	liblj_dat.la \
+	liblx_dat.la \
+	libei_dat.la \
+	libed_dat.la \
+	libtape_common_dat.la
 
 .PHONY: all $(RESOURCES) clean-local
 if CHK_MESSAGE
@@ -80,7 +80,7 @@ all: $(RESOURCES)
 endif
 
 $(RESOURCES):
-	@./make_message_src.sh $@
+	@LIBTOOL='$(SHELL) $(abs_top_builddir)/libtool' CC='$(CC)' ./make_message_src.sh $@
 
 if CHK_MESSAGE
 ../src/ltfsmsg.h: $(RESOURCES)
@@ -89,8 +89,9 @@ endif
 
 clean-local:
 	rm -rf $(RESOURCES) */work */work_*
+	rm -rf .libs
 	rm -f ../src/ltfsmsg.h
-	rm -f *.la
+	rm -f *.la *.lo *.a
 
 # Ship the helper scripts and per-component ICU resource source directories
 # in `make dist` so the rpm build (which consumes the dist tarball) has them.
