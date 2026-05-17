@@ -36,7 +36,7 @@
 bin_PROGRAMS = altfs
 
 altfs_SOURCES = altfs.c ltfs_fuse.c
-altfs_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfs_dat.a
+altfs_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfs_dat.la
 altfs_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
 altfs_LDADD = ../../libltfs/libaltfs.la
-altfs_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfs_dat.a
+altfs_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfs_dat.la

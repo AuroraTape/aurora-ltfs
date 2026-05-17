@@ -36,7 +36,7 @@
 bin_PROGRAMS = altfsck
 
 altfsck_SOURCES = altfsck.c
-altfsck_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfsck_dat.a
+altfsck_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfsck_dat.la
 altfsck_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
 altfsck_LDADD = ../../libltfs/libaltfs.la
-altfsck_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfsck_dat.a
+altfsck_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfsck_dat.la

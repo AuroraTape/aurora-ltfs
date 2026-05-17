@@ -36,7 +36,7 @@
 bin_PROGRAMS = mkaltfs
 
 mkaltfs_SOURCES = mkaltfs.c
-mkaltfs_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_mkaltfs_dat.a
+mkaltfs_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_mkaltfs_dat.la
 mkaltfs_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
 mkaltfs_LDADD = ../../libltfs/libaltfs.la
-mkaltfs_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_mkaltfs_dat.a
+mkaltfs_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_mkaltfs_dat.la
