@@ -17,13 +17,32 @@ jobs:
           - name: Ubuntu 24.04
             container: ubuntu:24.04
             id: ubuntu2404
+            distro: ubuntu
+            configure_extra: ""
+            install: true
           - name: Rocky Linux 9
             container: rockylinux:9
             id: rocky9
+            distro: rocky
+            configure_extra: ""
+            install: true
+          # Compile-only validation that every ltfsmsg(...) call site agrees
+          # with the printf format string in the message catalog. With
+          # --enable-message-checker the ltfsmsg() macro expands to a raw
+          # printf() against the catalog text, so -Wformat catches type
+          # mismatches at compile time. The resulting binary is not
+          # functional by design (configure help says "may be binary is
+          # defunct"), so we skip `make install`.
+          - name: Ubuntu 24.04 (message-checker)
+            container: ubuntu:24.04
+            id: msgcheck
+            distro: ubuntu
+            configure_extra: "--enable-message-checker"
+            install: false
 
     steps:
       - name: Install dependencies (Ubuntu)
-        if: matrix.id == 'ubuntu2404'
+        if: matrix.distro == 'ubuntu'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -40,11 +59,12 @@ jobs:
             libicu-dev \
             uuid-dev \
             icu-devtools \
+            python3 \
             git \
             ca-certificates
 
       - name: Install dependencies (Rocky 9)
-        if: matrix.id == 'rocky9'
+        if: matrix.distro == 'rocky'
         run: |
           dnf install -y epel-release
           dnf install -y dnf-plugins-core
@@ -65,6 +85,7 @@ jobs:
             redhat-rpm-config \
             annobin \
             gcc-plugin-annobin \
+            python3 \
             git \
             ca-certificates
 
@@ -75,10 +96,11 @@ jobs:
         run: ./autogen.sh
 
       - name: configure
-        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install" --enable-warning-as-error
+        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install" --enable-warning-as-error ${{ matrix.configure_extra }}
 
       - name: make
         run: make -k -j"$(nproc)"
 
       - name: make install
+        if: matrix.install
         run: make install
