@@ -35,10 +35,12 @@
 
 root:table {
 	// Device error codes (EDEV_* constants)
+	// The number part of the message ID equals (EDEV_* constant - 20000)
+	// defined in src/libltfs/ltfs_error.h (e.g. EDEV_CLEANING_REQUIRED = 20098 -> AED0098E).
 	messages:table {
 		prefix:string { "AED" }
 
-		AED0001E:string { "No sense data exists" }
+		AED0000E:string { "No sense data exists" }
 		AED0002E:string { "Read overrun condition when sili bit is off" }
 		AED0003E:string { "Read underrun condition when sili bit is off" }
 		AED0004E:string { "File mark is detected" }
@@ -53,101 +55,101 @@ root:table {
 		AED0013E:string { "(TS3500/TS4500) Drive is not available" }
 		AED0014E:string { "Record not found" }
 		AED0015E:string { "Insufficient time for operation (string search)" }
-		AED0016E:string { "(IBM LTO 00/8282) Drive requests cleaning" }
-		AED0017E:string { "Recovered error (should be ignored)" }
-		AED0018E:string { "Mode select parameter is rounded by the drive (should be ignored)" }
-		AED0019E:string { "(IBM LTO 01/8252) Degraded medium is detected" }
-		AED0020E:string { "Drive is not ready" }
-		AED0021E:string { "Cannot report an error for this condition" }
-		AED0022E:string { "Device is becoming ready" }
-		AED0023E:string { "Initialize command is required" }
-		AED0024E:string { "Manual intervention is required" }
-		AED0025E:string { "Operation is in progress" }
-		AED0026E:string { "Device is offline" }
-		AED0027E:string { "Door is open" }
-		AED0028E:string { "Device is too hot" }
-		AED0029E:string { "Drive has no medium" }
-		AED0030E:string { "Device has not self-configured yet" }
-		AED0031E:string { "SA creation parameter value rejected" }
-		AED0032E:string { "Cleaning is in progress" }
-		AED0033E:string { "(TS3500/TS4500) I/O slot is opened" }
-		AED0034E:string { "Other medium errors" }
-		AED0035E:string { "Read or write permanent error" }
-		AED0036E:string { "CM RW error" }
-		AED0037E:string { "Incompatible or unknown format" }
-		AED0038E:string { "Corrupt format is detected" }
-		AED0039E:string { "Drive rejects a read operation because of an unexpected overwrite on the WORM medium" }
-		AED0040E:string { "Load/Unload error" }
-		AED0041E:string { "Cleaning operation failed" }
-		AED0042E:string { "Permanent read error" }
-		AED0043E:string { "Permanent write error" }
-		AED0044E:string { "All H/W errors" }
-		AED0045E:string { "Logical Block Guard Check Failed" }
-		AED0046E:string { "Logical Block Protection read error" }
-		AED0047E:string { "There is no connection to the device" }
-		AED0048E:string { "All illegal request errors" }
-		AED0049E:string { "Invalid field in CDB" }
-		AED0050E:string { "Medium destination element full" }
-		AED0051E:string { "Medium source element empty" }
-		AED0052E:string { "Medium magazine is not accessible" }
-		AED0053E:string { "Element address is invalid" }
-		AED0054E:string { "Medium removal prevented. Drive media removal prevented state set" }
-		AED0055E:string { "Other UA conditions" }
-		AED0056E:string { "Not ready to transition: medium might have changed" }
-		AED0057E:string { "IE slot is accessed" }
-		AED0058E:string { "POR/Bus reset occurred" }
-		AED0059E:string { "Drive configuration is changed" }
-		AED0060E:string { "Command is cleared by another initiator" }
-		AED0061E:string { "Operator medium removal request" }
-		AED0062E:string { "Cannot remove the medium" }
-		AED0063E:string { "Medium magazine inserted" }
-		AED0064E:string { "Drive configuration is changed" }
-		AED0065E:string { "Reservations preempted" }
-		AED0066E:string { "Reservations released" }
-		AED0067E:string { "Registrations preempted" }
-		AED0068E:string { "Other data protect conditions" }
-		AED0069E:string { "Write-protected" }
-		AED0070E:string { "WORM cartridge" }
-		AED0071E:string { "Attempt to overwrite in append-only mode" }
-		AED0072E:string { "Other blank check conditions" }
-		AED0073E:string { "EOD detected" }
-		AED0074E:string { "EOD not found" }
-		AED0075E:string { "Other aborted command conditions" }
-		AED0076E:string { "Overlapping commands" }
-		AED0077E:string { "Initiator response timeout" }
-		AED0078E:string { "Aborted because of a communication issue" }
-		AED0079E:string { "The medium is full" }
-		AED0080E:string { "Other encryption-related errors" }
-		AED0081E:string { "Key service timeout or failure" }
-		AED0082E:string { "Detect key change" }
-		AED0083E:string { "Detect key change" }
-		AED0084E:string { "Internal logic error" }
-		AED0085E:string { "Driver reports an error" }
-		AED0086E:string { "Host reports an error" }
-		AED0087E:string { "Target reports an error" }
-		AED0088E:string { "Memory allocation failure" }
-		AED0089E:string { "Unsupported function" }
-		AED0090E:string { "Parameter code of log page not found" }
-		AED0091E:string { "Cannot get the sense data from a lower level" }
-		AED0092E:string { "Invalid argument" }
-		AED0093E:string { "IO error on saving dump" }
-		AED0094E:string { "Medium is already mounted or in use" }
-		AED0095E:string { "Cannot open the device" }
-		AED0096E:string { "Cannot support the device" }
-		AED0097E:string { "The device is not an IBM product" }
-		AED0098E:string { "Cannot support the firmware" }
-		AED0099E:string { "Unsupported SCSI command" }
-		AED0100E:string { "The actual transfer length and residual length do not match" }
-		AED0101E:string { "A buffer overrun is detected" }
-		AED0102E:string { "The number of drives are not correct" }
-		AED0103E:string { "Reservation conflict" }
-		AED0104E:string { "Connection lost while processing a command" }
-		AED0105E:string { "No reservation holder" }
-		AED0106E:string { "A path switch happened. Reissue the command" }
-		AED0107E:string { "A real power on reset is detected" }
-		AED0108E:string { "Buffer allocation error in a driver" }
-		AED0109E:string { "Retry the command again" }
-		AED0110E:string { "Unknown sense" }
-		AED0111E:string { "Vendor unique sense. ASC >= 0x80 or ASCQ >= 0x80" }
+		AED0098E:string { "(IBM LTO 00/8282) Drive requests cleaning" }
+		AED0100E:string { "Recovered error (should be ignored)" }
+		AED0101E:string { "Mode select parameter is rounded by the drive (should be ignored)" }
+		AED0198E:string { "(IBM LTO 01/8252) Degraded medium is detected" }
+		AED0200E:string { "Drive is not ready" }
+		AED0201E:string { "Cannot report an error for this condition" }
+		AED0202E:string { "Device is becoming ready" }
+		AED0203E:string { "Initialize command is required" }
+		AED0204E:string { "Manual intervention is required" }
+		AED0205E:string { "Operation is in progress" }
+		AED0206E:string { "Device is offline" }
+		AED0207E:string { "Door is open" }
+		AED0208E:string { "Device is too hot" }
+		AED0209E:string { "Drive has no medium" }
+		AED0210E:string { "Device has not self-configured yet" }
+		AED0211E:string { "SA creation parameter value rejected" }
+		AED0297E:string { "Cleaning is in progress" }
+		AED0298E:string { "(TS3500/TS4500) I/O slot is opened" }
+		AED0300E:string { "Other medium errors" }
+		AED0301E:string { "Read or write permanent error" }
+		AED0302E:string { "CM RW error" }
+		AED0303E:string { "Incompatible or unknown format" }
+		AED0304E:string { "Corrupt format is detected" }
+		AED0305E:string { "Drive rejects a read operation because of an unexpected overwrite on the WORM medium" }
+		AED0306E:string { "Load/Unload error" }
+		AED0307E:string { "Cleaning operation failed" }
+		AED0308E:string { "Permanent read error" }
+		AED0309E:string { "Permanent write error" }
+		AED0400E:string { "All H/W errors" }
+		AED0401E:string { "Logical Block Guard Check Failed" }
+		AED0402E:string { "Logical Block Protection read error" }
+		AED0403E:string { "There is no connection to the device" }
+		AED0500E:string { "All illegal request errors" }
+		AED0501E:string { "Invalid field in CDB" }
+		AED0502E:string { "Medium destination element full" }
+		AED0503E:string { "Medium source element empty" }
+		AED0504E:string { "Medium magazine is not accessible" }
+		AED0505E:string { "Element address is invalid" }
+		AED0506E:string { "Medium removal prevented. Drive media removal prevented state set" }
+		AED0600E:string { "Other UA conditions" }
+		AED0601E:string { "Not ready to transition: medium might have changed" }
+		AED0602E:string { "IE slot is accessed" }
+		AED0603E:string { "POR/Bus reset occurred" }
+		AED0604E:string { "Drive configuration is changed" }
+		AED0605E:string { "Command is cleared by another initiator" }
+		AED0606E:string { "Operator medium removal request" }
+		AED0607E:string { "Cannot remove the medium" }
+		AED0608E:string { "Medium magazine inserted" }
+		AED0609E:string { "Drive configuration is changed" }
+		AED0610E:string { "Reservations preempted" }
+		AED0611E:string { "Reservations released" }
+		AED0612E:string { "Registrations preempted" }
+		AED0700E:string { "Other data protect conditions" }
+		AED0701E:string { "Write-protected" }
+		AED0702E:string { "WORM cartridge" }
+		AED0703E:string { "Attempt to overwrite in append-only mode" }
+		AED0800E:string { "Other blank check conditions" }
+		AED0801E:string { "EOD detected" }
+		AED0802E:string { "EOD not found" }
+		AED1100E:string { "Other aborted command conditions" }
+		AED1101E:string { "Overlapping commands" }
+		AED1102E:string { "Initiator response timeout" }
+		AED1103E:string { "Aborted because of a communication issue" }
+		AED1300E:string { "The medium is full" }
+		AED1600E:string { "Other encryption-related errors" }
+		AED1601E:string { "Key service timeout or failure" }
+		AED1602E:string { "Detect key change" }
+		AED1603E:string { "Detect key change" }
+		AED1700E:string { "Internal logic error" }
+		AED1701E:string { "Driver reports an error" }
+		AED1702E:string { "Host reports an error" }
+		AED1703E:string { "Target reports an error" }
+		AED1704E:string { "Memory allocation failure" }
+		AED1705E:string { "Unsupported function" }
+		AED1706E:string { "Parameter code of log page not found" }
+		AED1707E:string { "Cannot get the sense data from a lower level" }
+		AED1708E:string { "Invalid argument" }
+		AED1709E:string { "IO error on saving dump" }
+		AED1710E:string { "Medium is already mounted or in use" }
+		AED1711E:string { "Cannot open the device" }
+		AED1712E:string { "Cannot support the device" }
+		AED1713E:string { "The device is not an IBM product" }
+		AED1714E:string { "Cannot support the firmware" }
+		AED1715E:string { "Unsupported SCSI command" }
+		AED1716E:string { "The actual transfer length and residual length do not match" }
+		AED1717E:string { "A buffer overrun is detected" }
+		AED1718E:string { "The number of drives are not correct" }
+		AED1719E:string { "Reservation conflict" }
+		AED1720E:string { "Connection lost while processing a command" }
+		AED1721E:string { "No reservation holder" }
+		AED1722E:string { "A path switch happened. Reissue the command" }
+		AED1723E:string { "A real power on reset is detected" }
+		AED1724E:string { "Buffer allocation error in a driver" }
+		AED1725E:string { "Retry the command again" }
+		AED9998E:string { "Unknown sense" }
+		AED9999E:string { "Vendor unique sense. ASC >= 0x80 or ASCQ >= 0x80" }
 	}
 }

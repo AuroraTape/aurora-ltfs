@@ -1448,11 +1448,13 @@ int ltfs_split_symlink(struct ltfs_volume *vol)
 	struct dentry *d, *workd;
 	int ret=0;
 	char *name, *lfdir, *path, *tok, *next_tok;
-	bool basedir=true, use_iosche=false;
+	bool basedir=true;
 	char value[32];
 	ltfs_file_id id;
 
-	if ( iosched_initialized(vol) ) use_iosche=true;
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
 
 	/* check lost_and_found directory and make if it doesn't exist */
 	asprintf( &lfdir, "/%s", LTFS_LOSTANDFOUND_DIR );
@@ -1469,7 +1471,7 @@ int ltfs_split_symlink(struct ltfs_volume *vol)
 		free(lfdir);
 		return ret;
 	}
-	ret = ltfs_fsops_close( workd, true, true, use_iosche, vol);
+	ret = ltfs_fsops_close( workd, true, true, true, vol);
 	path=strdup(lfdir);
 
 	/* loop for conflicted files */
@@ -1499,7 +1501,7 @@ int ltfs_split_symlink(struct ltfs_volume *vol)
 					goto err_out_func;
 
 			}
-			ret = ltfs_fsops_close( workd, true, true, use_iosche, vol);
+			ret = ltfs_fsops_close( workd, true, true, true, vol);
 			tok = next_tok;
 			next_tok=strtok( NULL, "/" );
 		}
@@ -1533,7 +1535,7 @@ int ltfs_split_symlink(struct ltfs_volume *vol)
 			ret = xattr_do_remove(d, LTFS_LIVELINK_EA_NAME, true, vol);
 			if (ret<0)
 				goto err_out_func;
-			ret = ltfs_fsops_close( workd, true, true, use_iosche, vol);
+			ret = ltfs_fsops_close( workd, true, true, true, vol);
 			if (ret<0)
 				goto err_out_func;
 		}

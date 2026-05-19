@@ -165,7 +165,7 @@ static void _free_file_info(struct file_info *fi)
  * @return File handle information, or NULL if memory allocation failed or if 'priv' is NULL.
  */
 static struct file_info *_file_open(const char *path, void *d, struct file_info *spare,
-	struct ltfs_fuse_data *priv)
+									struct ltfs_fuse_data *priv)
 {
 	struct file_info *fi = NULL;
 	CHECK_ARG_NULL(priv, NULL);
@@ -1086,13 +1086,12 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 
 #ifndef mingw_PLATFORM
 	/*
-	 * Open the I/O scheduler, if one has been specified by the user.
-	 * Please note that when we run in library mode the I/O scheduler
-	 * is loaded individually for each mounted volume.
-	 */
+ 	 * Open the I/O scheduler. It is mandatory for altfs operation.
+ 	 * If initialization fails, subsequent FS callbacks will return
+ 	 * -LTFS_IOSCHED_INIT so the user can detect the failure and unmount.
+ 	 */
 	if (iosched_init(&priv->iosched_plugin, priv->data) < 0) {
-		/* I/O scheduler disabled. Performance down, memory usage up. */
-		ltfsmsg(AFS0024W);
+		ltfsmsg(AFS0135E);
 	}
 
 	/* fill in fixed filesystem stats */

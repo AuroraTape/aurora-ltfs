@@ -558,7 +558,7 @@ int main(int argc, char **argv)
 
 	/* Start up libltfs with the default logging level. User overrides are
 	 * processed later, after command line parsing. */
-	openlog("ltfs", LOG_PID, LOG_USER);
+	openlog("altfs", LOG_PID, LOG_USER);
 	ret = ltfs_init(LTFS_INFO, true, true);
 	if (ret < 0) {
 		/* Failed to initialize libltfs */
@@ -766,8 +766,11 @@ int main(int argc, char **argv)
 	}
 	if (priv->iosched_backend_name == NULL)
 		priv->iosched_backend_name = config_file_get_default_plugin("iosched", priv->config);
-	if (priv->iosched_backend_name && strcmp(priv->iosched_backend_name, "none") == 0)
-		priv->iosched_backend_name = NULL;
+	if (priv->iosched_backend_name == NULL) {
+		/* I/O scheduler plug-in is required but not configured */
+		ltfsmsg(AFS0134E);
+		return 1;
+	}
 	if (priv->kmi_backend_name == NULL)
 		priv->kmi_backend_name = config_file_get_default_plugin("kmi", priv->config);
 	if (priv->kmi_backend_name && strcmp(priv->kmi_backend_name, "none") == 0)
@@ -807,13 +810,10 @@ int main(int argc, char **argv)
 		ltfsmsg(AFS0050E, ret);
 		return 1;
 	}
-	if (priv->iosched_backend_name) {
-		ret = plugin_load(&priv->iosched_plugin, "iosched", priv->iosched_backend_name,
-			priv->config);
-		if (ret < 0) {
-			ltfsmsg(AFS0051E, ret);
-			return 1;
-		}
+	ret = plugin_load(&priv->iosched_plugin, "iosched", priv->iosched_backend_name, priv->config);
+	if (ret < 0) {
+		ltfsmsg(AFS0051E, ret);
+		return 1;
 	}
 	if (priv->kmi_backend_name) {
 		ret = plugin_load(&priv->kmi_plugin, "kmi", priv->kmi_backend_name,
@@ -852,8 +852,7 @@ int main(int argc, char **argv)
 	ret = single_drive_main(&args, priv);
 
 	/* Unload plugins */
-	if (priv->iosched_backend_name)
-		plugin_unload(&priv->iosched_plugin);
+	plugin_unload(&priv->iosched_plugin);
 	if (priv->kmi_backend_name)
 		plugin_unload(&priv->kmi_plugin);
 	plugin_unload(&priv->tape_plugin);
