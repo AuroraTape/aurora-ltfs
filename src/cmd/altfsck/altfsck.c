@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 
 	/* Start up libltfs with the default logging level. */
 #ifndef mingw_PLATFORM
-	openlog("ltfsck", LOG_PID, LOG_USER);
+	openlog("altfsck", LOG_PID, LOG_USER);
 #endif
 	ret = ltfs_init(LTFS_INFO, true, false);
 	if (ret < 0) {

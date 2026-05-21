@@ -70,7 +70,7 @@
 #include "arch/time_internal.h"
 
 int ltfs_fsops_open(const char *path, bool open_write, bool use_iosched, struct dentry **d,
-	struct ltfs_volume *vol)
+					struct ltfs_volume *vol)
 {
 	int ret;
 	char *path_norm;
@@ -78,6 +78,10 @@ int ltfs_fsops_open(const char *path, bool open_write, bool use_iosched, struct 
 	CHECK_ARG_NULL(path, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
 
 	if (open_write) {
 		ret = ltfs_get_tape_readonly(vol);
@@ -94,12 +98,12 @@ int ltfs_fsops_open(const char *path, bool open_write, bool use_iosched, struct 
 		return ret;
 	}
 
-	if (use_iosched && iosched_initialized(vol))
+	if (use_iosched)
 		ret = iosched_open(path_norm, open_write, d, vol);
 	else
 		ret = ltfs_fsraw_open(path_norm, open_write, d, vol);
 
-	if ( ret==0 ){
+	if (!ret) {
 		if ( open_write && (**d).isslink ) {
 			ltfs_fsops_close(*d, false, open_write, use_iosched, vol);
 			ret=-LTFS_RDONLY_VOLUME;
@@ -120,10 +124,13 @@ int ltfs_fsops_open_combo(const char *path, bool open_write, bool use_iosched,
 	char *path_norm;
 	struct dentry *dtmp;
 
-
 	CHECK_ARG_NULL(path, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
 
 	if (open_write) {
 		ret = ltfs_get_tape_readonly(vol);
@@ -166,7 +173,7 @@ int ltfs_fsops_open_combo(const char *path, bool open_write, bool use_iosched,
 	if (ret<0)
 		goto out_open_combo;
 
-	if (use_iosched && iosched_initialized(vol))
+	if (use_iosched)
 		ret = iosched_open(path_norm, open_write, d, vol);
 	else
 		ret = ltfs_fsraw_open(path_norm, open_write, d, vol);
@@ -186,6 +193,10 @@ int ltfs_fsops_close(struct dentry *d, bool dirty, bool open_write, bool use_ios
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
 	if (d->need_update_time) {
 		acquirewrite_mrsw(&d->meta_lock);
 		get_current_timespec(&d->modify_time);
@@ -200,7 +211,7 @@ int ltfs_fsops_close(struct dentry *d, bool dirty, bool open_write, bool use_ios
 	if (open_write)
 		ret_u = ltfs_fsops_update_used_blocks(d, vol);
 
-	if (use_iosched && ! d->isdir && iosched_initialized(vol))
+	if (use_iosched && ! d->isdir)
 		ret = iosched_close(d, dirty, vol);
 	else
 		ret = ltfs_fsraw_close(d);
@@ -417,6 +428,10 @@ int ltfs_fsops_unlink(const char *path, ltfs_file_id *id, struct ltfs_volume *vo
 	CHECK_ARG_NULL(path, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
 	id->uid = 0;
 	id->ino = 0;
 
@@ -541,7 +556,7 @@ out:
 
 	releaseread_mrsw(&vol->lock);
 
-	if (ret == 0 && iosched_initialized(vol))
+	if (!ret)
 		iosched_update_data_placement(d, vol);
 
 	free(path_norm);
@@ -564,6 +579,10 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 	CHECK_ARG_NULL(from, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(to, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
 
 	id->uid = 0;
 	id->ino = 0;
@@ -882,10 +901,7 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 	incj_create(to_norm_copy, fromdentry, vol);
 
 	/* Release dentry of source */
-	if (! iosched_initialized(vol))
-		fs_release_dentry_unlocked(fromdentry);
-	else
-		releasewrite_mrsw(&fromdentry->meta_lock);
+	releasewrite_mrsw(&fromdentry->meta_lock);
 
 	ltfs_set_index_dirty(true, false, vol->index);
 
@@ -919,7 +935,7 @@ out_release:
 
 	/* Tell the scheduler about fromdentry's new name, ignoring errors (because the
 	 * rename already finished, no going back now) */
-	if (ret == 0 && iosched_initialized(vol) && fromdentry) {
+	if (!ret && fromdentry) {
 		iosched_update_data_placement(fromdentry, vol);
 		fs_release_dentry(fromdentry);
 	}
@@ -951,6 +967,10 @@ int ltfs_fsops_getattr(struct dentry *d, struct dentry_attr *attr, struct ltfs_v
 	CHECK_ARG_NULL(attr, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
 	ret = ltfs_get_volume_lock(false, vol);
 	if (ret < 0)
 		return ret;
@@ -977,7 +997,7 @@ int ltfs_fsops_getattr(struct dentry *d, struct dentry_attr *attr, struct ltfs_v
 	releaseread_mrsw(&d->meta_lock);
 	releaseread_mrsw(&vol->lock);
 
-	if (! d->isdir && !d->isslink && iosched_initialized(vol))
+	if (! d->isdir && !d->isslink)
 		attr->size = iosched_get_filesize(d, vol);
 
 	return 0;
@@ -1769,8 +1789,14 @@ int ltfs_fsops_write(struct dentry *d, const char *buf, size_t count, off_t offs
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(buf, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
-	if (d->isdir)
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
+	if (d->isdir) {
 		return -LTFS_ISDIRECTORY;
+	}
 
 	if (d->is_immutable || (d->is_appendonly && (uint64_t) offset != d->size)) {
 		ltfsmsg(ALI0040E, "write");
@@ -1782,18 +1808,9 @@ int ltfs_fsops_write(struct dentry *d, const char *buf, size_t count, off_t offs
 	 * We don't check for unit ready here because this call guarantees a write request later,
 	 * which will catch the unready condition. */
 
-	if (iosched_initialized(vol)) {
-		ret = iosched_write(d, buf, count, offset, isupdatetime, vol);
-		if (!isupdatetime && ret>=0)
-			d->need_update_time = true;
-	} else {
-		if (isupdatetime)
-			ret = ltfs_fsraw_write(d, buf, count, offset, ltfs_dp_id(vol), true, vol);
-		else {
-			ret = ltfs_fsraw_write(d, buf, count, offset, ltfs_dp_id(vol), false, vol);
-			if (ret>=0) d->need_update_time = true;
-		}
-	}
+	ret = iosched_write(d, buf, count, offset, isupdatetime, vol);
+	if (!isupdatetime && ret>=0)
+		d->need_update_time = true;
 
 	if (ret < 0)
 		return ret;
@@ -1809,17 +1826,20 @@ ssize_t ltfs_fsops_read(struct dentry *d, char *buf, size_t count, off_t offset,
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(buf, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
-	if (d->isdir)
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
+	if (d->isdir) {
 		return -LTFS_ISDIRECTORY;
+	}
 
 	if (vol->mount_type == MOUNT_ROLLBACK_META) {
 		return -LTFS_DEVICE_UNREADY;
 	}
 
-	if (iosched_initialized(vol))
-		ret = iosched_read(d, buf, count, offset, vol);
-	else
-		ret = ltfs_fsraw_read(d, buf, count, offset, vol);
+	ret = iosched_read(d, buf, count, offset, vol);
 
 	return ret;
 }
@@ -1830,6 +1850,11 @@ int ltfs_fsops_truncate(struct dentry *d, off_t length, struct ltfs_volume *vol)
 
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
 	if (length < 0) {
 		ltfsmsg(ALI0015E);
 		return -LTFS_BAD_ARG;
@@ -1851,10 +1876,7 @@ int ltfs_fsops_truncate(struct dentry *d, off_t length, struct ltfs_volume *vol)
 		return ret;
 	}
 
-	if (iosched_initialized(vol))
-		ret = iosched_truncate(d, length, vol);
-	else
-		ret = ltfs_fsraw_truncate(d, length, vol);
+	ret = iosched_truncate(d, length, vol);
 
 	if (ret == 0 && dcache_initialized(vol))
 		dcache_flush(d, (FLUSH_EXTENT_LIST | FLUSH_METADATA), vol);
@@ -1891,14 +1913,18 @@ int ltfs_fsops_flush(struct dentry *d, bool closeflag, struct ltfs_volume *vol)
 	int ret = 0;
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
-	if (d && d->isdir)
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
+	if (d && d->isdir) {
 		return -LTFS_ISDIRECTORY;
+	}
 
 	/* Don't need to check for read-only or unit ready here; the I/O scheduler will check for
 	 * those conditions if it wants to know about them. */
-
-	if (iosched_initialized(vol))
-		ret = iosched_flush(d, closeflag, vol);
+	ret = iosched_flush(d, closeflag, vol);
 
 	if (dcache_initialized(vol))
 		dcache_flush(d, FLUSH_ALL, vol);
@@ -1909,7 +1935,6 @@ int ltfs_fsops_flush(struct dentry *d, bool closeflag, struct ltfs_volume *vol)
 int ltfs_fsops_symlink_path(const char* to, const char* from, ltfs_file_id *id, struct ltfs_volume *vol)
 {
 	struct dentry *d;
-	bool use_iosche=false;
 	int ret=0, ret2=0;
 	char *value;
 	size_t size;
@@ -1919,7 +1944,9 @@ int ltfs_fsops_symlink_path(const char* to, const char* from, ltfs_file_id *id, 
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
-	if ( iosched_initialized(vol) ) use_iosche=true;
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
 
 	ltfsmsg(ALI0035D, from, to);
 
@@ -1948,7 +1975,7 @@ int ltfs_fsops_symlink_path(const char* to, const char* from, ltfs_file_id *id, 
 	ret = xattr_set_mountpoint_length( d, value, size );
 	free(value);
 
-	ret2 = ltfs_fsops_close(d, true, true, use_iosche, vol);
+	ret2 = ltfs_fsops_close(d, true, true, true, vol);
 	if ( ret==0 && ret2<0 ) {
 		ret = ret2;
 	}
@@ -1959,20 +1986,21 @@ int ltfs_fsops_symlink_path(const char* to, const char* from, ltfs_file_id *id, 
 int ltfs_fsops_readlink_path(const char* path, char* buf, size_t size, ltfs_file_id *id, struct ltfs_volume *vol)
 {
 	struct dentry *d;
-	bool use_iosche=false;
 	int ret=0;
 	char value[32];
 	int num1,num2;
 
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (!iosched_initialized(vol)) {
+		return -LTFS_IOSCHED_INIT;
+	}
+
 	id->uid = 0;
 	id->ino = 0;
 
-	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
-
-	if ( iosched_initialized(vol) ) use_iosche=true;
-
 	/* Open the file */
-	ret = ltfs_fsops_open(path, false, use_iosche, &d, vol);
+	ret = ltfs_fsops_open(path, false, true, &d, vol);
 	if (ret < 0)
 		return ret;
 
@@ -2004,7 +2032,7 @@ int ltfs_fsops_readlink_path(const char* path, char* buf, size_t size, ltfs_file
 		}
 	}
 
-	ret = ltfs_fsops_close(d, false, false, use_iosche, vol);
+	ret = ltfs_fsops_close(d, false, false, true, vol);
 	if (ret < 0)
 		return ret;
 
@@ -2012,7 +2040,7 @@ int ltfs_fsops_readlink_path(const char* path, char* buf, size_t size, ltfs_file
 	return 0; /* Shall be return 0, if success */
 }
 
-int ltfs_fsops_target_absolute_path(const char* link, const char* target, char* buf, size_t size )
+int ltfs_fsops_target_absolute_path(const char* link, const char* target, char* buf, size_t size)
 {
 	char *work_buf, *target_buf, *temp_buf, *token, *next_token; /* work buffers for string */
 	int  len=0, len2=0;                                          /* work variables for string length */

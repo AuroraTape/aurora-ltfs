@@ -69,7 +69,7 @@ struct libltfs_plugin {
  * @return 0 on success or a negative value on error.
  */
 int plugin_load(struct libltfs_plugin *pl, const char *type, const char *name,
-	struct config_file *config);
+				struct config_file *config);
 
 /**
  * Unload a previously loaded plugin. This should be called once for each call to @plugin_load.
@@ -88,4 +88,3 @@ int plugin_unload(struct libltfs_plugin *pl);
 void plugin_usage(const char *progname, const char *type, struct config_file *config);
 
 #endif /* __PLUGIN_H__ */
-

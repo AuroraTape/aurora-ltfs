@@ -566,7 +566,7 @@ int main(int argc, char **argv)
 
 	/* Start up libltfs with the default logging level. */
 #ifndef mingw_PLATFORM
-	openlog("ltfsindextool", LOG_PID, LOG_USER);
+	openlog("altfsindextool", LOG_PID, LOG_USER);
 #endif
 	ret = ltfs_init(LTFS_INFO, true, false);
 	if (ret < 0) {
