@@ -101,7 +101,7 @@ root:table {
 		AIX0059I:string { "      --kmi-backend=<name>   Use the specified key manager interface backend (default: %s)" }
 		AIX0060I:string { "  -q, --quiet                Suppress progress information and general messages" }
 		AIX0061I:string { "  -t, --trace                Enable function call tracing" }
-		AIX0062I:string { "  -V, --version             Version information" }
+		AIX0062I:string { "  -V, --version              Version information" }
 		AIX0063I:string { "  -h, --help                 This help" }
 		AIX0064I:string { "Usage example:" }
 		AIX0065I:string { "  %s --device=%s -p=%d" }

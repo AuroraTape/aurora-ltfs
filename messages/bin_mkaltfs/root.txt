@@ -116,7 +116,7 @@ root:table {
 		AMK0074I:string { "  -k, --keep-capacity       Keep the tape medium's total capacity proportion" }
 		AMK0075I:string { "  -f, --force               Force to format medium" }
 		AMK0076I:string { "      --kmi-backend=<name>  Use the specified key manager interface backend (default: %s)" }
-		AMK0077I:string { "      --syslogtrace               Enable diagnostic output to stderr and syslog" }
+		AMK0077I:string { "      --syslogtrace         Enable diagnostic output to stderr and syslog" }
 		AMK0078I:string { "  -V, --version             Version information" }
 		AMK0079I:string { "      --long-wipe           Unformat the medium and erase any data on the tape by overwriting special data pattern.\n                            This operation takes over 3 hours. Once you start, you cannot interrupt it" }
 		AMK0080I:string { "      --destructive         Use destructive format/unformat. This operation takes longer time\n                            in the LTO9 drive or later because of the media optimization procedure" }
