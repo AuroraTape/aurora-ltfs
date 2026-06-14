@@ -19,6 +19,5 @@
         "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind"
     ],
     "runArgs": ["--privileged", "--device=/dev/fuse", "--cap-add=SYS_ADMIN"],
-    "postCreateCommand": "./autogen.sh && ./configure --prefix=/workspaces/altfs && bear -- make -j$(nproc)",
     "remoteUser": "vscode"
 }
