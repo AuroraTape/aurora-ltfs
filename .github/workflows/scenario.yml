@@ -1,0 +1,59 @@
+name: Scenario tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  fsapi:
+    name: FS API (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            gcc \
+            pkg-config \
+            libfuse-dev \
+            libxml2-dev \
+            libicu-dev \
+            uuid-dev \
+            icu-devtools \
+            fuse \
+            python3 \
+            python3-pytest \
+            git \
+            ca-certificates
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: configure
+        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install" --enable-warning-as-error
+
+      - name: make
+        run: make -j"$(nproc)"
+
+      - name: make install
+        run: make install
+
+      - name: Run FS API tests
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: bash tests/fsapi/run.sh -v
