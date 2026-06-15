@@ -7,9 +7,13 @@ from pathlib import Path
 
 _RECORD_RE = re.compile(r"^(\d+)_(\d+)_R$")
 
+# On Linux, LTFS xattrs are exposed under the user.* namespace; the kernel
+# only lets unprivileged callers see/set xattrs in that namespace.
+_LINUX_NS = "user."
+
 
 def get_xattr(path, name):
-    return os.getxattr(os.fspath(path), name).decode("utf-8")
+    return os.getxattr(os.fspath(path), _LINUX_NS + name).decode("utf-8")
 
 
 def get_xattr_int(path, name):
@@ -17,7 +21,7 @@ def get_xattr_int(path, name):
 
 
 def set_xattr(path, name, value):
-    os.setxattr(os.fspath(path), name, value.encode("utf-8"))
+    os.setxattr(os.fspath(path), _LINUX_NS + name, value.encode("utf-8"))
 
 
 def full_sync(mnt, reason="test"):

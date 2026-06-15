@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import time
 
 import pytest
+
+sys.path.insert(0, os.path.dirname(__file__))
 
 
 _READY_TIMEOUT = 5.0
