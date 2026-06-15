@@ -477,6 +477,14 @@ int ltfs_fsops_unlink(const char *path, ltfs_file_id *id, struct ltfs_volume *vo
 	}
 	parent = d->parent;
 
+	/* parent->meta_lock is released unconditionally at `out:` (via
+	 * fs_release_dentry_unlocked), so it must be acquired before any
+	 * goto out. Acquiring it later left the early-bail paths
+	 * (WORM, DIRNOTEMPTY) releasing a lock that was never held,
+	 * corrupting the rwlock and deadlocking later operations on the
+	 * same parent. */
+	acquirewrite_mrsw(&parent->meta_lock);
+
 	if (parent->is_immutable || parent->is_appendonly) {
 		ltfsmsg(ALI0040E, "unlink: parent is WORM");
 		ret = -LTFS_WORM_ENABLED;
@@ -499,7 +507,6 @@ int ltfs_fsops_unlink(const char *path, ltfs_file_id *id, struct ltfs_volume *vo
 			goto out;
 	}
 
-	acquirewrite_mrsw(&parent->meta_lock);
 	acquirewrite_mrsw(&d->meta_lock);
 
 	if (dcache_initialized(vol)) {
