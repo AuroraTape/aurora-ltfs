@@ -56,6 +56,10 @@ rpm/BUILD/
 rpm/BUILDROOT/
 rpm/RPMS/
 rpm/SRPMS/
+# Python test artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
 # Files for development
 GPATH
 GRTAGS
