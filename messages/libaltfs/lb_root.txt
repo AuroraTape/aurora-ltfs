@@ -320,5 +320,6 @@ root:table {
 		ALB0280E:string { "UUID in the index does not match the label" }
 		ALB0281I:string { "Wrote inc-index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)" }
 		ALB0282I:string { "Info inc-index, Gen = %lld, Full Part = %c, Full Pos = %lld, Back Part = %c, Back Pos = %lld)" }
+		ALB0283W:string { "VCR buffer flush (WFM 0) failed with %d; VCI may be stale. Next mount will retry" }
 	}
 }

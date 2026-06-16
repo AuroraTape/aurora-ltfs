@@ -4283,6 +4283,11 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 	else
 		params->max_blksize = MIN(_cdb_read_block_limits(device), SG_MAX_BLOCK_SIZE);
 
+	params->needs_wfm_flush = IS_LTO(priv->drive_type) &&
+		(priv->vendor == VENDOR_HP ||
+		 priv->vendor == VENDOR_QUANTUM ||
+		 priv->vendor == VENDOR_QUANTUM_B);
+
 	ret = 0;
 
 out:

@@ -448,7 +448,8 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
 		ltfsmsg(ALP0027E, ret);
 		return ret;
 	}
-	dev->max_block_size = param.max_blksize;
+	dev->max_block_size   = param.max_blksize;
+	dev->needs_wfm_flush  = param.needs_wfm_flush;
 
 	/* Get programmable early warning size */
 	ret = tape_get_pews(dev, &pews);

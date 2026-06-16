@@ -129,6 +129,9 @@ struct tc_drive_param {
 	unsigned char density;               /* Current density code */
 	unsigned int  write_protect;         /* Write protect status of the tape (use bit field of volumelock_status) */
 	unsigned int  logical_write_protect; /* Logical Write Protect */
+	bool          needs_wfm_flush;       /* Drive requires WFM(0) flush after index write to ensure VCR
+	                                      * is committed to tape before VCI is written to MAM. True for
+	                                      * HP/HPE LTO and Quantum LTO drives. */
 	/* TODO: Following field shall be handled by backend but currently they are not implemented yet */
 	//bool          is_encrypted;          /* Is encrypted tape ? */
 	//bool          is_worm;               /* Is worm tape? */

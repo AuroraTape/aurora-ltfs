@@ -110,6 +110,7 @@ struct device_data {
 	bool is_worm;                         /**< Is WORM tape? */
 	bool is_encrypted;                    /**< Is tape encrypted? */
 	struct ltfs_timespec previous_exist;  /**< Previous time to be confirm drive connection presence */
+	bool needs_wfm_flush;                 /**< Drive requires WFM(0) flush after index write (HP/Quantum LTO) */
 
 	struct tape_ops *backend;             /**< Backend functions */
 	void *backend_data;                   /**< Backend private data */

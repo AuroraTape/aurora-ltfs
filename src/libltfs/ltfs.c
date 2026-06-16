@@ -2695,6 +2695,15 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		goto out_write_perm;
 	}
 
+	/* Flush drive write buffer before reading VCR for VCI update. Without this, the drive
+	 * may not have committed all pending writes to tape medium when VCI is written to MAM,
+	 * leaving VCR ahead of VCI and triggering a spurious full consistency check on next mount. */
+	if (type == LTFS_FULL_INDEX && vol->device->needs_wfm_flush) {
+		int flush_ret = tape_write_filemark(vol->device, 0, true, true, false);
+		if (flush_ret < 0)
+			ltfsmsg(ALB0283W, flush_ret);
+	}
+
 	if (type == LTFS_FULL_INDEX) {
 		/* Update MAM parameters. */
 		if (partition == ltfs_ip_id(vol))
