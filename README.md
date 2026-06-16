@@ -64,7 +64,7 @@ Tier 2 and Tier 3 platforms may be promoted or added based on community demand a
   | IBM     | TS1155                  | None              |
   | IBM     | TS1160                  | None              |
   | HP      | LTO5                    | T.B.D.            |
-  | HP      | LTO6                    | T.B.D.            |
+  | HP      | LTO6                    | 25MW (6250 FC)    |
   | HP      | LTO7                    | T.B.D.            |
   | HP      | LTO8                    | T.B.D.            |
   | HP      | LTO9                    | T.B.D.            |
