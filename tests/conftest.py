@@ -1,26 +1,13 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
-import time
 
 import pytest
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-
-_READY_TIMEOUT = 5.0
-_POLL_INTERVAL = 0.1
-
-
-def _wait_until(predicate, timeout):
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if predicate():
-            return True
-        time.sleep(_POLL_INTERVAL)
-    return False
+from common.altfs import format_tape, mount_tape, umount_tape
 
 
 @pytest.fixture(scope="module")
@@ -31,24 +18,9 @@ def mounted_tape(tmp_path_factory):
     tape_dir.mkdir()
     mnt_dir.mkdir()
 
-    subprocess.run(
-        ["mkaltfs", "-e", "file", "-d", str(tape_dir),
-         "-s", "TEST00", "-n", "test", "-f"],
-        check=True,
-    )
-    subprocess.run(
-        ["altfs",
-         "-o", "tape_backend=file",
-         "-o", f"devname={tape_dir}",
-         "-o", "sync_type=unmount",
-         str(mnt_dir)],
-        check=True,
-    )
-    if not _wait_until(lambda: os.path.ismount(mnt_dir), _READY_TIMEOUT):
-        raise RuntimeError(f"FUSE mount did not become ready: {mnt_dir}")
-
+    format_tape(tape_dir)
+    mount_tape(tape_dir, mnt_dir)
     try:
         yield mnt_dir
     finally:
-        subprocess.run(["fusermount", "-u", str(mnt_dir)], check=False)
-        _wait_until(lambda: not os.path.ismount(mnt_dir), _READY_TIMEOUT)
+        umount_tape(mnt_dir)
