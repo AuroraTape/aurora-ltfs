@@ -4699,17 +4699,43 @@ static bool is_ame(void *device)
 	}
 }
 
+static bool is_tde_capable(void *device)
+{
+	   unsigned char *buffer = NULL;
+	   size_t size = 0;
+	   const int ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_CAPS, &buffer, &size);
+	   free(buffer);
+
+	   if (ret != 0) {
+			char message[100] = {0};
+			sprintf(message, "failed to query DEC page (%d)", ret);
+			ltfsmsg(ATG0099D, __FUNCTION__, message);
+			return false;
+	   }
+
+	   return size > 0;
+}
+
 static int is_encryption_capable(void *device)
 {
 	struct sg_data *priv = (struct sg_data*)device;
 
-	if (IS_LTO(priv->drive_type)) {
+	if (IS_ENTERPRISE(priv->drive_type)) {
+		/* Jaguar: must already be configured for Application Managed Encryption */
+		if (! is_ame(device)) {
+			ltfsmsg(ATG0044E, priv->drive_type);
+			return -EDEV_INTERNAL_ERROR;
+		}
+	} else if (IS_LTO(priv->drive_type)) {
+		/* LTO (HP, Quantum, IBM LTO via sg): verify drive advertises TDE algorithms */
+		if (! is_tde_capable(device)) {
+			ltfsmsg(ATG0044E, priv->drive_type);
+			return -EDEV_INTERNAL_ERROR;
+		}
+	} else {
 		ltfsmsg(ATG0044E, priv->drive_type);
 		return -EDEV_INTERNAL_ERROR;
 	}
-
-	if (! is_ame(device))
-		return -EDEV_INTERNAL_ERROR;
 
 	return DEVICE_GOOD;
 }
@@ -4732,7 +4758,7 @@ int sg_set_key(void *device, const unsigned char *keyalias, const unsigned char 
 		return ret;
 	}
 
-	const uint16_t sps = 0x10;
+	const uint16_t sps = SPS_DATA_ENCRYPTION_CAPS;
 	const size_t size = keyalias ? 20 + DK_LENGTH + 4 + DKI_LENGTH : 20;
 	uint8_t *buffer = calloc(size, sizeof(uint8_t));
 	if (! buffer) {
@@ -4742,9 +4768,14 @@ int sg_set_key(void *device, const unsigned char *keyalias, const unsigned char 
 	}
 
 	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
-	ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
-	if (ret != DEVICE_GOOD)
-		goto out;
+
+	/* HP LTO drives do not support Mode Page 0x25. */
+	if (!(priv->vendor == VENDOR_HP && IS_LTO(priv->drive_type) &&
+		((DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 )))) {
+		ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
+		if (ret != DEVICE_GOOD)
+		    goto out;
+	}
 
 	ltfs_u16tobe(buffer + 0, sps);
 	ltfs_u16tobe(buffer + 2, size - 4);
@@ -4788,10 +4819,14 @@ int sg_set_key(void *device, const unsigned char *keyalias, const unsigned char 
 
 	priv->dev.is_data_key_set = keyalias != NULL;
 
-	memset(buf, 0, sizeof(buf));
-	ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
-	if (ret != DEVICE_GOOD)
-		goto out;
+	/* HP LTO drives do not support Mode Page 0x25. */
+	if (!(priv->vendor == VENDOR_HP && IS_LTO(priv->drive_type) &&
+	    ((DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 )))) {
+	    memset(buf, 0, sizeof(buf));
+	    ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
+	    if (ret != DEVICE_GOOD)
+			goto out;
+	}
 
 free:
 	free(buffer);
@@ -4850,7 +4885,7 @@ int sg_get_keyalias(void *device, unsigned char **keyalias)
 		return ret;
 	}
 
-	const uint16_t sps = 0x21;
+	const uint16_t sps = SPS_NEXT_BLOCK_ENC_STATUS;
 	uint8_t *buffer = NULL;
 	size_t size = 0;
 	int i = 0;
@@ -4906,6 +4941,28 @@ free:
 	free(buffer);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_GETKEYALIAS));
 	return ret;
+}
+
+static int sg_get_media_encrypted(void *device)
+{
+	struct sg_data *priv = (struct sg_data*)device;
+
+	if (!(priv->vendor == VENDOR_HP && IS_LTO(priv->drive_type)))
+		return -EDEV_UNSUPPORETD_COMMAND;
+
+	/* HP LTO does not support Mode Page 0x25; use SPIN Data Encryption Status page */
+	unsigned char *buffer = NULL;
+	size_t size = DES_ENCR_MODE_BYTE + 1;
+	const size_t alloc = size + 4;
+	int ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_STATUS, &buffer, &size);
+	show_hex_dump("DES SPIN:", buffer, alloc);
+	if (ret != DEVICE_GOOD || size < DES_ENCR_MODE_BYTE + 1) {
+		free(buffer);
+		return -EDEV_UNKNOWN;
+	}
+	int encrypted = buffer[DES_ENCR_MODE_BYTE] != 0;
+	free(buffer);
+	return encrypted;
 }
 
 int sg_takedump_drive(void *device, bool capture_unforced)
@@ -5291,6 +5348,7 @@ struct tape_ops sg_handler = {
 	.default_device_name    = sg_default_device_name,
 	.set_key                = sg_set_key,
 	.get_keyalias           = sg_get_keyalias,
+	.get_media_encrypted    = sg_get_media_encrypted,
 	.takedump_drive         = sg_takedump_drive,
 	.is_mountable           = sg_is_mountable,
 	.get_worm_status        = sg_get_worm_status,

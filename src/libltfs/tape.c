@@ -2420,6 +2420,8 @@ int tape_set_pews(struct device_data *dev, bool set_value)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_INVALID_FIELD_CDB)
+			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0073E, ret);
 		return ret;
 	}
@@ -2463,6 +2465,8 @@ int tape_get_pews(struct device_data *dev, uint16_t *pews)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_INVALID_FIELD_CDB)
+			return -LTFS_UNSUPPORTED; /* drive does not support subpage access */
 		ltfsmsg(ALP0075E, ret);
 		return ret;
 	}
@@ -2510,6 +2514,8 @@ int tape_enable_append_only_mode(struct device_data *dev, bool enable)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_INVALID_FIELD_CDB)
+			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0089E, ret);
 		return ret;
 	}
@@ -2601,6 +2607,8 @@ int tape_get_append_only_mode_setting(struct device_data *dev, bool *enabled)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_INVALID_FIELD_CDB)
+			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0091E, ret);
 		return ret;
 	}
@@ -2818,18 +2826,22 @@ int tape_takedump_drive(struct device_data *dev, bool nonforced_dump)
 
 char* tape_get_media_encrypted(struct device_data *dev)
 {
+	if (dev->backend->get_media_encrypted) {
+		int ret = dev->backend->get_media_encrypted(dev->backend_data);
+		if (ret >= 0)
+			return ret ? "true" : "false";
+		if (ret != -EDEV_UNSUPPORETD_COMMAND)
+			return "unknown";
+		/* fall through to modesense */
+	}
+
+	/* Generic fallback: modesense page 0x25 (IBM and backends without the new op) */
 	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
-	int ret = -EDEV_UNKNOWN;
-	char *encrypted = NULL;
-
-	ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT,
-								  0, buf, sizeof(buf));
+	int ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT,
+									  0, buf, sizeof(buf));
 	if (ret < 0)
-		encrypted = "unknown";
-	else
-		encrypted = (buf[16 + CRYPTO_STATUS] & MEDIUM_SUPPORT_CRYPTO) == 0 ? "false" : "true";
-
-	return encrypted;
+		return "unknown";
+	return (buf[16 + CRYPTO_STATUS] & MEDIUM_SUPPORT_CRYPTO) == 0 ? "false" : "true";
 }
 
 #define CRYPTO_CONTROL        (20)

@@ -856,6 +856,16 @@ struct tape_ops {
 	int   (*get_keyalias)(void *device, unsigned char **keyalias);
 
 	/**
+	 * Get media encryption status.
+	 * @param device Device handle returned by the backend's open().
+	 * @return 1 if the volume contains encrypted logical blocks, 0 if not encrypted,
+	 *         -EDEV_UNSUPPORETD_COMMAND to fall back to modesense page 0x25,
+	 *         or another negative value on error.
+	 * May be NULL; tape.c then falls back to modesense page 0x25.
+	 */
+	int   (*get_media_encrypted)(void *device);
+
+	/**
 	 * Take a dump from the tape drive.
 	 * @param device Device handle returned by the backend's open().
 	 * @return 0 on success or a negative value on error.

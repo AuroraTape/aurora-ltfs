@@ -77,6 +77,16 @@
 #define SK_ILI_SET (0x20)
 #define SK_FM_SET  (0x80)
 
+/* SCSI Security Protocol 0x20 (Tape Data Encryption) page codes (SPS field) */
+#define SPS_DATA_ENCRYPTION_CAPS   (0x0010u) /* Data Encryption Capabilities / Set Data Encryption */
+#define SPS_DATA_ENCRYPTION_STATUS (0x0020u) /* Data Encryption Status */
+#define SPS_NEXT_BLOCK_ENC_STATUS  (0x0021u) /* Next Block Encryption Status */
+
+/* Data Encryption Status page (SPS_DATA_ENCRYPTION_STATUS) field offsets and masks */
+#define DES_ENCR_MODE_BYTE (5)  /* ENCRYPTION MODE: 0 = disabled, non-zero = active */
+#define DES_VCELB_BYTE (13)    /* byte containing the VCELB flag */
+#define DES_VCELB_BIT  (0x01u) /* Volume Contains Encrypted Logical Blocks */
+
 #define PERIPHERAL_MASK   (0x1F)
 #define SEQUENTIAL_DEVICE (0x01)
 
