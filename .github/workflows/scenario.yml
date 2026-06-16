@@ -62,3 +62,87 @@ jobs:
         env:
           ALTFS_PREFIX: ${{ github.workspace }}/_install
         run: bash tests/scenarios/run.sh -v
+
+  coverage:
+    name: Coverage (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            gcc \
+            pkg-config \
+            libfuse-dev \
+            libxml2-dev \
+            libicu-dev \
+            uuid-dev \
+            icu-devtools \
+            fuse \
+            python3 \
+            python3-pytest \
+            git \
+            ca-certificates \
+            lcov
+
+      - name: autogen
+        run: ./autogen.sh
+
+      # --coverage emits the gcov instrumentation; -O0 / -g keep the
+      # mapping back to source lines accurate. --enable-warning-as-error
+      # is intentionally dropped here — the instrumentation can introduce
+      # warnings that the production build (covered by the tests job
+      # above) already gates on.
+      - name: configure (with coverage)
+        run: |
+          ./configure --prefix="${GITHUB_WORKSPACE}/_install" \
+            CFLAGS="-O0 -g --coverage" \
+            LDFLAGS="--coverage"
+
+      - name: make
+        run: make -j"$(nproc)"
+
+      - name: make install
+        run: make install
+
+      - name: Run FS API tests
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: bash tests/fsapi/run.sh -v
+
+      - name: Run scenario tests
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: bash tests/scenarios/run.sh -v
+
+      - name: Collect coverage
+        run: |
+          lcov --capture --directory . --output-file coverage.info \
+               --ignore-errors source,gcov
+          lcov --remove coverage.info \
+               '/usr/*' '*/tests/*' \
+               --output-file coverage.info \
+               --ignore-errors unused
+          lcov --list coverage.info
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-info
+          path: coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.info
+          fail_ci_if_error: false
