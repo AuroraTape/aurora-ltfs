@@ -10,8 +10,8 @@ defaults:
     shell: bash
 
 jobs:
-  fsapi:
-    name: FS API (Ubuntu 24.04)
+  tests:
+    name: FS API + scenarios (Ubuntu 24.04)
     runs-on: ubuntu-24.04
     env:
       DEBIAN_FRONTEND: noninteractive
@@ -57,3 +57,8 @@ jobs:
         env:
           ALTFS_PREFIX: ${{ github.workspace }}/_install
         run: bash tests/fsapi/run.sh -v
+
+      - name: Run scenario tests
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: bash tests/scenarios/run.sh -v
