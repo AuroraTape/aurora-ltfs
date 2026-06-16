@@ -1,8 +1,11 @@
+import base64
 import os
 
 import pytest
 
+from common.altfs import format_tape, mount_tape, umount_tape
 from common.helpers import get_xattr, set_xattr
+from common.index import find_entries_by_name, parse_latest_index
 
 _USER_NS = "user."
 
@@ -67,3 +70,45 @@ def test_xattr_survives_after_writes_to_file(mounted_tape):
     set_xattr(p, "test.persist", "tag")
     p.write_text("v2-longer-content")
     assert get_xattr(p, "test.persist") == "tag"
+
+
+def test_unprintable_xattr_value_is_base64_on_tape(tmp_path_factory):
+    """An xattr value that contains bytes pathname_validate_xattr_value
+    rejects (NUL, 0x7f, high bytes, etc.) must be serialized as
+    <value type="base64">...</value> in the index XML, and must
+    round-trip back to the original bytes through a re-mount."""
+    base = tmp_path_factory.mktemp("altfs-xattr-bin")
+    tape = base / "tape"
+    mnt = base / "mnt"
+    tape.mkdir()
+    mnt.mkdir()
+    format_tape(tape, serial="XATTRB", label="xattr-bin")
+
+    binary_value = b"\x00\x01\x02\x7f\x80\xfe\xff"
+    qname = _USER_NS + "test.binary"
+
+    mount_tape(tape, mnt)
+    try:
+        f = mnt / "binxattr.txt"
+        f.write_text("payload")
+        os.setxattr(os.fspath(f), qname, binary_value)
+    finally:
+        umount_tape(mnt)
+
+    root = parse_latest_index(tape)
+    entries = find_entries_by_name(root, {"binxattr.txt"})
+    file_el = entries["binxattr.txt"]
+    value_el = None
+    for xattr in file_el.iter("xattr"):
+        if xattr.find("key").text == "test.binary":
+            value_el = xattr.find("value")
+            break
+    assert value_el is not None, "test.binary xattr not present in index"
+    assert value_el.get("type") == "base64"
+    assert base64.b64decode(value_el.text) == binary_value
+
+    mount_tape(tape, mnt)
+    try:
+        assert os.getxattr(os.fspath(mnt / "binxattr.txt"), qname) == binary_value
+    finally:
+        umount_tape(mnt)
