@@ -16,10 +16,8 @@ umount → inspect the IP record with the stdlib XML parser → re-mount
 → verify names come back identical and content is intact.
 """
 
-import xml.etree.ElementTree as ET
-
 from common.altfs import format_tape, mount_tape, umount_tape
-from common.index import find_latest_index_record
+from common.index import parse_latest_index
 
 
 FILE_NAME = "log:2026-06-16.txt"        # `:` triggers percent encoding
@@ -57,9 +55,7 @@ def test_percent_encoded_names_round_trip(tmp_path_factory):
 
     # Inspect the raw XML: the writer should have emitted the colon
     # as %3A and tagged the element percentencoded="true".
-    index_path = find_latest_index_record(tape_dir)
-    tree = ET.parse(index_path)
-    root = tree.getroot()
+    root = parse_latest_index(tape_dir)
 
     by_encoded_name = {}
     for tag, name_el in _walk_named_entries(root):

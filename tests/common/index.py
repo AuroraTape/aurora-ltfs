@@ -1,39 +1,60 @@
-"""Independent inspection of LTFS index XML records on the file backend.
+"""Independent inspection of LTFS index XML records.
 
-These helpers parse the XML with Python's stdlib (xml.etree), which
-shares no code with altfs's libxml2-based parser. A structural bug
-that altfs's writer + reader both round-trip cleanly can still be
-caught here.
+These helpers capture the on-tape index with `altfsindextool`
+and parse the resulting XML with Python's stdlib (xml.etree),
+which shares no code with altfs's libxml2-based parser. A
+structural bug that altfs's writer + reader both round-trip
+cleanly can still be caught here.
+
+The capture step (`altfsindextool ... --output-dir=...`) is the
+public extraction path, so it works regardless of which tape
+backend wrote the index — tests do not need to know how the
+file backend names its on-disk records.
 """
 
-import os
-import re
+import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-_IP_RECORD_RE = re.compile(r"^0_(\d+)_R$")
+
+_RUN_TIMEOUT = 30
 
 
-def find_latest_index_record(tape_dir):
-    """Path to the highest-numbered IP record file whose content begins
-    with an <ltfsindex> element (skips the VOL1 label and <ltfslabel>)."""
-    candidates = []
-    for name in os.listdir(tape_dir):
-        m = _IP_RECORD_RE.match(name)
-        if not m:
-            continue
-        path = Path(tape_dir) / name
-        if b"<ltfsindex" in path.read_bytes()[:64]:
-            candidates.append((int(m.group(1)), path))
-    if not candidates:
-        raise RuntimeError(f"no ltfsindex record found in {tape_dir}")
-    candidates.sort()
-    return candidates[-1][1]
+def _capture_indexes(tape_dir, partition, dest):
+    subprocess.run(
+        ["altfsindextool",
+         "-e", "file",
+         "-d", str(tape_dir),
+         f"--partition={partition}",
+         f"--output-dir={dest}",
+         "--quiet"],
+        check=True,
+        capture_output=True,
+        timeout=_RUN_TIMEOUT,
+    )
 
 
-def parse_latest_index(tape_dir):
-    """Parse the latest IP index XML and return the root element."""
-    return ET.parse(find_latest_index_record(tape_dir)).getroot()
+def _latest_captured(dest, partition):
+    files = list(Path(dest).glob(f"ltfs-index-{partition}-*.xml"))
+    if not files:
+        raise RuntimeError(
+            f"altfsindextool captured no index for partition {partition} "
+            f"under {dest}"
+        )
+    return max(files, key=lambda p: int(p.stem.rsplit("-", 1)[-1]))
+
+
+def parse_latest_index(tape_dir, partition=0):
+    """Capture every index on `partition` and parse the highest-block
+    one. Returns the parsed XML root element.
+
+    Defaults to partition 0 (index partition): the IP carries the
+    most recent index after `sync_type=unmount` finishes, so a
+    single capture there yields the latest committed state."""
+    with tempfile.TemporaryDirectory(prefix="altfs-idxcap-") as dest:
+        _capture_indexes(tape_dir, partition, dest)
+        return ET.parse(_latest_captured(dest, partition)).getroot()
 
 
 def find_entries_by_name(root, names):
