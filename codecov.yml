@@ -1,0 +1,44 @@
+# Codecov configuration for Aurora LTFS.
+# Reference: https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5%
+    patch:
+      default:
+        target: auto
+        threshold: 5%
+
+# Paths excluded from the coverage denominator.
+#
+# The integration test harness only exercises libltfs through the
+# `file` debug backend on a Linux runner. Sources that require
+# other operating systems or real SCSI hardware are unreachable
+# from CI and would distort the percentage if counted.
+ignore:
+  # Other-OS tape backends.
+  - "src/tape_drivers/osx/**/*"
+  - "src/tape_drivers/freebsd/**/*"
+  - "src/tape_drivers/netbsd/**/*"
+
+  # Linux SCSI generic driver — needs a real tape drive.
+  - "src/tape_drivers/linux/sg/**/*"
+
+  # Real-drive vendor support files at the top level. The file
+  # backend at src/tape_drivers/generic/file/ does not link
+  # against these; they only ship with the SCSI/IOKit/CAM paths
+  # above.
+  - "src/tape_drivers/crc32c_crc.c"
+  - "src/tape_drivers/reed_solomon_crc.c"
+  - "src/tape_drivers/hp_tape.c"
+  - "src/tape_drivers/ibm_tape.c"
+  - "src/tape_drivers/quantum_tape.c"
+  - "src/tape_drivers/vendor_compat.c"
+  - "src/tape_drivers/open_factor.c"
+
+  # AGENTS.md flags fcfs as a sample I/O scheduler that is "not
+  # used at all" — the unified scheduler is mandatory.
+  - "src/iosched/fcfs.c"
