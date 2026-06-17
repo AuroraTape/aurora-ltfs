@@ -99,3 +99,60 @@ def test_mkaltfs_open_failure_on_bogus_device():
     )
     assert r.returncode != 0
     assert "open" in (r.stdout + r.stderr).lower()
+
+
+# ---------- altfsck ----------
+
+
+def test_altfsck_version_exits_zero():
+    r = _run("altfsck", "--version")
+    assert r.returncode == 0, r.stderr
+    assert "version" in (r.stdout + r.stderr).lower()
+
+
+def test_altfsck_help_exits_zero():
+    r = _run("altfsck", "--help")
+    assert r.returncode == 0, r.stderr
+    assert "usage" in (r.stdout + r.stderr).lower()
+
+
+def test_altfsck_no_args_fails():
+    r = _run("altfsck")
+    assert r.returncode != 0
+
+
+def test_altfsck_verify_without_generation_rejected(tmp_path):
+    # MODE_VERIFY (-n / --no-rollback) requires --generation; the
+    # validator should reject before opening the device.
+    r = _run("altfsck", "-e", "file", "-n", str(tmp_path))
+    assert r.returncode != 0
+
+
+# ---------- altfsindextool ----------
+
+
+def test_altfsindextool_version_exits_zero():
+    r = _run("altfsindextool", "--version")
+    assert r.returncode == 0, r.stderr
+    assert "version" in (r.stdout + r.stderr).lower()
+
+
+def test_altfsindextool_help_exits_zero():
+    r = _run("altfsindextool", "--help")
+    assert r.returncode == 0, r.stderr
+    assert "usage" in (r.stdout + r.stderr).lower()
+
+
+def test_altfsindextool_no_args_fails():
+    r = _run("altfsindextool")
+    assert r.returncode != 0
+
+
+def test_altfsindextool_open_failure_on_bogus_device(tmp_path):
+    r = _run(
+        "altfsindextool", "-e", "file",
+        "-d", "/nonexistent/path",
+        f"--output-dir={tmp_path}",
+    )
+    assert r.returncode != 0
+    assert "open" in (r.stdout + r.stderr).lower()
