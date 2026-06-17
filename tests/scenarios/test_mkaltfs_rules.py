@@ -16,9 +16,10 @@ landed on.
 
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 
 from common.altfs import mount_tape, umount_tape
-from common.helpers import list_records
+from common.helpers import list_records, set_xattr
 
 
 def _format_with_rules(tape_dir, rules, *, serial, label="rules"):
@@ -36,10 +37,43 @@ def _concat_bytes(record_paths):
     return b"".join(p.read_bytes() for p in record_paths)
 
 
+def _parse_index_records(record_paths):
+    """Return [(generation, root_element), ...] sorted ascending for every
+    record file under the given paths that holds an <ltfsindex>."""
+    out = []
+    for p in record_paths:
+        if b"<ltfsindex" not in p.read_bytes()[:128]:
+            continue
+        root = ET.parse(p).getroot()
+        gen_el = root.find("generationnumber")
+        if gen_el is None:
+            continue
+        out.append((int(gen_el.text), root))
+    out.sort(key=lambda kv: kv[0])
+    return out
+
+
+def _file_extent_partition(root, filename):
+    """Letter ('a' or 'b') of the first extent's partition for the named file
+    inside an <ltfsindex> root, or None if the file is absent."""
+    for f in root.iter("file"):
+        name = f.find("name")
+        if name is not None and name.text == filename:
+            partition = f.find(".//extent/partition")
+            return partition.text if partition is not None else None
+    return None
+
+
 def test_mkaltfs_rules_size_and_name_route_only_matches_to_ip(tmp_path_factory):
     """`size=1M/name=*.jpg` caches a matching, under-cap file on
     the IP. A name mismatch or a name match that overshoots the
-    size cap stays on the DP only."""
+    size cap stays on the DP only.
+
+    A mid-test `ltfs.sync` after writing the cached file leaves a
+    DP-only index (gen 2) that predates the later writes, so we
+    can verify that the older DP index references DP storage for
+    photo.jpg while the latest IP index reroutes the same file
+    to its cached IP copy."""
     base = tmp_path_factory.mktemp("rules-mix")
     tape_dir = base / "tape"
     mnt = base / "mnt"
@@ -55,6 +89,10 @@ def test_mkaltfs_rules_size_and_name_route_only_matches_to_ip(tmp_path_factory):
     mount_tape(tape_dir, mnt)
     try:
         (mnt / "photo.jpg").write_bytes(small_match + b"x" * 200)
+        # Forces a DP-only index write tagged with this commit
+        # message. This generation has only photo.jpg and is the
+        # "previous DP index" referenced in the assertions below.
+        set_xattr(mnt, "ltfs.sync", "after-photo")
         # 2 MiB exceeds the 1 MiB cache cap; matches the name glob
         # but must not be cached on the IP.
         big_payload = big_match + os.urandom(2 * 1024 * 1024 - len(big_match))
@@ -67,12 +105,40 @@ def test_mkaltfs_rules_size_and_name_route_only_matches_to_ip(tmp_path_factory):
     ip_bytes = _concat_bytes(ip_records)
     dp_bytes = _concat_bytes(dp_records)
 
+    # Raw-byte placement.
     assert small_match in ip_bytes, "matching small file should be cached on IP"
     assert small_match in dp_bytes, "matching small file must also exist on DP"
     assert big_match not in ip_bytes, "oversize match must not reach IP"
     assert big_match in dp_bytes
     assert nonmatch not in ip_bytes, "name mismatch must not reach IP"
     assert nonmatch in dp_bytes
+
+    # Index XML cross-check.
+    ip_indexes = _parse_index_records(ip_records)
+    dp_indexes = _parse_index_records(dp_records)
+
+    # Latest IP index reroutes the cached file to partition 'a'
+    # (the IP), and leaves the non-cached files pointing into the
+    # DP. This is what makes the cached copy actually useful — the
+    # rapid-access lookup hits IP without traversing the DP.
+    latest_ip_gen, latest_ip_root = ip_indexes[-1]
+    assert _file_extent_partition(latest_ip_root, "photo.jpg") == "a"
+    assert _file_extent_partition(latest_ip_root, "notes.txt") == "b"
+    assert _file_extent_partition(latest_ip_root, "big.jpg") == "b"
+
+    # The DP index from before the mid-test sync (gen 2 in this
+    # scenario — gen 1 is the empty format-time index) saw only
+    # photo.jpg and pointed at its DP copy. That older DP view
+    # must remain DP-anchored: the IP cache is a forward
+    # optimization, not a retroactive rewrite of past generations.
+    prior_dp_gens = [g for g, _ in dp_indexes if g < latest_ip_gen]
+    assert prior_dp_gens, f"expected an older DP index before gen {latest_ip_gen}"
+    prev_dp_gen, prev_dp_root = next(
+        (g, r) for g, r in dp_indexes
+        if _file_extent_partition(r, "photo.jpg") is not None
+        and g < latest_ip_gen
+    )
+    assert _file_extent_partition(prev_dp_root, "photo.jpg") == "b"
 
 
 def test_mkaltfs_rules_size_only_caches_any_small_file_on_ip(tmp_path_factory):
