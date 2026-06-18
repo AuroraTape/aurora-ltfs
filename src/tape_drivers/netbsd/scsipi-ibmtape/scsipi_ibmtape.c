@@ -4369,6 +4369,12 @@ free:
 	return ret;
 }
 
+int scsipi_ibmtape_get_media_encrypted(void *device)
+{
+	/* Defer to tape.c's modesense-based fallback */
+	return -EDEV_UNSUPPORETD_COMMAND;
+}
+
 int scsipi_ibmtape_takedump_drive(void *device, bool capture_unforced)
 {
 	struct scsipi_ibmtape_data *priv = (struct scsipi_ibmtape_data*)device;
@@ -4610,6 +4616,7 @@ struct tape_ops scsipi_ibmtape_handler = {
 	.default_device_name    = scsipi_ibmtape_default_device_name,
 	.set_key                = scsipi_ibmtape_set_key,
 	.get_keyalias           = scsipi_ibmtape_get_keyalias,
+	.get_media_encrypted    = scsipi_ibmtape_get_media_encrypted,
 	.takedump_drive         = scsipi_ibmtape_takedump_drive,
 	.is_mountable           = scsipi_ibmtape_is_mountable,
 	.get_worm_status        = scsipi_ibmtape_get_worm_status,

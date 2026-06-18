@@ -2705,6 +2705,12 @@ int filedebug_get_keyalias(void *device, unsigned char **keyalias)
 	return -EDEV_UNSUPPORTED_FUNCTION;
 }
 
+int filedebug_get_media_encrypted(void *device)
+{
+	/* Defer to tape.c's modesense-based fallback */
+	return -EDEV_UNSUPPORETD_COMMAND;
+}
+
 int filedebug_takedump_drive(void *device, bool nonforced_dump)
 {
 	/* Do nothing */
@@ -2843,6 +2849,7 @@ struct tape_ops filedebug_handler = {
 	.default_device_name    = filedebug_default_device_name,
 	.set_key                = filedebug_set_key,
 	.get_keyalias           = filedebug_get_keyalias,
+	.get_media_encrypted    = filedebug_get_media_encrypted,
 	.takedump_drive         = filedebug_takedump_drive,
 	.is_mountable           = filedebug_is_mountable,
 	.get_worm_status        = filedebug_get_worm_status,

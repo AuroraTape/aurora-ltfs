@@ -4094,6 +4094,12 @@ free:
 	return ret;
 }
 
+int iokit_get_media_encrypted(void *device)
+{
+	/* Defer to tape.c's modesense-based fallback */
+	return -EDEV_UNSUPPORETD_COMMAND;
+}
+
 int iokit_takedump_drive(void *device, bool capture_unforced)
 {
 	struct iokit_data *priv = (struct iokit_data*)device;
@@ -4340,6 +4346,7 @@ struct tape_ops iokit_handler = {
 	.default_device_name    = iokit_default_device_name,
 	.set_key                = iokit_set_key,
 	.get_keyalias           = iokit_get_keyalias,
+	.get_media_encrypted    = iokit_get_media_encrypted,
 	.takedump_drive         = iokit_takedump_drive,
 	.is_mountable           = iokit_is_mountable,
 	.get_worm_status        = iokit_get_worm_status,

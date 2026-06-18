@@ -861,7 +861,9 @@ struct tape_ops {
 	 * @return 1 if the volume contains encrypted logical blocks, 0 if not encrypted,
 	 *         -EDEV_UNSUPPORETD_COMMAND to fall back to modesense page 0x25,
 	 *         or another negative value on error.
-	 * May be NULL; tape.c then falls back to modesense page 0x25.
+	 * Required (tape_device_open() rejects backends with any NULL op). Backends
+	 * without a dedicated implementation should return -EDEV_UNSUPPORETD_COMMAND
+	 * so tape.c falls back to modesense page 0x25.
 	 */
 	int   (*get_media_encrypted)(void *device);
 

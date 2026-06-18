@@ -3886,6 +3886,12 @@ bailout:
 	return rc;
 }
 
+int camtape_get_media_encrypted(void *device)
+{
+	/* Defer to tape.c's modesense-based fallback */
+	return -EDEV_UNSUPPORETD_COMMAND;
+}
+
 typedef enum {
 	CT_PP_LBP_R,
 	CT_PP_LBP_W,
@@ -4171,6 +4177,7 @@ struct tape_ops camtape_drive_handler = {
 	.default_device_name    = camtape_default_device_name,
 	.set_key                = camtape_set_key,
 	.get_keyalias           = camtape_get_keyalias,
+	.get_media_encrypted    = camtape_get_media_encrypted,
 	.takedump_drive         = camtape_takedump_drive,
 	.is_mountable           = camtape_is_mountable,
 	.get_worm_status		= camtape_get_worm_status,

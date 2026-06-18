@@ -1390,6 +1390,12 @@ int itdtimage_get_keyalias(void *device, unsigned char **keyalias)
 	return -EDEV_UNSUPPORTED_FUNCTION;
 }
 
+int itdtimage_get_media_encrypted(void *device)
+{
+	/* Defer to tape.c's modesense-based fallback */
+	return -EDEV_UNSUPPORETD_COMMAND;
+}
+
 int itdtimage_takedump_drive(void *device, bool capture_unforced)
 {
 	/* Do nothing */
@@ -1654,6 +1660,7 @@ struct tape_ops itdtimage_handler = {
 	.default_device_name	= itdtimage_default_device_name,
 	.set_key				= itdtimage_set_key,
 	.get_keyalias			= itdtimage_get_keyalias,
+	.get_media_encrypted	= itdtimage_get_media_encrypted,
 	.takedump_drive			= itdtimage_takedump_drive,
 	.is_mountable			= itdtimage_is_mountable,
 	.get_worm_status		= itdtimage_get_worm_status,
