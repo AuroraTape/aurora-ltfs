@@ -4288,6 +4288,12 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 		 priv->vendor == VENDOR_QUANTUM ||
 		 priv->vendor == VENDOR_QUANTUM_B);
 
+	/* HP LTO-6 does not support the Device Configuration Extension mode page
+	 * subpage (MP 0x10 subpage 0x01); callers must skip PEWS / append-only access. */
+	params->no_dev_config_ext_subpage = IS_LTO(priv->drive_type) &&
+		priv->vendor == VENDOR_HP &&
+		DRIVE_GEN(priv->drive_type) == 0x06;
+
 	ret = 0;
 
 out:

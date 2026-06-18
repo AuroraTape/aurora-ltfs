@@ -132,6 +132,9 @@ struct tc_drive_param {
 	bool          needs_wfm_flush;       /* Drive requires WFM(0) flush after index write to ensure VCR
 	                                      * is committed to tape before VCI is written to MAM. True for
 	                                      * HP/HPE LTO and Quantum LTO drives. */
+	bool          no_dev_config_ext_subpage; /* Drive does not support the Device Configuration Extension
+	                                      * mode page subpage (MP 0x10 subpage 0x01). True for HP LTO-6;
+	                                      * callers skip PEWS / append-only mode access on such drives. */
 	/* TODO: Following field shall be handled by backend but currently they are not implemented yet */
 	//bool          is_encrypted;          /* Is encrypted tape ? */
 	//bool          is_worm;               /* Is worm tape? */

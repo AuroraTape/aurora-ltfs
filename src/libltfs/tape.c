@@ -450,6 +450,7 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
 	}
 	dev->max_block_size   = param.max_blksize;
 	dev->needs_wfm_flush  = param.needs_wfm_flush;
+	dev->no_dev_config_ext_subpage = param.no_dev_config_ext_subpage;
 
 	/* Get programmable early warning size */
 	ret = tape_get_pews(dev, &pews);
@@ -2415,13 +2416,15 @@ int tape_set_pews(struct device_data *dev, bool set_value)
 		pews = 0;
 	}
 
+	/* HP LTO-6 lacks the Device Configuration Extension subpage; nothing to set */
+	if (dev->no_dev_config_ext_subpage)
+		return 0;
+
 	/* Issue Mode Sense (MP x10.01) */
 	memset(mp_dev_config_ext, 0, TC_MP_DEV_CONFIG_EXT_SIZE);
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
-		if (ret == -EDEV_INVALID_FIELD_CDB)
-			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0073E, ret);
 		return ret;
 	}
@@ -2460,13 +2463,15 @@ int tape_get_pews(struct device_data *dev, uint16_t *pews)
 	CHECK_ARG_NULL(dev->backend_data, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(pews, -LTFS_NULL_ARG);
 
+	/* HP LTO-6 lacks the Device Configuration Extension subpage */
+	if (dev->no_dev_config_ext_subpage)
+		return -LTFS_UNSUPPORTED;
+
 	/* Issue Mode Sense (MP x10.01) */
 	memset(mp_dev_config_ext, 0, TC_MP_DEV_CONFIG_EXT_SIZE);
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
-		if (ret == -EDEV_INVALID_FIELD_CDB)
-			return -LTFS_UNSUPPORTED; /* drive does not support subpage access */
 		ltfsmsg(ALP0075E, ret);
 		return ret;
 	}
@@ -2503,6 +2508,12 @@ int tape_enable_append_only_mode(struct device_data *dev, bool enable)
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend_data, -LTFS_NULL_ARG);
 
+	/* HP LTO-6 lacks the Device Configuration Extension subpage; append-only unsupported */
+	if (dev->no_dev_config_ext_subpage) {
+		dev->append_only_mode = false;
+		return 0;
+	}
+
 	/* Check cartridge is already loaded not not */
 	for (i = 0; i < 3 && ret < 0; i++) {
 		ret = _tape_test_unit_ready(dev);
@@ -2514,8 +2525,6 @@ int tape_enable_append_only_mode(struct device_data *dev, bool enable)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
-		if (ret == -EDEV_INVALID_FIELD_CDB)
-			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0089E, ret);
 		return ret;
 	}
@@ -2602,13 +2611,18 @@ int tape_get_append_only_mode_setting(struct device_data *dev, bool *enabled)
 	CHECK_ARG_NULL(dev->backend_data, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(enabled, -LTFS_NULL_ARG);
 
+	/* HP LTO-6 lacks the Device Configuration Extension subpage; append-only unsupported */
+	if (dev->no_dev_config_ext_subpage) {
+		*enabled = false;
+		dev->append_only_mode = false;
+		return 0;
+	}
+
 	/* Issue Mode Sense (MP x10.01) */
 	memset(mp_dev_config_ext, 0, TC_MP_DEV_CONFIG_EXT_SIZE);
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
-		if (ret == -EDEV_INVALID_FIELD_CDB)
-			return 0; /* drive does not support subpage access */
 		ltfsmsg(ALP0091E, ret);
 		return ret;
 	}

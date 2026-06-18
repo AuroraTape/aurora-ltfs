@@ -111,6 +111,7 @@ struct device_data {
 	bool is_encrypted;                    /**< Is tape encrypted? */
 	struct ltfs_timespec previous_exist;  /**< Previous time to be confirm drive connection presence */
 	bool needs_wfm_flush;                 /**< Drive requires WFM(0) flush after index write (HP/Quantum LTO) */
+	bool no_dev_config_ext_subpage;       /**< Drive lacks Device Config Extension subpage MP 0x10.01 (HP LTO-6) */
 
 	struct tape_ops *backend;             /**< Backend functions */
 	void *backend_data;                   /**< Backend private data */
