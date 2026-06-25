@@ -1,0 +1,14 @@
+# aurora-ltfs coding style
+# C project, bsd-derived layout with hard tabs (display width 4).
+# Note: only indent_style/width can be declared here. The bsd offsets
+# (case-label, innamespace, access-label, etc.) are left to the editor.
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{c,h}]
+indent_style = tab
+indent_size = tab
+tab_width = 4
