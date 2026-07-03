@@ -108,7 +108,7 @@ struct device_data {
 	bool fence;                           /**< Are device lock requests blocked? */
 	bool append_only_mode;                /**< Is in the append only mode? */
 	bool is_worm;                         /**< Is WORM tape? */
-	bool is_encrypted;                    /**< Is tape encrypted? */
+	int  is_encrypted;                    /**< Is tape encrypted? 0: unknown, -1: not encrypted, 1: encrypted */
 	struct ltfs_timespec previous_exist;  /**< Previous time to be confirm drive connection presence */
 
 	struct tape_ops *backend;             /**< Backend functions */

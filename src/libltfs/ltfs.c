@@ -908,6 +908,8 @@ int ltfs_get_params_unlocked(struct device_param *params, struct ltfs_volume *vo
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	if (vol->device) {
+		memset(&tc_params, 0, sizeof(tc_params));
+
 		ret = tape_device_lock(vol->device);
 		if (ret < 0) {
 			ltfsmsg(ALB0190E, __FUNCTION__);
@@ -921,12 +923,12 @@ int ltfs_get_params_unlocked(struct device_param *params, struct ltfs_volume *vo
 			vol->reval = -LTFS_REVAL_FAILED;
 
 		if (!ret) {
-			params->max_blksize           = tc_params.max_blksize;
-			params->cart_type             = tc_params.cart_type;
-			params->density               = tc_params.density;
-			params->write_protected       = tc_params.write_protect;
+			params->max_blksize     = tc_params.max_blksize;
+			params->cart_type       = tc_params.cart_type;
+			params->density         = tc_params.density;
+			params->write_protected = tc_params.write_protect;
+			params->is_encrypted    = tc_params.is_encrypted;
 			/* TODO: Following field shall be implemented in the future */
-			//params->is_encrypted          = tc_params.is_encrypted;
 			//params->is_worm               = tc_params.is_worm;
 		}
 
@@ -1567,11 +1569,6 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 
 	tape_get_cart_volume_lock_status(vol->device, &vollock);
 	tape_get_worm_status(vol->device, &vol->device->is_worm);
-
-	if ( strcmp("true", tape_get_media_encrypted(vol->device)) ) {
-		vol->device->is_encrypted = false;
-	} else
-		vol->device->is_encrypted = true;
 
 	/* Check EOD status in both partitions */
 	INTERRUPTED_GOTO(ret, out_unlock);

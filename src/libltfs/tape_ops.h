@@ -129,8 +129,8 @@ struct tc_drive_param {
 	unsigned char density;               /* Current density code */
 	unsigned int  write_protect;         /* Write protect status of the tape (use bit field of volumelock_status) */
 	unsigned int  logical_write_protect; /* Logical Write Protect */
+	int           is_encrypted;          /* Is encrypted tape ? 0:unknown, 1:encrypted -1:plain */
 	/* TODO: Following field shall be handled by backend but currently they are not implemented yet */
-	//bool          is_encrypted;          /* Is encrypted tape ? */
 	//bool          is_worm;               /* Is worm tape? */
 };
 
@@ -268,6 +268,11 @@ typedef enum {
 #define TC_MAM_APP_FORMAT_VERSION_SIZE (0x10)
 #define TC_MAM_LOCKED_MAM (0x1623)
 #define TC_MAM_LOCKED_MAM_SIZE (0x1)
+
+/* SCSI Security Protocol 0x20 (Tape Data Encryption) page codes (SPS field) */
+#define SPS_DATA_ENCRYPTION_CAPS   (0x0010)
+#define SPS_DATA_ENCRYPTION_STATUS (0x0020)
+#define SPS_NEXT_BLOCK_ENC_STATUS  (0x0021)
 
 #define BINARY_FORMAT (0x0)
 #define ASCII_FORMAT (0x1)
