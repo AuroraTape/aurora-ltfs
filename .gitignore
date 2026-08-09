@@ -25,6 +25,8 @@ altfs.pc
 .libs/
 messages/.lib
 .dirstamp
+# Local install prefix (also the prefix CI uses; see .github/workflows)
+_install/
 # local settings for claude code
 .claude
 # AI agent workspace files
