@@ -15,22 +15,18 @@ the file backend's timing emulation and produces a stable tape
 state we can assert against.
 """
 
+import os
+import re
+import signal
 import subprocess
+import time
 
-from common.altfs import format_tape, mount_tape, umount_tape
+from common.altfs import format_tape, mount_tape, run_altfsck, umount_tape
 from common.helpers import set_xattr
 
 
-_RUN_TIMEOUT = 30
-
-
 def _altfsck(*extra_args, tape_dir):
-    return subprocess.run(
-        ["altfsck", "-e", "file", *extra_args, str(tape_dir)],
-        capture_output=True,
-        text=True,
-        timeout=_RUN_TIMEOUT,
-    )
+    return run_altfsck(*extra_args, tape_dir=tape_dir)
 
 
 def test_altfsck_modes_on_clean_tape(tmp_path_factory):
@@ -100,3 +96,65 @@ def test_altfsck_l_lists_commit_messages_from_synced_writes(tmp_path_factory):
     for msg in commits:
         assert msg in out, f"missing commit message {msg!r} in:\n{out}"
     assert "Initial Index" in out
+
+
+def _kill_altfs_daemon(mnt):
+    """SIGKILL the altfs daemon serving mnt, simulating a crash: the
+    final index write never happens, so the tape is left with data
+    blocks newer than its newest index."""
+    pattern = f"altfs.*{re.escape(str(mnt))}$"
+    pgrep = subprocess.run(
+        ["pgrep", "-f", pattern], capture_output=True, text=True)
+    pids = [int(p) for p in pgrep.stdout.split()]
+    assert pids, f"no altfs daemon found for {mnt}"
+    for pid in pids:
+        os.kill(pid, signal.SIGKILL)
+    # Detach the dead FUSE endpoint and wait for the kernel to let go.
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline:
+        subprocess.run(["fusermount", "-u", str(mnt)],
+                       capture_output=True, check=False)
+        if not os.path.ismount(mnt):
+            return
+        time.sleep(0.1)
+    raise RuntimeError(f"could not detach dead mount: {mnt}")
+
+
+def test_altfsck_recovers_volume_after_daemon_crash(tmp_path_factory):
+    """Crash recovery: kill the daemon after a synced generation plus
+    unsynced changes. altfsck must bring the volume back to the last
+    synced index — mountable, synced file intact, unsynced file
+    rolled back."""
+    base = tmp_path_factory.mktemp("altfsck-crash")
+    tape_dir = base / "tape"
+    mnt = base / "mnt"
+    tape_dir.mkdir()
+    mnt.mkdir()
+
+    format_tape(tape_dir, serial="FSCKCR", label="fsck-crash")
+    mount_tape(tape_dir, mnt)
+
+    (mnt / "synced.txt").write_text("survives the crash\n")
+    set_xattr(mnt, "ltfs.sync", "last good generation")
+
+    # Written and flushed to tape, but no index write afterwards: at
+    # crash time this file only exists as orphaned data blocks.
+    (mnt / "unsynced.txt").write_text("lost with the crash\n")
+    fd = os.open(mnt / "unsynced.txt", os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+    _kill_altfs_daemon(mnt)
+
+    check = _altfsck(tape_dir=tape_dir)
+    assert check.returncode in (0, 1), check.stdout + check.stderr
+    assert "consistent" in (check.stdout + check.stderr).lower()
+
+    mount_tape(tape_dir, mnt)
+    try:
+        assert (mnt / "synced.txt").read_text() == "survives the crash\n"
+        assert not (mnt / "unsynced.txt").exists()
+    finally:
+        umount_tape(mnt)
