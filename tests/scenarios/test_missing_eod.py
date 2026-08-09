@@ -24,6 +24,9 @@ Expected behavior, verified against src/libltfs/ltfs.c
 import os
 
 from common.altfs import (
+    LTFSCK_CORRECTED,
+    LTFSCK_UNCORRECTED,
+    LTFSCK_USAGE_SYNTAX_ERROR,
     format_tape,
     mount_tape,
     run_altfsck,
@@ -32,10 +35,6 @@ from common.altfs import (
 )
 from common.helpers import set_xattr
 
-
-LTFSCK_CORRECTED = 0x01
-LTFSCK_UNCORRECTED = 0x04
-LTFSCK_USAGE_SYNTAX_ERROR = 0x10
 
 _KEEP_CONTENT = "data written before the EOD was lost\n"
 
@@ -135,12 +134,16 @@ def test_both_eod_missing_listing_works_but_unrecoverable(tmp_path_factory):
 def test_salvage_rollback_points_rejected_on_non_worm(tmp_path_factory):
     """--salvage-rollback-points is restricted to WORM cartridges;
     on a normal no-EOD cartridge it must be rejected as a usage
-    error (the normal -l listing is the supported path there)."""
+    error (the normal -l listing is the supported path there).
+
+    The WORM check fires before altfsck even looks at the EOD, so
+    the missing EOD does not influence the outcome — it is kept
+    only to mirror the situation the salvage option exists for."""
     tape_dir, _mnt = _make_populated_tape(
         tmp_path_factory, "eod-salvage", serial="NOEOD3", label="noeod3")
 
-    _drop_eod(tape_dir, partition=0)
-    _drop_eod(tape_dir, partition=1)
+    assert _drop_eod(tape_dir, partition=0) == 1
+    assert _drop_eod(tape_dir, partition=1) == 1
 
     salvage = run_altfsck("--salvage-rollback-points", tape_dir=tape_dir)
     assert salvage.returncode == LTFSCK_USAGE_SYNTAX_ERROR, \

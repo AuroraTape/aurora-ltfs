@@ -21,7 +21,13 @@ import signal
 import subprocess
 import time
 
-from common.altfs import format_tape, mount_tape, run_altfsck, umount_tape
+from common.altfs import (
+    LTFSCK_CORRECTED,
+    format_tape,
+    mount_tape,
+    run_altfsck,
+    umount_tape,
+)
 from common.helpers import set_xattr
 
 
@@ -39,12 +45,14 @@ def test_altfsck_modes_on_clean_tape(tmp_path_factory):
     tape_dir.mkdir()
     format_tape(tape_dir, serial="FSCKCL", label="fsck-clean")
 
-    # Default check: altfsck returns LTFSCK_NO_ERRORS (0) or
-    # LTFSCK_CORRECTED (1) on a consistent volume — both indicate
-    # the volume was processed cleanly without unrecoverable error.
+    # Default check: check_ltfs_volume() always exits with
+    # LTFSCK_CORRECTED (1) after processing a volume cleanly (it
+    # mounts and unmounts, which rewrites the index).
     check = _altfsck(tape_dir=tape_dir)
-    assert check.returncode in (0, 1), check.stderr
-    assert "consistent" in (check.stdout + check.stderr).lower()
+    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    # "volume is consistent", not the bare word: "inconsistent"
+    # would match "consistent" too.
+    assert "volume is consistent" in (check.stdout + check.stderr).lower()
 
     # -l: rollback-point listing should mention the initial index.
     listing = _altfsck("-l", tape_dir=tape_dir)
@@ -108,13 +116,20 @@ def _kill_altfs_daemon(mnt):
     pids = [int(p) for p in pgrep.stdout.split()]
     assert pids, f"no altfs daemon found for {mnt}"
     for pid in pids:
-        os.kill(pid, signal.SIGKILL)
-    # Detach the dead FUSE endpoint and wait for the kernel to let go.
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # already gone
+    # Detach the dead FUSE endpoint and wait for both the kernel and
+    # the process to let go before altfsck touches the tape.
     deadline = time.monotonic() + 5.0
     while time.monotonic() < deadline:
         subprocess.run(["fusermount", "-u", str(mnt)],
                        capture_output=True, check=False)
-        if not os.path.ismount(mnt):
+        daemon_alive = subprocess.call(
+            ["pgrep", "-f", pattern],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+        if not os.path.ismount(mnt) and not daemon_alive:
             return
         time.sleep(0.1)
     raise RuntimeError(f"could not detach dead mount: {mnt}")
@@ -133,24 +148,28 @@ def test_altfsck_recovers_volume_after_daemon_crash(tmp_path_factory):
 
     format_tape(tape_dir, serial="FSCKCR", label="fsck-crash")
     mount_tape(tape_dir, mnt)
-
-    (mnt / "synced.txt").write_text("survives the crash\n")
-    set_xattr(mnt, "ltfs.sync", "last good generation")
-
-    # Written and flushed to tape, but no index write afterwards: at
-    # crash time this file only exists as orphaned data blocks.
-    (mnt / "unsynced.txt").write_text("lost with the crash\n")
-    fd = os.open(mnt / "unsynced.txt", os.O_RDONLY)
     try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+        (mnt / "synced.txt").write_text("survives the crash\n")
+        set_xattr(mnt, "ltfs.sync", "last good generation")
+
+        # Written and fsynced to tape through the writing fd, but no
+        # index write afterwards: at crash time this file only exists
+        # as orphaned data blocks.
+        with open(mnt / "unsynced.txt", "wb") as f:
+            f.write(b"lost with the crash\n")
+            f.flush()
+            os.fsync(f.fileno())
+    except BaseException:
+        # Only on failure: the happy path must NOT unmount, that
+        # would write the final index and erase the crash state.
+        umount_tape(mnt)
+        raise
 
     _kill_altfs_daemon(mnt)
 
     check = _altfsck(tape_dir=tape_dir)
-    assert check.returncode in (0, 1), check.stdout + check.stderr
-    assert "consistent" in (check.stdout + check.stderr).lower()
+    assert check.returncode == LTFSCK_CORRECTED, check.stdout + check.stderr
+    assert "volume is consistent" in (check.stdout + check.stderr).lower()
 
     mount_tape(tape_dir, mnt)
     try:

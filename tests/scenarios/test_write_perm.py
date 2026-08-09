@@ -30,7 +30,13 @@ import os
 
 import pytest
 
-from common.altfs import format_tape, mount_tape, run_altfsck, umount_tape
+from common.altfs import (
+    LTFSCK_CORRECTED,
+    format_tape,
+    mount_tape,
+    run_altfsck,
+    umount_tape,
+)
 from common.helpers import set_xattr
 
 
@@ -57,24 +63,23 @@ def _write_until_error(mnt, name):
     """Write data until the injected WRITE PERM surfaces.
 
     The error may surface at write(2) (scheduler already stuck), at
-    close(2) (final flush) or at the explicit index sync. The errno
-    depends on timing: the write call whose flush hits the tape error
-    gets EIO, but once the volume has been flagged write-error later
-    writes fail with EROFS — whichever our writing loop meets first.
-    Returns the OSError that surfaced, or None if everything
-    unexpectedly succeeded.
+    flush/close (final push into FUSE) or at the explicit index sync.
+    The errno depends on timing: the write call whose flush hits the
+    tape error gets EIO, but once the volume has been flagged
+    write-error later writes fail with EROFS — whichever our writing
+    loop meets first. Returns the OSError that surfaced, or None if
+    everything unexpectedly succeeded.
     """
     err = None
-    f = open(mnt / name, "wb", buffering=0)
     try:
-        for _ in range(_CHUNKS):
-            f.write(b"\xb5" * _CHUNK)
+        # Buffered I/O so short writes are absorbed internally; the
+        # per-chunk flush pushes each chunk into FUSE promptly.
+        with open(mnt / name, "wb") as f:
+            for _ in range(_CHUNKS):
+                f.write(b"\xb5" * _CHUNK)
+                f.flush()
     except OSError as e:
         err = e
-    try:
-        f.close()
-    except OSError as e:
-        err = err or e
     if err is None:
         try:
             set_xattr(mnt, "ltfs.vendor.Aurora.FullSync", "flush after injection")
@@ -120,8 +125,10 @@ def test_write_protected_tape_rejects_writes_and_stays_consistent(tmp_path_facto
         umount_tape(mnt)
 
     check = run_altfsck(tape_dir=tape_dir)
-    assert check.returncode in (0, 1), check.stderr
-    assert "consistent" in (check.stdout + check.stderr).lower()
+    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    # "volume is consistent", not the bare word: "inconsistent"
+    # would match "consistent" too.
+    assert "volume is consistent" in (check.stdout + check.stderr).lower()
 
 
 def test_single_write_perm_preserves_synced_data(tmp_path_factory):
@@ -199,5 +206,5 @@ def test_double_write_perm_no_crash_and_still_mountable(tmp_path_factory):
         umount_tape(mnt)
 
     check = run_altfsck(tape_dir=tape_dir)
-    assert check.returncode in (0, 1), check.stderr
-    assert "consistent" in (check.stdout + check.stderr).lower()
+    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    assert "volume is consistent" in (check.stdout + check.stderr).lower()
