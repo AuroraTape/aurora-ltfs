@@ -133,13 +133,13 @@ root:table {
 		ALX0093E:string { "XML writer: failed to write a block to the disk (%d)" }
 		ALX0094E:string { "XML writer: failed to flush cached data to the disk (%d)" }
 		ALX0095E:string { "Failed to %s (%d)" }
-		ALX0096W:string { "Failed to create the path of %s (%s)" }
-		ALX0097W:string { "Failed to open %s (%s)" }
-		ALX0098I:string { "Information of %lld files are written to the offset cache" }
-		ALX0099I:string { "Information of %lld files are written to the sync list" }
+		//unused ALX0096W:string { "Failed to create the path of %s (%s)" }
+		//unused ALX0097W:string { "Failed to open %s (%s)" }
+		//unused ALX0098I:string { "Information of %lld files are written to the offset cache" }
+		//unused ALX0099I:string { "Information of %lld files are written to the sync list" }
 		ALX0100I:string { "File %s (%lld) was opened when this index was written" }
 		ALX0101W:string { "Invalid value (%s) in the %s tag in UID %lld" }
-		ALX0102I:string { "Cannot open %s cache for sync (%d)" }
+		//unused ALX0102I:string { "Cannot open %s cache for sync (%d)" }
 		ALX0103I:string { "An unexpected character exists in the decoded name object (%s). Revert to the encoded character" }
 		ALX0104I:string { "0x2f (/) or 0x1f (US) exists in name object (%s): Replace it with '_'" }
 		ALX0105I:string { "Sleep was interrupted by a signal while taking the advisory lock '%s'" }

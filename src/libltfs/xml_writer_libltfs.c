@@ -63,13 +63,6 @@
 #include "inc_journal.h"
 #include "arch/time_internal.h"
 
-/* Structure to control EE's file offset cache and sync file list */
-struct ltfsee_cache
-{
-	FILE*    fp;    /* File pointer */
-	uint64_t count; /* File count to write */
-};
-
 /**************************************************************************************
  * Local Functions
  **************************************************************************************/
@@ -263,10 +256,9 @@ static int _xml_write_xattr(xmlTextWriterPtr writer, const struct dentry *file)
  * @param file the file to write
  * @return 0 on success or -1 on failure
  */
-static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file, struct ltfsee_cache* offset_c, struct ltfsee_cache* sync_list)
+static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file)
 {
 	struct extent_info *extent;
-	bool write_offset = false;
 	size_t i;
 
 	if (file->isdir) {
@@ -296,12 +288,6 @@ static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file, struct 
     } else if (! TAILQ_EMPTY(&file->extentlist)) {
 		xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "extentinfo"), -1);
 		TAILQ_FOREACH(extent, &file->extentlist, list) {
-			/* Write file offset cache */
-			if (offset_c->fp && ! write_offset) {
-				fprintf(offset_c->fp, "%s,%"PRIu64",%"PRIu64"\n", file->name.name, extent->start.block, file->used_blocks);
-				write_offset = true;
-				offset_c->count++;
-			}
 			xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "extent"), -1);
 			xml_mktag(xmlTextWriterWriteFormatElement(
 				writer, BAD_CAST "fileoffset", "%"PRIu64, extent->fileoffset), -1);
@@ -316,12 +302,6 @@ static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file, struct 
 			xml_mktag(xmlTextWriterEndElement(writer), -1);
 		}
 		xml_mktag(xmlTextWriterEndElement(writer), -1);
-	} else {
-		/* Write file offset cache */
-		if (offset_c->fp) {
-			fprintf(offset_c->fp, "%s,0,0\n", file->name.name);
-			offset_c->count++;
-		}
 	}
 
 	/* Save unrecognized tags */
@@ -336,12 +316,6 @@ static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file, struct 
 
 	xml_mktag(xmlTextWriterEndElement(writer), -1);
 
-	/* Write dirty file list */
-	if (sync_list->fp && file->dirty) {
-		fprintf(sync_list->fp, "%s,%"PRIu64"\n", file->name.name, file->size);
-		sync_list->count++;
-	}
-
 	file->dirty = false;
 
 	return 0;
@@ -352,18 +326,13 @@ static int _xml_write_file(xmlTextWriterPtr writer, struct dentry *file, struct 
  * @param writer output pointer
  * @param dir directory to process
  * @param idx pointer to ltfs index structure
- * @param offset_c file pointer to write offest cache
- * @param sync_list file pointer to write sync file list
  * @return 0 on success or negative on failure
  */
 static int _xml_write_dirtree(xmlTextWriterPtr writer, struct dentry *dir,
-					   const struct ltfs_index *idx, struct ltfsee_cache* offset_c, struct ltfsee_cache* sync_list)
+					   const struct ltfs_index *idx)
 {
 	size_t i;
-	char *offset_name, *sync_name;
-	struct ltfsee_cache *offset = offset_c, *sync = sync_list;
 	struct name_list *list_ptr, *list_tmp;
-	int ret;
 
 	if (!dir)
 		return 0; /* nothing to do */
@@ -395,45 +364,10 @@ static int _xml_write_dirtree(xmlTextWriterPtr writer, struct dentry *dir,
 	HASH_SORT(dir->child_list, fs_hash_sort_by_uid);
 
 	HASH_ITER(hh, dir->child_list, list_ptr, list_tmp) {
-		if (list_ptr->d->isdir) {
-
-			if (list_ptr->d->vol->index_cache_path_w && !strcmp(list_ptr->d->name.name, ".LTFSEE_DATA")) {
-				ret = asprintf(&offset_name, "%s.%s", list_ptr->d->vol->index_cache_path_w, "offsetcache.new");
-				if (ret > 0) {
-					offset->fp = fopen(offset_name, "w");
-					free(offset_name);
-					if (!offset->fp)
-						ltfsmsg(ALX0097W, "offset cache", list_ptr->d->vol->index_cache_path_w);
-				} else
-					ltfsmsg(ALX0096W, "offset cache", list_ptr->d->vol->index_cache_path_w);
-
-				ret = asprintf(&sync_name, "%s.%s", list_ptr->d->vol->index_cache_path_w, "synclist.new");
-				if (ret > 0) {
-					sync->fp = fopen(sync_name, "w");
-					free(sync_name);
-					if (!sync->fp)
-						ltfsmsg(ALX0097W, "sync list", list_ptr->d->vol->index_cache_path_w);
-				} else
-					ltfsmsg(ALX0096W, "sync list", list_ptr->d->vol->index_cache_path_w);
-			}
-
-			xml_mktag(_xml_write_dirtree(writer, list_ptr->d, idx, offset, sync), -1);
-
-			if (offset->fp) {
-				fflush(offset->fp);
-				fsync(fileno(offset->fp));
-				fclose(offset->fp);
-				offset->fp = NULL;
-			}
-			if (sync->fp) {
-				fflush(sync->fp);
-				fsync(fileno(sync->fp));
-				fclose(sync->fp);
-				sync->fp = NULL;
-			}
-
-		} else
-			xml_mktag(_xml_write_file(writer, list_ptr->d, offset_c, sync_list), -1);
+		if (list_ptr->d->isdir)
+			xml_mktag(_xml_write_dirtree(writer, list_ptr->d, idx), -1);
+		else
+			xml_mktag(_xml_write_file(writer, list_ptr->d), -1);
 	}
 
 	xml_mktag(xmlTextWriterEndElement(writer), -1);
@@ -469,8 +403,6 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 	size_t i;
 	char *update_time;
 	struct ltfs_name *name_criteria;
-	struct ltfsee_cache offset = {NULL, 0};  /* Cache structure for file offset cache */
-	struct ltfsee_cache list = {NULL, 0};    /* Cache structure for sync list */
 
 	ret = xml_format_time(idx->mod_time, &update_time);
 	if (!update_time)
@@ -561,11 +493,7 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 		free(value);
 	}
 
-	xml_mktag(_xml_write_dirtree(writer, idx->root, idx, &offset, &list), -1);
-	if (offset.count)
-		ltfsmsg(ALX0098I, (unsigned long long)offset.count);
-	if (list.count)
-		ltfsmsg(ALX0099I, (unsigned long long)list.count);
+	xml_mktag(_xml_write_dirtree(writer, idx->root, idx), -1);
 
 	/* Save unrecognized tags */
 	if (idx->tag_count > 0) {
@@ -806,17 +734,12 @@ static int _xml_goto_increment_parent(xmlTextWriterPtr writer,
  * Write directory tags for incremental index based on current incremental journal information
  * @param writer output pointer
  * @param vol ltfs volume
- * @param offset_c file pointer to write offest cache
- * @param sync_list file pointer to write sync file list
  * @return 0 on success or negative on failure
  */
-static int _xml_write_inc_journal(xmlTextWriterPtr writer, struct ltfs_volume *vol,
-								  struct ltfsee_cache* offset_c, struct ltfsee_cache* sync_list)
+static int _xml_write_inc_journal(xmlTextWriterPtr writer, struct ltfs_volume *vol)
 {
 	int ret = 0;
 	bool failed = false;
-	struct ltfsee_cache offset = {NULL, 0};  /* Cache structure for file offset cache */
-	struct ltfsee_cache list = {NULL, 0};    /* Cache structure for sync list */
 	struct jentry *ent = NULL, *tmp = NULL;
 	struct incj_path_helper *cur_parent = NULL;
 
@@ -839,13 +762,12 @@ static int _xml_write_inc_journal(xmlTextWriterPtr writer, struct ltfs_volume *v
 			if (!ret) {
 				switch (ent->reason) {
 					case CREATE:
-						/* TODO: Need to support sync cache and offset cache */
 						if (ent->dentry->isdir) {
 							/* Create XML recursively */
-							ret = _xml_write_dirtree(writer, ent->dentry, vol->index, &offset, &list);
+							ret = _xml_write_dirtree(writer, ent->dentry, vol->index);
 						} else {
 							/* Create XML for a file */
-							ret = _xml_write_file(writer, ent->dentry, &offset, &list);
+							ret = _xml_write_file(writer, ent->dentry);
 						}
 						break;
 					case MODIFY:
@@ -854,7 +776,7 @@ static int _xml_write_inc_journal(xmlTextWriterPtr writer, struct ltfs_volume *v
 							ret = _xml_write_incremental_dir(writer, ent->dentry);
 						} else {
 							/* Create XML for a file */
-							ret = _xml_write_file(writer, ent->dentry, &offset, &list);
+							ret = _xml_write_file(writer, ent->dentry);
 						}
 						break;
 					case DELETE_FILE:
@@ -904,8 +826,6 @@ static int _xml_write_incremental_schema(xmlTextWriterPtr writer, const char *cr
 	int ret;
 	size_t i;
 	char *update_time;
-	struct ltfsee_cache offset = {NULL, 0};  /* Cache structure for file offset cache */
-	struct ltfsee_cache list = {NULL, 0};    /* Cache structure for sync list */
 	struct ltfs_index *idx = vol->index;
 
 	ret = xml_format_time(idx->mod_time, &update_time);
@@ -991,7 +911,7 @@ static int _xml_write_incremental_schema(xmlTextWriterPtr writer, const char *cr
 	}
 
 	/* Create XML of update */
-	xml_mktag(_xml_write_inc_journal(writer, vol, &offset, &list), -1);
+	xml_mktag(_xml_write_inc_journal(writer, vol), -1);
 
 	/* Save unrecognized tags */
 	if (idx->tag_count > 0) {
@@ -1135,60 +1055,6 @@ xmlBufferPtr xml_make_schema(const char *creator, const struct ltfs_index *idx)
 	return buf;
 }
 
-static int _commit_offset_caches(const char* path, const struct ltfs_index *idx)
-{
-	int ret = 0, fd = -1;
-	char *offset_name = NULL, *sync_name = NULL;
-	char *offset_new = NULL, *sync_new = NULL;
-
-	if (path) {
-		/* Rename new sync cache and offset cache */
-		ret = asprintf(&offset_new, "%s.%s", path, "offsetcache.new");
-		if (ret > 0) {
-			ret = asprintf(&offset_name, "%s.%s", path, "offsetcache");
-			if (ret > 0) {
-				unlink(offset_name);
-				rename(offset_new, offset_name);
-				fd = open(offset_name, O_RDWR | O_BINARY,
-						  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP );
-				if (fd >= 0) {
-					fsync(fd);
-					close(fd);
-					fd = -1;
-				} else {
-					if (errno != ENOENT)
-						ltfsmsg(ALX0102I, offset_name, errno);
-				}
-				free(offset_name);
-			}
-			free(offset_new);
-		}
-
-		ret = asprintf(&sync_new, "%s.%s", path, "synclist.new");
-		if (ret > 0) {
-			ret = asprintf(&sync_name, "%s.%s", path, "synclist");
-			if (ret > 0) {
-				unlink(sync_name);
-				rename(sync_new, sync_name);
-				fd = open(sync_name, O_RDWR | O_BINARY,
-						  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP );
-				if (fd >= 0) {
-					fsync(fd);
-					close(fd);
-					fd = -1;
-				} else {
-					if (errno != ENOENT)
-						ltfsmsg(ALX0102I, sync_name, errno);
-				}
-				free(sync_name);
-			}
-			free(sync_new);
-		}
-	}
-
-	return 0;
-}
-
 /**
  * Generate an XML schema file based on the priv->root directory tree.
  * @param filename output XML file
@@ -1221,8 +1087,6 @@ int xml_schema_to_file(const char *filename, const char *creator,
 		ret = _xml_write_schema(writer, alt_creator, idx);
 		if (ret < 0)
 			ltfsmsg(ALX0058E, ret, filename);
-		else
-			_commit_offset_caches(filename, idx);
 
 		xmlFreeTextWriter(writer);
 		free(alt_creator);
@@ -1336,16 +1200,8 @@ int xml_schema_to_tape(char *reason, int type, struct ltfs_volume *vol)
 			/* New index is successfully sent to the internal buffer of tape drive */
 			immed = (strcmp(reason, SYNC_FORMAT) == 0); /* Use immediate write FM only at format */
 			ret = tape_write_filemark(vol->device, 1, true, true, immed);
-			if (!ret) {
-				/*
-				 * All buffered data, new index and following FM is written on tape correctly.
-				 * It's time to unveil the offset cache and sync cache to other programs.
-				 */
-				if (vol->index_cache_path_w)
-					_commit_offset_caches(vol->index_cache_path_w, vol->index);
-			} else {
+			if (ret)
 				ltfsmsg(ALX0001E, ret);
-			}
 
 			if (out_ctx->fd >= 0)
 				xml_release_file_lock(vol->index_cache_path_w, out_ctx->fd, bk, false);
