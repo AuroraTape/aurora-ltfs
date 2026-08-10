@@ -77,6 +77,56 @@ def mount_tape(tape_dir, mnt, sync_type="unmount"):
         raise RuntimeError(f"FUSE mount did not become ready: {mnt}")
 
 
+def mount_tape_foreground(tape_dir, mnt, sync_type="unmount"):
+    """Mount with altfs running in the foreground (-f) as our child.
+
+    Unlike the daemonized default, this lets the caller prove — via
+    umount_tape_foreground() — that a plain umount makes the daemon
+    exit on its own: exit code observable, no signal, no kill.
+    Daemon output goes to altfs-foreground.log next to the mount
+    point so it survives for inspection when a test fails.
+    """
+    log = open(os.path.join(os.path.dirname(str(mnt)),
+                            "altfs-foreground.log"), "ab")
+    proc = subprocess.Popen(
+        ["altfs", "-f",
+         "-o", "tape_backend=file",
+         "-o", f"devname={tape_dir}",
+         "-o", f"sync_type={sync_type}",
+         str(mnt)],
+        stdout=log,
+        stderr=log,
+    )
+    proc.altfs_log = log
+    if not _wait_until(lambda: os.path.ismount(mnt)):
+        proc.kill()
+        proc.wait()
+        log.close()
+        raise RuntimeError(f"FUSE mount did not become ready: {mnt}")
+    return proc
+
+
+def umount_tape_foreground(proc, mnt):
+    """Unmount a mount_tape_foreground() session and return the
+    daemon's exit code.
+
+    The daemon must terminate by itself in response to the umount;
+    if it does not, that is an error (it is killed only to avoid
+    leaking into later tests, after the failure is already decided).
+    """
+    try:
+        _detach_mount(mnt)
+        try:
+            return proc.wait(timeout=_TEARDOWN_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            raise RuntimeError(
+                f"altfs did not exit on its own after umount: {mnt}")
+    finally:
+        proc.altfs_log.close()
+
+
 def try_mount_tape(tape_dir, mnt, sync_type="unmount", timeout=30):
     """Attempt a mount that is expected to fail (e.g. damaged volume).
 

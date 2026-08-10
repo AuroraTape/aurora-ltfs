@@ -34,8 +34,10 @@ from common.altfs import (
     LTFSCK_CORRECTED,
     format_tape,
     mount_tape,
+    mount_tape_foreground,
     run_altfsck,
     umount_tape,
+    umount_tape_foreground,
 )
 from common.helpers import set_xattr
 
@@ -49,14 +51,17 @@ _FORCE_ERROR_WRITE = "ltfs.vendor.Aurora.forceErrorWrite"
 
 
 def _make_mounted_tape(tmp_path_factory, name, serial, label):
+    """Format and mount a fresh tape with altfs in the foreground,
+    so the injection session can verify the daemon's own exit code
+    after umount."""
     base = tmp_path_factory.mktemp(name)
     tape_dir = base / "tape"
     mnt = base / "mnt"
     tape_dir.mkdir()
     mnt.mkdir()
     format_tape(tape_dir, serial=serial, label=label)
-    mount_tape(tape_dir, mnt)
-    return tape_dir, mnt
+    proc = mount_tape_foreground(tape_dir, mnt)
+    return tape_dir, mnt, proc
 
 
 def _write_until_error(mnt, name):
@@ -86,6 +91,24 @@ def _write_until_error(mnt, name):
         except OSError as e:
             err = e
     return err
+
+
+def _assert_write_locked_but_readable(mnt, survivor, content):
+    """After a WRITE PERM the still-mounted volume must deny every
+    mutation with EROFS while read access keeps working."""
+    with pytest.raises(OSError) as exc:
+        (mnt / "denied-after-perm.txt").write_text("must be rejected")
+    assert exc.value.errno == errno.EROFS
+
+    with pytest.raises(OSError) as exc:
+        os.mkdir(mnt / "denied-after-perm-dir")
+    assert exc.value.errno == errno.EROFS
+
+    with pytest.raises(OSError) as exc:
+        os.unlink(mnt / survivor)
+    assert exc.value.errno == errno.EROFS
+
+    assert (mnt / survivor).read_text() == content
 
 
 def test_write_protected_tape_rejects_writes_and_stays_consistent(tmp_path_factory):
@@ -135,8 +158,9 @@ def test_single_write_perm_preserves_synced_data(tmp_path_factory):
     """WRITE PERM on the data partition: the error must surface as
     EIO, the recovery index must land on the index partition, and a
     later mount must come up read-only with the previously synced
-    file intact."""
-    tape_dir, mnt = _make_mounted_tape(
+    file intact. The daemon must not need to be killed: a plain
+    umount has to terminate it cleanly."""
+    tape_dir, mnt, altfs_proc = _make_mounted_tape(
         tmp_path_factory, "write-perm", serial="WPERM1", label="wperm1")
     try:
         (mnt / "survivor.txt").write_text("synced before the write error\n")
@@ -148,8 +172,15 @@ def test_single_write_perm_preserves_synced_data(tmp_path_factory):
         err = _write_until_error(mnt, "victim.bin")
         assert err is not None, "injected WRITE PERM never surfaced"
         assert err.errno in (errno.EIO, errno.EROFS)
+
+        # Still in the same mount session: the volume must already
+        # be write-locked, not only after the next mount.
+        _assert_write_locked_but_readable(
+            mnt, "survivor.txt", "synced before the write error\n")
     finally:
-        umount_tape(mnt)
+        exit_code = umount_tape_foreground(altfs_proc, mnt)
+    assert exit_code == 0, \
+        f"altfs must exit cleanly on umount after WRITE PERM: {exit_code}"
     assert not os.path.ismount(mnt)
 
     # The write-perm handling saved the index on the IP, tagged with
@@ -172,10 +203,11 @@ def test_single_write_perm_preserves_synced_data(tmp_path_factory):
 
 def test_double_write_perm_no_crash_and_still_mountable(tmp_path_factory):
     """DOUBLE WRITE PERM: the recovery index write on the index
-    partition fails as well. The daemon must survive, and the volume
+    partition fails as well. The daemon must survive and terminate
+    cleanly on a plain umount (exit code 0, no kill), and the volume
     must still mount read-only from the newest index that made it to
     tape before the injection."""
-    tape_dir, mnt = _make_mounted_tape(
+    tape_dir, mnt, altfs_proc = _make_mounted_tape(
         tmp_path_factory, "double-write-perm", serial="WPERM2", label="wperm2")
     try:
         (mnt / "survivor.txt").write_text("synced before the write error\n")
@@ -188,11 +220,17 @@ def test_double_write_perm_no_crash_and_still_mountable(tmp_path_factory):
         err = _write_until_error(mnt, "victim.bin")
         assert err is not None, "injected WRITE PERM never surfaced"
         assert err.errno in (errno.EIO, errno.EROFS)
+
+        # The double perm must write-lock the live session just like
+        # the single one — reads stay available.
+        _assert_write_locked_but_readable(
+            mnt, "survivor.txt", "synced before the write error\n")
     finally:
-        # umount_tape waits for the daemon to exit; a crash or hang
-        # here would leave the mount point busy and fail the next
-        # assertion.
-        umount_tape(mnt)
+        # Even with both index writes failing on the way out, the
+        # daemon has to exit on its own in response to the umount.
+        exit_code = umount_tape_foreground(altfs_proc, mnt)
+    assert exit_code == 0, \
+        f"altfs must exit cleanly on umount after DOUBLE WRITE PERM: {exit_code}"
     assert not os.path.ismount(mnt)
 
     mount_tape(tape_dir, mnt)
