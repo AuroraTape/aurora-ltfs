@@ -21,7 +21,9 @@ _POLL_INTERVAL = 0.1
 LTFSCK_NO_ERRORS = 0x00
 LTFSCK_CORRECTED = 0x01
 LTFSCK_UNCORRECTED = 0x04
+LTFSCK_OPERATIONAL_ERROR = 0x08
 LTFSCK_USAGE_SYNTAX_ERROR = 0x10
+MKLTFS_UNFORMATTED = 0x01
 
 
 def _wait_until(predicate, timeout=_READY_TIMEOUT, interval=_POLL_INTERVAL):
@@ -64,13 +66,19 @@ def format_tape(tape_dir, serial="TEST00", label="test"):
     )
 
 
-def mount_tape(tape_dir, mnt, sync_type="unmount"):
+def _mount_args(tape_dir, mnt, sync_type, extra_opts):
+    cmd = ["-o", "tape_backend=file",
+           "-o", f"devname={tape_dir}",
+           "-o", f"sync_type={sync_type}"]
+    for opt in extra_opts:
+        cmd += ["-o", opt]
+    cmd.append(str(mnt))
+    return cmd
+
+
+def mount_tape(tape_dir, mnt, sync_type="unmount", extra_opts=()):
     subprocess.run(
-        ["altfs",
-         "-o", "tape_backend=file",
-         "-o", f"devname={tape_dir}",
-         "-o", f"sync_type={sync_type}",
-         str(mnt)],
+        ["altfs"] + _mount_args(tape_dir, mnt, sync_type, extra_opts),
         check=True,
     )
     if not _wait_until(lambda: os.path.ismount(mnt)):
@@ -89,11 +97,7 @@ def mount_tape_foreground(tape_dir, mnt, sync_type="unmount"):
     log = open(os.path.join(os.path.dirname(str(mnt)),
                             "altfs-foreground.log"), "ab")
     proc = subprocess.Popen(
-        ["altfs", "-f",
-         "-o", "tape_backend=file",
-         "-o", f"devname={tape_dir}",
-         "-o", f"sync_type={sync_type}",
-         str(mnt)],
+        ["altfs", "-f"] + _mount_args(tape_dir, mnt, sync_type, ()),
         stdout=log,
         stderr=log,
     )
@@ -127,7 +131,7 @@ def umount_tape_foreground(proc, mnt):
         proc.altfs_log.close()
 
 
-def try_mount_tape(tape_dir, mnt, sync_type="unmount", timeout=30):
+def try_mount_tape(tape_dir, mnt, sync_type="unmount", timeout=30, extra_opts=()):
     """Attempt a mount that is expected to fail (e.g. damaged volume).
 
     Runs altfs in the foreground (-f): a mount that unexpectedly
@@ -140,11 +144,7 @@ def try_mount_tape(tape_dir, mnt, sync_type="unmount", timeout=30):
     """
     try:
         return subprocess.run(
-            ["altfs", "-f",
-             "-o", "tape_backend=file",
-             "-o", f"devname={tape_dir}",
-             "-o", f"sync_type={sync_type}",
-             str(mnt)],
+            ["altfs", "-f"] + _mount_args(tape_dir, mnt, sync_type, extra_opts),
             capture_output=True,
             text=True,
             timeout=timeout,
