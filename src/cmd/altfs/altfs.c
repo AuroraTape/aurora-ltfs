@@ -1048,7 +1048,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 
 		/* Mount the volume */
 		ltfs_set_traverse_mode(TRAVERSE_BACKWARD, priv->data);
-		if (priv->rollback_str) {
+		if (priv->rollback_str && !priv->rollback_gen) {
 			if (ltfs_mount_indexfile(priv->rollback_str, true, priv->data) < 0) {
 				ltfsmsg(AFS0013E, "index file");
 				ltfs_volume_free(&priv->data);
