@@ -104,3 +104,25 @@ jobs:
       - name: make install
         if: matrix.install
         run: make install
+
+  # Per-language LOC table in the job summary (issue #45). tokei.rs (the
+  # badge service) is unreliable, so the README carries a code-size badge
+  # instead and the detailed numbers live here.
+  loc:
+    name: Lines of code
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install cloc
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cloc
+
+      - name: Count lines of code
+        run: |
+          echo '## Lines of code' >> "$GITHUB_STEP_SUMMARY"
+          cloc --quiet --md --hide-rate src messages docs >> "$GITHUB_STEP_SUMMARY"
