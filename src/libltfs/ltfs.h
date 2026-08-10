@@ -329,7 +329,7 @@ struct dentry {
 	uint64_t size;          /**< File size (logical EOF position) */
 	bool     extents_dirty; /**< Dirty flag of extents */
 	uint64_t used_blocks;   /**< number of used block on tape */
-	bool     dirty;         /**< Dirty flag of the file will clear when this dentry written to sync file list */
+	bool     dirty;         /**< Dirty flag of the file, cleared when this dentry is written to an index */
 
 	/* Take the meta_lock and parent's contents_lock before writing to these fields.
 	 * Take either of those locks before reading these fields. */
