@@ -180,6 +180,41 @@ def test_rollback_mount_by_index_file(tmp_path_factory):
         umount_tape(mnt)
 
 
+def test_rollback_mount_foreign_index_file_rejected(tmp_path_factory):
+    """An index file captured from a *different* volume must be
+    rejected at mount time: ltfs_mount_indexfile() compares the
+    index's volume UUID against the label on the loaded tape
+    (ALB0280E) instead of presenting another volume's tree. The
+    volume itself must stay intact and mountable."""
+    tape_dir, mnt = _make_history_tape(
+        tmp_path_factory, "rollback-foreign", serial="ROLLBU", label="rollbu")
+
+    foreign_base = tmp_path_factory.mktemp("rollback-foreign-donor")
+    foreign_tape = foreign_base / "tape"
+    foreign_tape.mkdir()
+    format_tape(foreign_tape, serial="FOREGN", label="foreign")
+    dest = foreign_base / "captured"
+    dest.mkdir()
+    # Generation 1 is the format-time index; it is the only one on
+    # the donor tape.
+    foreign_index = _capture_index_file(foreign_tape, dest, 1)
+
+    denied = try_mount_tape(
+        tape_dir, mnt, extra_opts=[f"rollback_mount={foreign_index}"])
+    assert denied.returncode != 0, \
+        "mount must reject an index file from a different volume"
+    assert not os.path.ismount(mnt)
+    assert "ALB0280E" in denied.stdout + denied.stderr, \
+        "rejection must be the UUID-mismatch diagnostic"
+
+    # The failed rollback mount must not have damaged the volume.
+    mount_tape(tape_dir, mnt)
+    try:
+        _assert_latest_view(mnt)
+    finally:
+        umount_tape(mnt)
+
+
 def test_rollback_mount_nonexistent_generation_rejected(tmp_path_factory):
     """A rollback target that never existed on the tape must fail
     the mount instead of silently presenting some other state."""
