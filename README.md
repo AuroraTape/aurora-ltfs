@@ -1,6 +1,19 @@
-[![BSD License](http://img.shields.io/badge/license-BSD-blue.svg?style=flat)](LICENSE)
-
 # Aurora LTFS
+
+[![Build](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/build.yml/badge.svg)](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/build.yml)
+[![Scenario tests](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/scenario.yml/badge.svg)](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/scenario.yml)
+[![Coverage](https://codecov.io/gh/AuroraTape/aurora-ltfs/graph/badge.svg)](https://codecov.io/gh/AuroraTape/aurora-ltfs)
+[![Code size](https://img.shields.io/github/languages/code-size/AuroraTape/aurora-ltfs)](https://github.com/AuroraTape/aurora-ltfs)
+[![BSD License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](LICENSE)
+
+<details>
+<summary>Coverage graph</summary>
+
+[![Coverage sunburst](https://codecov.io/gh/AuroraTape/aurora-ltfs/graphs/sunburst.svg)](https://codecov.io/gh/AuroraTape/aurora-ltfs)
+
+The inner ring is the whole project, moving outward through directories down to individual files. The size of a slice is proportional to the number of statements; the color shows coverage (green = covered, red = not).
+
+</details>
 
 Aurora LTFS is a filesystem implementation that allows mounting LTFS-formatted tapes as regular filesystems. Once mounted, users can access tape contents through standard filesystem APIs.
 
