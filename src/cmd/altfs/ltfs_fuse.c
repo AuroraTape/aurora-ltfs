@@ -608,6 +608,43 @@ int ltfs_fuse_utimens(const char *path, const struct timespec ts[2])
 	tsTmp[0] = ltfs_timespec_from_timespec(&ts[0]);
 	tsTmp[1] = ltfs_timespec_from_timespec(&ts[1]);
 
+#if defined(UTIME_NOW) && defined(UTIME_OMIT)
+	/* flag_utime_omit_ok is set, so the kernel passes the UTIME_NOW /
+	 * UTIME_OMIT markers through instead of resolving partial updates
+	 * itself. Resolve them here: NOW becomes the current time, OMIT
+	 * keeps the time already stored in the dentry. */
+	if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
+		struct ltfs_timespec now;
+
+		get_current_timespec(&now);
+		if (ts[0].tv_nsec == UTIME_NOW)
+			tsTmp[0] = now;
+		if (ts[1].tv_nsec == UTIME_NOW)
+			tsTmp[1] = now;
+	}
+	if (ts[0].tv_nsec == UTIME_OMIT || ts[1].tv_nsec == UTIME_OMIT) {
+		struct dentry_attr attr;
+
+		/* Not reachable through libfuse (it calls utimens only when at
+		 * least one time is being set); kept as a cheap no-op guard. */
+		if (ts[0].tv_nsec == UTIME_OMIT && ts[1].tv_nsec == UTIME_OMIT) {
+			ltfs_request_trace(FUSE_REQ_EXIT(REQ_UTIMENS), 0, 0);
+			return 0;
+		}
+
+		ret = ltfs_fsops_getattr_path(path, &attr, &id, priv->data);
+		if (ret < 0) {
+			ltfs_request_trace(FUSE_REQ_EXIT(REQ_UTIMENS), ret, id.uid);
+			ltfsmsg(ALC0014E, "utimens", path, 0, 0);
+			return errormap_fuse_error(ret);
+		}
+		if (ts[0].tv_nsec == UTIME_OMIT)
+			tsTmp[0] = attr.access_time;
+		if (ts[1].tv_nsec == UTIME_OMIT)
+			tsTmp[1] = attr.modify_time;
+	}
+#endif
+
 	ltfsmsg(AFS0034D, path);
 	ret = ltfs_fsops_utimens_path(path, tsTmp, &id, priv->data);
 
@@ -1239,5 +1276,10 @@ struct fuse_operations ltfs_ops = {
 	.readlink    = ltfs_fuse_readlink,
 #if FUSE_VERSION >= 28
 	.flag_nullpath_ok = 1,
+#endif
+#if FUSE_VERSION >= 29 && defined(UTIME_NOW) && defined(UTIME_OMIT)
+	/* Ask the kernel to pass UTIME_NOW/UTIME_OMIT markers through to
+	 * ltfs_fuse_utimens() instead of dropping partial updates. */
+	.flag_utime_omit_ok = 1,
 #endif
 };
