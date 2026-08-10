@@ -12,7 +12,9 @@ Every invocation has a short timeout so a regression that hangs a
 command fails the test cleanly instead of stalling CI.
 """
 
+import shlex
 import subprocess
+from pathlib import Path
 
 
 _TIMEOUT = 10
@@ -53,6 +55,8 @@ def test_altfs_no_args_reports_missing_device():
 
 
 def test_altfs_device_list_with_file_backend(tmp_path):
+    # No drive-list pointer file exists for the process, so the file
+    # backend enumerates nothing: just the header, exit code 0.
     r = _run(
         "altfs",
         "-o", "tape_backend=file",
@@ -60,7 +64,59 @@ def test_altfs_device_list_with_file_backend(tmp_path):
         "-o", "device_list",
     )
     assert r.returncode == 0, r.stderr
-    assert "Tape Device list" in (r.stdout + r.stderr)
+    combined = r.stdout + r.stderr
+    assert "Tape Device list" in combined
+    assert "Device Name = " not in combined
+
+
+def test_altfs_device_list_enumerates_file_backend_drives(tmp_path):
+    # The file backend enumerates drives by reading /tmp/ltfs<pid>
+    # (pid of the altfs process itself), which holds the path of a
+    # directory whose Drive_<n>_<serial>.<model> entries are the
+    # devices. Launch altfs through `sh -c 'echo ... > /tmp/ltfs$$;
+    # exec altfs ...'` so the pointer file is created under the very
+    # pid altfs will run as (exec preserves it).
+    expected_drives = [
+        ("0", "123456", "ULT3580-TD5"),
+        ("1", "ABCDEF", "ULT3580-TD6"),
+    ]
+    drives = tmp_path / "drives"
+    drives.mkdir()
+    for n, serial, model in expected_drives:
+        (drives / f"Drive_{n}_{serial}.{model}").touch()
+    # A name without the Drive_ prefix must not be enumerated; the
+    # entry-count assertion below is what catches it.
+    (drives / "README").touch()
+
+    # set -C (noclobber) refuses to overwrite an existing /tmp/ltfs$$
+    # (stale file from a recycled pid, or a symlink planted by another
+    # user); pointer_record keeps the exact path for cleanup.
+    pointer_record = tmp_path / "pointer_path"
+    script = (
+        "set -C; "
+        f"echo /tmp/ltfs$$ > {shlex.quote(str(pointer_record))} && "
+        f"echo {shlex.quote(str(drives))} > /tmp/ltfs$$ || exit 97; "
+        f"exec altfs -o tape_backend=file "
+        f"-o devname={shlex.quote(str(drives))} -o device_list"
+    )
+    try:
+        r = _run("sh", "-c", script)
+    finally:
+        if pointer_record.exists():
+            pointer = pointer_record.read_text().strip()
+            if pointer.startswith("/tmp/ltfs"):
+                Path(pointer).unlink(missing_ok=True)
+
+    assert r.returncode == 0, r.stderr
+    out = r.stdout + r.stderr
+    assert "Tape Device list" in out
+    assert out.count("Device Name = ") == len(expected_drives)
+    for n, serial, model in expected_drives:
+        assert (
+            f"Device Name = {drives}/Drive_{n}_{serial}.{model}, "
+            f"Vendor ID = DUMMY, Product ID = {model}, "
+            f"Serial Number = {serial}, Product Name =[{model}]"
+        ) in out
 
 
 # ---------- mkaltfs ----------
