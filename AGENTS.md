@@ -197,6 +197,10 @@ altfsck -d <device_name>
   - When commenting out, add `unused` prefix before the message ID
   - Example: `//unused AFS0123I:string { "Old message" }`
 
+**Release Branches:**
+- Messages added on a release branch use letter-bearing shapes of the 4-character field (e.g. `AFSA001E` for 1.0.x, `AFSAA01E` for 1.1.x, `AFSBA01E` for 2.1.x) so parallel lines draw from disjoint pools and cannot collide — see `messages/README` ("Release-branch ID shapes") for the full rules
+- New `AEI`/`AED` error constants are added on HEAD only; release branches backport them
+
 **During Development (before release):**
 - Message numbers should be kept consecutive without gaps
 - If a message is removed before release, renumber subsequent messages to fill the gap

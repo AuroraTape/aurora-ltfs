@@ -61,12 +61,53 @@ A message ID is an 8-character string:
   * "A"        - fixed leading letter (Aurora).
   * Component  - two letters identifying the bundle that defines the message
                  (see the table below).
-  * Number     - four digits, unique per prefix. The same number may appear
-                 under different prefixes (AFS0001 and ACK0001 coexist), but
-                 within one prefix a number is used at most once across all
-                 severities: once AFS0001I exists, AFS0001E/W/D must never be
-                 used.
+  * Number     - four characters, unique per prefix. Messages added on HEAD
+                 use four digits; messages added on release branches use
+                 letter-bearing shapes (see "Release-branch ID shapes"). The
+                 same number may appear under different prefixes (AFS0001 and
+                 ACK0001 coexist), but within one prefix a number is used at
+                 most once across all severities: once AFS0001I exists,
+                 AFS0001E/W/D must never be used.
   * Severity   - E (Error), W (Warning), I (Information), or D (Debug).
+
+
+Release-branch ID shapes
+=============================
+
+To let release branches add messages in parallel with HEAD without any
+cross-branch coordination, the shape of the 4-character number field encodes
+the release line ("pool") that introduced the message. The three shapes are
+mutually exclusive, so concurrently active lines draw from disjoint pools and
+cannot collide by construction.
+
+    Pool (where the ID was added)   Shape                     Example
+    -----------------------------   -----------------------   -----------------
+    HEAD (trunk)                    4 digits                  AFS0001E
+    M.0.x patch series              Major letter + 3 digits   1.0.x -> AFSA001E
+    M.m.x patch series (m >= 1)     Major letter + Minor      1.1.x -> AFSAA01E
+                                    letter + 2 digits         2.1.x -> AFSBA01E
+
+  * Version mapping: Major M maps to letter chr('A' + M - 1) (1 -> A,
+    2 -> B); Minor m likewise (1 -> A). Major/Minor versions above 26 are
+    out of scope.
+  * Only one patch stream may be active per minor at a time; this serializes
+    each pool's counter.
+  * Majors are released directly from HEAD (no stabilization branch), so
+    X.0.0 releases contain only digit-form IDs.
+  * Backports keep their original ID; the pools are disjoint, so a trunk ID
+    carried into a patch release cannot collide. A backported trunk ID is
+    frozen as soon as any release ships it, even if HEAD itself has not
+    released it.
+  * AEI/AED are exempt: their numbers are derived from the LTFS_*/EDEV_*
+    constants (see "Internal error codes"), which cannot encode letters.
+    New error constants are added on HEAD only; release branches backport
+    them.
+  * All existing digit-form IDs form the trunk pool baseline; no renumbering
+    is needed. validate_error_messages.py currently accepts only the digit
+    form; widen its pattern to A[A-Z]{2}(\d{4}|[A-Z]\d{3}|[A-Z]{2}\d{2})[EIWD]
+    when the first release branch is cut.
+
+See GitHub issue #46 for the background discussion.
 
 
 Component codes
