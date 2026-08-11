@@ -172,32 +172,40 @@ altfsck -d <device_name>
 
 ### Message Structure
 - Messages defined in `messages/` directory
-- Message is constructed a number and severity (Error, Warning, Info, Debug)
-- Number part of message must be unique
-  - It means 11111W must not be used if 11111I is used
+- Message ID format: `A` + 2-letter component code + 4-digit number + severity letter (`E`rror, `W`arning, `I`nfo, `D`ebug)
+  - Example: `AFS0001I`, `ALC0002E`, `AED0098E`
+  - The full format description and the component-code table are in `messages/README`
+- Number part of message must be unique within its prefix
+  - It means AFS0001W must not be used if AFS0001I is used (AFS0001 and ACK0001 can coexist)
 - Number part of message must not be reused once used
-  - It means 11111[EWID] must not be used if 11111[EWID] is already commented out
+  - It means AFS0001[EWID] must not be used if AFS0001[EWID] is already commented out
 - Message ID must be commented out when it is not required anymore
 - Each component has its own message file
+- Consistency between source and catalogs is checked by `validate_error_messages.py` (repository root)
 
 ### Message ID Rules
 
 **Uniqueness:**
-- Number part of message must be unique across all severities
-  - Example: If `11111I` is used, `11111E`, `11111W`, and `11111D` cannot be used
+- Number part of message must be unique across all severities within its prefix
+  - Example: If `AFS0001I` is used, `AFS0001E`, `AFS0001W`, and `AFS0001D` cannot be used
 
 **Once Released (in any release/tag):**
 - Message IDs must NEVER be reused after a release
 - Message number must NEVER be reused, even with different severity
-  - Example: If `12345I` existed in a release, you cannot later add `12345E`
+  - Example: If `AFS0123I` existed in a release, you cannot later add `AFS0123E`
 - Obsolete messages must be commented out (not deleted) to reserve the ID
   - When commenting out, add `unused` prefix before the message ID
-  - Example: `//unused 12345I:string { "Old message" }`
+  - Example: `//unused AFS0123I:string { "Old message" }`
+
+**Release Branches:**
+- Messages added on a release branch use letter-bearing shapes of the 4-character field (e.g. `AFSA001E` for 1.0.x, `AFSAA01E` for 1.1.x, `AFSBA01E` for 2.1.x) so parallel lines draw from disjoint pools and cannot collide — see `messages/README` ("Release-branch ID shapes") for the full rules
+- New `AEI`/`AED` error constants are added on HEAD only; release branches backport them
 
 **During Development (before release):**
 - Message numbers should be kept consecutive without gaps
 - If a message is removed before release, renumber subsequent messages to fill the gap
 - This keeps message IDs compact and organized
+- Exception: `AEI`/`AED` numbers are derived from the `LTFS_*`/`EDEV_*` constants in `src/libltfs/ltfs_error.h` (see `messages/README`), not allocated consecutively
 
 ### Workflow
 1. Add new messages using the next available consecutive number
