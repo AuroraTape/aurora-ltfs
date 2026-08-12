@@ -20,12 +20,19 @@ coverage:
 # from CI and would distort the percentage if counted.
 ignore:
   # Other-OS tape backends.
-  - "src/tape_drivers/osx/**/*"
-  - "src/tape_drivers/freebsd/**/*"
-  - "src/tape_drivers/netbsd/**/*"
+  - "src/tape_drivers/osx"
+  - "src/tape_drivers/freebsd"
+  - "src/tape_drivers/netbsd"
 
   # Linux SCSI generic driver — needs a real tape drive.
-  - "src/tape_drivers/linux/sg/**/*"
+  # NOTE: a bare directory path ignores the folder and all its
+  # contents. The previous "**/*" suffix required an extra
+  # directory level below sg/, so files directly inside it
+  # (sg_tape.c etc.) were not excluded.
+  - "src/tape_drivers/linux/sg"
+
+  # ITDT image backend — not exercised by the CI test harness.
+  - "src/tape_drivers/generic/itdtimg"
 
   # Real-drive vendor support files at the top level. The file
   # backend at src/tape_drivers/generic/file/ does not link
