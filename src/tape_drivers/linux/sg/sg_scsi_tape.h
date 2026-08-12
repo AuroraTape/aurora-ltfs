@@ -77,10 +77,21 @@
 #define SK_ILI_SET (0x20)
 #define SK_FM_SET  (0x80)
 
-/* Data Encryption Status page (SPS_DATA_ENCRYPTION_STATUS) field offsets and masks */
-#define DES_ENCR_MODE_BYTE (5)  /* ENCRYPTION MODE: 0 = disabled, non-zero = active */
-#define DES_VCELB_BYTE (13)     /* byte containing the VCELB flag */
-#define DES_VCELB_BIT  (0x01u)  /* Volume Contains Encrypted Logical Blocks */
+/* Next Block Encryption Status page (SPS_NEXT_BLOCK_ENC_STATUS) field offsets and masks */
+#define NBES_ENCR_STATUS_BYTE (12)    /* byte containing the ENCRYPTION STATUS field */
+#define NBES_ENCR_STATUS_MASK (0x0Fu) /* ENCRYPTION STATUS: bits 3-0 */
+
+/* Values of the ENCRYPTION STATUS field in the Next Block Encryption Status page */
+enum nbes_encryption_status {
+	ENC_STAT_INCAPABLE                          = 0,
+	ENC_STAT_NOT_YET_BEEN_READ                  = 1,
+	ENC_STAT_NOT_A_LOGICAL_BLOCK                = 2,
+	ENC_STAT_NOT_ENCRYPTED                      = 3,
+	ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM = 4,
+	ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM   = 5,
+	ENC_STAT_ENCRYPTED_BY_OTHER_KEY             = 6,
+	ENC_STAT_RESERVED, /* 7h-Fh */
+};
 
 #define PERIPHERAL_MASK   (0x1F)
 #define SEQUENTIAL_DEVICE (0x01)

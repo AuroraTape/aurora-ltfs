@@ -4577,6 +4577,7 @@ static int _cdb_spin(void *device, const uint16_t sps, unsigned char **buffer, s
 	timeout = get_timeout(priv->timeouts, cdb[0]);
 	if (timeout < 0) {
 		free(*buffer);
+		*buffer = NULL;
 		return -EDEV_UNSUPPORETD_COMMAND;
 	}
 
@@ -4594,6 +4595,7 @@ static int _cdb_spin(void *device, const uint16_t sps, unsigned char **buffer, s
 	ret = sg_issue_cdb_command(&priv->dev, &req, &msg);
 	if (ret < 0){
 		free(*buffer);
+		*buffer = NULL;
 		ret_ep = _process_errors(device, ret, msg, cmd_desc, true, true);
 		if (ret_ep < 0)
 			ret = ret_ep;
@@ -4901,7 +4903,6 @@ int sg_get_keyalias(void *device, unsigned char **keyalias)
 		return ret;
 	}
 
-	const uint16_t sps = 0x21;
 	uint8_t *buffer = NULL;
 	size_t size = 0;
 	int i = 0;
@@ -4915,24 +4916,14 @@ int sg_get_keyalias(void *device, unsigned char **keyalias)
 	 */
 	for (i = 0; i < 2; ++i) {
 		free(buffer);
-		ret = _cdb_spin(device, sps, &buffer, &size);
+		ret = _cdb_spin(device, SPS_NEXT_BLOCK_ENC_STATUS, &buffer, &size);
 		if (ret != DEVICE_GOOD)
 			goto free;
 	}
 
 	show_hex_dump("SPIN:", buffer, size + 4);
 
-	const unsigned char encryption_status = buffer[12] & 0xF;
-	enum {
-		ENC_STAT_INCAPABLE                          = 0,
-		ENC_STAT_NOT_YET_BEEN_READ                  = 1,
-		ENC_STAT_NOT_A_LOGICAL_BLOCK                = 2,
-		ENC_STAT_NOT_ENCRYPTED                      = 3,
-		ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM = 4,
-		ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM   = 5,
-		ENC_STAT_ENCRYPTED_BY_OTHER_KEY             = 6,
-		ENC_STAT_RESERVED, /* 7h-Fh */
-	};
+	const unsigned char encryption_status = buffer[NBES_ENCR_STATUS_BYTE] & NBES_ENCR_STATUS_MASK;
 	if (encryption_status == ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM ||
 		encryption_status == ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM ||
 		encryption_status == ENC_STAT_ENCRYPTED_BY_OTHER_KEY) {
@@ -4965,8 +4956,9 @@ free:
 /**
  * Get media encryption status of the loaded volume.
  * Fetched from the Read/Write Control mode page (0x25), except on HP LTO drives,
- * which do not support MP 0x25; there the SPIN Data Encryption Status page is
- * the only way to fetch the status.
+ * which do not support MP 0x25; there the ENCRYPTION STATUS field of the SPIN
+ * Next Block Encryption Status page reports whether the block at the current
+ * position is encrypted, independently of the key configured on this I_T nexus.
  * @param device Device handle returned by the backend's open().
  * @return 1 if the volume is encrypted, -1 if plain, 0 if unknown
  */
@@ -4977,14 +4969,32 @@ static int _get_media_encrypted(void *device)
 
 	if (IS_LTO(priv->drive_type) && priv->vendor == VENDOR_HP) {
 		unsigned char *buffer = NULL;
-		size_t size = DES_ENCR_MODE_BYTE + 1;
+		size_t size = NBES_ENCR_STATUS_BYTE + 1;
 
-		ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_STATUS, &buffer, &size);
-		if (ret != DEVICE_GOOD || size < DES_ENCR_MODE_BYTE + 1) {
+		ret = _cdb_spin(device, SPS_NEXT_BLOCK_ENC_STATUS, &buffer, &size);
+		if (ret != DEVICE_GOOD)
+			return 0;
+
+		/* On success, size holds the PAGE LENGTH field, which excludes the 4-byte header */
+		if (size + 4 < NBES_ENCR_STATUS_BYTE + 1) {
+			free(buffer);
 			return 0;
 		}
 
-		encrypted = (buffer[DES_ENCR_MODE_BYTE] != 0) ? 1 : -1;
+		switch (buffer[NBES_ENCR_STATUS_BYTE] & NBES_ENCR_STATUS_MASK) {
+			case ENC_STAT_NOT_ENCRYPTED:
+				encrypted = -1;
+				break;
+			case ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM:
+			case ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM:
+			case ENC_STAT_ENCRYPTED_BY_OTHER_KEY:
+				encrypted = 1;
+				break;
+			default:
+				/* Incapable, not yet determined, filemark/EOD or reserved */
+				encrypted = 0;
+				break;
+		}
 		free(buffer);
 	} else {
 		unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
