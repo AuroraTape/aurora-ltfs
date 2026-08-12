@@ -76,6 +76,7 @@
 #include "libltfs/ltfs_endian.h"
 #include "libltfs/tape_ops.h"
 #include "libltfs/ltfs_error.h"
+#include "libltfs/ltfstrace.h"
 
 #include "tape_drivers/tape_drivers.h"
 #include "tape_drivers/vendor_compat.h"
@@ -151,6 +152,7 @@ struct filedebug_data {
 	struct tc_drive_info info;             /**< Device informaton (DUMMY) */
 	char     *product_id;                  /**< Product ID of this dummy tape device */
 	struct   filedebug_conf_tc conf;       /**< Bahavior option for this instance */
+	FILE     *profiler;                    /**< Profiler file pointer */
 };
 
 struct filedebug_global_data {
@@ -2780,8 +2782,55 @@ int filedebug_get_info(void *device, struct tc_drive_info *info)
 
 int filedebug_set_profiler(void *device, char *work_dir, bool enable)
 {
-	/* Do nohting: file backend does not support profiler */
-	return 0;
+	int rc = 0;
+	struct filedebug_data *state = (struct filedebug_data *)device;
+
+	char *path, *c;
+	FILE *p;
+	struct timer_info timerinfo;
+
+	if (enable) {
+		if (state->profiler)
+			return 0;
+
+		if (!work_dir)
+			return -LTFS_BAD_ARG;
+
+		rc = asprintf(&path, "%s/%s%s%s", work_dir, DRIVER_PROFILER_BASE,
+					  state->serial_number ? state->serial_number : "DUMMY",
+					  PROFILER_EXTENSION);
+		if (rc < 0) {
+			ltfsmsg(ALC0002E, __FUNCTION__);
+			return -EDEV_NO_MEMORY;
+		}
+
+		/* The serial number comes from the device path and may contain
+		 * path separators: flatten them so the file lands in work_dir */
+		for (c = path + strlen(work_dir) + 1; *c; c++) {
+			if (*c == '/' || *c == '\\')
+				*c = '_';
+		}
+
+		p = fopen(path, PROFILER_FILE_MODE);
+
+		free(path);
+
+		if (! p)
+			rc = -LTFS_FILE_ERR;
+		else {
+			get_timer_info(&timerinfo);
+			fwrite((void*)&timerinfo, sizeof(timerinfo), 1, p);
+			state->profiler = p;
+			rc = 0;
+		}
+	} else {
+		if (state->profiler) {
+			fclose(state->profiler);
+			state->profiler = NULL;
+		}
+	}
+
+	return rc;
 }
 
 int filedebug_get_next_block_to_xfer(void *device, struct tc_position *pos)
@@ -2794,38 +2843,279 @@ int filedebug_get_next_block_to_xfer(void *device, struct tc_position *pos)
 	return 0;
 }
 
+/*
+ * Profiled wrappers: record an ENTER/EXIT profiler entry around the plain
+ * filedebug operations.  The wrapper style is used instead of inline entries
+ * (like sg_tape.c) so the emulator functions with many return paths do not
+ * need to be touched.  The profiler pointer is NULL until enabled, in which
+ * case ltfs_profiler_add_entry() is a no-op.
+ *
+ * Only the I/O and medium-motion related operations are wrapped; pure
+ * status/parameter calls that sg_tape.c also profiles (logsense, modeselect,
+ * reserve_unit, ...) are intentionally left unwrapped to keep the emulator
+ * diff small.
+ */
+static int filedebug_close_profiled(void *device)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	FILE *p = state->profiler;
+	int ret;
+
+	ltfs_profiler_add_entry(p, NULL, TAPEBEND_REQ_ENTER(REQ_TC_CLOSE));
+	state->profiler = NULL; /* filedebug_close() frees the state, detach first */
+	ret = filedebug_close(device);
+	ltfs_profiler_add_entry(p, NULL, TAPEBEND_REQ_EXIT(REQ_TC_CLOSE));
+	if (p)
+		fclose(p);
+
+	return ret;
+}
+
+static int filedebug_test_unit_ready_profiled(void *device)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_TUR));
+	ret = filedebug_test_unit_ready(device);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_TUR));
+
+	return ret;
+}
+
+static int filedebug_read_profiled(void *device, char *buf, size_t count,
+	struct tc_position *pos, const bool unusual_size)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_READ));
+	ret = filedebug_read(device, buf, count, pos, unusual_size);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_READ));
+
+	return ret;
+}
+
+static int filedebug_write_profiled(void *device, const char *buf, size_t count,
+	struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITE));
+	ret = filedebug_write(device, buf, count, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_WRITE));
+
+	return ret;
+}
+
+static int filedebug_writefm_profiled(void *device, size_t count,
+	struct tc_position *pos, bool immed)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITEFM));
+	ret = filedebug_writefm(device, count, pos, immed);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_WRITEFM));
+
+	return ret;
+}
+
+static int filedebug_rewind_profiled(void *device, struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_REWIND));
+	ret = filedebug_rewind(device, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REWIND));
+
+	return ret;
+}
+
+static int filedebug_locate_profiled(void *device, struct tc_position dest,
+	struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_LOCATE));
+	ret = filedebug_locate(device, dest, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_LOCATE));
+
+	return ret;
+}
+
+static int filedebug_space_profiled(void *device, size_t count, TC_SPACE_TYPE type,
+	struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_SPACE));
+	ret = filedebug_space(device, count, type, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_SPACE));
+
+	return ret;
+}
+
+static int filedebug_erase_profiled(void *device, struct tc_position *pos, bool long_erase)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_ERASE));
+	ret = filedebug_erase(device, pos, long_erase);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_ERASE));
+
+	return ret;
+}
+
+static int filedebug_load_profiled(void *device, struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_LOAD));
+	ret = filedebug_load(device, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_LOAD));
+
+	return ret;
+}
+
+static int filedebug_unload_profiled(void *device, struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_UNLOAD));
+	ret = filedebug_unload(device, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_UNLOAD));
+
+	return ret;
+}
+
+static int filedebug_readpos_profiled(void *device, struct tc_position *pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_READPOS));
+	ret = filedebug_readpos(device, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_READPOS));
+
+	return ret;
+}
+
+static int filedebug_format_profiled(void *device, TC_FORMAT_TYPE format,
+	const char *vol_name, const char *barcode_name, const char *vol_mam_uuid)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_FORMAT));
+	ret = filedebug_format(device, format, vol_name, barcode_name, vol_mam_uuid);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_FORMAT));
+
+	return ret;
+}
+
+static int filedebug_remaining_capacity_profiled(void *device, struct tc_remaining_cap *cap)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_REMAINCAP));
+	ret = filedebug_remaining_capacity(device, cap);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REMAINCAP));
+
+	return ret;
+}
+
+static int filedebug_modesense_profiled(void *device, const uint8_t page,
+	const TC_MP_PC_TYPE pc, const uint8_t subpage, unsigned char *buf, const size_t size)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_MODESENSE));
+	ret = filedebug_modesense(device, page, pc, subpage, buf, size);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_MODESENSE));
+
+	return ret;
+}
+
+static int filedebug_read_attribute_profiled(void *device, const tape_partition_t part,
+	const uint16_t id, unsigned char *buf, const size_t size)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_READATTR));
+	ret = filedebug_read_attribute(device, part, id, buf, size);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_READATTR));
+
+	return ret;
+}
+
+static int filedebug_write_attribute_profiled(void *device, const tape_partition_t part,
+	const unsigned char *buf, const size_t size)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_WRITEATTR));
+	ret = filedebug_write_attribute(device, part, buf, size);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_WRITEATTR));
+
+	return ret;
+}
+
+static int filedebug_allow_overwrite_profiled(void *device, const struct tc_position pos)
+{
+	struct filedebug_data *state = (struct filedebug_data *)device;
+	int ret;
+
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_ALLOWOVERW));
+	ret = filedebug_allow_overwrite(device, pos);
+	ltfs_profiler_add_entry(state->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_ALLOWOVERW));
+
+	return ret;
+}
+
 struct tape_ops filedebug_handler = {
 	.open                   = filedebug_open,
 	.reopen                 = filedebug_reopen,
-	.close                  = filedebug_close,
+	.close                  = filedebug_close_profiled,
 	.close_raw              = filedebug_close_raw,
 	.is_connected           = filedebug_is_connected,
 	.inquiry                = filedebug_inquiry,
 	.inquiry_page           = filedebug_inquiry_page,
-	.test_unit_ready        = filedebug_test_unit_ready,
-	.read                   = filedebug_read,
-	.write                  = filedebug_write,
-	.writefm                = filedebug_writefm,
-	.rewind                 = filedebug_rewind,
-	.locate                 = filedebug_locate,
-	.space                  = filedebug_space,
-	.erase                  = filedebug_erase,
-	.load                   = filedebug_load,
-	.unload                 = filedebug_unload,
-	.readpos                = filedebug_readpos,
+	.test_unit_ready        = filedebug_test_unit_ready_profiled,
+	.read                   = filedebug_read_profiled,
+	.write                  = filedebug_write_profiled,
+	.writefm                = filedebug_writefm_profiled,
+	.rewind                 = filedebug_rewind_profiled,
+	.locate                 = filedebug_locate_profiled,
+	.space                  = filedebug_space_profiled,
+	.erase                  = filedebug_erase_profiled,
+	.load                   = filedebug_load_profiled,
+	.unload                 = filedebug_unload_profiled,
+	.readpos                = filedebug_readpos_profiled,
 	.setcap                 = filedebug_setcap,
-	.format                 = filedebug_format,
-	.remaining_capacity     = filedebug_remaining_capacity,
+	.format                 = filedebug_format_profiled,
+	.remaining_capacity     = filedebug_remaining_capacity_profiled,
 	.logsense               = filedebug_logsense,
-	.modesense              = filedebug_modesense,
+	.modesense              = filedebug_modesense_profiled,
 	.modeselect             = filedebug_modeselect,
 	.reserve_unit           = filedebug_reserve_unit,
 	.release_unit           = filedebug_release_unit,
 	.prevent_medium_removal = filedebug_prevent_medium_removal,
 	.allow_medium_removal   = filedebug_allow_medium_removal,
-	.write_attribute        = filedebug_write_attribute,
-	.read_attribute         = filedebug_read_attribute,
-	.allow_overwrite        = filedebug_allow_overwrite,
+	.write_attribute        = filedebug_write_attribute_profiled,
+	.read_attribute         = filedebug_read_attribute_profiled,
+	.allow_overwrite        = filedebug_allow_overwrite_profiled,
 	.grao                   = filedebug_grao,
 	.rrao                   = filedebug_rrao,
 	.set_compression        = filedebug_set_compression,
