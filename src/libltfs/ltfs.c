@@ -1889,6 +1889,13 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 		vol->lock_status = vol->index->vollock;
 	}
 
+	/*
+	 * The index has been read at this point, so the media / drive encryption
+	 * status is settled; cache it for ltfs.mediaEncrypted and
+	 * ltfs.driveEncryptionState.
+	 */
+	tape_refresh_encryption_status(vol->device);
+
 	barcode = _get_barcode(vol);
 
 	ltfsmsg(ALB0032I,

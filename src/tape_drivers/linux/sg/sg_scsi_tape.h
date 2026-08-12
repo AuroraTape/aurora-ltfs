@@ -77,6 +77,10 @@
 #define SK_ILI_SET (0x20)
 #define SK_FM_SET  (0x80)
 
+/* Data Encryption Status page (SPS_DATA_ENCRYPTION_STATUS) field offsets */
+#define DES_DECR_MODE_BYTE (6)        /* DECRYPTION MODE: 0h disable, 1h raw, 2h decrypt, 3h mixed */
+#define DES_DECR_MODE_DECRYPT (0x02)  /* modes >= this actually decrypt */
+
 /* Next Block Encryption Status page (SPS_NEXT_BLOCK_ENC_STATUS) field offsets and masks */
 #define NBES_ENCR_STATUS_BYTE (12)    /* byte containing the ENCRYPTION STATUS field */
 #define NBES_ENCR_STATUS_MASK (0x0Fu) /* ENCRYPTION STATUS: bits 3-0 */

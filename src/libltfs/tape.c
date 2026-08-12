@@ -481,7 +481,8 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
 		dev->partition_space[1] = PART_WRITABLE;
 	ltfs_mutex_unlock(&dev->read_only_flag_mutex);
 
-	dev->is_encrypted = param.is_encrypted;
+	dev->is_encrypted  = param.is_encrypted;
+	dev->is_decrypting = param.is_decrypting;
 
 	return 0;
 }
@@ -886,6 +887,31 @@ int tape_get_params(struct device_data *dev, struct tc_drive_param *param)
 	ret = dev->backend->get_parameters(dev->backend_data, param);
 	if (ret < 0)
 		ltfsmsg(ALP0040E, ret);
+
+	return ret;
+}
+
+/**
+ * Refresh the cached encryption status of the loaded volume and the drive.
+ * LTFS volumes are encrypted all-or-nothing, so once the mount sequence has
+ * read the index, the state fetched here is settled for the whole mount.
+ * @param dev the device
+ * @return 0 on success or a negative value on error
+ */
+int tape_refresh_encryption_status(struct device_data *dev)
+{
+	struct tc_drive_param param;
+	int ret;
+
+	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	memset(&param, 0, sizeof(param));
+	ret = dev->backend->get_parameters(dev->backend_data, &param);
+	if (! ret) {
+		dev->is_encrypted  = param.is_encrypted;
+		dev->is_decrypting = param.is_decrypting;
+	}
 
 	return ret;
 }
@@ -2870,6 +2896,21 @@ char *tape_get_drive_encryption_state(struct device_data *dev)
 	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
 	int ret = -EDEV_UNKNOWN;
 	char *state = NULL;
+
+	/*
+	 * LTFS volumes are encrypted all-or-nothing, so the decryption state
+	 * cached at the end of the mount sequence reflects the drive's encryption
+	 * state. Backends that do not report it leave the cache at 0 (unknown);
+	 * fetch the Read/Write Control mode page (0x25) there.
+	 */
+	switch (dev->is_decrypting) {
+		case 1:
+			return "on";
+		case -1:
+			return "off";
+		default:
+			break;
+	}
 
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT,
 								  0, buf, sizeof(buf));

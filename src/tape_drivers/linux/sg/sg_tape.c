@@ -274,6 +274,7 @@ static bool is_dump_required(struct sg_data *priv, int ret, bool *capture_unforc
 static int _cdb_read_buffer(void *device, int id, unsigned char *buf, size_t offset, size_t len, int type);
 static int _cdb_force_dump(struct sg_data *priv);
 static int _get_media_encrypted(void *device);
+static int _get_drive_decrypting(void *device);
 
 static int _get_dump(struct sg_data *priv, char *fname)
 {
@@ -4244,7 +4245,8 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETPARAM));
 
 	/* Callers do not zero out params, always report "unknown" while no tape is loaded */
-	params->is_encrypted = 0;
+	params->is_encrypted  = 0;
+	params->is_decrypting = 0;
 
 	if (priv->loaded) {
 		params->cart_type = priv->cart_type;
@@ -4298,6 +4300,9 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 
 		/* Capture the medium has encrypted blocks or not */
 		params->is_encrypted  = _get_media_encrypted(device);
+
+		/* Capture the drive is decrypting or not */
+		params->is_decrypting = _get_drive_decrypting(device);
 	} else {
 		params->cart_type = priv->cart_type;
 		params->density   = priv->density_code;
@@ -5007,6 +5012,41 @@ static int _get_media_encrypted(void *device)
 	}
 
 	return encrypted;
+}
+
+/**
+ * Get the decryption state of the drive on this I_T nexus.
+ * Only HP LTO drives are queried, through the DECRYPTION MODE field of the
+ * SPIN Data Encryption Status page. Other vendors report the state through
+ * the Read/Write Control mode page (0x25) in libltfs, so they are left at
+ * "unknown" here to keep that path.
+ * @param device Device handle returned by the backend's open().
+ * @return 1 if the drive is decrypting, -1 if not, 0 if unknown
+ */
+static int _get_drive_decrypting(void *device)
+{
+	struct sg_data *priv = (struct sg_data*)device;
+	unsigned char *buffer = NULL;
+	size_t size = DES_DECR_MODE_BYTE + 1;
+	int ret, decrypting;
+
+	if (! (IS_LTO(priv->drive_type) && priv->vendor == VENDOR_HP))
+		return 0;
+
+	ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_STATUS, &buffer, &size);
+	if (ret != DEVICE_GOOD)
+		return 0;
+
+	/* On success, size holds the PAGE LENGTH field, which excludes the 4-byte header */
+	if (size + 4 < DES_DECR_MODE_BYTE + 1) {
+		free(buffer);
+		return 0;
+	}
+
+	decrypting = (buffer[DES_DECR_MODE_BYTE] >= DES_DECR_MODE_DECRYPT) ? 1 : -1;
+	free(buffer);
+
+	return decrypting;
 }
 
 int sg_takedump_drive(void *device, bool capture_unforced)

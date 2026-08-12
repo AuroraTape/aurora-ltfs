@@ -130,6 +130,7 @@ struct tc_drive_param {
 	unsigned int  write_protect;         /* Write protect status of the tape (use bit field of volumelock_status) */
 	unsigned int  logical_write_protect; /* Logical Write Protect */
 	int           is_encrypted;          /* Is encrypted tape ? 0:unknown, 1:encrypted -1:plain */
+	int           is_decrypting;         /* Is the drive decrypting ? 0:unknown, 1:decrypting -1:not decrypting */
 	/* TODO: Following field shall be handled by backend but currently they are not implemented yet */
 	//bool          is_worm;               /* Is worm tape? */
 };
