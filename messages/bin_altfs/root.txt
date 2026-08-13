@@ -227,5 +227,8 @@ root:table {
 		AFS0134E:string { "I/O scheduler plug-in is required, but it is not configured" }
 		AFS0135E:string { "Cannot initialize I/O scheduler" }
 		// Reserved 14468I
+
+		// Help messages (continued)
+		AFS0136I:string { "    -o devname=<dev>          Tape device (default: %s)" }
 	}
 }

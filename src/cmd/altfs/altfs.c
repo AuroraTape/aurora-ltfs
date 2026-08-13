@@ -138,10 +138,14 @@ static struct fuse_opt ltfs_options[] = {
 	FUSE_OPT_END
 };
 
-void single_drive_advanced_usage(const char *default_driver, struct ltfs_fuse_data *priv)
+void single_drive_advanced_usage(const char *default_device, const char *default_driver,
+	struct ltfs_fuse_data *priv)
 {
 	ltfsresult(AFS0099I);                              /* LTFS options: */
-	ltfsresult(AFS0100I);                              /* -o devname=<dev> */
+	if (default_device)
+		ltfsresult(AFS0136I, default_device);          /* -o devname=<dev> (default: %s) */
+	else
+		ltfsresult(AFS0100I);                          /* -o devname=<dev> */
 	ltfsresult(AFS0105I, LTFS_CONFIG_FILE);            /* -o config_file=<file> */
 	ltfsresult(AFS0101I, LTFS_DEFAULT_WORK_DIR);       /* -o work_directory=<dir> */
 	ltfsresult(AFS0106I);                              /* -o atime */
@@ -179,13 +183,27 @@ void single_drive_advanced_usage(const char *default_driver, struct ltfs_fuse_da
 
 void usage(char *progname, struct ltfs_fuse_data *priv)
 {
+	int ret = -1;
 	const char *default_driver = config_file_get_default_plugin("tape", priv->config);
+	const char *default_device = NULL;
+
+	if (! priv->tape_backend_name)
+		priv->tape_backend_name = default_driver;
+
+	if (priv->tape_backend_name) {
+		ret = plugin_load(&priv->tape_plugin, "tape", priv->tape_backend_name, priv->config);
+		if (ret == 0)
+			default_device = ltfs_default_device_name(priv->tape_plugin.ops);
+	}
 
 	fprintf(stderr, "\n");
-	single_drive_advanced_usage(default_driver, priv);
+	single_drive_advanced_usage(default_device, default_driver, priv);
 	fprintf(stderr, "\n");
 	plugin_usage(progname, "tape", priv->config);
 	plugin_usage(progname, "kmi", priv->config);
+
+	if (ret == 0)
+		plugin_unload(&priv->tape_plugin);
 }
 
 mode_t parse_mode(char *input)

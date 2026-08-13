@@ -12,6 +12,7 @@ Every invocation has a short timeout so a regression that hangs a
 command fails the test cleanly instead of stalling CI.
 """
 
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -42,6 +43,24 @@ def test_altfs_help_exits_zero():
     r = _run("altfs", "-h")
     assert r.returncode == 0, r.stderr
     assert "usage" in (r.stdout + r.stderr).lower()
+
+
+def test_altfs_help_shows_default_device_with_file_backend():
+    # The file backend has a static default device, so the devname
+    # help line must include it (issue #21).
+    r = _run("altfs", "-o", "tape_backend=file", "--help")
+    assert r.returncode == 0, r.stderr
+    combined = r.stdout + r.stderr
+    assert re.search(r"-o devname=<dev>\s+Tape device \(default: ", combined)
+
+
+def test_altfs_help_falls_back_without_default_device():
+    # An unloadable backend cannot provide a default device; the
+    # devname help line must fall back to the plain variant.
+    r = _run("altfs", "-o", "tape_backend=nonexistent", "--help")
+    assert r.returncode == 0, r.stderr
+    combined = r.stdout + r.stderr
+    assert re.search(r"-o devname=<dev>\s+Tape device\s*$", combined, re.M)
 
 
 def test_altfs_no_args_reports_missing_device():
