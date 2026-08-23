@@ -149,6 +149,42 @@ The unmount command triggers the altfs process to write metadata and close the t
 
 [`altfs_ordered_copy`](src/utils/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires the `pyxattr` module.
 
+# Running with Docker
+
+Release images are published to GHCR for x86_64. Images are tagged
+`X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
+version you run never changes behind your back. Pick one explicitly:
+
+```
+# docker pull ghcr.io/auroratape/aurora-ltfs:1.0.0
+```
+
+The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
+`altfsck` and `altfsindextool`. Tape access needs the SCSI generic device
+passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
+
+```
+# List drives
+docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+  altfs -o device_list
+
+# Format a tape
+docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+  mkaltfs -d /dev/sg0
+
+# Mount a tape (foreground; Ctrl-C unmounts)
+docker run --rm -it \
+  --device /dev/fuse --device /dev/sg0 \
+  --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
+  ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+  altfs -f -o devname=/dev/sg0 /ltfs
+```
+
+To make the mounted filesystem visible on the host instead of only inside
+the container, bind-mount a host directory with shared propagation and
+mount onto it: add `-v /mnt/ltfs:/ltfs:rshared` (the host path must be on a
+mount with shared propagation).
+
 # Building from Source
 
 ## Prerequisites
