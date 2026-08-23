@@ -739,7 +739,7 @@ int main(int argc, char **argv)
 	/* Show run time information */
 	show_runtime_system_info();
 
-	/* Actually mkltfs logic starts here */
+	/* Actually altfsindextool logic starts here */
 	ret = ltfs_volume_alloc("altfsindextool", &vol);
 	if (ret < 0) {
 		ltfsmsg(AIX0002E);

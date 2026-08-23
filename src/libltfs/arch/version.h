@@ -53,7 +53,7 @@
 /*
  * Creator tag value format:
  *     PackageName Version - Platform - Program
- *     Aurora LTFS 1.0.0 - Linux - mkaltfs
+ *     Aurora LTFS <version> - Linux - mkaltfs
  */
 #define CREATOR_STRING_FORMAT "%s %s - %s - %s"
 
