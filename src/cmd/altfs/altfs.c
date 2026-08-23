@@ -977,7 +977,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	}
 
 	/* Allocate the LTFS volume structure */
-	if (ltfs_volume_alloc("ltfs", &priv->data) < 0) {
+	if (ltfs_volume_alloc("altfs", &priv->data) < 0) {
 		/* Could not allocate LTFS volume structure */
 		ltfsmsg(AFS0011E);
 		return 1;

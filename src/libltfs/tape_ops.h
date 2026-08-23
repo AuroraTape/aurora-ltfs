@@ -829,7 +829,7 @@ struct tape_ops {
 	/**
 	 * Get the default device name for the backend.
 	 * @return A pointer to the default device name string. This pointer is not freed on exit
-	 *         by the IBM LTFS utilities. It may be NULL if the backend has no default device.
+	 *         by the Aurora LTFS utilities. It may be NULL if the backend has no default device.
 	 */
 	const char *(*default_device_name)(void);
 

@@ -361,7 +361,7 @@ int ltfs_volume_alloc(const char *execname, struct ltfs_volume **volume)
 
 	if (execname) {
 		ret = asprintf(&newvol->creator, CREATOR_STRING_FORMAT,
-			"IBM LTFS", PACKAGE_VERSION, PLATFORM, execname);
+			PACKAGE_NAME, PACKAGE_VERSION, PLATFORM, execname);
 		if (ret < 0) {
 			/* Memory allocation failed */
 			ltfsmsg(ALC0002E, "ltfs_volume_alloc, creator string");
