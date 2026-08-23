@@ -452,7 +452,7 @@ int main(int argc, char **argv)
 	show_runtime_system_info();
 
 	/* Actually mkltfs logic starts here */
-	ret = ltfs_volume_alloc("mkltfs", &newvol);
+	ret = ltfs_volume_alloc("mkaltfs",&newvol);
 	if (ret < 0) {
 		ltfsmsg(AMK0002E);
 		return MKLTFS_OPERATIONAL_ERROR;
@@ -603,7 +603,7 @@ int format_tape(struct ltfs_volume *vol, struct other_format_opts *opt, void *ar
 	/* Check target medium state */
 	if (! opt->force) {
 		ltfsmsg(AMK0042I, "mount");
-		ret = ltfs_volume_alloc("mkltfs", &dummy_vol);
+		ret = ltfs_volume_alloc("mkaltfs",&dummy_vol);
 		if (ret < 0) {
 			ret = MKLTFS_OPERATIONAL_ERROR;
 			goto out_close;

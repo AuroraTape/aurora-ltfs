@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 	show_runtime_system_info();
 
 	/* Actually mkltfs logic starts here */
-	ret = ltfs_volume_alloc("ltfsck", &vol);
+	ret = ltfs_volume_alloc("altfsck", &vol);
 	if (ret < 0) {
 		ltfsmsg(ACK0002E);
 		return LTFSCK_OPERATIONAL_ERROR;

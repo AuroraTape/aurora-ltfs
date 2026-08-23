@@ -740,7 +740,7 @@ int main(int argc, char **argv)
 	show_runtime_system_info();
 
 	/* Actually mkltfs logic starts here */
-	ret = ltfs_volume_alloc("dummy", &vol);
+	ret = ltfs_volume_alloc("altfsindextool", &vol);
 	if (ret < 0) {
 		ltfsmsg(AIX0002E);
 		return INDEXTOOL_OPERATIONAL_ERROR;
