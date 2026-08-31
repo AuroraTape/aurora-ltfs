@@ -320,5 +320,6 @@ root:table {
 		ALB0280E:string { "UUID in the index does not match the label" }
 		ALB0281I:string { "Wrote inc-index of %s (Gen = %lld, Part = %c, Pos = %lld, %s)" }
 		ALB0282I:string { "Info inc-index, Gen = %lld, Full Part = %c, Full Pos = %lld, Back Part = %c, Back Pos = %lld)" }
+		ALB0283E:string { "An incremental index (format spec 2.5) was found on partition %c after the last full index. This build supports format spec 2.4 and cannot recover it. Use a build with format spec 2.5 support to recover this volume" }
 	}
 }
