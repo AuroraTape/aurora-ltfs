@@ -51,8 +51,10 @@ We use a tiered support model combined with OS lifecycle tracking.
 | Tier | Definition | Platforms |
 |:----:|:-----------|:----------|
 | Tier 1 | CI tested. Build failures block releases. | Ubuntu 24.04 (x86\_64), Rocky Linux 9 (x86\_64) |
-| Tier 2 | Best effort. Builds are verified but not in CI. | macOS, Debian, FreeBSD |
+| Tier 2 | Best effort. Builds are verified in CI, but failures do not block releases. | macOS, Debian, FreeBSD |
 | Tier 3 | Community-contributed. No guarantees from maintainers. | NetBSD, other platforms |
+
+CI verifies that all Tier 2 platforms (macOS, Debian, FreeBSD) and NetBSD build successfully (build verification only — no functional tests, since CI has no tape hardware).
 
 **Tier 1 selection policy:**
 

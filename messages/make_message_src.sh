@@ -3,28 +3,23 @@
 set -e
 
 KERNEL_NAME=`uname -s`
-if [ "$KERNEL_NAME" = "Darwin" ]; then
-	ICU_FRAMEWORK=/Library/Frameworks/ICU.framework
 
-	if [ -d ${ICU_FRAMEWORK} ]; then
-		export PATH=${PATH}:${ICU_FRAMEWORK}/Versions/Current/usr/bin
-		export DYLD_LIBRARY_PATH=${ICU_FRAMEWORK}/Versions/Current/usr/lib
-		GENRB=${ICU_FRAMEWORK}/Versions/Current/usr/bin/genrb
-		PKGDATA=${ICU_FRAMEWORK}/Versions/Current/usr/bin/pkgdata
-	else
-		GENRB=genrb
-		PKGDATA=pkgdata
-	fi
-elif [ "$KERNEL_NAME" = "FreeBSD" ]; then
-	GENRB=genrb
-	PKGDATA=/usr/local/bin/pkgdata
-else
-	if [ -x /usr/bin/genrb ]; then
+# GENRB/PKGDATA normally come from the parent Makefile with the paths that
+# configure detected. The fallbacks below are only for direct invocation.
+# On Darwin the ICU tools must come from Homebrew (via PATH); the obsolete
+# /Library/Frameworks/ICU.framework (ICU 4.8) generates archives the macOS
+# linker cannot read and must not be picked up.
+if [ -z "${GENRB}" ]; then
+	if [ -x /usr/bin/genrb ] && [ "$KERNEL_NAME" != "Darwin" ]; then
 		GENRB=/usr/bin/genrb
 	else
 		GENRB=genrb
 	fi
-	if [ -x /usr/bin/pkgdata ]; then
+fi
+if [ -z "${PKGDATA}" ]; then
+	if [ "$KERNEL_NAME" = "FreeBSD" ]; then
+		PKGDATA=/usr/local/bin/pkgdata
+	elif [ -x /usr/bin/pkgdata ] && [ "$KERNEL_NAME" != "Darwin" ]; then
 		PKGDATA=/usr/bin/pkgdata
 	else
 		PKGDATA=pkgdata

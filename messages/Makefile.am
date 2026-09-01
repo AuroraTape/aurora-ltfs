@@ -80,7 +80,7 @@ all: $(RESOURCES)
 endif
 
 $(RESOURCES):
-	@LIBTOOL='$(SHELL) $(abs_top_builddir)/libtool' CC='$(CC)' ./make_message_src.sh $@
+	@LIBTOOL='$(SHELL) $(abs_top_builddir)/libtool' CC='$(CC)' GENRB='$(GENRB)' PKGDATA='$(PKGDATA)' ./make_message_src.sh $@
 
 if CHK_MESSAGE
 ../src/ltfsmsg.h: $(RESOURCES)

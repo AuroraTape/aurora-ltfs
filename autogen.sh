@@ -40,7 +40,7 @@ mkdir -p build-aux
 
 aclocal
 
-if [ -x /usr/local/bin/glibtoolize ]; then
+if command -v glibtoolize > /dev/null 2>&1; then
 	glibtoolize
 else
 	libtoolize
