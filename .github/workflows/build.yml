@@ -17,13 +17,21 @@ jobs:
           - name: Ubuntu 24.04
             container: ubuntu:24.04
             id: ubuntu2404
-            distro: ubuntu
+            pkg: apt
             configure_extra: ""
             install: true
           - name: Rocky Linux 9
             container: rockylinux:9
             id: rocky9
-            distro: rocky
+            pkg: dnf
+            configure_extra: ""
+            install: true
+          # Tier 2 platform (issue #73): build verified in CI, failures do
+          # not block releases.
+          - name: Debian 13
+            container: debian:13
+            id: debian13
+            pkg: apt
             configure_extra: ""
             install: true
           # Compile-only validation that every ltfsmsg(...) call site agrees
@@ -36,7 +44,7 @@ jobs:
           - name: Ubuntu 24.04 (message-checker)
             container: ubuntu:24.04
             id: msgcheck
-            distro: ubuntu
+            pkg: apt
             configure_extra: "--enable-message-checker"
             install: false
           # Compile check of the experimental format spec 2.5 support
@@ -50,8 +58,8 @@ jobs:
             install: true
 
     steps:
-      - name: Install dependencies (Ubuntu)
-        if: matrix.distro == 'ubuntu'
+      - name: Install dependencies (apt)
+        if: matrix.pkg == 'apt'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -72,8 +80,8 @@ jobs:
             git \
             ca-certificates
 
-      - name: Install dependencies (Rocky 9)
-        if: matrix.distro == 'rocky'
+      - name: Install dependencies (dnf)
+        if: matrix.pkg == 'dnf'
         run: |
           dnf install -y epel-release
           dnf install -y dnf-plugins-core
@@ -113,6 +121,112 @@ jobs:
       - name: make install
         if: matrix.install
         run: make install
+
+  # Build verification for the non-Linux platforms (issue #73). Tier 2/3
+  # platforms, build only — no tape hardware and no FUSE mount in CI, so
+  # nothing is executed. --enable-warning-as-error is deliberately not
+  # used here: these builds compile with clang or older gcc and warning
+  # sets differ from the Tier 1 gcc baseline.
+  macos:
+    name: macOS 15
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Homebrew)
+        run: |
+          brew install \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            ossp-uuid \
+            libxml2 \
+            icu4c
+          brew install --cask macfuse
+
+      # icu4c and libxml2 are keg-only; macFUSE installs fuse.pc under
+      # /usr/local/lib/pkgconfig even on Apple Silicon.
+      - name: Set up Homebrew paths
+        run: |
+          echo "PKG_CONFIG_PATH=$(brew --prefix icu4c)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig:/usr/local/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "$(brew --prefix icu4c)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix libxml2)/bin" >> "$GITHUB_PATH"
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: configure
+        run: LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --prefix="${GITHUB_WORKSPACE}/_install"
+
+      - name: make
+        run: make -k -j"$(sysctl -n hw.ncpu)"
+
+      - name: make install
+        run: make install
+
+  freebsd:
+    name: FreeBSD 14.3
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.3"
+          usesh: true
+          prepare: |
+            pkg install -y \
+              autoconf \
+              automake \
+              libtool \
+              pkgconf \
+              gmake \
+              fusefs-libs \
+              libuuid \
+              libxml2 \
+              icu
+          run: |
+            set -e
+            ./autogen.sh
+            ./configure --prefix=/usr/local --mandir=/usr/local/man
+            gmake -k -j"$(sysctl -n hw.ncpu)"
+            gmake install
+
+  netbsd:
+    name: NetBSD 10.1
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build in NetBSD VM
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: "10.1"
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add \
+              autoconf \
+              automake \
+              libtool-base \
+              pkgconf \
+              gmake \
+              fuse \
+              libuuid \
+              libxml2 \
+              icu
+          run: |
+            set -e
+            ./autogen.sh
+            ./configure
+            gmake -k -j"$(sysctl -n hw.ncpu)"
+            gmake install
 
   # Per-language LOC table in the job summary (issue #45). tokei.rs (the
   # badge service) is unreliable, so the README carries a code-size badge

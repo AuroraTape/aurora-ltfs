@@ -4627,10 +4627,10 @@ struct tape_ops *tape_dev_get_ops(void)
 	return &scsipi_ibmtape_handler;
 }
 
-extern char tape_linux_sg_ibmtape_dat[];
+extern char tape_linux_sg_dat[];
 
 const char *tape_dev_get_message_bundle_name(void **message_data)
 {
-	*message_data = tape_linux_sg_ibmtape_dat;
-	return "tape_linux_sg_ibmtape";
+	*message_data = tape_linux_sg_dat;
+	return "tape_linux_sg";
 }

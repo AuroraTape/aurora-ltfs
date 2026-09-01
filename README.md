@@ -51,8 +51,10 @@ We use a tiered support model combined with OS lifecycle tracking.
 | Tier | Definition | Platforms |
 |:----:|:-----------|:----------|
 | Tier 1 | CI tested. Build failures block releases. | Ubuntu 24.04 (x86\_64), Rocky Linux 9 (x86\_64) |
-| Tier 2 | Best effort. Builds are verified but not in CI. | macOS, Debian, FreeBSD |
+| Tier 2 | Best effort. Builds are verified in CI, but failures do not block releases. | macOS, Debian, FreeBSD |
 | Tier 3 | Community-contributed. No guarantees from maintainers. | NetBSD, other platforms |
+
+CI verifies that all Tier 2 platforms (macOS, Debian, FreeBSD) and NetBSD build successfully (build verification only — no functional tests, since CI has no tape hardware).
 
 **Tier 1 selection policy:**
 
@@ -203,15 +205,20 @@ These Dockerfiles contain the full list of required packages. You can use them d
 Install the following packages via Homebrew.
 
 ```
-automake autoconf libtool osxfuse ossp-uuid libxml2 icu4c gnu-sed
+automake autoconf libtool pkg-config macfuse ossp-uuid libxml2 icu4c gnu-sed
 ```
+
+The ICU tools (`genrb`/`pkgdata`) must be the Homebrew `icu4c` ones found
+via `PATH` at configure time. A legacy `/Library/Frameworks/ICU.framework`
+(e.g. ICU 4.8 from old LTFS SDE installs) is not supported and is ignored
+by the build.
 
 ### FreeBSD
 
 Install the following packages. FreeBSD 10.2 or later is required for sa(4) driver support.
 
 ```
-automake autoconf libtool fusefs-libs e2fsprogs-libuuid libxml2 icu
+automake autoconf libtool pkgconf gmake fusefs-libs libuuid libxml2 icu
 ```
 
 ### NetBSD
@@ -219,7 +226,7 @@ automake autoconf libtool fusefs-libs e2fsprogs-libuuid libxml2 icu
 Install the following packages. NetBSD 7.0 or later is required for FUSE support.
 
 ```
-automake autoconf libtool libfuse libuuid libxml2 icu
+automake autoconf libtool-base pkgconf gmake fuse libuuid libxml2 icu
 ```
 
 ## Linux
