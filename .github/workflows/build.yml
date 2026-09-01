@@ -53,7 +53,7 @@ jobs:
           - name: Ubuntu 24.04 (format-spec25)
             container: ubuntu:24.04
             id: spec25
-            distro: ubuntu
+            pkg: apt
             configure_extra: "--enable-format-spec25"
             install: true
 
