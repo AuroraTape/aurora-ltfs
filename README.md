@@ -205,8 +205,13 @@ These Dockerfiles contain the full list of required packages. You can use them d
 Install the following packages via Homebrew.
 
 ```
-automake autoconf libtool osxfuse ossp-uuid libxml2 icu4c gnu-sed
+automake autoconf libtool pkg-config macfuse ossp-uuid libxml2 icu4c gnu-sed
 ```
+
+The ICU tools (`genrb`/`pkgdata`) must be the Homebrew `icu4c` ones found
+via `PATH` at configure time. A legacy `/Library/Frameworks/ICU.framework`
+(e.g. ICU 4.8 from old LTFS SDE installs) is not supported and is ignored
+by the build.
 
 ### FreeBSD
 
