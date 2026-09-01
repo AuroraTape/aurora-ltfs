@@ -178,7 +178,7 @@ jobs:
               pkgconf \
               gmake \
               fusefs-libs \
-              e2fsprogs-libuuid \
+              libuuid \
               libxml2 \
               icu
           run: |
@@ -208,7 +208,7 @@ jobs:
               libtool-base \
               pkgconf \
               gmake \
-              libfuse \
+              fuse \
               libuuid \
               libxml2 \
               icu

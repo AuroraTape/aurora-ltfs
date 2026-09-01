@@ -218,7 +218,7 @@ by the build.
 Install the following packages. FreeBSD 10.2 or later is required for sa(4) driver support.
 
 ```
-automake autoconf libtool fusefs-libs e2fsprogs-libuuid libxml2 icu
+automake autoconf libtool pkgconf gmake fusefs-libs libuuid libxml2 icu
 ```
 
 ### NetBSD
@@ -226,7 +226,7 @@ automake autoconf libtool fusefs-libs e2fsprogs-libuuid libxml2 icu
 Install the following packages. NetBSD 7.0 or later is required for FUSE support.
 
 ```
-automake autoconf libtool libfuse libuuid libxml2 icu
+automake autoconf libtool-base pkgconf gmake fuse libuuid libxml2 icu
 ```
 
 ## Linux
