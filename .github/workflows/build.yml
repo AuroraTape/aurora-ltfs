@@ -39,6 +39,15 @@ jobs:
             distro: ubuntu
             configure_extra: "--enable-message-checker"
             install: false
+          # Compile check of the experimental format spec 2.5 support
+          # (issue #64) so the FORMAT_SPEC25-gated code does not rot
+          # while the default build ships spec 2.4.
+          - name: Ubuntu 24.04 (format-spec25)
+            container: ubuntu:24.04
+            id: spec25
+            distro: ubuntu
+            configure_extra: "--enable-format-spec25"
+            install: true
 
     steps:
       - name: Install dependencies (Ubuntu)
