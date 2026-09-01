@@ -324,8 +324,12 @@ fi
 dnl
 dnl Check for ICU
 dnl
+dnl icu-uc must be requested explicitly: the code uses common-API symbols
+dnl (ucnv_*, u_str*, unorm2_*) that live in libicuuc, and linkers that do
+dnl not follow DT_NEEDED for symbol resolution (e.g. lld on FreeBSD) fail
+dnl when only -licui18n is on the command line.
 PKG_CHECK_EXISTS([icu-i18n],
-    [PKG_CHECK_MODULES([ICU_MODULE], [icu-i18n])],
+    [PKG_CHECK_MODULES([ICU_MODULE], [icu-i18n icu-uc])],
     [PKG_CHECK_MODULES([ICU_MODULE], [icu-uc >= 0.21])])
 
 AC_MSG_CHECKING([for using ICU6x (unorm2) functions forcibly])
@@ -544,6 +548,11 @@ fi
 if test "x${host_mac}" = "xno"
 then
     MODULE_CHECK_LD='-Wl,--no-undefined,--as-needed'
+fi
+
+dnl On the BSDs dlopen(3) lives in libc; only glibc needs -ldl.
+if test "x${host_linux}" = "xyes"
+then
     AM_LDFLAGS="${AM_LDFLAGS} -ldl"
 fi
 
