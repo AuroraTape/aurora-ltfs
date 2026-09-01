@@ -39,9 +39,9 @@ BASENAMES = libtape-scsipi-ibmtape
 AM_LIBTOOLFLAGS = --tag=disable-static
 
 libtape_scsipi_ibmtape_la_SOURCES = scsipi_scsi_tape.c scsipi_ibmtape.c vendor_compat.c ibm_tape.c hp_tape.c quantum_tape.c
-libtape_scsipi_ibmtape_la_DEPENDENCIES = ../../../../messages/libtape_linux_sg_ibmtape_dat.la ../../../libltfs/libaltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
+libtape_scsipi_ibmtape_la_DEPENDENCIES = ../../../../messages/libtape_linux_sg_dat.la ../../../libltfs/libaltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
 libtape_scsipi_ibmtape_la_LIBADD = ../../../libltfs/libaltfs.la libtape_scsipi_ibmtape_la-reed_solomon_crc.lo libtape_scsipi_ibmtape_la-crc32c_crc.lo
-libtape_scsipi_ibmtape_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_linux_sg_ibmtape_dat.la
+libtape_scsipi_ibmtape_la_LDFLAGS = -avoid-version -module @AM_LDFLAGS@ ../../../../messages/libtape_linux_sg_dat.la
 libtape_scsipi_ibmtape_la_CPPFLAGS = @AM_CPPFLAGS@ @AM_EXTRA_CPPFLAGS@ -I ../../.. -I ../..
 
 vendor_compat.c:
