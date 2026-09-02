@@ -481,6 +481,9 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
 		dev->partition_space[1] = PART_WRITABLE;
 	ltfs_mutex_unlock(&dev->read_only_flag_mutex);
 
+	dev->is_encrypted  = param.is_encrypted;
+	dev->is_decrypting = param.is_decrypting;
+
 	return 0;
 }
 
@@ -884,6 +887,31 @@ int tape_get_params(struct device_data *dev, struct tc_drive_param *param)
 	ret = dev->backend->get_parameters(dev->backend_data, param);
 	if (ret < 0)
 		ltfsmsg(ALP0040E, ret);
+
+	return ret;
+}
+
+/**
+ * Refresh the cached encryption status of the loaded volume and the drive.
+ * LTFS volumes are encrypted all-or-nothing, so once the mount sequence has
+ * read the index, the state fetched here is settled for the whole mount.
+ * @param dev the device
+ * @return 0 on success or a negative value on error
+ */
+int tape_refresh_encryption_status(struct device_data *dev)
+{
+	struct tc_drive_param param;
+	int ret;
+
+	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	memset(&param, 0, sizeof(param));
+	ret = dev->backend->get_parameters(dev->backend_data, &param);
+	if (! ret) {
+		dev->is_encrypted  = param.is_encrypted;
+		dev->is_decrypting = param.is_decrypting;
+	}
 
 	return ret;
 }
@@ -1439,6 +1467,10 @@ static int tape_update_density(struct device_data *dev, int density_code)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0x00,
 								  mp_read_write_ctrl, TC_MP_READ_WRITE_CTRL_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0124E, "modesense", ret);
 		return ret;
 	}
@@ -1450,6 +1482,10 @@ static int tape_update_density(struct device_data *dev, int density_code)
 
 	ret = dev->backend->modeselect(dev->backend_data, mp_read_write_ctrl, TC_MP_READ_WRITE_CTRL_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0124E, "modeselect", ret);
 	}
 
@@ -2419,6 +2455,10 @@ int tape_set_pews(struct device_data *dev, bool set_value)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0073E, ret);
 		return ret;
 	}
@@ -2457,11 +2497,18 @@ int tape_get_pews(struct device_data *dev, uint16_t *pews)
 	CHECK_ARG_NULL(dev->backend_data, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(pews, -LTFS_NULL_ARG);
 
+	/* Initialize PEWS value */
+	*pews = 0;
+
 	/* Issue Mode Sense (MP x10.01) */
 	memset(mp_dev_config_ext, 0, TC_MP_DEV_CONFIG_EXT_SIZE);
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0075E, ret);
 		return ret;
 	}
@@ -2509,6 +2556,10 @@ int tape_enable_append_only_mode(struct device_data *dev, bool enable)
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0089E, ret);
 		return ret;
 	}
@@ -2595,11 +2646,17 @@ int tape_get_append_only_mode_setting(struct device_data *dev, bool *enabled)
 	CHECK_ARG_NULL(dev->backend_data, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(enabled, -LTFS_NULL_ARG);
 
+	*enabled = false;
+
 	/* Issue Mode Sense (MP x10.01) */
 	memset(mp_dev_config_ext, 0, TC_MP_DEV_CONFIG_EXT_SIZE);
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_DEV_CONFIG_EXT, TC_MP_PC_CURRENT, 0x01,
 								  mp_dev_config_ext, TC_MP_DEV_CONFIG_EXT_SIZE);
 	if (ret < 0) {
+		if (ret == -EDEV_UNSUPPORETD_COMMAND) {
+			/* Return 0 if the drive does not support sub page */
+			return 0;
+		}
 		ltfsmsg(ALP0091E, ret);
 		return ret;
 	}
@@ -2812,23 +2869,23 @@ int tape_takedump_drive(struct device_data *dev, bool nonforced_dump)
 	return dev->backend->takedump_drive(dev->backend_data, nonforced_dump);
 }
 
-#define CRYPTO_STATUS         (24)
-#define MEDIUM_SUPPORT_CRYPTO (0x01)
-
 char* tape_get_media_encrypted(struct device_data *dev)
 {
-	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
-	int ret = -EDEV_UNKNOWN;
-	char *encrypted = NULL;
+	char *ret = "";
 
-	ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT,
-								  0, buf, sizeof(buf));
-	if (ret < 0)
-		encrypted = "unknown";
-	else
-		encrypted = (buf[16 + CRYPTO_STATUS] & MEDIUM_SUPPORT_CRYPTO) == 0 ? "false" : "true";
+	switch (dev->is_encrypted) {
+		case -1:
+			ret = "false";
+			break;
+		case 1:
+			ret = "true";
+			break;
+		default:
+			ret = "unknown";
+			break;
+	}
 
-	return encrypted;
+	return ret;
 }
 
 #define CRYPTO_CONTROL        (20)
@@ -2839,6 +2896,21 @@ char *tape_get_drive_encryption_state(struct device_data *dev)
 	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
 	int ret = -EDEV_UNKNOWN;
 	char *state = NULL;
+
+	/*
+	 * LTFS volumes are encrypted all-or-nothing, so the decryption state
+	 * cached at the end of the mount sequence reflects the drive's encryption
+	 * state. Backends that do not report it leave the cache at 0 (unknown);
+	 * fetch the Read/Write Control mode page (0x25) there.
+	 */
+	switch (dev->is_decrypting) {
+		case 1:
+			return "on";
+		case -1:
+			return "off";
+		default:
+			break;
+	}
 
 	ret = dev->backend->modesense(dev->backend_data, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT,
 								  0, buf, sizeof(buf));

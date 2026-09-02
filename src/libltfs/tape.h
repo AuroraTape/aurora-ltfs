@@ -108,7 +108,8 @@ struct device_data {
 	bool fence;                           /**< Are device lock requests blocked? */
 	bool append_only_mode;                /**< Is in the append only mode? */
 	bool is_worm;                         /**< Is WORM tape? */
-	bool is_encrypted;                    /**< Is tape encrypted? */
+	int  is_encrypted;                    /**< Is tape encrypted? 0: unknown, -1: not encrypted, 1: encrypted */
+	int  is_decrypting;                   /**< Is the drive decrypting? 0: unknown, -1: no, 1: yes */
 	struct ltfs_timespec previous_exist;  /**< Previous time to be confirm drive connection presence */
 
 	struct tape_ops *backend;             /**< Backend functions */
@@ -154,6 +155,7 @@ int tape_get_append_position(struct device_data *dev, tape_partition_t prt, tape
 int tape_set_ip_append_position(struct device_data *dev, tape_partition_t prt, tape_block_t block);
 int tape_set_append_position(struct device_data *dev, tape_partition_t prt, tape_block_t block);
 int tape_get_params(struct device_data *dev, struct tc_drive_param *param);
+int tape_refresh_encryption_status(struct device_data *dev);
 int tape_get_max_blocksize(struct device_data *dev, unsigned int *size);
 int tape_read_only(struct device_data *dev, tape_partition_t partition);
 int tape_force_read_only(struct device_data *dev);
