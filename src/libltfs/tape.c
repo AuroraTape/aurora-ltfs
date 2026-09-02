@@ -1291,7 +1291,30 @@ int tape_write_filemark(struct device_data *dev, uint8_t count, bool ignore_less
 			ltfs_mutex_unlock(&dev->read_only_flag_mutex);
 		}
 		return ret;
-	} else if (dev->position.early_warning) {
+	}
+
+	/*
+	 *  This is the workaround for the drive that doesn't flush VCI with WRITE_FM command without immediate flag like HP LTO6.
+	 *  This behavior is unlike the LTO drive specification, but some drives have this behavior.  We need to flush VCI by
+	 *  a WRITE_FM 0 command without immediate flag.
+	 *  For good manner drives, additional cost of this command is tiny because data and VCI was already flushed with WRITE_FM above.
+	 *  The decision here is to spend a few microseconds on good manner drives to support bad manner drives.
+	 */
+	if (!ret && !immed && count) {
+		ret = dev->backend->writefm(dev->backend_data, 0, &dev->position, false);
+		if (ret < 0) {
+			/* If a "real" write error occurs, refuse all further writes */
+			if (! NEED_REVAL(ret)) {
+				ltfsmsg(ALP0053E, ret);
+				ltfs_mutex_lock(&dev->read_only_flag_mutex);
+				dev->write_error = true;
+				ltfs_mutex_unlock(&dev->read_only_flag_mutex);
+			}
+			return ret;
+		}
+	}
+
+	if (dev->position.early_warning) {
 		ltfs_mutex_lock(&dev->read_only_flag_mutex);
 		dev->partition_space[dev->position.partition] = PART_NO_SPACE;
 		ltfs_mutex_unlock(&dev->read_only_flag_mutex);
