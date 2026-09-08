@@ -3,14 +3,22 @@
 
 coverage:
   status:
+    # Project status: fail only when overall coverage drops by more
+    # than 5% against the base commit.
     project:
       default:
         target: auto
         threshold: 5%
+    # Patch status: report only, never fail.
+    #
+    # CI can only exercise libltfs through the `file` debug backend,
+    # so changes that add real-drive code paths (vendor-specific
+    # branches in tape.c / ltfs.c etc.) are structurally unreachable
+    # from the test harness. Gating on diff coverage turned such PRs
+    # red (#49, #50) even though nothing testable was left uncovered.
     patch:
       default:
-        target: auto
-        threshold: 5%
+        informational: true
 
 # Paths excluded from the coverage denominator.
 #
