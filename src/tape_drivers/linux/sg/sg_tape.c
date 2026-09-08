@@ -273,6 +273,8 @@ static bool is_dump_required(struct sg_data *priv, int ret, bool *capture_unforc
 
 static int _cdb_read_buffer(void *device, int id, unsigned char *buf, size_t offset, size_t len, int type);
 static int _cdb_force_dump(struct sg_data *priv);
+static int _get_media_encrypted(void *device);
+static int _get_drive_decrypting(void *device);
 
 static int _get_dump(struct sg_data *priv, char *fname)
 {
@@ -3253,6 +3255,24 @@ int sg_modesense(void *device, const unsigned char page, const TC_MP_PC_TYPE pc,
 	char cmd_desc[COMMAND_DESCRIPTION_LENGTH] = "MODESENSE";
 	char *msg = NULL;
 
+	/* Reject if unsupported page is specified */
+	if ( priv->vendor == VENDOR_HP && IS_LTO(priv->drive_type) &&
+		  ((DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 )) ) {
+
+		if (page == TC_MP_READ_WRITE_CTRL) {
+			/* HP LTO drives do not support READ_WRITE_CTRL Mode Page (0x25). */
+			return -EDEV_UNSUPPORETD_COMMAND;
+		}
+
+		if (page == TC_MP_DEV_CONFIG_EXT && subpage == TC_MP_SUB_DEV_CONFIG_EXT) {
+			/*
+			 * HP LTO-5/LTO6 does not support the Device Configuration Extension mode page
+			 * subpage (MP 0x10 subpage 0x01); callers must skip PEWS / append-only access.
+			 */
+			return -EDEV_UNSUPPORETD_COMMAND;
+		}
+	}
+
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_MODESENSE));
 	ltfsmsg(ATG0100D, "modesense", page, priv->drive_serial);
 
@@ -3286,7 +3306,7 @@ int sg_modesense(void *device, const unsigned char page, const TC_MP_PC_TYPE pc,
 	req.usr_ptr         = (void *)cmd_desc;
 
 	ret = sg_issue_cdb_command(&priv->dev, &req, &msg);
-	if (ret < 0){
+	if (ret < 0) {
 		ret_ep = _process_errors(device, ret, msg, cmd_desc, true, true);
 		if (ret_ep < 0)
 			ret = ret_ep;
@@ -4224,6 +4244,10 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETPARAM));
 
+	/* Callers do not zero out params, always report "unknown" while no tape is loaded */
+	params->is_encrypted  = 0;
+	params->is_decrypting = 0;
+
 	if (priv->loaded) {
 		params->cart_type = priv->cart_type;
 		params->density   = priv->density_code;
@@ -4273,6 +4297,12 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 			//TODO: Store is_crypto based on LP17:200h
 			*/
 		}
+
+		/* Capture the medium has encrypted blocks or not */
+		params->is_encrypted  = _get_media_encrypted(device);
+
+		/* Capture the drive is decrypting or not */
+		params->is_decrypting = _get_drive_decrypting(device);
 	} else {
 		params->cart_type = priv->cart_type;
 		params->density   = priv->density_code;
@@ -4550,8 +4580,11 @@ static int _cdb_spin(void *device, const uint16_t sps, unsigned char **buffer, s
 	ltfs_u32tobe(cdb + 6, len);
 
 	timeout = get_timeout(priv->timeouts, cdb[0]);
-	if (timeout < 0)
+	if (timeout < 0) {
+		free(*buffer);
+		*buffer = NULL;
 		return -EDEV_UNSUPPORETD_COMMAND;
+	}
 
 	/* Build request */
 	req.dxfer_direction = SCSI_FROM_TARGET_TO_INITIATOR;
@@ -4566,12 +4599,14 @@ static int _cdb_spin(void *device, const uint16_t sps, unsigned char **buffer, s
 
 	ret = sg_issue_cdb_command(&priv->dev, &req, &msg);
 	if (ret < 0){
+		free(*buffer);
+		*buffer = NULL;
 		ret_ep = _process_errors(device, ret, msg, cmd_desc, true, true);
 		if (ret_ep < 0)
 			ret = ret_ep;
+	} else {
+		*size = ltfs_betou16((*buffer) + 2);
 	}
-
-	*size = ltfs_betou16((*buffer) + 2);
 
 	return ret;
 }
@@ -4694,17 +4729,43 @@ static bool is_ame(void *device)
 	}
 }
 
+static bool is_tde_capable(void *device)
+{
+	unsigned char *buffer = NULL;
+	size_t size = 0;
+	const int ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_CAPS, &buffer, &size);
+	free(buffer);
+
+	if (ret != 0) {
+		char message[100] = {0};
+		sprintf(message, "failed to query DEC page (%d)", ret);
+		ltfsmsg(ATG0099D, __FUNCTION__, message);
+		return false;
+	}
+
+	return size > 0;
+}
+
 static int is_encryption_capable(void *device)
 {
 	struct sg_data *priv = (struct sg_data*)device;
 
-	if (IS_LTO(priv->drive_type)) {
+	if (IS_ENTERPRISE(priv->drive_type)) {
+		/* Jaguar: must already be configured for Application Managed Encryption */
+		if (! is_ame(device)) {
+			ltfsmsg(ATG0044E, priv->drive_type);
+			return -EDEV_INTERNAL_ERROR;
+		}
+	} else if (IS_LTO(priv->drive_type)) {
+		/* LTO (HP, Quantum, IBM LTO via sg): verify drive advertises TDE algorithms */
+		if (! is_tde_capable(device)) {
+			ltfsmsg(ATG0044E, priv->drive_type);
+			return -EDEV_INTERNAL_ERROR;
+		}
+	} else {
 		ltfsmsg(ATG0044E, priv->drive_type);
 		return -EDEV_INTERNAL_ERROR;
 	}
-
-	if (! is_ame(device))
-		return -EDEV_INTERNAL_ERROR;
 
 	return DEVICE_GOOD;
 }
@@ -4738,8 +4799,10 @@ int sg_set_key(void *device, const unsigned char *keyalias, const unsigned char 
 
 	unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
 	ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
-	if (ret != DEVICE_GOOD)
-		goto out;
+	if (ret == -EDEV_UNSUPPORETD_COMMAND)
+		ret = DEVICE_GOOD; /* HP LTO does not support MP 0x25, skip */
+	else if (ret != DEVICE_GOOD)
+		goto free;
 
 	ltfs_u16tobe(buffer + 0, sps);
 	ltfs_u16tobe(buffer + 2, size - 4);
@@ -4785,8 +4848,8 @@ int sg_set_key(void *device, const unsigned char *keyalias, const unsigned char 
 
 	memset(buf, 0, sizeof(buf));
 	ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
-	if (ret != DEVICE_GOOD)
-		goto out;
+	if (ret == -EDEV_UNSUPPORETD_COMMAND)
+		ret = DEVICE_GOOD; /* HP LTO does not support MP 0x25, skip */
 
 free:
 	free(buffer);
@@ -4845,7 +4908,6 @@ int sg_get_keyalias(void *device, unsigned char **keyalias)
 		return ret;
 	}
 
-	const uint16_t sps = 0x21;
 	uint8_t *buffer = NULL;
 	size_t size = 0;
 	int i = 0;
@@ -4859,24 +4921,14 @@ int sg_get_keyalias(void *device, unsigned char **keyalias)
 	 */
 	for (i = 0; i < 2; ++i) {
 		free(buffer);
-		ret = _cdb_spin(device, sps, &buffer, &size);
+		ret = _cdb_spin(device, SPS_NEXT_BLOCK_ENC_STATUS, &buffer, &size);
 		if (ret != DEVICE_GOOD)
 			goto free;
 	}
 
 	show_hex_dump("SPIN:", buffer, size + 4);
 
-	const unsigned char encryption_status = buffer[12] & 0xF;
-	enum {
-		ENC_STAT_INCAPABLE                          = 0,
-		ENC_STAT_NOT_YET_BEEN_READ                  = 1,
-		ENC_STAT_NOT_A_LOGICAL_BLOCK                = 2,
-		ENC_STAT_NOT_ENCRYPTED                      = 3,
-		ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM = 4,
-		ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM   = 5,
-		ENC_STAT_ENCRYPTED_BY_OTHER_KEY             = 6,
-		ENC_STAT_RESERVED, /* 7h-Fh */
-	};
+	const unsigned char encryption_status = buffer[NBES_ENCR_STATUS_BYTE] & NBES_ENCR_STATUS_MASK;
 	if (encryption_status == ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM ||
 		encryption_status == ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM ||
 		encryption_status == ENC_STAT_ENCRYPTED_BY_OTHER_KEY) {
@@ -4901,6 +4953,100 @@ free:
 	free(buffer);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_GETKEYALIAS));
 	return ret;
+}
+
+#define CRYPTO_STATUS         (24)
+#define MEDIUM_SUPPORT_CRYPTO (0x01)
+
+/**
+ * Get media encryption status of the loaded volume.
+ * Fetched from the Read/Write Control mode page (0x25), except on HP LTO drives,
+ * which do not support MP 0x25; there the ENCRYPTION STATUS field of the SPIN
+ * Next Block Encryption Status page reports whether the block at the current
+ * position is encrypted, independently of the key configured on this I_T nexus.
+ * @param device Device handle returned by the backend's open().
+ * @return 1 if the volume is encrypted, -1 if plain, 0 if unknown
+ */
+static int _get_media_encrypted(void *device)
+{
+	struct sg_data *priv = (struct sg_data*)device;
+	int ret, encrypted;
+
+	if (IS_LTO(priv->drive_type) && priv->vendor == VENDOR_HP) {
+		unsigned char *buffer = NULL;
+		size_t size = NBES_ENCR_STATUS_BYTE + 1;
+
+		ret = _cdb_spin(device, SPS_NEXT_BLOCK_ENC_STATUS, &buffer, &size);
+		if (ret != DEVICE_GOOD)
+			return 0;
+
+		/* On success, size holds the PAGE LENGTH field, which excludes the 4-byte header */
+		if (size + 4 < NBES_ENCR_STATUS_BYTE + 1) {
+			free(buffer);
+			return 0;
+		}
+
+		switch (buffer[NBES_ENCR_STATUS_BYTE] & NBES_ENCR_STATUS_MASK) {
+			case ENC_STAT_NOT_ENCRYPTED:
+				encrypted = -1;
+				break;
+			case ENC_STAT_ENCRYPTED_BY_UNSUPPORTED_ALGORITHM:
+			case ENC_STAT_ENCRYPTED_BY_SUPPORTED_ALGORITHM:
+			case ENC_STAT_ENCRYPTED_BY_OTHER_KEY:
+				encrypted = 1;
+				break;
+			default:
+				/* Incapable, not yet determined, filemark/EOD or reserved */
+				encrypted = 0;
+				break;
+		}
+		free(buffer);
+	} else {
+		unsigned char buf[TC_MP_READ_WRITE_CTRL_SIZE] = {0};
+
+		ret = sg_modesense(device, TC_MP_READ_WRITE_CTRL, TC_MP_PC_CURRENT, 0, buf, sizeof(buf));
+		if (ret < 0)
+			return 0;
+
+		encrypted = (buf[16 + CRYPTO_STATUS] & MEDIUM_SUPPORT_CRYPTO) == 0 ? -1 : 1;
+	}
+
+	return encrypted;
+}
+
+/**
+ * Get the decryption state of the drive on this I_T nexus.
+ * Only HP LTO drives are queried, through the DECRYPTION MODE field of the
+ * SPIN Data Encryption Status page. Other vendors report the state through
+ * the Read/Write Control mode page (0x25) in libltfs, so they are left at
+ * "unknown" here to keep that path.
+ * @param device Device handle returned by the backend's open().
+ * @return 1 if the drive is decrypting, -1 if not, 0 if unknown
+ */
+static int _get_drive_decrypting(void *device)
+{
+	struct sg_data *priv = (struct sg_data*)device;
+	unsigned char *buffer = NULL;
+	size_t size = DES_DECR_MODE_BYTE + 1;
+	int ret, decrypting;
+
+	if (! (IS_LTO(priv->drive_type) && priv->vendor == VENDOR_HP))
+		return 0;
+
+	ret = _cdb_spin(device, SPS_DATA_ENCRYPTION_STATUS, &buffer, &size);
+	if (ret != DEVICE_GOOD)
+		return 0;
+
+	/* On success, size holds the PAGE LENGTH field, which excludes the 4-byte header */
+	if (size + 4 < DES_DECR_MODE_BYTE + 1) {
+		free(buffer);
+		return 0;
+	}
+
+	decrypting = (buffer[DES_DECR_MODE_BYTE] >= DES_DECR_MODE_DECRYPT) ? 1 : -1;
+	free(buffer);
+
+	return decrypting;
 }
 
 int sg_takedump_drive(void *device, bool capture_unforced)

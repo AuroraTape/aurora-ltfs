@@ -97,6 +97,12 @@ def test_virtual_root_xattrs_values(mounted_tape):
     assert re.match(r"^[ab]:\d+$", get_xattr(mounted_tape, "ltfs.indexLocation"))
     assert _LTFS_TIME_RE.match(get_xattr(mounted_tape, "ltfs.volumeFormatTime"))
     assert _LTFS_TIME_RE.match(get_xattr(mounted_tape, "ltfs.indexTime"))
+    # The file backend does not report the media encryption status through
+    # get_parameters(), so the tri-state in device_data stays at 0 (unknown).
+    assert get_xattr(mounted_tape, "ltfs.mediaEncrypted") == "unknown"
+    # Likewise the cached decryption state stays at 0 (unknown), so the value
+    # comes from the MP 0x25 fallback, whose CRYPTO CONTROL bits read 0 (off).
+    assert get_xattr(mounted_tape, "ltfs.driveEncryptionState") == "off"
 
 
 def test_virtual_file_xattrs_values(mounted_tape):

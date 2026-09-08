@@ -244,7 +244,7 @@ struct device_param {
 	unsigned char cart_type;             /* Cartridge type in CM like TC_MP_JB */
 	unsigned char density;               /* Current density code */
 	unsigned int  write_protected;       /* Write protect status of the tape (use bit field of volumelock_status) */
-	bool          is_encrypted;          /* Is encrypted tape ? */
+	int           is_encrypted;          /* Is encrypted tape ? 0: unknown, -1: not encrypted, 1: encrypted */
 	bool          is_worm;               /* Is worm tape? */
 };
 
