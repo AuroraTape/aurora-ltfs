@@ -40,8 +40,10 @@ jobs:
           echo "VERSION=$V" >> "$GITHUB_ENV"
           # deb (3.0 native) and rpm reject '-' in versions; '~' is the
           # packaging pre-release convention (1.0.0~rc.1 sorts before 1.0.0).
-          # For final releases the two are identical.
-          echo "PKG_VERSION=${V//-/~}" >> "$GITHUB_ENV"
+          # For final releases the two are identical. Use tr, not
+          # ${V//-/~}: the runner's bash tilde-expands the replacement
+          # ('~' became /github/home in the v1.0.0-rc.1 run).
+          echo "PKG_VERSION=$(printf '%s' "$V" | tr -- '-' '~')" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
       - name: Embed version into configure.ac
@@ -104,7 +106,7 @@ jobs:
           V="${GITHUB_REF_NAME#v}"
           echo "VERSION=$V" >> "$GITHUB_ENV"
           # See the deb job: '~' replaces '-' for packaging-legal versions.
-          echo "PKG_VERSION=${V//-/~}" >> "$GITHUB_ENV"
+          echo "PKG_VERSION=$(printf '%s' "$V" | tr -- '-' '~')" >> "$GITHUB_ENV"
           echo "Building version: $V"
 
       - name: Embed version into configure.ac and spec
