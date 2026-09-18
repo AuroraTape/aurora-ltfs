@@ -22,8 +22,10 @@ BuildRequires:  libuuid-devel
 BuildRequires:  icu
 BuildRequires:  diffutils
 BuildRequires:  redhat-rpm-config
+BuildRequires:  systemd-rpm-macros
 
 Requires:       fuse
+%{?systemd_requires}
 Requires:       libaltfs%{?_isa} = %{version}-%{release}
 
 %description
@@ -53,13 +55,17 @@ libaltfs.
 %build
 # The source tarball is produced by `make dist`, so it already contains a
 # generated configure script. No need to bootstrap again here.
-%configure --disable-static
+%configure --disable-static --with-systemdsystemunitdir=%{_unitdir}
 %make_build
 
 %install
 %make_install
 # libtool .la files are not desired by packaging policy.
 find %{buildroot} -name '*.la' -delete
+# altfs.service unmounts all LTFS volumes cleanly at shutdown and is inert
+# otherwise, so enable it by default through a preset.
+install -d %{buildroot}%{_presetdir}
+echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 
 %files
 %license LICENSE
@@ -72,6 +78,8 @@ find %{buildroot} -name '*.la' -delete
 %dir %{_libdir}/altfs
 %{_libdir}/altfs/*.so
 %{_datadir}/altfs/
+%{_unitdir}/altfs.service
+%{_presetdir}/90-altfs.preset
 %{_mandir}/man1/altfs_ordered_copy.1*
 %{_mandir}/man8/altfs.8*
 %{_mandir}/man8/mkaltfs.8*
@@ -88,6 +96,36 @@ find %{buildroot} -name '*.la' -delete
 %{_includedir}/%{pkgname}/
 %{_libdir}/libaltfs.so
 %{_libdir}/pkgconfig/altfs.pc
+
+%post
+%systemd_post altfs.service
+# The unit only does work when it is stopped at shutdown, so it has to be
+# active. The preset enables it; start it on first install as well.
+if [ $1 -eq 1 ] && [ -d /run/systemd/system ]; then
+    systemctl start altfs.service >/dev/null 2>&1 || :
+fi
+
+%triggerun -- %{name} < 1.0.1
+# Upgrade from a release that did not ship altfs.service (1.0.0): the
+# systemd_post macro applies the preset only on a first install, so the
+# upgrade would leave the unit disabled. Apply the preset and start the
+# unit once, when the old package goes away. Later upgrades keep the
+# administrator's choice.
+systemctl --no-reload preset altfs.service >/dev/null 2>&1 || :
+if [ -d /run/systemd/system ]; then
+    systemctl start altfs.service >/dev/null 2>&1 || :
+fi
+
+%preun
+# Does nothing on upgrade: the unit stays active and mounted volumes are
+# left alone. On removal it stops the unit, which unmounts all volumes
+# before the binaries disappear.
+%systemd_preun altfs.service
+
+%postun
+# Not the _with_restart variant: restarting runs "stop", which would
+# unmount the user's tapes in the middle of a package upgrade.
+%systemd_postun altfs.service
 
 %post -n libaltfs -p /sbin/ldconfig
 %postun -n libaltfs -p /sbin/ldconfig
