@@ -57,3 +57,12 @@ ignore:
   # AGENTS.md flags fcfs as a sample I/O scheduler that is "not
   # used at all" — the unified scheduler is mandatory.
   - "src/iosched/fcfs.c"
+
+  # Key manager interface plugins (simple, flatfile and the shared
+  # key_format_ltfs.c). They are only meaningful with a drive that
+  # supports encryption (set_key in tape_ops); the CI harness runs
+  # the `file` backend with DEFAULT_KMI=none, so they are never
+  # loaded. The plugin loader src/libltfs/kmi.c stays counted on
+  # purpose — it is part of libltfs and reachable once a KMI plugin
+  # is loaded.
+  - "src/kmi"
