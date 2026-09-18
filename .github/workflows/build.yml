@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
   pull_request:
 
 jobs:
@@ -227,6 +227,31 @@ jobs:
             ./configure
             gmake -k -j"$(sysctl -n hw.ncpu)"
             gmake install
+
+  # Message catalog consistency: every ID referenced from src/ is defined
+  # under messages/ and vice versa. For a pull request into release/X.Y it
+  # also checks that added IDs come from that release line's pool or are
+  # backports from main (messages/README, "Release-branch ID shapes").
+  message-ids:
+    name: Message IDs
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The pool check reads the catalogs of the base branch and main.
+          fetch-depth: 0
+
+      - name: Validate message IDs
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            python3 validate_error_messages.py \
+              --target-branch "$BASE_REF" --base "origin/$BASE_REF"
+          else
+            python3 validate_error_messages.py
+          fi
 
   # Per-language LOC table in the job summary (issue #45). tokei.rs (the
   # badge service) is unreliable, so the README carries a code-size badge
