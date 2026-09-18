@@ -103,10 +103,15 @@ jobs:
       # is intentionally dropped here — the instrumentation can introduce
       # warnings that the production build (covered by the tests job
       # above) already gates on.
+      #
+      # -fprofile-update=atomic: altfs is multithreaded (FUSE workers), and
+      # the default non-atomic counter updates race. A lost update can
+      # leave a counter negative, which makes geninfo abort with
+      # "Unexpected negative count".
       - name: configure (with coverage)
         run: |
           ./configure --prefix="${GITHUB_WORKSPACE}/_install" \
-            CFLAGS="-O0 -g --coverage" \
+            CFLAGS="-O0 -g --coverage -fprofile-update=atomic" \
             LDFLAGS="--coverage"
 
       - name: make
