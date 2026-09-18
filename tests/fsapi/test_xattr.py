@@ -89,6 +89,10 @@ def test_virtual_root_xattrs_values(mounted_tape):
     assert get_xattr(mounted_tape, "ltfs.volumeName") == "test"
     assert get_xattr(mounted_tape, "ltfs.volumeSerial") == "TEST00"
     assert get_xattr(mounted_tape, "ltfs.softwareVendor") == "Aurora"
+    # altfs_ordered_copy detects an LTFS destination by finding "LTFS" in
+    # this value, whatever the software version is (issue #95).
+    assert get_xattr(mounted_tape, "ltfs.softwareProduct") == "Aurora LTFS"
+    assert get_xattr(mounted_tape, "ltfs.softwareVersion")
     assert get_xattr(mounted_tape, "ltfs.volumeBlocksize") == "524288"
     assert get_xattr(mounted_tape, "ltfs.partitionMap") == "I:a,D:b"
     assert get_xattr_int(mounted_tape, "ltfs.indexGeneration") >= 1
