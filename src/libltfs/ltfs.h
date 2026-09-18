@@ -191,6 +191,9 @@ enum ltfs_index_type {
 #define LTFS_LOSTANDFOUND_DIR         "_ltfs_lostandfound"
 
 #define LTFS_VENDOR_NAME              "Aurora"
+/* Value of ltfs.softwareProduct. altfs_ordered_copy detects an LTFS
+ * destination by the string "LTFS" in it. */
+#define LTFS_PRODUCT_NAME             "Aurora LTFS"
 
 #define LTFS_LIVELINK_EA_NAME         "ltfs.vendor." LTFS_VENDOR_NAME ".prefixLength"
 
