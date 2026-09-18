@@ -103,9 +103,12 @@ cannot collide by construction.
     New error constants are added on HEAD only; release branches backport
     them.
   * All existing digit-form IDs form the trunk pool baseline; no renumbering
-    is needed. validate_error_messages.py currently accepts only the digit
-    form; widen its pattern to A[A-Z]{2}(\d{4}|[A-Z]\d{3}|[A-Z]{2}\d{2})[EIWD]
-    when the first release branch is cut.
+    is needed.
+  * validate_error_messages.py accepts all three shapes. Given
+    "--target-branch release/X.Y --base <rev>" it also checks that every ID
+    added relative to <rev> either has the shape of the X.Y.x pool or is a
+    backport that is already defined on the trunk (--trunk, default
+    origin/main). CI runs this check on pull requests into release branches.
 
 See GitHub issue #46 for the background discussion.
 
