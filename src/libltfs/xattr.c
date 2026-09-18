@@ -588,12 +588,7 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 	} else if (! strcmp(name, "ltfs.softwareVendor")) {
 		ret = xattr_get_string(LTFS_VENDOR_NAME, &val, name);
 	} else if (! strcmp(name, "ltfs.softwareProduct")) {
-		if ( strncmp( PACKAGE_VERSION, "1", 1 )==0 )
-			ret = xattr_get_string("LTFS SDE", &val, name);
-		else if ( strncmp( PACKAGE_VERSION, "2", 1 )==0 )
-			ret = xattr_get_string("LTFS LE", &val, name);
-		else
-			ret = -LTFS_NO_XATTR;
+		ret = xattr_get_string(LTFS_PRODUCT_NAME, &val, name);
 	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".logLevel")) {
 		ret = asprintf(&val, "%d", ltfs_log_level);
 		if (ret < 0) {

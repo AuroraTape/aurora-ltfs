@@ -372,7 +372,9 @@ direct_write_threads = 8
 try:
     sig = xattr.getxattr(args.DEST, VEA_PREFIX + LTFS_SIG_VEA)
 
-    if sig.startswith(b"LTFS"):
+    # Product names differ between LTFS implementations ("Aurora LTFS",
+    # "LTFS SDE", ...), so look for "LTFS" anywhere in the value.
+    if b"LTFS" in sig:
         logger.info("Destination {0} is LTFS".format(args.DEST))
         direct_write_threads = 1
     else:
