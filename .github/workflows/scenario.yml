@@ -2,7 +2,7 @@ name: Scenario tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
   pull_request:
 
 defaults:
