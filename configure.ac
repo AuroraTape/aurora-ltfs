@@ -109,6 +109,21 @@ AC_ARG_ENABLE([warning-as-error],
 AC_MSG_RESULT([$warning_as_error])
 
 dnl
+dnl Directory for the systemd unit (Linux only).
+dnl The default follows --prefix so that an unprivileged "make install" and
+dnl "make distcheck" work; packages built with --prefix=/usr get the
+dnl standard /usr/lib/systemd/system.
+dnl
+AC_MSG_CHECKING([directory for the systemd unit])
+AC_ARG_WITH([systemdsystemunitdir],
+    [AS_HELP_STRING([--with-systemdsystemunitdir=DIR],[directory for the systemd unit file (default: PREFIX/lib/systemd/system)])],
+    [systemdsystemunitdir=$withval],
+    [systemdsystemunitdir='${prefix}/lib/systemd/system']
+)
+AC_MSG_RESULT([$systemdsystemunitdir])
+AC_SUBST([systemdsystemunitdir])
+
+dnl
 dnl Handle --enable-fast (default:no)
 dnl
 AC_MSG_CHECKING([whether to enable optimizations])

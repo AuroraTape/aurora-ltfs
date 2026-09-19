@@ -1,0 +1,24 @@
+# Cleanly unmounts all Aurora LTFS volumes at shutdown / reboot.
+#
+# "start" only marks the unit active; the work is done by "stop", which
+# systemd runs during shutdown. The helper sends SIGTERM to every altfs
+# process and waits until they have written their indexes and exited.
+[Unit]
+Description=Aurora LTFS clean unmount at shutdown
+Documentation=man:altfs(8)
+# Units are stopped in the reverse of their start order, so being started
+# after these targets means "stop" runs while local and remote file systems
+# and the network (iSCSI / FC-over-IP attached drives) are still up.
+After=local-fs.target remote-fs.target network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@datadir@/altfs/altfs start
+ExecStop=@datadir@/altfs/altfs stop
+# The helper waits up to 10 minutes for the index to reach the tape; do
+# not let the default 90 s stop timeout kill it half way.
+TimeoutStopSec=660
+
+[Install]
+WantedBy=multi-user.target

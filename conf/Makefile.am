@@ -32,6 +32,16 @@ altfs.conf: altfs.conf.in
 	${SED} -e "s!__CONFDIR__!@sysconfdir@!" altfs.conf.tmp >altfs.conf
 	rm altfs.conf.tmp
 
+# systemd unit that unmounts all volumes cleanly at shutdown. It calls the
+# helper script installed from init.d/ into $(datadir)/altfs.
+if PLATFORM_LINUX
+systemdsystemunit_DATA = altfs.service
+endif
+
+altfs.service: altfs.service.in Makefile
+	${SED} -e 's!@datadir[@]!$(datadir)!g' $(srcdir)/altfs.service.in >altfs.service.tmp
+	mv altfs.service.tmp altfs.service
+
 install-data-local:
 	mkdir -p "$(DESTDIR)$(sysconfdir)"
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/altfs.conf.local" ]; then \
@@ -39,7 +49,7 @@ install-data-local:
 	fi
 
 clean-local:
-	rm -f altfs.conf
+	rm -f altfs.conf altfs.service altfs.service.tmp
 
 # Source / config files needed at build or install time. altfs.conf
 # itself is generated from altfs.conf.in by the rule above, so the
@@ -47,7 +57,7 @@ clean-local:
 EXTRA_DIST = \
 	altfs.conf.in \
 	altfs.conf.local \
-	altfs.service \
+	altfs.service.in \
 	altfs-log.conf \
 	altfslog \
 	README.md

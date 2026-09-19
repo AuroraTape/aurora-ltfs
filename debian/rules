@@ -19,6 +19,12 @@ override_dh_auto_install:
 	dh_auto_install
 	find debian/tmp -name '*.la' -delete
 
+# altfs.service only acts on "stop", which unmounts every LTFS volume.
+# Enable and start it on installation, but never stop or restart it on a
+# package upgrade: that would unmount the user's tapes.
+override_dh_installsystemd:
+	dh_installsystemd --no-stop-on-upgrade
+
 override_dh_auto_clean:
 	dh_auto_clean
 	rm -f altfs.pc
