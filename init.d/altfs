@@ -73,20 +73,22 @@ LTFSMTAB=`LC_ALL=C awk 'match($1,/^ltfs:?/) && match($3,/^fuse/) { print $2 }' /
 wait_time=300
 
 wait_exit() {
-	# Send SIGTERM to all ltfs processes
-	ltfspid=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/ltfs\(\|-singledrive\|-library\)$' | awk 'BEGIN{FS="/"}{print $3}'`
+	# Send SIGTERM to all altfs processes. The exe link carries a
+	# " (deleted)" suffix when the binary was replaced (package upgrade)
+	# while a volume was mounted.
+	ltfspid=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/altfs\( (deleted)\)\?$' | awk 'BEGIN{FS="/"}{print $3}'`
 	[ -z "$ltfspid" ] && return 0
 	/bin/kill -TERM $ltfspid
 
-	# Wait for ltfs processes to exit
+	# Wait for altfs processes to exit
 	counter=0
 	while [ "$counter" -lt "$wait_time" ]; do
-		procs=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/ltfs\(\|-singledrive\|-library\)$'`
+		procs=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/altfs\( (deleted)\)\?$'`
 		[ -z "$procs" ] && break
 		counter=$(( $counter + 1 ))
 		sleep 2
 	done
-	procs=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/ltfs\(\|-singledrive\|-library\)$'`
+	procs=`ls -l /proc/[0123456789]*/exe 2>/dev/null | grep '/altfs\( (deleted)\)\?$'`
 	[ -n "$procs" ] && return 1
 	return 0
 }
