@@ -1156,6 +1156,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 	} else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".profiler")) {
 		uint64_t source = 0;
 		char *invalid_start, *v;
+		int ret_req;
 
 		v = strndup(value, size);
 		if (! v) {
@@ -1167,11 +1168,15 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		if( (*invalid_start == '\0') && v ) {
 			/* Set request profiler */
 			if (source & PROF_REQ)
-				ret = ltfs_request_profiler_start(vol->work_directory);
+				ret_req = ltfs_request_profiler_start(vol->work_directory);
 			else
-				ret = ltfs_request_profiler_stop();
+				ret_req = ltfs_request_profiler_stop();
 
+			/* Set the other sources even if the request profiler failed,
+			 * and report the first error */
 			ret = ltfs_profiler_set(source, vol);
+			if (ret_req)
+				ret = ret_req;
 		} else
 			ret = -LTFS_STRING_CONVERSION;
 		free(v);
