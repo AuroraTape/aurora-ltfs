@@ -107,7 +107,7 @@ def test_capture_after_writes_picks_up_new_dp_index(tmp_path_factory):
 
 
 def test_capture_quiet_still_writes_files(tmp_path_factory):
-    """--quiet suppresses LTFSAIX info messages but the captured
+    """--quiet suppresses AIX info messages but the captured
     files must still appear."""
     base = tmp_path_factory.mktemp("indextool-quiet")
     tape_dir = base / "tape"
@@ -119,5 +119,5 @@ def test_capture_quiet_still_writes_files(tmp_path_factory):
     r = _indextool(tape_dir, out, "--quiet")
     assert r.returncode == 0, r.stderr
     # Quiet should silence the AIX0030I "Reading an index" lines.
-    assert "LTFSAIX0030I" not in (r.stdout + r.stderr)
+    assert "AIX0030I" not in (r.stdout + r.stderr)
     assert list(out.iterdir())
