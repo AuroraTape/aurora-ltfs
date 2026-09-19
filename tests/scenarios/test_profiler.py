@@ -177,6 +177,36 @@ def test_invalid_value_is_rejected(clean_profiler, bad):
     assert list(work.glob("prof_*.dat")) == []
 
 
+def test_request_profiler_start_failure_is_reported(clean_profiler):
+    """Issue #117: the result of starting the request profiler was
+    overwritten by the result of the other sources, so the failure was
+    reported as success."""
+    mnt, work = clean_profiler
+
+    # fopen() cannot open a directory for writing, whoever runs the test.
+    blocker = work / "prof_request.dat"
+    blocker.mkdir()
+    try:
+        with pytest.raises(OSError) as exc:
+            set_xattr(mnt, _PROFILER, hex(PROF_REQ))
+        assert exc.value.errno == errno.EIO      # -LTFS_FILE_ERR
+
+        # The other sources are still started, and the error still wins.
+        with pytest.raises(OSError):
+            set_xattr(mnt, _PROFILER, hex(PROF_ALL))
+        set_xattr(mnt, _PROFILER, "0")
+        assert len(_files(work, PROF_IOSCHED)) == 1
+        assert len(_files(work, PROF_DRIVER)) == 1
+    finally:
+        set_xattr(mnt, _PROFILER, "0")
+        blocker.rmdir()
+
+    # Once the file can be created again, the request profiler works.
+    _profile(mnt, PROF_REQ, "after_failure.bin")
+    (path,) = _files(work, PROF_REQ)
+    assert path.stat().st_size > _HEADER.size
+
+
 def test_records_decode(clean_profiler):
     mnt, work = clean_profiler
     _profile(mnt, PROF_ALL, "decode.bin")
