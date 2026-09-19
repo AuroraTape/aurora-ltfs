@@ -5,6 +5,7 @@ usr/bin/altfsindextool
 usr/bin/altfs_ordered_copy
 usr/lib/*/altfs/*.so*
 usr/share/altfs/*
+usr/lib/systemd/system/altfs.service
 usr/share/man/man1/altfs_ordered_copy.1*
 usr/share/man/man8/altfs.8*
 usr/share/man/man8/mkaltfs.8*
