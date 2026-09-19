@@ -67,27 +67,51 @@ Tier 2 and Tier 3 platforms may be promoted or added based on community demand a
 
 ## Supported Tape Drives
 
-  | Vendor  | Drive Type              | Minimum F/W Level |
-  |:-------:|:-----------------------:|:-----------------:|
-  | IBM     | LTO5                    | B170              |
-  | IBM     | LTO6                    | None              |
-  | IBM     | LTO7                    | None              |
-  | IBM     | LTO8                    | HB81              |
-  | IBM     | LTO9                    | None              |
-  | IBM     | TS1140                  | 3694              |
-  | IBM     | TS1150                  | None              |
-  | IBM     | TS1155                  | None              |
-  | IBM     | TS1160                  | None              |
-  | HP      | LTO5                    | T.B.D.            |
-  | HP      | LTO6                    | T.B.D.            |
-  | HP      | LTO7                    | T.B.D.            |
-  | HP      | LTO8                    | T.B.D.            |
-  | HP      | LTO9                    | T.B.D.            |
-  | Quantum | LTO5 (Only Half Height) | T.B.D.            |
-  | Quantum | LTO6 (Only Half Height) | T.B.D.            |
-  | Quantum | LTO7 (Only Half Height) | T.B.D.            |
-  | Quantum | LTO8 (Only Half Height) | T.B.D.            |
-  | Quantum | LTO9 (Only Half Height) | T.B.D.            |
+  | Vendor  | Drive Type              | Minimum F/W Level | Status                     |
+  |:-------:|:-----------------------:|:-----------------:|:---------------------------|
+  | IBM     | LTO5                    | B170              | Maintained                 |
+  | IBM     | LTO6                    | None              | Maintained                 |
+  | IBM     | LTO7                    | None              | Maintained                 |
+  | IBM     | LTO8                    | HB81              | Maintained                 |
+  | IBM     | LTO9                    | None              | Maintained                 |
+  | IBM     | TS1140                  | 3694              | Maintained                 |
+  | IBM     | TS1150                  | None              | Maintained                 |
+  | IBM     | TS1155                  | None              | Maintained                 |
+  | IBM     | TS1160                  | None              | Maintained                 |
+  | HP      | LTO5                    | Not determined    | Untested                   |
+  | HP      | LTO6                    | Not determined    | Community verified (1.0.0) |
+  | HP      | LTO7                    | Not determined    | Untested                   |
+  | HP      | LTO8                    | Not determined    | Untested                   |
+  | HP      | LTO9                    | Not determined    | Untested                   |
+  | Quantum | LTO5 (Only Half Height) | Not determined    | Untested                   |
+  | Quantum | LTO6 (Only Half Height) | Not determined    | Untested                   |
+  | Quantum | LTO7 (Only Half Height) | Not determined    | Untested                   |
+  | Quantum | LTO8 (Only Half Height) | Not determined    | Untested                   |
+  | Quantum | LTO9 (Only Half Height) | Not determined    | Untested                   |
+
+Status:
+
+- **Maintained** - the maintainers develop and test with these drives. The minimum firmware levels are inherited from the reference implementation.
+- **Community verified (version)** - a community member verified the drive on real hardware with that Aurora LTFS version. HP LTO6 was verified through [#49](https://github.com/AuroraTape/aurora-ltfs/pull/49) and [#50](https://github.com/AuroraTape/aurora-ltfs/pull/50). The firmware level of the reporting drive is not a tested minimum, so the column stays "Not determined".
+- **Untested** - the drive is recognized and its code path exists (inherited from the reference implementation), but nobody has reported a result with Aurora LTFS. It may work, work with limitations, or fail.
+
+### Drive testing policy
+
+The maintainers have IBM drives only. No HP or Quantum hardware is available to them, and CI has no tape hardware at all (it exercises the `file` backend), so:
+
+- Releases are tested by the maintainers on IBM drives.
+- HP and Quantum rows depend entirely on reports from the community. Fixes for those drives are developed together with the reporter, who verifies them on the real drive.
+- A "Community verified" status names the Aurora LTFS version that was verified. It is not re-verified for later versions unless someone reports again.
+
+### Reporting a drive
+
+Reports are welcome for any row that is not "Maintained", whether the drive works or not. Open an issue with the **Drive report** template and include:
+
+- Drive vendor, model, generation and form factor, and the firmware level
+- The line of `altfs -o device_list` that shows the drive
+- HBA and interface (SAS, FC, ...), OS / distribution, Aurora LTFS version or commit hash
+- What was tried: `mkaltfs`, mount, writing and reading files, unmount, remount, `altfsck`
+- For a failure: the log around the first error, preferably with `-o loglevel=4` (from the terminal, or `/var/log/altfs.log` / the journal)
 
 ## LTFS Format Specifications
 
