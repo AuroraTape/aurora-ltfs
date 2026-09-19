@@ -147,6 +147,8 @@ After successful mounting, access the tape contents through the `/altfs` directo
 
 The unmount command triggers the altfs process to write metadata and close the tape cleanly. The actual unmount completes when the altfs process finishes.
 
+Messages of `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` go to syslog. With the deb / rpm packages and rsyslog they are written to `/var/log/altfs.log` (RFC 3339 timestamps, rotated by logrotate) instead of the system log; see [conf/README.md](conf/README.md), which also has a syslog-ng example.
+
 On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. When building from source with a prefix other than `/usr`, register the unit yourself: `systemctl enable --now <prefix>/lib/systemd/system/altfs.service`.
 
 ## The `altfs_ordered_copy` utility

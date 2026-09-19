@@ -42,11 +42,28 @@ altfs.service: altfs.service.in Makefile
 	${SED} -e 's!@datadir[@]!$(datadir)!g' $(srcdir)/altfs.service.in >altfs.service.tmp
 	mv altfs.service.tmp altfs.service
 
+# rsyslog rule and logrotate config for /var/log/altfs.log. They take
+# effect when sysconfdir is /etc, as in the deb / rpm packages. The 30-
+# prefix of the rsyslog file is significant, see the comment inside it.
+if PLATFORM_LINUX
+rsyslogdir = $(sysconfdir)/rsyslog.d
+rsyslog_DATA = 30-altfs.conf
+endif
+
 install-data-local:
 	mkdir -p "$(DESTDIR)$(sysconfdir)"
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/altfs.conf.local" ]; then \
 		cp altfs.conf.local "$(DESTDIR)$(sysconfdir)/altfs.conf.local"; \
 	fi
+if PLATFORM_LINUX
+	mkdir -p "$(DESTDIR)$(sysconfdir)/logrotate.d"
+	$(INSTALL_DATA) $(srcdir)/altfs.logrotate "$(DESTDIR)$(sysconfdir)/logrotate.d/altfs"
+endif
+
+uninstall-local:
+if PLATFORM_LINUX
+	rm -f "$(DESTDIR)$(sysconfdir)/logrotate.d/altfs"
+endif
 
 clean-local:
 	rm -f altfs.conf altfs.service altfs.service.tmp
@@ -58,6 +75,6 @@ EXTRA_DIST = \
 	altfs.conf.in \
 	altfs.conf.local \
 	altfs.service.in \
-	altfs-log.conf \
-	altfslog \
+	30-altfs.conf \
+	altfs.logrotate \
 	README.md
