@@ -535,6 +535,8 @@ int main(int argc, char **argv)
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 	struct ltfs_fuse_data *priv = (struct ltfs_fuse_data *) calloc(1, sizeof(struct ltfs_fuse_data));
 	char *lang, **mount_options, *cmd_args;
+	char *lang_unavailable = NULL;
+	const char *lang_fallback = NULL;
 	void *message_handle;
 
 	priv->verbose = LTFS_INFO;
@@ -546,7 +548,9 @@ int main(int argc, char **argv)
 	 * strdup(NULL) when LC_ALL/LANG cannot be loaded, which segfaults `altfs -h`. */
 	lang = getenv("LANG");
 	if (lang && ! setlocale(LC_ALL, lang)) {
-		fprintf(stderr, "LTFS9015W The locale '%s' is not available; falling back. Set LANG to an installed locale to suppress this warning.\n", lang);
+		/* Reported once the message catalog is loaded. Copy it: setenv() below
+		 * may invalidate the string getenv() returned. */
+		lang_unavailable = strdup(lang);
 		lang = NULL;
 	}
 	if (! lang) {
@@ -562,13 +566,14 @@ int main(int argc, char **argv)
 			}
 		}
 		if (! chosen) {
-			fprintf(stderr, "LTFS9016E Cannot set the LANG environment variable\n");
+			/* The message catalog cannot be loaded without a locale */
+			fprintf(stderr, "AFS0139E Cannot set the LANG environment variable\n");
 			return 1;
 		}
-		fprintf(stderr, "LTFS9015W Setting the locale to '%s'. If this is wrong, please set the LANG environment variable before starting ltfs.\n", chosen);
+		lang_fallback = chosen;
 		ret = setenv("LANG", chosen, 1);
 		if (ret) {
-			fprintf(stderr, "LTFS9016E Cannot set the LANG environment variable\n");
+			fprintf(stderr, "AFS0139E Cannot set the LANG environment variable\n");
 			return 1;
 		}
 	}
@@ -589,6 +594,14 @@ int main(int argc, char **argv)
 		ltfsmsg(ALC0011E, ret);
 		return 1;
 	}
+
+	/* Report the locale fallback, now that the messages are available */
+	if (lang_unavailable) {
+		ltfsmsg(AFS0137W, lang_unavailable);
+		free(lang_unavailable);
+	}
+	if (lang_fallback)
+		ltfsmsg(AFS0138W, lang_fallback);
 
 	if (! priv) {
 		ltfsmsg(ALC0002E, "main: private data");
