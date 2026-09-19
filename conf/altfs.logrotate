@@ -1,0 +1,21 @@
+/var/log/altfs.log {
+	size 1M
+	rotate 4
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+	postrotate
+		# Make rsyslog reopen the log file. systemctl covers both Tier 1
+		# families; the pid files are the fallback without systemd.
+		if [ -d /run/systemd/system ]; then
+			systemctl kill -s HUP rsyslog.service >/dev/null 2>&1 || true
+		else
+			for f in /run/rsyslogd.pid /run/syslogd.pid; do
+				[ -f "$f" ] && kill -HUP "$(cat "$f")" 2>/dev/null
+			done
+			true
+		fi
+	endscript
+}

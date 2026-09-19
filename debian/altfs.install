@@ -12,4 +12,6 @@ usr/share/man/man8/mkaltfs.8*
 usr/share/man/man8/altfsck.8*
 usr/share/man/man8/altfsindextool.8*
 etc/altfs.conf
+etc/rsyslog.d/30-altfs.conf
+etc/logrotate.d/altfs
 etc/altfs.conf.local

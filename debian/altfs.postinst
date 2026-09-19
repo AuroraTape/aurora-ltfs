@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+#DEBHELPER#
+
+# Make a running rsyslog pick up /etc/rsyslog.d/30-altfs.conf (rsyslog has no
+# reload, a config change needs a restart). Only when the rule is new: on a
+# fresh install, or when upgrading from 1.0.0, which did not ship it.
+if [ "$1" = "configure" ] && [ -d /run/systemd/system ]; then
+	if [ -z "$2" ] || dpkg --compare-versions "$2" lt "1.0.1~"; then
+		systemctl try-restart rsyslog.service >/dev/null 2>&1 || true
+	fi
+fi
