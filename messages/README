@@ -166,6 +166,23 @@ rather than allocated consecutively:
           e.g. EDEV_CLEANING_REQUIRED (20098) -> AED0098E
 
 
+Log line format
+=============================
+
+Every message written to stderr or syslog starts with its message ID,
+followed by one space and the message text. When thread IDs are printed (the
+altfs daemon does this), the thread ID in lowercase hexadecimal and one space
+come first:
+
+    AMK0001I Starting mkltfs, Aurora LTFS version 1.0.1, log level 2
+    5eac AFS0001I LTFS starting, Aurora LTFS version 1.0.1, log level 2
+
+The format is defined by the MSG_PREFIX macros in src/libltfs/ltfslogging.c.
+(Aurora LTFS 1.0.0 printed the string "LTFS" directly in front of the ID,
+e.g. "LTFSAMK0001I", a leftover of the numeric IDs of the reference
+implementation.)
+
+
 Message ID rules
 =============================
 
