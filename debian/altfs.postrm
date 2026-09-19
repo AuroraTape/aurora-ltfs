@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+#DEBHELPER#
+
+# The rsyslog rule is a conffile: it stays on "remove" and goes on "purge".
+if [ "$1" = "purge" ] && [ -d /run/systemd/system ]; then
+	systemctl try-restart rsyslog.service >/dev/null 2>&1 || true
+fi
