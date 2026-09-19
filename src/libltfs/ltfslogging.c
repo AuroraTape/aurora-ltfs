@@ -87,10 +87,12 @@
 #include "libltfs/ltfs_error.h"
 #include "queue.h"
 
-/* Some hard-coded message bits. */
-#define MSG_PREFIX_POSIX_TID   "%016llx LTFS%s "
-#define MSG_PREFIX_TID         "%lx LTFS%s "
-#define MSG_PREFIX             "LTFS%s "
+/* Some hard-coded message bits. A log line starts with the message ID
+ * (after the thread ID, when that is printed); see "Log line format" in
+ * messages/README. */
+#define MSG_PREFIX_POSIX_TID   "%016llx %s "
+#define MSG_PREFIX_TID         "%lx %s "
+#define MSG_PREFIX             "%s "
 #define MSG_FALLBACK           "(could not generate message)"
 
 #define OUTPUT_BUF_SIZE 4096  /* Output buffer size, should be big enough to hold any message. */
