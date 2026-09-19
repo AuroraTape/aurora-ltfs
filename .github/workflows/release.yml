@@ -101,6 +101,13 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # The spec is the source of truth for build dependencies: install
+      # whatever it lists, so that a new BuildRequires cannot be missed
+      # here. (v1.0.1-rc.1 failed in rpmbuild because systemd-rpm-macros
+      # had been added to the spec only.)
+      - name: Install the spec's BuildRequires
+        run: dnf builddep -y rpm/altfs.spec
+
       - name: Resolve version from tag
         run: |
           V="${GITHUB_REF_NAME#v}"
