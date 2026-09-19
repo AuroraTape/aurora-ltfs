@@ -80,6 +80,8 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %{_datadir}/altfs/
 %{_unitdir}/altfs.service
 %{_presetdir}/90-altfs.preset
+%config(noreplace) %{_sysconfdir}/rsyslog.d/30-altfs.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/altfs
 %{_mandir}/man1/altfs_ordered_copy.1*
 %{_mandir}/man8/altfs.8*
 %{_mandir}/man8/mkaltfs.8*
@@ -103,6 +105,9 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 # active. The preset enables it; start it on first install as well.
 if [ $1 -eq 1 ] && [ -d /run/systemd/system ]; then
     systemctl start altfs.service >/dev/null 2>&1 || :
+    # Make a running rsyslog pick up rsyslog.d/30-altfs.conf (rsyslog has no
+    # reload, a config change needs a restart).
+    systemctl try-restart rsyslog.service >/dev/null 2>&1 || :
 fi
 
 %triggerun -- %{name} < 1.0.1
@@ -110,10 +115,11 @@ fi
 # systemd_post macro applies the preset only on a first install, so the
 # upgrade would leave the unit disabled. Apply the preset and start the
 # unit once, when the old package goes away. Later upgrades keep the
-# administrator's choice.
+# administrator's choice. 1.0.0 had no rsyslog rule either.
 systemctl --no-reload preset altfs.service >/dev/null 2>&1 || :
 if [ -d /run/systemd/system ]; then
     systemctl start altfs.service >/dev/null 2>&1 || :
+    systemctl try-restart rsyslog.service >/dev/null 2>&1 || :
 fi
 
 %preun
@@ -126,6 +132,11 @@ fi
 # Not the _with_restart variant: restarting runs "stop", which would
 # unmount the user's tapes in the middle of a package upgrade.
 %systemd_postun altfs.service
+# On removal the rsyslog rule is gone (unless it was modified and kept as
+# .rpmsave); let a running rsyslog drop it.
+if [ $1 -eq 0 ] && [ -d /run/systemd/system ]; then
+    systemctl try-restart rsyslog.service >/dev/null 2>&1 || :
+fi
 
 %post -n libaltfs -p /sbin/ldconfig
 %postun -n libaltfs -p /sbin/ldconfig
