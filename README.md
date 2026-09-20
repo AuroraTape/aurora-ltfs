@@ -180,7 +180,7 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 
 ## The `altfs_ordered_copy` utility
 
-[`altfs_ordered_copy`](src/utils/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires the `pyxattr` module.
+[`altfs_ordered_copy`](src/cmd/altfs_ordered_copy/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires Python 3 and a Python `xattr` module, either `pyxattr` or `xattr` (both work). The deb package depends on `python3-pyxattr | python3-xattr`. On RHEL-likes both providers live in repositories that are not enabled by default (`python3-pyxattr` in CRB, `python3-xattr` in EPEL), so the rpm only recommends them: enable one of those repositories, or `pip install pyxattr`.
 
 # Running with Docker
 

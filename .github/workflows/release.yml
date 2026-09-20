@@ -200,6 +200,8 @@ jobs:
           docker run --rm "$IMG" mkaltfs --help > /dev/null
           docker run --rm "$IMG" altfsck --help > /dev/null
           docker run --rm "$IMG" altfsindextool --help > /dev/null
+          # Python tool: fails on a missing interpreter or xattr module
+          docker run --rm "$IMG" altfs_ordered_copy --help > /dev/null
           # Format a fake tape with the file backend (no device needed)
           docker run --rm "$IMG" bash -c \
             'mkdir -p /tmp/tape && mkaltfs -e file -d /tmp/tape -s SMOKE0 -f -q'
