@@ -23,7 +23,9 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  libaltfs0 (= ${binary:Version}),
- fuse
+ fuse,
+ python3,
+ python3-pyxattr | python3-xattr
 Description: Aurora LTFS filesystem tools and FUSE daemon
  Aurora LTFS lets you mount LTFS-formatted tapes as a regular filesystem
  using FUSE. This package provides the altfs FUSE daemon plus the mkaltfs,

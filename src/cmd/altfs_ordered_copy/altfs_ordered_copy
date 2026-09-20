@@ -38,12 +38,22 @@ import errno
 import platform
 import os.path
 import argparse
-import xattr
 import shutil
 import threading
 
 from logging import getLogger, basicConfig, NOTSET, CRITICAL, ERROR, WARNING, INFO, DEBUG
 from collections import deque
+
+# Two different projects provide a module called "xattr" ("xattr" and
+# "pyxattr"). Only the calls both of them have are used here: getxattr(),
+# setxattr() and listxattr().
+try:
+    import xattr
+except ImportError:
+    sys.stderr.write("altfs_ordered_copy needs the Python 'xattr' module. Install "
+                     "python3-pyxattr or python3-xattr (Debian / Ubuntu: universe, "
+                     "RHEL-likes: CRB or EPEL), or 'pip install pyxattr'.\n")
+    sys.exit(1)
 
 def is_errno(num, names):
     if not num in errno.errorcode:

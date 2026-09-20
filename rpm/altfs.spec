@@ -25,6 +25,12 @@ BuildRequires:  redhat-rpm-config
 BuildRequires:  systemd-rpm-macros
 
 Requires:       fuse
+Requires:       python3
+# altfs_ordered_copy needs a Python "xattr" module. On RHEL-likes both
+# providers live in repositories that are not enabled by default (pyxattr in
+# CRB, xattr in EPEL), so a hard requirement would make this package
+# uninstallable on a default system. Pull one in when it is available.
+Recommends:     (python3-pyxattr or python3-xattr)
 %{?systemd_requires}
 Requires:       libaltfs%{?_isa} = %{version}-%{release}
 
