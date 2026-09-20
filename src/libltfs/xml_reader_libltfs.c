@@ -2041,7 +2041,6 @@ int xml_extent_symlink_info_from_file(const char *filename, struct dentry *d)
 	return ret;
 }
 
-#ifdef FORMAT_SPEC25
 /**
  * Parse incremental index entry (file or directory)
  * @param reader XML text reader
@@ -2825,4 +2824,3 @@ out_free_ctx:
 
 	return ret;
 }
-#endif /* FORMAT_SPEC25 */

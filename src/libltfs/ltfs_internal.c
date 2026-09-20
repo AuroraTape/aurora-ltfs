@@ -1094,71 +1094,6 @@ out:
 	return ret;
 }
 
-#ifndef FORMAT_SPEC25
-/**
- * Refuse consistency recovery when the blocks between the end of the last index and EOD
- * contain an incremental index, a format spec 2.5 construct that this build cannot parse.
- * Truncating it as stray data would destroy changes that a spec 2.5 capable build can
- * recover, so the volume must be left untouched instead.
- *
- * Index constructs are always preceded by a filemark, so only the first block of each
- * filemark-delimited section is inspected.
- *
- * @param partid The partition to examine
- * @param endofidx Block position just after the last index's trailing filemark
- * @param eod End-of-data position of the partition
- * @param vol LTFS volume
- * @return 0 if no incremental index was found, -LTFS_UNSUPPORTED_INDEX_VERSION if one
- *         was found, or another negative value on error.
- */
-static int _ltfs_refuse_incindex_after_idx(char partid, tape_block_t endofidx,
-	tape_block_t eod, struct ltfs_volume *vol)
-{
-	static const char inc_toptag[] = "<ltfsincrementalindex";
-	int ret;
-	ssize_t nr;
-	char *buf;
-	struct tc_position pos;
-
-	buf = malloc(vol->label->blocksize + LTFS_CRC_SIZE);
-	if (! buf) {
-		ltfsmsg(ALC0002E, "_ltfs_refuse_incindex_after_idx: buffer");
-		return -LTFS_NO_MEMORY;
-	}
-
-	pos.partition = ltfs_part_id2num(partid, vol);
-	pos.block = endofidx;
-	ret = tape_seek(vol->device, &pos);
-	if (ret < 0)
-		goto out;
-
-	while (pos.block < eod) {
-		nr = tape_read(vol->device, buf, vol->label->blocksize, true, vol->kmi_handle);
-		if (nr < 0)
-			break; /* unreadable block: leave it to the normal recovery path */
-		/* The XML declaration and top tag always sit at the head of the block */
-		if (nr > 0 && memmem(buf, nr < 512 ? (size_t)nr : 512,
-							 inc_toptag, sizeof(inc_toptag) - 1)) {
-			ltfsmsg(ALB0283E, partid);
-			ret = -LTFS_UNSUPPORTED_INDEX_VERSION;
-			goto out;
-		}
-		/* Skip the rest of this filemark-delimited section */
-		ret = tape_spacefm(vol->device, 1);
-		if (ret < 0)
-			break; /* no more filemarks before EOD */
-		ret = tape_get_position(vol->device, &pos);
-		if (ret < 0)
-			goto out;
-	}
-	ret = 0;
-
-out:
-	free(buf);
-	return ret;
-}
-#endif /* ! FORMAT_SPEC25 */
-
 /**
  * Check a volume for physical consistency. This should be called when there is some doubt about
  * the validity of the MAM parameters; it reads index files from both partitions and verifies
@@ -1301,7 +1236,6 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 
 	/* Set append position for data partition to end of trailing data. */
 	if (dp_have_index && dp_blocks_after) {
-#ifdef FORMAT_SPEC25
 		/* Try incremental index recovery before treating extra blocks as stray data */
 		if (fix) {
 			ret = ltfs_incindex_recovery(dp_endofidx, dp_eod, vol);
@@ -1318,12 +1252,6 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 			/* ret == 1: no incremental indexes found — fall through to regular handling */
 			ret = 0;
 		}
-#else
-		/* This build cannot parse incremental indexes; never truncate one as stray data */
-		ret = _ltfs_refuse_incindex_after_idx(vol->label->partid_dp, dp_endofidx, dp_eod, vol);
-		if (ret < 0)
-			goto out_unlock;
-#endif /* FORMAT_SPEC25 */
 		ret = _ltfs_find_append_blk_after_idx(vol, vol->label->partid_dp, dp_index->selfptr.block, fix);
 		if (ret < 0) {
 			goto out_unlock;
@@ -1333,18 +1261,10 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 				ALB0110E, out_unlock);
 		}
 	}
-#ifdef FORMAT_SPEC25
 skip_dp_extra_blocks:;
-#endif
 
 	/* Set append position for index partition to end of trailing data or preceding data */
 	if (ip_have_index && ip_blocks_after) {
-#ifndef FORMAT_SPEC25
-		/* This build cannot parse incremental indexes; never truncate one as stray data */
-		ret = _ltfs_refuse_incindex_after_idx(vol->label->partid_ip, ip_endofidx, ip_eod, vol);
-		if (ret < 0)
-			goto out_unlock;
-#endif
 		ret = _ltfs_find_append_blk_after_idx(vol, vol->label->partid_ip, ip_index->selfptr.block, fix);
 		if (ret <0) {
 			goto out_unlock;
@@ -1651,7 +1571,6 @@ int ltfs_set_dentry_dirty(struct dentry *d, struct ltfs_volume *vol)
 	return ret;
 }
 
-#ifdef FORMAT_SPEC25
 /**
  * Find a dentry by UID in the filesystem tree (recursive search)
  * @param uid Object UID to search for
@@ -2246,4 +2165,3 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 	ltfsmsg(ALB0189I);
 	return 0;
 }
-#endif /* FORMAT_SPEC25 */

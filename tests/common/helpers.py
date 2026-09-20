@@ -28,6 +28,10 @@ def full_sync(mnt, reason="test"):
     set_xattr(mnt, "ltfs.vendor.Aurora.FullSync", reason)
 
 
+def incremental_sync(mnt, reason="test"):
+    set_xattr(mnt, "ltfs.vendor.Aurora.IncrementalSync", reason)
+
+
 def list_records(tape_dir):
     ip, dp = [], []
     for name in os.listdir(tape_dir):

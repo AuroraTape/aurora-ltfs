@@ -155,24 +155,14 @@ struct device_data;
 #define LTFS_LABEL_VERSION_MIN        MAKE_LTFS_VERSION(1,0,0)   /* Min supported label version */
 #define LTFS_LABEL_VERSION_MAX        MAKE_LTFS_VERSION(2,99,99) /* Max supported label version */
 
-#ifdef FORMAT_SPEC25
 #define LTFS_LABEL_VERSION            MAKE_LTFS_VERSION(2,5,0)   /* Written label version */
 #define LTFS_LABEL_VERSION_STR        "2.5.0"    /* Label version string */
-#else
-#define LTFS_LABEL_VERSION            MAKE_LTFS_VERSION(2,4,0)   /* Written label version */
-#define LTFS_LABEL_VERSION_STR        "2.4.0"    /* Label version string */
-#endif
 
 #define LTFS_INDEX_VERSION_MIN        MAKE_LTFS_VERSION(1,0,0)    /* Min supported index version */
 #define LTFS_INDEX_VERSION_MAX        MAKE_LTFS_VERSION(2,99,99)  /* Max supported index version */
 
-#ifdef FORMAT_SPEC25
 #define LTFS_INDEX_VERSION            MAKE_LTFS_VERSION(2,5,0)    /* Written index version */
 #define LTFS_INDEX_VERSION_STR        "2.5.0"  /* Index version string */
-#else
-#define LTFS_INDEX_VERSION            MAKE_LTFS_VERSION(2,4,0)    /* Written index version */
-#define LTFS_INDEX_VERSION_STR        "2.4.0"  /* Index version string */
-#endif
 
 #define INDEX_MAX_COMMENT_LEN         65536 /* Maximum comment field length (per LTFS Format) */
 
