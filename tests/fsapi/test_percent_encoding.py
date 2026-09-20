@@ -16,7 +16,10 @@ umount → inspect the IP record with the stdlib XML parser → re-mount
 → verify names come back identical and content is intact.
 """
 
+import pytest
+
 from common.altfs import format_tape, mount_tape, umount_tape
+from common.helpers import list_records
 from common.index import parse_latest_index
 
 
@@ -167,14 +170,15 @@ def test_index_with_percent_encoded_us_is_read_as_us(tmp_path_factory):
     finally:
         umount_tape(mnt)
 
-    patched = 0
-    for record in tape_dir.glob("*_R"):
-        data = record.read_bytes()
-        if b"foreign%3Aname.txt" in data:
-            record.write_bytes(data.replace(b"foreign%3Aname.txt",
-                                            b"foreign%1Fname.txt"))
-            patched += 1
-    assert patched >= 2, "expected the name in the index of both partitions"
+    for partition, records in zip(("index", "data"), list_records(tape_dir)):
+        patched = 0
+        for record in records:
+            data = record.read_bytes()
+            if b"foreign%3Aname.txt" in data:
+                record.write_bytes(data.replace(b"foreign%3Aname.txt",
+                                                b"foreign%1Fname.txt"))
+                patched += 1
+        assert patched >= 1, f"no index with the name on the {partition} partition"
 
     mount_tape(tape_dir, mnt)
     try:
@@ -183,3 +187,64 @@ def test_index_with_percent_encoded_us_is_read_as_us(tmp_path_factory):
         assert (mnt / "foreign\x1fname.txt").read_text() == US_BODY
     finally:
         umount_tape(mnt)
+
+
+# Annex G, Table G.1 of the LTFS format specification ("Character
+# representations: version 2.3 or later") says how each character of a
+# name is expressed in an index. Walk the rows that are not plain
+# "Allowed": every C0 control character except TAB / NL / CR and the
+# colon are percent encoded; TAB, NL and CR are allowed as they are.
+# US (0x1f) was treated differently from its neighbours for years
+# because nothing compared the implementation with the table (#83).
+_PERCENT_ENCODED = [c for c in range(0x01, 0x20)
+                    if c not in (0x09, 0x0A, 0x0D)] + [0x3A]
+_ALLOWED_AS_IS = [0x09, 0x0A, 0x0D]
+
+
+@pytest.fixture(scope="module")
+def annex_g_volume(tmp_path_factory):
+    """One volume that holds a file per character of the table, and
+    the names as they come back after a remount."""
+    base = tmp_path_factory.mktemp("altfs-annex-g")
+    tape_dir = base / "tape"
+    mnt = base / "mnt"
+    tape_dir.mkdir()
+    mnt.mkdir()
+
+    format_tape(tape_dir, serial="ANNEXG", label="annexg")
+
+    mount_tape(tape_dir, mnt)
+    try:
+        for code in _PERCENT_ENCODED + _ALLOWED_AS_IS:
+            (mnt / f"c{code:02X}-{chr(code)}-x").write_text(f"{code:02X}")
+    finally:
+        umount_tape(mnt)
+
+    index_names = {name_el.text: name_el
+                   for _, name_el in _walk_named_entries(
+                       parse_latest_index(tape_dir))}
+
+    mount_tape(tape_dir, mnt)
+    try:
+        listing = {p.name: p.read_text() for p in mnt.iterdir()}
+    finally:
+        umount_tape(mnt)
+
+    return index_names, listing
+
+
+@pytest.mark.parametrize("code", _PERCENT_ENCODED,
+                         ids=[f"{c:02X}" for c in _PERCENT_ENCODED])
+def test_annex_g_percent_encoded_character(annex_g_volume, code):
+    index_names, listing = annex_g_volume
+    encoded = f"c{code:02X}-%{code:02X}-x"
+    assert encoded in index_names, sorted(index_names)
+    assert index_names[encoded].attrib.get("percentencoded") == "true"
+    assert listing.get(f"c{code:02X}-{chr(code)}-x") == f"{code:02X}"
+
+
+@pytest.mark.parametrize("code", _ALLOWED_AS_IS,
+                         ids=[f"{c:02X}" for c in _ALLOWED_AS_IS])
+def test_annex_g_allowed_control_character(annex_g_volume, code):
+    _, listing = annex_g_volume
+    assert listing.get(f"c{code:02X}-{chr(code)}-x") == f"{code:02X}"
