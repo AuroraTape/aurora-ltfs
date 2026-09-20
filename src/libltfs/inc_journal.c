@@ -494,7 +494,17 @@ static int _by_path(const struct jentry *a, const struct jentry *b)
 
 	ret = strcmp(a->id.full_path, b->id.full_path);
 	if (!ret) {
-		if (a->id.uid > b->id.uid)
+		/*
+		 * Two entries of one path are a deleted object and the object that took its name.
+		 * The deletion has to be written first, whatever the UIDs are: a new file has the
+		 * higher UID, but an older object that is renamed to this name has the lower one.
+		 */
+		bool a_deleted = (a->reason == DELETE_FILE || a->reason == DELETE_DIRECTORY);
+		bool b_deleted = (b->reason == DELETE_FILE || b->reason == DELETE_DIRECTORY);
+
+		if (a_deleted != b_deleted)
+			ret = a_deleted ? -1 : 1;
+		else if (a->id.uid > b->id.uid)
 			ret = 1;
 		else
 			ret = -1;
