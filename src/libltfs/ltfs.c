@@ -2012,8 +2012,10 @@ void ltfs_set_index_dirty(bool locking, bool atime, struct ltfs_index *idx)
 		was_dirty = idx->dirty;
 		if (atime)
 			idx->atime_dirty = true;
-		else
+		else {
 			idx->dirty = true;
+			idx->inc_dirty = true;
+		}
 		if (! atime || (atime && idx->use_atime))
 			idx->version = LTFS_INDEX_VERSION;
 		if (!was_dirty && idx->dirty && dcache_initialized(idx->root->vol))
@@ -2040,6 +2042,7 @@ void ltfs_unset_index_dirty(bool update_version, struct ltfs_index *idx)
 		ltfs_mutex_lock(&idx->dirty_lock);
 		was_dirty = idx->dirty;
 		idx->dirty = false;
+		idx->inc_dirty = false;
 		idx->atime_dirty = false;
 		if (was_dirty && dcache_initialized(idx->root->vol))
 				dcache_set_dirty(false, idx->root->vol);
@@ -2436,6 +2439,39 @@ size_t ltfs_max_cache_size(struct ltfs_volume *vol)
 }
 
 /**
+ * Decide the type of index to write.
+ *
+ * LTFS_INDEX_AUTO is used by the syncs that promise nothing about the state of the files
+ * (periodic sync, sync on close, volume sync). They only have to bring the volume back to a
+ * recent index after a failure, so they write incremental indexes. Whoever needs a guarantee
+ * asks for a full index explicitly.
+ *  - full_index_interval == 0: always an incremental index
+ *  - full_index_interval != 0: a full index after full_index_interval incremental indexes
+ *
+ * An incremental index is turned into a full index when the journal cannot describe the
+ * changes: it missed a change (journal_err) or the change is not in the journal at all
+ * (index level properties).
+ *
+ * @param type requested type of index
+ * @param vol LTFS volume
+ * @return LTFS_FULL_INDEX or LTFS_INCREMENTAL_INDEX
+ */
+static enum ltfs_index_type _ltfs_resolve_index_type(enum ltfs_index_type type, struct ltfs_volume *vol)
+{
+	if (type == LTFS_INDEX_AUTO) {
+		if (vol->index->full_index_interval && ! vol->index->full_index_to_go)
+			type = LTFS_FULL_INDEX;
+		else
+			type = LTFS_INCREMENTAL_INDEX;
+	}
+
+	if (type == LTFS_INCREMENTAL_INDEX && (vol->journal_err || ! HASH_COUNT(vol->journal)))
+		type = LTFS_FULL_INDEX;
+
+	return type;
+}
+
+/**
  * Write an index file to the given partition.
  * This should only be called after a successful ltfs_mount or ltfs_format,
  * when the cartridge is known to be in a sane state.
@@ -2467,19 +2503,9 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		return ret;
 	}
 
-	if (type == LTFS_INDEX_AUTO) {
-		if (vol->index->full_index_interval) {
-			if (vol->index->full_index_to_go)
-				type = LTFS_INCREMENTAL_INDEX;
-			else
-				type = LTFS_FULL_INDEX;
-		} else {
-			type = LTFS_FULL_INDEX;
-		}
-	}
-
-	if (type == LTFS_INCREMENTAL_INDEX && vol->journal_err) {
-		/* The journal missed a change, only a full index describes the volume correctly */
+	type = _ltfs_resolve_index_type(type, vol);
+	if (type == LTFS_INCREMENTAL_INDEX && partition != ltfs_dp_id(vol)) {
+		/* An incremental index is a construct of the data partition */
 		type = LTFS_FULL_INDEX;
 	}
 
@@ -2744,6 +2770,14 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		incj_clear(vol); /* Clear incremental journal data */
 		ltfs_unset_index_dirty(true, vol->index);
 	} else {
+		/* The data partition does not end in a full index any more */
+		vol->dp_index_file_end = false;
+
+		/* The index stays dirty until the next full index, but this state is on the tape */
+		ltfs_mutex_lock(&vol->index->dirty_lock);
+		vol->index->inc_dirty = false;
+		ltfs_mutex_unlock(&vol->index->dirty_lock);
+
 		ltfsmsg(ALB0281I,
 				bc_print,
 				(unsigned long long)vol->index->generation,
@@ -3652,7 +3686,7 @@ out:
 int ltfs_sync_index(char *reason, bool index_locking, enum ltfs_index_type type, struct ltfs_volume *vol)
 {
 	int ret = 0, ret_r = 0;
-	bool dirty;
+	bool dirty, inc_dirty;
 	char partition;
 	bool dp_index_file_end, ip_index_file_end;
 	char *bc_print = NULL;
@@ -3670,7 +3704,15 @@ start:
 
 	ltfs_mutex_lock(&vol->index->dirty_lock);
 	dirty = vol->index->dirty;
+	inc_dirty = vol->index->inc_dirty;
 	ltfs_mutex_unlock(&vol->index->dirty_lock);
+
+	if (type != LTFS_FULL_INDEX && ! inc_dirty) {
+		/* Nothing is changed since the last index, do not write an empty incremental index */
+		dirty = false;
+	}
+	type = _ltfs_resolve_index_type(type, vol);
+
 	dp_index_file_end = vol->dp_index_file_end;
 	ip_index_file_end = vol->ip_index_file_end;
 
@@ -3687,7 +3729,9 @@ start:
 		/* If the DP ends in an index and the IP doesn't, then we're most likely positioned
 		 * at the end of the IP, and writing an index there is allowed without first putting
 		 * down a DP index. */
-		if (dp_index_file_end && ! ip_index_file_end)
+		if (type == LTFS_INCREMENTAL_INDEX)
+			partition = ltfs_dp_id(vol); /* An incremental index always goes to the DP */
+		else if (dp_index_file_end && ! ip_index_file_end)
 			partition = ltfs_ip_id(vol);
 		else /* Otherwise, it's faster to write an index to the DP. */
 			partition = ltfs_dp_id(vol);
@@ -3775,6 +3819,7 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 							   bool skip_dir, f_index_found func, void **list, void* priv)
 {
 	int ret, func_ret;
+	bool is_inc_index = false;
 
 	ret = tape_locate_first_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
@@ -3786,7 +3831,8 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 		ltfs_index_free(&vol->index);
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
-		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
+		is_inc_index = (ret == -LTFS_XML_INC_INDEX);
+		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION && ! is_inc_index) {
 			ltfsmsg(ALB0198E, 'N', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
@@ -3798,6 +3844,14 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 			vol->index->selfptr.block = vol->device->position.block - 1;
 			vol->index->selfptr.partition =
 				vol->label->part_num2id[vol->device->position.partition];
+		}
+
+		if (is_inc_index) {
+			/* An incremental index is not a rollback point, step over the rest of it */
+			ret = tape_spacefm(vol->device, 1);
+			if (ret < 0)
+				return ret;
+			goto next_index_n;
 		}
 
 		ltfsmsg(ALB0203D, 'N', vol->index->generation, partition);
@@ -3814,6 +3868,7 @@ int ltfs_traverse_index_no_eod(struct ltfs_volume *vol, char partition, unsigned
 		if(vol->index->generation != (unsigned int)-1 && gen != 0 && vol->index->generation >= gen)
 			break;
 
+next_index_n:
 		ret = tape_locate_next_index(vol->device);
 		if (ret < 0) {
 			ltfsmsg(ALB0254I, ret, vol->index->generation);
@@ -3849,6 +3904,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 								bool skip_dir, f_index_found func, void **list, void* priv)
 {
 	int ret, func_ret;
+	bool is_inc_index = false;
 	struct tape_offset last_index;
 
 	ret = tape_locate_last_index(vol->device, ltfs_part_id2num(partition, vol));
@@ -3870,7 +3926,8 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 		ltfs_index_free(&vol->index);
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
-		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
+		is_inc_index = (ret == -LTFS_XML_INC_INDEX);
+		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION && ! is_inc_index) {
 			ltfsmsg(ALB0198E, 'F', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
@@ -3881,6 +3938,14 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 			vol->index->selfptr.block = vol->device->position.block - 1;
 			vol->index->selfptr.partition =
 				vol->label->part_num2id[vol->device->position.partition];
+		}
+
+		if (is_inc_index) {
+			/* An incremental index is not a rollback point, step over the rest of it */
+			ret = tape_spacefm(vol->device, 1);
+			if (ret < 0)
+				return ret;
+			goto next_index_f;
 		}
 
 		ltfsmsg(ALB0203D, 'F', vol->index->generation, partition);
@@ -3897,6 +3962,7 @@ int ltfs_traverse_index_forward(struct ltfs_volume *vol, char partition, unsigne
 		if(vol->index->generation != (unsigned int)-1 && gen != 0 && vol->index->generation >= gen)
 			break;
 
+next_index_f:
 		if (last_index.block > vol->device->position.block) {
 			ret = tape_locate_next_index(vol->device);
 			if (ret < 0) {
@@ -3933,6 +3999,7 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 								 bool skip_dir, f_index_found func, void **list, void* priv)
 {
 	int ret, func_ret;
+	bool is_inc_index = false;
 
 	ret = tape_locate_last_index(vol->device, ltfs_part_id2num(partition, vol));
 	if (ret < 0) {
@@ -3947,7 +4014,8 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 		ltfs_index_free(&vol->index);
 		ltfs_index_alloc(&vol->index, vol);
 		ret = ltfs_read_index(0, false, skip_dir, vol);
-		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION) {
+		is_inc_index = (ret == -LTFS_XML_INC_INDEX);
+		if (ret < 0 && ret != -LTFS_UNSUPPORTED_INDEX_VERSION && ! is_inc_index) {
 			ltfsmsg(ALB0198E, 'B', (int)vol->device->position.block, partition);
 			return ret;
 		} else if (ret == -LTFS_UNSUPPORTED_INDEX_VERSION) {
@@ -3958,6 +4026,14 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 			vol->index->selfptr.block = vol->device->position.block - 1;
 			vol->index->selfptr.partition =
 				vol->label->part_num2id[vol->device->position.partition];
+		}
+
+		if (is_inc_index) {
+			/* An incremental index is not a rollback point, step over the rest of it */
+			ret = tape_spacefm(vol->device, 1);
+			if (ret < 0)
+				return ret;
+			goto next_index_b;
 		}
 
 		ltfsmsg(ALB0203D, 'B', vol->index->generation, partition);
@@ -3975,6 +4051,7 @@ int ltfs_traverse_index_backward(struct ltfs_volume *vol, char partition, unsign
 		if(vol->index->generation != (unsigned int)-1 && gen != 0 && vol->index->generation <= gen)
 			break;
 
+next_index_b:
 		ret = tape_locate_previous_index(vol->device);
 		if (ret < 0) {
 			ltfsmsg(ALB0199E, 'B', partition);

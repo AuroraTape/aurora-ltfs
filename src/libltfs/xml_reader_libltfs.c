@@ -336,11 +336,12 @@ static int _xml_parser_init(xmlTextReaderPtr reader, const char *top_name, int *
 		return ret;
 
 	if (strcmp(name, top_name)) {
-		if ( !strcmp(top_name, "ltfsindex") && !strcmp(name, "ltfsincrementalindex"))
+		if ( !strcmp(top_name, "ltfsindex") && !strcmp(name, "ltfsincrementalindex")) {
 			ltfsmsg(ALX0118I);
-		else
-			ltfsmsg(ALX0024E, name);
+			return -LTFS_XML_INC_INDEX;
+		}
 
+		ltfsmsg(ALX0024E, name);
 		return -LTFS_XML_WRONG_TOPTAG;
 	}
 
