@@ -358,6 +358,11 @@ static int _xml_write_dirtree(xmlTextWriterPtr writer, struct dentry *dir,
 	/* write extended attributes */
 	xml_mktag(_xml_write_xattr(writer, dir), -1);
 
+	/* Everything of this directory is written. Without clearing the flag, as _xml_write_file()
+	 * does for a file, a later change of the directory is never put into the incremental journal
+	 * (ltfs_set_dentry_dirty() only journals the first change of a clean dentry). */
+	dir->dirty = false;
+
 	/* write children */
 	xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "contents"), -1);
 	/* Sort dentries by UID before generating xml */
@@ -516,8 +521,31 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 	return 0;
 }
 
+/**
+ * Write the extended attributes of a modified directory into an incremental index.
+ * The list replaces the one of the previous index, so an empty list has to be written
+ * explicitly: without the tag a reader cannot tell "no extended attribute is left" from
+ * "not changed".
+ */
+static int _xml_write_incremental_dir_xattr(xmlTextWriterPtr writer, struct dentry *dir)
+{
+	if (TAILQ_EMPTY(&dir->xattrlist)) {
+		xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "extendedattributes"), -1);
+		xml_mktag(xmlTextWriterEndElement(writer), -1);
+		return 0;
+	}
+
+	return _xml_write_xattr(writer, dir);
+}
+
+/**
+ * Write a directory that is modified itself, without its contents.
+ */
 static int _xml_write_incremental_dir(xmlTextWriterPtr writer, struct dentry *dir)
 {
+	xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "directory"), -1);
+	xml_mktag(_xml_write_nametype(writer, "name", &dir->name), -1);
+
 	/* Handle R/O and timestamp if it is dirty */
 	if (dir->dirty) {
 		xml_mktag(xmlTextWriterWriteElement(
@@ -531,9 +559,11 @@ static int _xml_write_incremental_dir(xmlTextWriterPtr writer, struct dentry *di
 
 	/* Handle extended attribute if it is dirty */
 	if (dir->dirty) {
-		xml_mktag(_xml_write_xattr(writer, dir), -1);
+		xml_mktag(_xml_write_incremental_dir_xattr(writer, dir), -1);
 		dir->dirty = false;
 	}
+
+	xml_mktag(xmlTextWriterEndElement(writer), -1); /* close directory tag */
 
 	return 0;
 }
@@ -553,7 +583,7 @@ static int _xml_open_incremental_dir_ent(xmlTextWriterPtr writer, struct dentry 
 
 	/* Handle extended attribute if it is dirty */
 	if (dir->dirty) {
-		xml_mktag(_xml_write_xattr(writer, dir), -1);
+		xml_mktag(_xml_write_incremental_dir_xattr(writer, dir), -1);
 		dir->dirty = false;
 	}
 

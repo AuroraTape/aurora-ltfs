@@ -961,9 +961,11 @@ static int _xml_save_symlink_conflict( struct ltfs_index *idx, struct dentry *d)
 
 /**
  * Parse a file into the given directory.
+ * @param deleted NULL for a full index. For an incremental index, set to true when the entry is
+ *                a deletion record (<deleted/>); only the name of the file is valid then.
  */
 static int _xml_parse_file(xmlTextReaderPtr reader, struct ltfs_index *idx, struct dentry *dir,
-						   struct name_list *filename)
+						   struct name_list *filename, bool *deleted)
 {
 	unsigned long long value_int;
 	struct dentry *file;
@@ -1136,8 +1138,22 @@ static int _xml_parse_file(xmlTextReaderPtr reader, struct ltfs_index *idx, stru
 		} else if (! strcmp(name, BACKUPTIME_TAGNAME)) {
 			ignore_unrecognized_tag();
 
+		} else if (deleted && ! strcmp(name, "deleted")) {
+			/* Deletion record of an incremental index, it carries nothing but the name */
+			*deleted = true;
+			if (xml_skip_tag(reader) < 0)
+				return -LTFS_XML_SKIP_FAIL;
+
 		} else
 			preserve_unrecognized_tag(file);
+	}
+
+	if (deleted && *deleted) {
+		if (! have_required_tags[0]) {
+			ltfsmsg(ALX0007E, parent_tag);
+			return -LTFS_XML_NO_REQUIRED_TAG;
+		}
+		return 0;
 	}
 
 	/* For old index versions, allocate a UID */
@@ -1211,7 +1227,7 @@ static int _xml_parse_dir_contents(xmlTextReaderPtr reader, struct dentry *dir, 
 				ltfsmsg(ALC0002E, "_xml_parse_dir_contents: file");
 				return -LTFS_NO_MEMORY;
 			}
-			ret = _xml_parse_file(reader, idx, dir, entry_name);
+			ret = _xml_parse_file(reader, idx, dir, entry_name, NULL);
 			if (ret < 0) {
 				free(entry_name);
 				return ret;
@@ -2263,6 +2279,132 @@ static void _xml_clear_dentry_extents(struct dentry *d)
 	d->size = 0;
 }
 
+static void _xml_clear_dentry_xattrs(struct dentry *d)
+{
+	struct xattr_info *xattr, *xattr_aux;
+
+	TAILQ_FOREACH_SAFE(xattr, &d->xattrlist, list, xattr_aux) {
+		TAILQ_REMOVE(&d->xattrlist, xattr, list);
+		free(xattr->key.name);
+		if (xattr->value)
+			free(xattr->value);
+		free(xattr);
+	}
+}
+
+/**
+ * Take a child out of a directory and release it.
+ */
+static void _xml_unlink_incindex_child(struct dentry *parent, struct dentry *d, struct ltfs_volume *vol)
+{
+	struct name_list *nl;
+	int rc = 0;
+
+	acquirewrite_mrsw(&parent->contents_lock);
+	nl = fs_find_key_from_hash_table(parent->child_list, d->platform_safe_name, &rc);
+	if (nl) {
+		HASH_DEL(parent->child_list, nl);
+		free(nl->name);
+		free(nl);
+	}
+	releasewrite_mrsw(&parent->contents_lock);
+	d->parent = NULL;
+	if (!d->isdir)
+		--vol->index->file_count;
+	/* Release the "in tree" reference (numhandles: 1→0 → freed) */
+	fs_release_dentry(d);
+}
+
+/**
+ * Apply one file entry from the incremental index to the dentry tree.
+ * A file entry that is not a deletion record is a complete file element, the same one a full
+ * index holds. It is parsed by the parser of the full index, so that everything a file can
+ * carry (extended attributes, read-only flag, symlink target, preserved tags, ...) is
+ * recovered, and the new dentry replaces the one of the last full index.
+ * On entry, reader is positioned AT the <file> start element.
+ * On return, reader is positioned AT the </file> end element.
+ */
+static int _xml_apply_incindex_file(xmlTextReaderPtr reader, struct dentry *parent,
+									int *count, struct ltfs_volume *vol)
+{
+	struct name_list *entry, *nl;
+	struct dentry *file, *old = NULL;
+	bool deleted = false;
+	int ret, rc = 0;
+
+	entry = calloc(1, sizeof(struct name_list));
+	if (!entry) {
+		ltfsmsg(ALC0002E, "_xml_apply_incindex_file");
+		return -LTFS_NO_MEMORY;
+	}
+
+	ret = _xml_parse_file(reader, vol->index, parent, entry, &deleted);
+	file = entry->d;
+	if (ret < 0 || !file || !file->name.name) {
+		/* The recovery is abandoned as a whole, the half built dentry goes with the index */
+		free(entry);
+		if (ret >= 0) {
+			ltfsmsg(ALX0120E, "(no name)");
+			ret = -LTFS_INDEX_INVALID;
+		}
+		return ret;
+	}
+
+	nl = fs_find_key_from_hash_table(parent->child_list, file->name.name, &rc);
+	if (nl)
+		old = nl->d;
+
+	if (deleted) {
+		if (old) {
+			if (old->isdir) {
+				ltfsmsg(ALX0121E, file->name.name);
+				ret = -LTFS_INDEX_INVALID;
+			} else {
+				_xml_unlink_incindex_child(parent, old, vol);
+				ltfsmsg(ALX0006I, file->name.name);
+			}
+		} else
+			ltfsmsg(ALX0005I, file->name.name);
+
+		/* Dispose the dentry that only carried the name */
+		free(entry);
+		file->parent = NULL;
+		--vol->index->file_count;
+		fs_release_dentry(file);
+
+		if (ret < 0)
+			return ret;
+		(*count)++;
+		return 0;
+	}
+
+	/* An existing object of the same name must be the same object */
+	if (old && (old->isdir || old->uid != file->uid)) {
+		ltfsmsg(ALX0121E, file->name.name);
+		free(entry);
+		return -LTFS_INDEX_INVALID;
+	}
+
+	if (old) {
+		_xml_unlink_incindex_child(parent, old, vol);
+		ltfsmsg(ALX0004I, file->name.name);
+	} else
+		ltfsmsg(ALX0003I, file->name.name);
+
+	/* Put the new dentry into the directory, fs_update_platform_safe_names() owns the entry */
+	{
+		struct name_list *list = NULL;
+		HASH_ADD_KEYPTR(hh, list, entry->name, strlen(entry->name), entry);
+		ret = fs_update_platform_safe_names(parent, vol->index, list);
+		if (ret < 0)
+			return ret;
+	}
+
+	file->dirty = true;
+	(*count)++;
+	return 0;
+}
+
 /**
  * Apply one file or directory entry from the incremental index to the dentry tree.
  * On entry, reader is positioned AT the <file> or <directory> start element.
@@ -2280,6 +2422,7 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 	struct dentry *d = NULL;
 	struct name_list *nl;
 	bool d_existing = false;  /* true if dentry already existed (MODIFY), false if created (CREATE) */
+	bool has_readonly = false, readonly = false;
 	int ret = 0, type, rc = 0;
 
 	/* Determine file vs directory from current element */
@@ -2313,6 +2456,35 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 				}
 			} else if (xmlStrcmp(name, BAD_CAST "deleted") == 0) {
 				is_deleted = true;
+			} else if (xmlStrcmp(name, BAD_CAST "readonly") == 0) {
+				val = xmlTextReaderReadString(reader);
+				if (val) {
+					if (xml_parse_bool(&readonly, (char *)val) == 0)
+						has_readonly = true;
+					xmlFree(val);
+				}
+			} else if (xmlStrcmp(name, BAD_CAST "extendedattributes") == 0) {
+				/* The list in the incremental index replaces the one of the full index */
+				if (!d && !is_deleted && entry_name) {
+					nl = fs_find_key_from_hash_table(parent->child_list, entry_name, &rc);
+					if (nl) {
+						d = nl->d;
+						d_existing = true;
+					} else {
+						d = fs_allocate_dentry(parent, entry_name, NULL, is_dir,
+											   false, false, vol->index);
+						if (!d) { ret = -LTFS_NO_MEMORY; xmlFree(name); goto out; }
+					}
+				}
+				if (d) {
+					_xml_clear_dentry_xattrs(d);
+					if (xmlTextReaderIsEmptyElement(reader) == 0) {
+						ret = _xml_parse_xattrs(reader, d);
+						if (ret < 0) { xmlFree(name); goto out; }
+					}
+				} else {
+					if (xml_skip_tag(reader) < 0) { xmlFree(name); ret = -LTFS_XML_SKIP_FAIL; goto out; }
+				}
 			} else if (xmlStrcmp(name, BAD_CAST UID_TAGNAME) == 0) {
 				val = xmlTextReaderReadString(reader);
 				if (val) { uid = strtoull((char *)val, NULL, 10); xmlFree(val); }
@@ -2448,6 +2620,8 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 								vol->index->uid_number = uid;
 						}
 						d->size = length;
+						if (has_readonly)
+							d->readonly = readonly;
 						if (ctime.tv_sec || ctime.tv_nsec)
 							d->creation_time = ctime;
 						if (chtime.tv_sec || chtime.tv_nsec)
@@ -2499,8 +2673,15 @@ static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *
 			continue;
 
 		if (type == XML_READER_TYPE_ELEMENT) {
-			if (xmlStrcmp(name, BAD_CAST "directory") == 0 ||
-				xmlStrcmp(name, BAD_CAST "file") == 0) {
+			if (xmlStrcmp(name, BAD_CAST "file") == 0) {
+				xmlFree(name);
+				ret = _xml_apply_incindex_file(reader, parent, count, vol);
+				if (ret < 0)
+					return ret;
+				continue;
+			}
+
+			if (xmlStrcmp(name, BAD_CAST "directory") == 0) {
 				xmlFree(name);
 				ret = _xml_apply_incindex_entry(reader, parent, count, vol);
 				if (ret < 0)
