@@ -2700,6 +2700,58 @@ static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *
 }
 
 /**
+ * Apply a field of the root directory. The root is no entry of the incremental journal, an
+ * incremental index opens with it and carries its read-only flag, time stamps and extended
+ * attributes when it is modified. Its name is the volume name and is not applied here.
+ * On entry, reader is positioned AT the start element of the field.
+ */
+static int _xml_apply_incindex_root_field(xmlTextReaderPtr reader, const xmlChar *name,
+										  struct dentry *root)
+{
+	struct ltfs_timespec *ts = NULL;
+	xmlChar *val;
+	int ret = 0;
+
+	if (xmlStrcmp(name, BAD_CAST "extendedattributes") == 0) {
+		/* The list in the incremental index replaces the one of the full index */
+		_xml_clear_dentry_xattrs(root);
+		if (xmlTextReaderIsEmptyElement(reader) == 0)
+			ret = _xml_parse_xattrs(reader, root);
+		return ret;
+	}
+
+	if (xmlStrcmp(name, BAD_CAST "creationtime") == 0)
+		ts = &root->creation_time;
+	else if (xmlStrcmp(name, BAD_CAST "changetime") == 0)
+		ts = &root->change_time;
+	else if (xmlStrcmp(name, BAD_CAST "modifytime") == 0)
+		ts = &root->modify_time;
+	else if (xmlStrcmp(name, BAD_CAST "accesstime") == 0)
+		ts = &root->access_time;
+	else if (xmlStrcmp(name, BAD_CAST BACKUPTIME_TAGNAME) == 0)
+		ts = &root->backup_time;
+	else if (xmlStrcmp(name, BAD_CAST "readonly") != 0)
+		return 0; /* name, fileuid */
+
+	val = xmlTextReaderReadString(reader);
+	if (!val)
+		return 0;
+
+	if (ts)
+		ret = xml_parse_time(true, (char *)val, ts);
+	else
+		ret = xml_parse_bool(&root->readonly, (char *)val);
+	xmlFree(val);
+
+	if (ret < 0) {
+		ltfsmsg(ALX0110E, (char *)name, "/");
+		return -LTFS_INDEX_INVALID;
+	}
+
+	return 0;
+}
+
+/**
  * Read and apply an incremental index directly from tape, performing full recursive
  * tree manipulation (handles extents, nested directories, all timestamps).
  * Caller must hold vol->lock (write) before calling.
@@ -2827,6 +2879,14 @@ int xml_apply_incindex_from_tape(uint64_t eod_pos, int *entry_count, struct ltfs
 														   vol->index->root,
 														   &count, vol);
 						goto done_scanning;
+					}
+					if (type == XML_READER_TYPE_ELEMENT) {
+						/* Fields of the root directory, written when it is dirty */
+						ret = _xml_apply_incindex_root_field(reader, name, vol->index->root);
+						if (ret < 0) {
+							xmlFree(name);
+							goto done_scanning;
+						}
 					}
 					xmlFree(name);
 				}
