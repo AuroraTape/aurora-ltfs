@@ -900,7 +900,8 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 
 	fromdentry->dirty = true;
 
-	/* Process the incremental journal */
+	/* Process the incremental journal, it is protected by the dirty_lock as in create and unlink */
+	ltfs_mutex_lock(&vol->index->dirty_lock);
 	if (fromdentry->isdir)
 		incj_rmdir(from_norm_copy, fromdentry, vol);
 	else
@@ -913,6 +914,7 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 	ltfs_set_dentry_dirty(fromdir, vol);
 	if (todir != fromdir)
 		ltfs_set_dentry_dirty(todir, vol);
+	ltfs_mutex_unlock(&vol->index->dirty_lock);
 
 	/* Release dentry of source */
 	releasewrite_mrsw(&fromdentry->meta_lock);

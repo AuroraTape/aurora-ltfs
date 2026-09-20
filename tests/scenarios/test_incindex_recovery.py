@@ -48,7 +48,7 @@ def _tree(mnt):
     symlink), the write permission bits (read-only flag) and the user
     extended attributes."""
     tree = {}
-    for path in sorted(mnt.rglob("*")):
+    for path in [mnt] + sorted(mnt.rglob("*")):
         rel = str(path.relative_to(mnt))
         if path.is_symlink():
             content = ("link", os.readlink(path))
@@ -160,6 +160,12 @@ def _rename_parent_of_created_dir(mnt):
     (mnt / "d2" / "other.txt").write_text("elsewhere\n")
 
 
+def _root_directory(mnt):
+    # The root is no journal entry; the incremental index opens with it.
+    os.setxattr(mnt, "user.test.root", b"on the root directory")
+    (mnt / "in-root.txt").write_text("moves the times of the root\n")
+
+
 def _xattrs_on_files(mnt):
     (mnt / "d" / "tagged.txt").write_text("new and tagged\n")
     os.setxattr(mnt / "d" / "tagged.txt", "user.test.new", b"on a new file")
@@ -224,6 +230,7 @@ _CASES = [
     ("delete-then-recreate", [_delete_then_recreate]),
     ("rename-dir-with-modified-child", [_rename_dir_with_modified_child]),
     ("rename-parent-of-created-dir", [_rename_parent_of_created_dir]),
+    ("root-directory", [_root_directory]),
     ("xattrs-on-files", [_xattrs_on_files]),
     ("xattr-removed", [_xattr_removed]),
     ("xattrs-on-dirs", [_xattrs_on_dirs]),
@@ -259,7 +266,9 @@ def test_recovered_tree_matches_mounted_tree(tmp_path, steps):
         expected = _tree(mnt)
         # Nothing writes to the tape directory at this point: the sync
         # through the extended attribute is synchronous, all files are
-        # closed and sync_type=unmount runs no periodic sync.
+        # closed and sync_type=unmount runs no periodic sync. (FUSE
+        # releases a file after close() returned, but on Linux that
+        # release changes nothing an index records.)
         shutil.copytree(tape_dir, crashed_dir,
                         ignore=shutil.ignore_patterns("attr_*"))
     finally:

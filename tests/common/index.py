@@ -75,10 +75,12 @@ def find_entries_by_name(root, names):
 _TIME_TAGS = ("creationtime", "changetime", "modifytime", "backuptime")
 
 
-def index_records(root, with_times=True):
+def index_records(root):
     """Flatten an index into a dict: path -> what the index records
-    about the object (kind, UID, read-only flag, time stamps, and for a
-    file its length, symlink target, extended attributes and extents).
+    about the object (kind, UID, read-only flag, time stamps, extended
+    attributes, and for a file its length, symlink target and extents).
+    The root directory is recorded under the path "" (its name is the
+    volume name and is left out).
 
     Two indexes that describe the same file system state produce equal
     dicts, wherever they sit on the tape and whatever their generation
@@ -89,22 +91,24 @@ def index_records(root, with_times=True):
         child = elem.find(tag)
         return None if child is None else (child.text or "")
 
+    def describe(elem):
+        return {
+            "kind": elem.tag,
+            "fileuid": text(elem, "fileuid"),
+            "readonly": text(elem, "readonly"),
+            "times": {t: text(elem, t) for t in _TIME_TAGS},
+            "xattrs": sorted(
+                (text(x, "key"), text(x, "value"))
+                for x in elem.iterfind("extendedattributes/xattr")),
+        }
+
     def walk(directory, prefix):
         contents = directory.find("contents")
         for elem in (contents if contents is not None else ()):
             if elem.tag not in ("file", "directory"):
                 continue
             path = prefix + text(elem, "name")
-            record = {
-                "kind": elem.tag,
-                "fileuid": text(elem, "fileuid"),
-                "readonly": text(elem, "readonly"),
-                "xattrs": sorted(
-                    (text(x, "key"), text(x, "value"))
-                    for x in elem.iterfind("extendedattributes/xattr")),
-            }
-            if with_times:
-                record["times"] = {t: text(elem, t) for t in _TIME_TAGS}
+            record = describe(elem)
             if elem.tag == "file":
                 record["length"] = text(elem, "length")
                 record["symlink"] = text(elem, "symlink")
@@ -117,5 +121,7 @@ def index_records(root, with_times=True):
             if elem.tag == "directory":
                 walk(elem, path + "/")
 
-    walk(root.find("directory"), "")
+    root_dir = root.find("directory")
+    records[""] = describe(root_dir)
+    walk(root_dir, "")
     return records

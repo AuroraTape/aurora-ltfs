@@ -1557,8 +1557,11 @@ int ltfs_set_dentry_dirty(struct dentry *d, struct ltfs_volume *vol)
 	int ret = 0;
 	char *full_path = NULL;
 
-	/* The root directory is no entry of the journal: an incremental index always opens with
-	 * it, and writes its fields when it is dirty. */
+	/* A dentry without a parent is no entry of the journal.
+	 *  - The root directory: an incremental index always opens with it, and writes its fields
+	 *    when it is dirty.
+	 *  - A file that is unlinked but still open: it is gone from the tree, and its path would
+	 *    be built without the directories it was in. */
 	if (!d->dirty && d->parent) {
 		ret = ltfs_build_fullpath(&full_path, d);
 		if (!ret) {
