@@ -358,11 +358,6 @@ static int _xml_write_dirtree(xmlTextWriterPtr writer, struct dentry *dir,
 	/* write extended attributes */
 	xml_mktag(_xml_write_xattr(writer, dir), -1);
 
-	/* Everything of this directory is written. Without clearing the flag, as _xml_write_file()
-	 * does for a file, a later change of the directory is never put into the incremental journal
-	 * (ltfs_set_dentry_dirty() only journals the first change of a clean dentry). */
-	dir->dirty = false;
-
 	/* write children */
 	xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "contents"), -1);
 	/* Sort dentries by UID before generating xml */
@@ -388,6 +383,11 @@ static int _xml_write_dirtree(xmlTextWriterPtr writer, struct dentry *dir,
 	}
 
 	xml_mktag(xmlTextWriterEndElement(writer), -1);
+
+	/* Everything of this directory is written. Without clearing the flag, as _xml_write_file()
+	 * does for a file, a later change of the directory is never put into the incremental journal
+	 * (ltfs_set_dentry_dirty() only journals the first change of a clean dentry). */
+	dir->dirty = false;
 
 	return 0;
 }
