@@ -535,7 +535,8 @@ struct ltfs_index {
 
 	/* Update tracking */
 	ltfs_mutex_t dirty_lock;            /**< Controls access to the update tracking bits */
-	bool dirty;                         /**< Set on metadata update, cleared on write to tape */
+	bool dirty;                         /**< Set on metadata update, cleared on write of a full index to tape */
+	bool inc_dirty;                     /**< Set on metadata update, cleared on write of any index to tape */
 	bool atime_dirty;                   /**< Set on atime update, cleared on write to tape */
 	bool use_atime;                     /**< Set if atime updates should make the index dirty */
 	uint64_t file_count;                /**< Number of files in the file system */

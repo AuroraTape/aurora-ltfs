@@ -336,11 +336,12 @@ static int _xml_parser_init(xmlTextReaderPtr reader, const char *top_name, int *
 		return ret;
 
 	if (strcmp(name, top_name)) {
-		if ( !strcmp(top_name, "ltfsindex") && !strcmp(name, "ltfsincrementalindex"))
+		if ( !strcmp(top_name, "ltfsindex") && !strcmp(name, "ltfsincrementalindex")) {
 			ltfsmsg(ALX0118I);
-		else
-			ltfsmsg(ALX0024E, name);
+			return -LTFS_XML_INC_INDEX;
+		}
 
+		ltfsmsg(ALX0024E, name);
 		return -LTFS_XML_WRONG_TOPTAG;
 	}
 
@@ -1886,7 +1887,7 @@ int xml_schema_from_file(const char *filename, struct ltfs_index *idx, struct lt
  *                encountered during parsing.
  * @param skip_dir skip parsing directory
  * @param vol LTFS volume.
- * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 on success, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int xml_schema_from_tape(uint64_t eod_pos, bool skip_dir, struct ltfs_volume *vol)
@@ -2383,6 +2384,13 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 				xmlStrcmp(name, BAD_CAST "file") == 0) {
 				xmlFree(name);
 
+				/* Every entry has a name, and every entry that is not a deletion has a UID */
+				if (!entry_name || (!is_deleted && !uid)) {
+					ltfsmsg(ALX0120E, entry_name ? entry_name : "(no name)");
+					ret = -LTFS_INDEX_INVALID;
+					goto out;
+				}
+
 				/* Apply the operation */
 				if (is_deleted) {
 					/* Find dentry and delete it from parent */
@@ -2423,6 +2431,13 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 														   false, false, vol->index);
 							if (!d) { ret = -LTFS_NO_MEMORY; goto out; }
 						}
+					}
+
+					/* An existing object of the same name must be the same object */
+					if (d && d_existing && (d->uid != uid || d->isdir != is_dir)) {
+						ltfsmsg(ALX0121E, entry_name);
+						ret = -LTFS_INDEX_INVALID;
+						goto out;
 					}
 
 					/* Apply metadata to dentry */
@@ -2492,6 +2507,11 @@ static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *
 					return ret;
 				continue;
 			}
+
+			/* Only files and directories can live in a contents tag */
+			ltfsmsg(ALX0119E, (char *)name);
+			xmlFree(name);
+			return -LTFS_INDEX_INVALID;
 		} else if (type == XML_READER_TYPE_END_ELEMENT) {
 			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
 				xmlFree(name);
@@ -2677,7 +2697,7 @@ out_free_ctx:
  * @param user_data User data to pass to callback
  * @param entry_count Pointer to store actual entry count
  * @param vol LTFS volume
- * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 on success, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int xml_incindex_from_tape(uint64_t eod_pos,

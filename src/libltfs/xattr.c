@@ -910,7 +910,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 							  size_t size, struct ltfs_volume *vol)
 {
 	int ret = 0;
-	enum ltfs_index_type idx_type = LTFS_INDEX_AUTO;
+	enum ltfs_index_type idx_type = LTFS_FULL_INDEX;
 
 	if ((! strcmp(name, "ltfs.commitMessage") ||
 		 ! strcmp(name, "ltfs.sync") ||
@@ -924,10 +924,14 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 			ret = -LTFS_LARGE_XATTR;
 		}
 
-		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync"))
-			idx_type = LTFS_FULL_INDEX;
-		else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync"))
+		/*
+		 * A sync through an extended attribute is an explicit request, the caller wants a
+		 * state that is guaranteed to be on the tape. Only IncrementalSync asks for less.
+		 */
+		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync"))
 			idx_type = LTFS_INCREMENTAL_INDEX;
+		else
+			idx_type = LTFS_FULL_INDEX;
 
 		ltfs_mutex_lock(&vol->index->dirty_lock);
 		if (! vol->index->dirty) {

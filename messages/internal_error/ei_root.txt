@@ -305,5 +305,6 @@ root:table {
 		AEI5049E:string { "Unexpected blocksize in a label" }
 		AEI5050E:string { "Unexpected compression in a label" }
 		AEI5051E:string { "Unsupported index type is specified" }
+		AEI5052E:string { "Incremental index is found where a full index is expected" }
 	}
 }

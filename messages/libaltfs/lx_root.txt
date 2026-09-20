@@ -156,5 +156,8 @@ root:table {
 		ALX0116E:string { "Unexpected value was provided to _xml_write_incremental_delete (%d)" }
 		ALX0117E:string { "XML parser: contents tag not found in incremental index" }
 		ALX0118I:string { "XML parser: Found an incremental index, but skip this" }
+		ALX0119E:string { "Incremental index: unexpected tag in a contents tag (%s)" }
+		ALX0120E:string { "Incremental index: entry has no name or no valid UID (%s)" }
+		ALX0121E:string { "Incremental index: entry conflicts with the existing object of the same name (%s)" }
 	}
 }

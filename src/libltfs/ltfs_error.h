@@ -318,6 +318,7 @@
 #define LTFS_XML_WRONG_BLOCKSIZE  5049  /* Unexpected blocksize in a label */
 #define LTFS_XML_WRONG_COMP       5050  /* Unexpected compression in a label */
 #define LTFS_BAD_INDEX_TYPE       5051  /* Unsupported index type is specified */
+#define LTFS_XML_INC_INDEX        5052  /* Incremental index is found where a full index is expected */
 
 #define LTFS_ERR_MAX              19999
 
