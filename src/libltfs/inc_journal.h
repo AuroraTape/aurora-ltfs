@@ -81,7 +81,9 @@ struct journal_id {
  * Journal entry
  */
 struct jentry {
-	struct journal_id     id;           /**< ID of the journal entry (key of the hash table) */
+	struct journal_id     id;           /**< ID of the journal entry */
+	char                  *key;         /**< Key of the hash table, uid followed by the full path */
+	size_t                key_len;      /**< Length of the key */
 	enum   journal_reason reason;       /**< Reason of the entry */
 	struct dentry         *dentry;      /**< Target dentry if required */
 	struct ltfs_name      name;         /**< Name of entry for delete */
