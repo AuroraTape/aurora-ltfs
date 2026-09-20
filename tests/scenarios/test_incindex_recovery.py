@@ -7,9 +7,10 @@ the tape directory taken at that moment is the state a crash would
 leave behind (the MAM ``attr_*`` files are left out so the volume
 coherency shortcut cannot hide the incremental indexes). ``altfsck``
 has to replay the incremental indexes on top of the last full index,
-and the recovered volume must show exactly the tree — names and file
-contents — that was mounted when the last incremental index was
-written.
+and the recovered volume must show exactly the tree that was mounted
+when the last incremental index was written: names, file contents,
+link targets, the read-only flag and the extended attributes
+(issue #136).
 
 The cases concentrate on what the incremental index has to express
 beyond "a new file in the root directory": changes below directories
@@ -19,6 +20,7 @@ name prefix with a directory created or deleted in the same session.
 
 import os
 import shutil
+import stat
 
 import pytest
 
@@ -33,11 +35,24 @@ from common.helpers import full_sync, incremental_sync
 
 
 def _tree(mnt):
-    """Map of relative path -> file content (None for a directory)."""
+    """Map of relative path -> everything the index records about the
+    object that a user can see: kind and content (link target for a
+    symlink), the write permission bits (read-only flag) and the user
+    extended attributes."""
     tree = {}
     for path in sorted(mnt.rglob("*")):
         rel = str(path.relative_to(mnt))
-        tree[rel] = None if path.is_dir() else path.read_bytes()
+        if path.is_symlink():
+            content = ("link", os.readlink(path))
+        elif path.is_dir():
+            content = ("dir", None)
+        else:
+            content = ("file", path.read_bytes())
+        xattrs = {key: os.getxattr(path, key, follow_symlinks=False)
+                  for key in os.listxattr(path, follow_symlinks=False)
+                  if key.startswith("user.test.")}
+        writable = bool(stat.S_IMODE(os.lstat(path).st_mode) & 0o222)
+        tree[rel] = (content, writable, xattrs)
     return tree
 
 
@@ -49,6 +64,8 @@ def _setup_base(mnt):
     (mnt / "d" / "c.txt").write_text("c\n")
     (mnt / "d" / "sub" / "deep.txt").write_text("deep\n")
     (mnt / "d2" / "keep.txt").write_text("keep\n")
+    os.setxattr(mnt / "d2" / "keep.txt", "user.test.base", b"set before")
+    os.setxattr(mnt / "d2", "user.test.base", b"set before")
 
 
 def _create_in_existing_dir(mnt):
@@ -121,6 +138,41 @@ def _rename_parent_of_created_dir(mnt):
     (mnt / "d2" / "other.txt").write_text("elsewhere\n")
 
 
+def _xattrs_on_files(mnt):
+    (mnt / "d" / "tagged.txt").write_text("new and tagged\n")
+    os.setxattr(mnt / "d" / "tagged.txt", "user.test.new", b"on a new file")
+    os.setxattr(mnt / "d" / "c.txt", "user.test.added", b"on an old file")
+    os.setxattr(mnt / "d2" / "keep.txt", "user.test.base", b"changed")
+    os.setxattr(mnt / "d2" / "keep.txt", "user.test.second", b"\x00\x01bin")
+
+
+def _xattr_removed(mnt):
+    os.removexattr(mnt / "d2" / "keep.txt", "user.test.base")
+    os.removexattr(mnt / "d2", "user.test.base")
+
+
+def _xattrs_on_dirs(mnt):
+    os.setxattr(mnt / "d", "user.test.dir", b"on an existing directory")
+    (mnt / "tagged-dir").mkdir()
+    os.setxattr(mnt / "tagged-dir", "user.test.dir", b"on a new directory")
+    (mnt / "tagged-dir" / "in.txt").write_text("in\n")
+    os.setxattr(mnt / "tagged-dir" / "in.txt", "user.test.deep", b"deep")
+    # The directory is also the path to a changed child.
+    (mnt / "d" / "c.txt").write_text("c changed\n")
+
+
+def _read_only(mnt):
+    os.chmod(mnt / "d" / "c.txt", 0o444)
+    os.chmod(mnt / "d2", 0o555)
+    (mnt / "ro-new.txt").write_text("born read-only\n")
+    os.chmod(mnt / "ro-new.txt", 0o444)
+
+
+def _symlinks(mnt):
+    os.symlink("c.txt", mnt / "d" / "to-c")
+    os.symlink("../top.txt", mnt / "d" / "sub" / "to-top")
+
+
 def _create_dir_with_prefix_sibling(mnt):
     # "/d2/..." must not be taken for a descendant of the new "/d2x"
     # and vice versa.
@@ -149,6 +201,14 @@ _CASES = [
     ("delete-then-recreate", [_delete_then_recreate]),
     ("rename-dir-with-modified-child", [_rename_dir_with_modified_child]),
     ("rename-parent-of-created-dir", [_rename_parent_of_created_dir]),
+    ("xattrs-on-files", [_xattrs_on_files]),
+    ("xattr-removed", [_xattr_removed]),
+    ("xattrs-on-dirs", [_xattrs_on_dirs]),
+    ("read-only", [_read_only]),
+    ("symlinks", [_symlinks]),
+    # _read_only comes last: it write-protects d/c.txt and d2.
+    ("metadata-chain", [_xattrs_on_files, _xattr_removed, _symlinks,
+                        _xattrs_on_dirs, _read_only]),
     ("create-dir-with-prefix-sibling", [_create_dir_with_prefix_sibling]),
     ("delete-dir-with-prefix-sibling", [_delete_dir_with_prefix_sibling]),
     ("chain", [_create_in_existing_dir, _modify_in_existing_dirs,
