@@ -2384,6 +2384,13 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 				xmlStrcmp(name, BAD_CAST "file") == 0) {
 				xmlFree(name);
 
+				/* Every entry has a name, and every entry that is not a deletion has a UID */
+				if (!entry_name || (!is_deleted && !uid)) {
+					ltfsmsg(ALX0120E, entry_name ? entry_name : "(no name)");
+					ret = -LTFS_INDEX_INVALID;
+					goto out;
+				}
+
 				/* Apply the operation */
 				if (is_deleted) {
 					/* Find dentry and delete it from parent */
@@ -2424,6 +2431,13 @@ static int _xml_apply_incindex_entry(xmlTextReaderPtr reader, struct dentry *par
 														   false, false, vol->index);
 							if (!d) { ret = -LTFS_NO_MEMORY; goto out; }
 						}
+					}
+
+					/* An existing object of the same name must be the same object */
+					if (d && d_existing && (d->uid != uid || d->isdir != is_dir)) {
+						ltfsmsg(ALX0121E, entry_name);
+						ret = -LTFS_INDEX_INVALID;
+						goto out;
 					}
 
 					/* Apply metadata to dentry */
@@ -2493,6 +2507,11 @@ static int _xml_apply_incindex_contents(xmlTextReaderPtr reader, struct dentry *
 					return ret;
 				continue;
 			}
+
+			/* Only files and directories can live in a contents tag */
+			ltfsmsg(ALX0119E, (char *)name);
+			xmlFree(name);
+			return -LTFS_INDEX_INVALID;
 		} else if (type == XML_READER_TYPE_END_ELEMENT) {
 			if (xmlStrcmp(name, BAD_CAST "contents") == 0) {
 				xmlFree(name);

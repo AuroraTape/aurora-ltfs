@@ -2086,6 +2086,70 @@ int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol)
 	return ltfs_apply_incindex_from_tape(eod_pos, vol, false);
 }
 
+struct uid_seen {
+	uint64_t uid;
+	UT_hash_handle hh;
+};
+
+static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, struct ltfs_volume *vol)
+{
+	int ret = 0;
+	struct name_list *nl, *tmp;
+	struct uid_seen *ent;
+
+	HASH_ITER(hh, dir->child_list, nl, tmp) {
+		struct dentry *d = nl->d;
+
+		HASH_FIND(hh, *seen, &d->uid, sizeof(d->uid), ent);
+		if (ent || d->uid <= 1 || d->uid > vol->index->uid_number) {
+			ltfsmsg(ALB0285E, d->name.name, (unsigned long long)d->uid);
+			return -LTFS_INDEX_INVALID;
+		}
+
+		ent = calloc(1, sizeof(*ent));
+		if (! ent) {
+			ltfsmsg(ALC0002E, "_ltfs_validate_uids");
+			return -LTFS_NO_MEMORY;
+		}
+		ent->uid = d->uid;
+		HASH_ADD(hh, *seen, uid, sizeof(ent->uid), ent);
+
+		if (d->isdir) {
+			ret = _ltfs_validate_uids(d, seen, vol);
+			if (ret < 0)
+				return ret;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * Check the tree built by the incremental index recovery before it is written to the tape:
+ * the root keeps UID 1 and every other object has a unique UID that the index can hold.
+ * A full index that breaks these rules is rejected by the index parser, the volume would not
+ * mount any more.
+ */
+static int _ltfs_validate_recovered_tree(struct ltfs_volume *vol)
+{
+	int ret;
+	struct uid_seen *seen = NULL, *ent, *tmp;
+
+	if (vol->index->root->uid != 1) {
+		ltfsmsg(ALB0285E, "/", (unsigned long long)vol->index->root->uid);
+		return -LTFS_INDEX_INVALID;
+	}
+
+	ret = _ltfs_validate_uids(vol->index->root, &seen, vol);
+
+	HASH_ITER(hh, seen, ent, tmp) {
+		HASH_DEL(seen, ent);
+		free(ent);
+	}
+
+	return ret;
+}
+
 /**
  * Recover filesystem state by applying incremental indexes found on the data partition
  * after the last full index, then writing a new full index to both partitions.
@@ -2098,8 +2162,11 @@ int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol)
 int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 						   struct ltfs_volume *vol)
 {
+	static const char inc_toptag[] = "<ltfsincrementalindex";
 	int ret;
 	int inc_count = 0;
+	ssize_t nr;
+	char *buf = NULL;
 	struct tc_position seek_pos, cur_pos;
 	tape_partition_t dp_num;
 
@@ -2107,43 +2174,74 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 
 	dp_num = ltfs_part_id2num(ltfs_dp_id(vol), vol);
 
+	buf = malloc(vol->label->blocksize + LTFS_CRC_SIZE);
+	if (! buf) {
+		ltfsmsg(ALC0002E, "ltfs_incindex_recovery: buffer");
+		return -LTFS_NO_MEMORY;
+	}
+
 	/* Seek to the first block after the last full index's filemark */
 	seek_pos.partition = dp_num;
 	seek_pos.block = dp_full_idx_end;
 	ret = tape_seek(vol->device, &seek_pos);
 	if (ret < 0) {
 		ltfsmsg(ALB0184E, ret);
-		return ret;
+		goto out;
 	}
 
 	/* Apply all incremental indexes found between the full index and EOD.
 	 * Between the full index and each inc index there may be data blocks separated
-	 * by filemarks. Skip any non-inc-index sections by spacing forward over filemarks. */
+	 * by filemarks. Index constructs are always preceded by a filemark, so only the first
+	 * block of each filemark-delimited section is inspected: data is never handed to the
+	 * XML parser.
+	 *
+	 * The recovery is all or nothing. When an incremental index cannot be applied, or the
+	 * resulting tree is not consistent, nothing is written and the volume keeps its last
+	 * full index. */
 	while (true) {
 		ret = tape_get_position(vol->device, &cur_pos);
 		if (ret < 0)
-			return ret;
+			goto out;
 		if (cur_pos.block >= dp_eod)
 			break;
 
-		ret = ltfs_apply_incindex_from_tape(dp_eod, vol, true);
-		if (ret == 0 || ret == 1) {
+		nr = tape_read(vol->device, buf, vol->label->blocksize, true, vol->kmi_handle);
+		if (nr == 0)
+			continue; /* a filemark, the next section starts right here */
+		if (nr > 0 && memmem(buf, nr < 512 ? (size_t)nr : 512, inc_toptag, sizeof(inc_toptag) - 1)) {
+			/* The XML declaration and top tag always sit at the head of the block */
+			ret = tape_seek(vol->device, &cur_pos);
+			if (ret < 0)
+				goto out;
+
+			ret = ltfs_apply_incindex_from_tape(dp_eod, vol, true);
+			if (ret < 0) {
+				ltfsmsg(ALB0284E, (unsigned long long)cur_pos.block, ret);
+				goto out;
+			}
+
 			inc_count++;
-			if (ret == 1)
+			if (ret == LTFS_NO_TRAIL_FM)
 				break; /* no trailing filemark — at end of data */
 		} else {
-			/* Not an inc index (data block or parse error) — skip to next FM section */
+			/* Not an inc index (data or unreadable block) — skip to next FM section */
 			ret = tape_spacefm(vol->device, 1);
 			if (ret < 0)
 				break; /* cannot space further, stop */
-			ret = 0;
 		}
 	}
+	ret = 0;
 
 	if (inc_count == 0) {
 		ltfsmsg(ALB0185I);
-		return 1;
+		ret = 1;
+		goto out;
 	}
+
+	/* The result must be a tree that can be written as a full index and read back */
+	ret = _ltfs_validate_recovered_tree(vol);
+	if (ret < 0)
+		goto out;
 
 	ltfsmsg(ALB0186I, inc_count);
 
@@ -2152,16 +2250,20 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 	ret = ltfs_write_index(vol->label->partid_dp, SYNC_RECOVERY, LTFS_FULL_INDEX, vol);
 	if (ret < 0) {
 		ltfsmsg(ALB0187E, ret);
-		return ret;
+		goto out;
 	}
 
 	/* Write recovered full index to IP */
 	ret = ltfs_write_index(vol->label->partid_ip, SYNC_RECOVERY, LTFS_FULL_INDEX, vol);
 	if (ret < 0) {
 		ltfsmsg(ALB0188E, ret);
-		return ret;
+		goto out;
 	}
 
 	ltfsmsg(ALB0189I);
-	return 0;
+	ret = 0;
+
+out:
+	free(buf);
+	return ret;
 }
