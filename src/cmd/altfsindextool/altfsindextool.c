@@ -529,6 +529,7 @@ int main(int argc, char **argv)
 	struct indextool_opts opt;
 	int ret, log_level, syslog_level, i, cmd_args_len;
 	char *lang, *cmd_args;
+	const char *lang_fallback = NULL;
 	const char *config_file = NULL;
 	void *message_handle;
 
@@ -548,10 +549,12 @@ int main(int argc, char **argv)
 	/* Check for LANG variable and set it to en_US.UTF-8 if it is unset. */
 	lang = getenv("LANG");
 	if (! lang) {
-		fprintf(stderr, "LTFS9015W Setting the locale to 'en_US.UTF-8'. If this is wrong, please set the LANG environment variable before starting mkltfs.\n");
-		ret = setenv("LANG", "en_US.UTF-8", 1);
+		/* Reported once the message catalog is loaded */
+		lang_fallback = "en_US.UTF-8";
+		ret = setenv("LANG", lang_fallback, 1);
 		if (ret) {
-			fprintf(stderr, "LTFS9016E Cannot set the LANG environment variable\n");
+			/* The message catalog cannot be loaded without a locale */
+			fprintf(stderr, "AIX0068E Cannot set the LANG environment variable\n");
 			return INDEXTOOL_OPERATIONAL_ERROR;
 		}
 	}
@@ -579,6 +582,10 @@ int main(int argc, char **argv)
 		ltfsmsg(ALC0011E, ret);
 		return INDEXTOOL_OPERATIONAL_ERROR;
 	}
+
+	/* Report the locale fallback, now that the messages are available */
+	if (lang_fallback)
+		ltfsmsg(AIX0067W, lang_fallback);
 
 	/* Set up empty options and load the configuration file. */
 	memset(&opt, 0, sizeof(struct indextool_opts));
