@@ -910,7 +910,7 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 							  size_t size, struct ltfs_volume *vol)
 {
 	int ret = 0;
-	enum ltfs_index_type idx_type = LTFS_INDEX_AUTO;
+	enum ltfs_index_type idx_type = LTFS_FULL_INDEX;
 
 	if ((! strcmp(name, "ltfs.commitMessage") ||
 		 ! strcmp(name, "ltfs.sync") ||

@@ -259,7 +259,13 @@ def test_bad_incremental_index_leaves_volume_untouched(tmp_path, old, new,
     assert patched != data and len(patched) == len(data)
     record.write_bytes(patched)
 
-    before = {p.name: p.read_bytes() for p in crashed_dir.iterdir()}
+    def blocks():
+        # The MAM attribute files are no part of the medium contents;
+        # altfsck may create them.
+        return {p.name: p.read_bytes() for p in crashed_dir.iterdir()
+                if not p.name.startswith("attr_")}
+
+    before = blocks()
 
     check = run_altfsck(tape_dir=crashed_dir)
     check_out = check.stdout + check.stderr
@@ -267,9 +273,8 @@ def test_bad_incremental_index_leaves_volume_untouched(tmp_path, old, new,
     assert message in check_out, check_out
     assert "ALB0189I" not in check_out
 
-    after = {p.name: p.read_bytes() for p in crashed_dir.iterdir()
-             if not p.name.startswith("attr_")}
-    assert after == before, "a failed recovery must not write to the volume"
+    assert blocks() == before, \
+        "a failed recovery must not write to the volume"
 
 
 def test_clean_recovery_is_quiet(tmp_path):

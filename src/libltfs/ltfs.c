@@ -3707,10 +3707,15 @@ start:
 	inc_dirty = vol->index->inc_dirty;
 	ltfs_mutex_unlock(&vol->index->dirty_lock);
 
-	if (type != LTFS_FULL_INDEX && ! inc_dirty) {
-		/* Nothing is changed since the last index, do not write an empty incremental index */
+	/*
+	 * Nothing is changed since the last index: do not write an empty incremental index, and
+	 * do not let an empty journal turn the request into a full index on every sync.
+	 * The exception is the full index that is due after full_index_interval incremental
+	 * indexes, it closes the chain even when the volume is idle.
+	 */
+	if (type != LTFS_FULL_INDEX && ! inc_dirty &&
+		! (type == LTFS_INDEX_AUTO && vol->index->full_index_interval && ! vol->index->full_index_to_go))
 		dirty = false;
-	}
 	type = _ltfs_resolve_index_type(type, vol);
 
 	dp_index_file_end = vol->dp_index_file_end;

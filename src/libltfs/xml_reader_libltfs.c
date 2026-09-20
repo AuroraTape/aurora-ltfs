@@ -1887,7 +1887,7 @@ int xml_schema_from_file(const char *filename, struct ltfs_index *idx, struct lt
  *                encountered during parsing.
  * @param skip_dir skip parsing directory
  * @param vol LTFS volume.
- * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 on success, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int xml_schema_from_tape(uint64_t eod_pos, bool skip_dir, struct ltfs_volume *vol)
@@ -2697,7 +2697,7 @@ out_free_ctx:
  * @param user_data User data to pass to callback
  * @param entry_count Pointer to store actual entry count
  * @param vol LTFS volume
- * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 on success, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int xml_incindex_from_tape(uint64_t eod_pos,

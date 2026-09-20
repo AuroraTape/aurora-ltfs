@@ -2014,7 +2014,7 @@ int ltfs_validate_incindex(const char *incindex_data, size_t data_size,
  * @param eod_pos End of data position of the current partition
  * @param vol LTFS volume with existing metadata
  * @param apply_changes If true, actually apply changes; if false, just validate
- * @return 0 on success, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 on success, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
@@ -2078,7 +2078,7 @@ int ltfs_apply_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol,
  * Validate incremental index from tape against current filesystem state
  * @param eod_pos End of data position of the current partition
  * @param vol LTFS volume with existing metadata
- * @return 0 if valid, 1 if parsing succeeded but no file mark was encountered,
+ * @return 0 if valid, LTFS_NO_TRAIL_FM if parsing succeeded but no file mark was encountered,
  *         or a negative value on error.
  */
 int ltfs_validate_incindex_from_tape(uint64_t eod_pos, struct ltfs_volume *vol)
@@ -2091,7 +2091,8 @@ struct uid_seen {
 	UT_hash_handle hh;
 };
 
-static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, struct ltfs_volume *vol)
+static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, bool report,
+							   struct ltfs_volume *vol)
 {
 	int ret = 0;
 	struct name_list *nl, *tmp;
@@ -2102,7 +2103,8 @@ static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, struc
 
 		HASH_FIND(hh, *seen, &d->uid, sizeof(d->uid), ent);
 		if (ent || d->uid <= 1 || d->uid > vol->index->uid_number) {
-			ltfsmsg(ALB0285E, d->name.name, (unsigned long long)d->uid);
+			if (report)
+				ltfsmsg(ALB0285E, d->name.name, (unsigned long long)d->uid);
 			return -LTFS_INDEX_INVALID;
 		}
 
@@ -2115,7 +2117,7 @@ static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, struc
 		HASH_ADD(hh, *seen, uid, sizeof(ent->uid), ent);
 
 		if (d->isdir) {
-			ret = _ltfs_validate_uids(d, seen, vol);
+			ret = _ltfs_validate_uids(d, seen, report, vol);
 			if (ret < 0)
 				return ret;
 		}
@@ -2125,22 +2127,25 @@ static int _ltfs_validate_uids(struct dentry *dir, struct uid_seen **seen, struc
 }
 
 /**
- * Check the tree built by the incremental index recovery before it is written to the tape:
- * the root keeps UID 1 and every other object has a unique UID that the index can hold.
- * A full index that breaks these rules is rejected by the index parser, the volume would not
- * mount any more.
+ * Check the invariants of a tree that is about to be written as a full index: the root has
+ * UID 1 and every other object has a unique UID that is not above the highest UID of the
+ * index. The index parser only enforces a part of them (UID 1 is reserved for the root), so
+ * a tree that breaks them can end up on the tape and fail to mount later.
+ *
+ * @param report log the object that breaks an invariant
  */
-static int _ltfs_validate_recovered_tree(struct ltfs_volume *vol)
+static int _ltfs_validate_recovered_tree(bool report, struct ltfs_volume *vol)
 {
 	int ret;
 	struct uid_seen *seen = NULL, *ent, *tmp;
 
 	if (vol->index->root->uid != 1) {
-		ltfsmsg(ALB0285E, "/", (unsigned long long)vol->index->root->uid);
+		if (report)
+			ltfsmsg(ALB0285E, "/", (unsigned long long)vol->index->root->uid);
 		return -LTFS_INDEX_INVALID;
 	}
 
-	ret = _ltfs_validate_uids(vol->index->root, &seen, vol);
+	ret = _ltfs_validate_uids(vol->index->root, &seen, report, vol);
 
 	HASH_ITER(hh, seen, ent, tmp) {
 		HASH_DEL(seen, ent);
@@ -2167,6 +2172,7 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 	int inc_count = 0;
 	ssize_t nr;
 	char *buf = NULL;
+	bool tree_was_consistent;
 	struct tc_position seek_pos, cur_pos;
 	tape_partition_t dp_num;
 
@@ -2179,6 +2185,8 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 		ltfsmsg(ALC0002E, "ltfs_incindex_recovery: buffer");
 		return -LTFS_NO_MEMORY;
 	}
+
+	tree_was_consistent = (_ltfs_validate_recovered_tree(false, vol) == 0);
 
 	/* Seek to the first block after the last full index's filemark */
 	seek_pos.partition = dp_num;
@@ -2208,7 +2216,13 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 		nr = tape_read(vol->device, buf, vol->label->blocksize, true, vol->kmi_handle);
 		if (nr == 0)
 			continue; /* a filemark, the next section starts right here */
-		if (nr > 0 && memmem(buf, nr < 512 ? (size_t)nr : 512, inc_toptag, sizeof(inc_toptag) - 1)) {
+		if (nr < 0) {
+			/* Cannot tell what this section is, it might be an incremental index */
+			ltfsmsg(ALB0284E, (unsigned long long)cur_pos.block, (int)nr);
+			ret = (int)nr;
+			goto out;
+		}
+		if (memmem(buf, nr < 512 ? (size_t)nr : 512, inc_toptag, sizeof(inc_toptag) - 1)) {
 			/* The XML declaration and top tag always sit at the head of the block */
 			ret = tape_seek(vol->device, &cur_pos);
 			if (ret < 0)
@@ -2224,10 +2238,10 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 			if (ret == LTFS_NO_TRAIL_FM)
 				break; /* no trailing filemark — at end of data */
 		} else {
-			/* Not an inc index (data or unreadable block) — skip to next FM section */
+			/* Not an inc index (data) — skip to next FM section */
 			ret = tape_spacefm(vol->device, 1);
 			if (ret < 0)
-				break; /* cannot space further, stop */
+				break; /* no more filemarks before EOD: trailing data, nothing to apply */
 		}
 	}
 	ret = 0;
@@ -2238,10 +2252,14 @@ int ltfs_incindex_recovery(tape_block_t dp_full_idx_end, tape_block_t dp_eod,
 		goto out;
 	}
 
-	/* The result must be a tree that can be written as a full index and read back */
-	ret = _ltfs_validate_recovered_tree(vol);
-	if (ret < 0)
-		goto out;
+	/* The recovery must not break a tree that was consistent before. A last full index
+	 * that does not hold the invariants itself (written by someone else) is not a reason
+	 * to refuse the recovery. */
+	if (tree_was_consistent) {
+		ret = _ltfs_validate_recovered_tree(true, vol);
+		if (ret < 0)
+			goto out;
+	}
 
 	ltfsmsg(ALB0186I, inc_count);
 
