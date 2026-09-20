@@ -69,7 +69,7 @@ class Replay:
 
     def _target(self, source, name):
         """An existing directory as the target means "into it"."""
-        target = self._real("." if name == "." else name)
+        target = self._real(name)
         if target.is_dir():
             target = target / source.name
         return target
@@ -84,6 +84,8 @@ class Replay:
         os.rename(source, target)
 
     def _cp(self, *args):
+        if len(args) != (3 if args[:1] == ("-r",) else 2):
+            raise TypeError("cp [-r] name name")
         if args[0] == "-r":
             source, target = self._real(args[1]), self._real(args[2])
             if not source.is_dir() or not target.is_dir():
@@ -107,14 +109,18 @@ class Replay:
         path = self._real(name)
         if not path.is_dir():
             raise NotADirectoryError(name)
-        self.cwd = "/" + str(path.relative_to(self.mnt)).lstrip(".")
+        relative = str(path.relative_to(self.mnt))
+        self.cwd = "/" if relative == "." else "/" + relative
 
-    def _index(self, *args):
-        """The first index of a run is a full index, the following ones
-        are incremental unless the command asks for a full one (-f).
-        The simulator writes both kinds when no flag is given."""
+    def index(self, *args):
+        """index [-f | -i] [prefix]: the first index of a run is a full
+        index, the following ones are incremental unless the command asks
+        for a full one (-f). (Without a flag the simulator writes a full
+        and an incremental index file side by side; on a tape the
+        incremental one is what continues the chain.)"""
         flag = args[0] if args and args[0] in ("-f", "-i") else None
-        reason = args[-1] if args else "index"
+        names = args[1:] if flag else args
+        reason = names[0] if names else "index"
         if flag == "-f" or not self.indexes:
             full_sync(self.mnt, reason)
             self.indexes.append("full")
@@ -130,7 +136,7 @@ class Replay:
             "touch": self._touch, "mkdir": self._mkdir, "md": self._mkdir,
             "rm": self._rm, "rmdir": self._rmdir, "rd": self._rmdir,
             "mv": self._mv, "cp": self._cp, "echo": self._echo,
-            "cd": self._cd, "index": self._index,
+            "cd": self._cd, "index": self.index,
         }
         for number, line in enumerate(Path(script).read_text().splitlines(),
                                       1):

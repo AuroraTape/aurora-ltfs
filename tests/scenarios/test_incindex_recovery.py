@@ -178,6 +178,20 @@ def _symlinks(mnt):
     os.symlink("../top.txt", mnt / "d" / "sub" / "to-top")
 
 
+def _replace_dir_then_remove(mnt):
+    # d2 of the full index is emptied and replaced by d/sub, then the
+    # new d2 goes as well. The old d2 must still be deleted on the tape.
+    (mnt / "d2" / "keep.txt").unlink()
+    os.rename(mnt / "d" / "sub", mnt / "d2")
+    shutil.rmtree(mnt / "d2")
+
+
+def _replace_file(mnt):
+    (mnt / "d" / "fresh.txt").write_text("replaces d/c.txt\n")
+    os.rename(mnt / "d" / "fresh.txt", mnt / "d" / "c.txt")
+    os.rename(mnt / "top.txt", mnt / "d.txt")
+
+
 def _create_dir_with_prefix_sibling(mnt):
     # "/d2/..." must not be taken for a descendant of the new "/d2x"
     # and vice versa.
@@ -216,6 +230,8 @@ _CASES = [
     # _read_only comes last: it write-protects d/c.txt and d2.
     ("metadata-chain", [_xattrs_on_files, _xattr_removed, _symlinks,
                         _xattrs_on_dirs, _read_only]),
+    ("replace-dir-then-remove", [_replace_dir_then_remove]),
+    ("replace-file", [_replace_file]),
     ("create-dir-with-prefix-sibling", [_create_dir_with_prefix_sibling]),
     ("delete-dir-with-prefix-sibling", [_delete_dir_with_prefix_sibling]),
     ("chain", [_create_in_existing_dir, _modify_in_existing_dirs,

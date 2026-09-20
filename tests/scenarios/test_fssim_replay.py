@@ -19,6 +19,7 @@ import pytest
 
 from common.altfs import format_tape, mount_tape, umount_tape
 from common.fssim import Replay
+from common.helpers import list_records
 from common.recovery import crash_and_recover
 
 
@@ -27,17 +28,27 @@ _TESTCASES = sorted(
      "testcases").glob("*.txt"))
 
 
+# Commands that fail during the replay, per script. They fail in the
+# simulator as well: "rm" of what is a directory at that point, and the
+# "mv" that depends on it. Any other failure means that the driver and
+# the script no longer understand each other.
+_EXPECTED_FAILURES = {
+    "daptest5": ["rm /A/B/n1"],
+    "fssimin10": ["rm /A/B/n1", "mv n1 /A/B"],
+}
+
+
 def _last_dp_index_is_incremental(tape_dir):
-    """The file backend stores block B of the data partition as 1_<B>_R."""
-    last = None
-    for record in sorted(tape_dir.glob("1_*_R"),
-                         key=lambda p: int(p.name.split("_")[1])):
-        head = record.read_bytes()[:512]
+    last = False
+    _, dp_records = list_records(tape_dir)
+    for record in dp_records:
+        with open(record, "rb") as f:
+            head = f.read(512)
         if b"<ltfsincrementalindex " in head:
             last = True
         elif b"<ltfsindex " in head:
             last = False
-    return bool(last)
+    return last
 
 
 def test_testcases_are_found():
@@ -60,21 +71,19 @@ def test_fssim_case_recovers(tmp_path, script):
             # The script ends with changes that no index holds. They
             # would be lost in the crash by design; give them an index so
             # the whole script is what the recovery has to reproduce.
-            replay._index("-i", "end of script")
+            replay.index("-i", "end of script")
+
+        assert replay.indexes, "the script must write at least one index"
+        assert [line for _, line in replay.failed] == \
+            _EXPECTED_FAILURES.get(script.stem, [])
+        need_recovery = _last_dp_index_is_incremental(tape_dir)
     except BaseException:
         umount_tape(mnt)
         raise
-
-    assert replay.indexes, "the script must write at least one index"
-
-    # Commands may fail like they do in the simulator (removing a
-    # directory with rm, ...), but a script that mostly fails means the
-    # driver no longer understands it.
-    assert len(replay.failed) <= 2, replay.failed
 
     # The crash state needs a recovery if the data partition ends in an
     # incremental index. An "index" without changes before it writes a
     # full index even when an incremental one is asked for (the commit
     # message is the only change, and the journal cannot carry that).
     crash_and_recover(tape_dir, mnt, crashed_dir,
-                      need_recovery=_last_dp_index_is_incremental(tape_dir))
+                      need_recovery=need_recovery)

@@ -419,6 +419,15 @@ int incj_rmdir(char *path, struct dentry *d, struct ltfs_volume *vol)
 	/* Need to find existing children under this directory */
 	HASH_ITER(hh, vol->journal, je, tmp) {
 		if (_is_same_or_under(je->id.full_path, path)) {
+			/*
+			 * Keep the deletion record of another object that had this name before, e.g. the
+			 * directory that was replaced when this one was renamed to its name. It is still
+			 * on the tape and must be deleted, even if this directory disappears again.
+			 */
+			if (je->id.uid != d->uid && !strcmp(je->id.full_path, path) &&
+				(je->reason == DELETE_FILE || je->reason == DELETE_DIRECTORY))
+				continue;
+
 			HASH_DEL(vol->journal, je);
 			_dispose_jentry(je);
 		}
