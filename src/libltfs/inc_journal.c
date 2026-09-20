@@ -419,6 +419,15 @@ int incj_rmdir(char *path, struct dentry *d, struct ltfs_volume *vol)
 	/* Need to find existing children under this directory */
 	HASH_ITER(hh, vol->journal, je, tmp) {
 		if (_is_same_or_under(je->id.full_path, path)) {
+			/*
+			 * Keep the deletion record of another object that had this name before, e.g. the
+			 * directory that was replaced when this one was renamed to its name. It is still
+			 * on the tape and must be deleted, even if this directory disappears again.
+			 */
+			if (je->id.uid != d->uid && !strcmp(je->id.full_path, path) &&
+				(je->reason == DELETE_FILE || je->reason == DELETE_DIRECTORY))
+				continue;
+
 			HASH_DEL(vol->journal, je);
 			_dispose_jentry(je);
 		}
@@ -494,7 +503,17 @@ static int _by_path(const struct jentry *a, const struct jentry *b)
 
 	ret = strcmp(a->id.full_path, b->id.full_path);
 	if (!ret) {
-		if (a->id.uid > b->id.uid)
+		/*
+		 * Two entries of one path are a deleted object and the object that took its name.
+		 * The deletion has to be written first, whatever the UIDs are: a new file has the
+		 * higher UID, but an older object that is renamed to this name has the lower one.
+		 */
+		bool a_deleted = (a->reason == DELETE_FILE || a->reason == DELETE_DIRECTORY);
+		bool b_deleted = (b->reason == DELETE_FILE || b->reason == DELETE_DIRECTORY);
+
+		if (a_deleted != b_deleted)
+			ret = a_deleted ? -1 : 1;
+		else if (a->id.uid > b->id.uid)
 			ret = 1;
 		else
 			ret = -1;

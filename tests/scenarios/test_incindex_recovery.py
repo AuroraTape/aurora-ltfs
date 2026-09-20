@@ -27,7 +27,6 @@ name prefix with a directory created or deleted in the same session.
 
 import os
 import shutil
-import stat
 
 import pytest
 
@@ -39,29 +38,7 @@ from common.altfs import (
     umount_tape,
 )
 from common.helpers import full_sync, incremental_sync
-from common.index import index_records, parse_latest_index
-
-
-def _tree(mnt):
-    """Map of relative path -> everything the index records about the
-    object that a user can see: kind and content (link target for a
-    symlink), the write permission bits (read-only flag) and the user
-    extended attributes."""
-    tree = {}
-    for path in [mnt] + sorted(mnt.rglob("*")):
-        rel = str(path.relative_to(mnt))
-        if path.is_symlink():
-            content = ("link", os.readlink(path))
-        elif path.is_dir():
-            content = ("dir", None)
-        else:
-            content = ("file", path.read_bytes())
-        xattrs = {key: os.getxattr(path, key, follow_symlinks=False)
-                  for key in os.listxattr(path, follow_symlinks=False)
-                  if key.startswith("user.test.")}
-        writable = bool(stat.S_IMODE(os.lstat(path).st_mode) & 0o222)
-        tree[rel] = (content, writable, xattrs)
-    return tree
+from common.recovery import crash_and_recover
 
 
 def _setup_base(mnt):
@@ -201,6 +178,20 @@ def _symlinks(mnt):
     os.symlink("../top.txt", mnt / "d" / "sub" / "to-top")
 
 
+def _replace_dir_then_remove(mnt):
+    # d2 of the full index is emptied and replaced by d/sub, then the
+    # new d2 goes as well. The old d2 must still be deleted on the tape.
+    (mnt / "d2" / "keep.txt").unlink()
+    os.rename(mnt / "d" / "sub", mnt / "d2")
+    shutil.rmtree(mnt / "d2")
+
+
+def _replace_file(mnt):
+    (mnt / "d" / "fresh.txt").write_text("replaces d/c.txt\n")
+    os.rename(mnt / "d" / "fresh.txt", mnt / "d" / "c.txt")
+    os.rename(mnt / "top.txt", mnt / "d.txt")
+
+
 def _create_dir_with_prefix_sibling(mnt):
     # "/d2/..." must not be taken for a descendant of the new "/d2x"
     # and vice versa.
@@ -239,6 +230,8 @@ _CASES = [
     # _read_only comes last: it write-protects d/c.txt and d2.
     ("metadata-chain", [_xattrs_on_files, _xattr_removed, _symlinks,
                         _xattrs_on_dirs, _read_only]),
+    ("replace-dir-then-remove", [_replace_dir_then_remove]),
+    ("replace-file", [_replace_file]),
     ("create-dir-with-prefix-sibling", [_create_dir_with_prefix_sibling]),
     ("delete-dir-with-prefix-sibling", [_delete_dir_with_prefix_sibling]),
     ("chain", [_create_in_existing_dir, _modify_in_existing_dirs,
@@ -263,40 +256,11 @@ def test_recovered_tree_matches_mounted_tree(tmp_path, steps):
         for number, step in enumerate(steps, 1):
             step(mnt)
             incremental_sync(mnt, f"inc {number}")
-        expected = _tree(mnt)
-        # Nothing writes to the tape directory at this point: the sync
-        # through the extended attribute is synchronous, all files are
-        # closed and sync_type=unmount runs no periodic sync. (FUSE
-        # releases a file after close() returned, but on Linux that
-        # release changes nothing an index records.)
-        shutil.copytree(tape_dir, crashed_dir,
-                        ignore=shutil.ignore_patterns("attr_*"))
-    finally:
+    except BaseException:
         umount_tape(mnt)
+        raise
 
-    # Nothing changed between the snapshot and the clean unmount, so the
-    # full index of the unmount is the ground truth for the index that
-    # the recovery has to come up with.
-    ground_truth = index_records(parse_latest_index(tape_dir))
-
-    check = run_altfsck(tape_dir=crashed_dir)
-    check_out = check.stdout + check.stderr
-    assert check.returncode == LTFSCK_CORRECTED, check_out
-    assert "ALB0189I" in check_out, "recovery must complete"
-
-    # The recovered full index, on both partitions, describes every
-    # object like the ground truth does: UIDs, time stamps, read-only
-    # flags, extended attributes, symlink targets and — the extents —
-    # where the data of each file is on the tape.
-    for partition in (0, 1):
-        recovered = index_records(parse_latest_index(crashed_dir, partition))
-        assert recovered == ground_truth, f"partition {partition}"
-
-    mount_tape(crashed_dir, mnt)
-    try:
-        assert _tree(mnt) == expected
-    finally:
-        umount_tape(mnt)
+    crash_and_recover(tape_dir, mnt, crashed_dir)
 
 
 def _inc_index_records(tape_dir):
@@ -319,7 +283,6 @@ def _crashed_volume(tmp_path):
     try:
         _setup_base(mnt)
         full_sync(mnt, "base")
-        base = _tree(mnt)
         (mnt / "d" / "c.txt").write_text("c changed\n")
         (mnt / "d" / "e.txt").write_text("e\n")
         incremental_sync(mnt, "inc")
@@ -327,7 +290,7 @@ def _crashed_volume(tmp_path):
                         ignore=shutil.ignore_patterns("attr_*"))
     finally:
         umount_tape(mnt)
-    return crashed_dir, mnt, base
+    return crashed_dir
 
 
 @pytest.mark.parametrize("old,new,message", [
@@ -343,7 +306,7 @@ def test_bad_incremental_index_leaves_volume_untouched(tmp_path, old, new,
     """Recovery is all or nothing: when an incremental index cannot be
     applied, altfsck writes nothing and the volume keeps its last full
     index."""
-    crashed_dir, _, _ = _crashed_volume(tmp_path)
+    crashed_dir = _crashed_volume(tmp_path)
 
     (record,) = _inc_index_records(crashed_dir)
     data = record.read_bytes()
@@ -388,7 +351,7 @@ def test_clean_recovery_is_quiet(tmp_path):
     when nothing is wrong. (The backward search for the last full index
     that runs before it still probes every section, ALX0023E / ALB0084W
     from there are expected.)"""
-    crashed_dir, _, _ = _crashed_volume(tmp_path)
+    crashed_dir = _crashed_volume(tmp_path)
 
     check = run_altfsck(tape_dir=crashed_dir)
     check_out = check.stdout + check.stderr

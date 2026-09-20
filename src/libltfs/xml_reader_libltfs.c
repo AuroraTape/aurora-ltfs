@@ -2535,7 +2535,13 @@ static int _xml_apply_incindex_dir(xmlTextReaderPtr reader, struct dentry *paren
 					}
 				}
 				if (d) {
-					ret = _xml_apply_incindex_contents(reader, d, count, vol);
+					/* <contents/> of an empty directory has no end tag to read up to */
+					ret = xmlTextReaderIsEmptyElement(reader);
+					if (ret < 0) {
+						ltfsmsg(ALX0010E);
+						ret = -LTFS_XML_EMPTY_UNKNOWN;
+					} else if (ret == 0)
+						ret = _xml_apply_incindex_contents(reader, d, count, vol);
 					if (ret < 0) { xmlFree(name); goto out; }
 				} else {
 					/* No dentry (deleted dir with contents?) - skip */
@@ -2875,9 +2881,17 @@ int xml_apply_incindex_from_tape(uint64_t eod_pos, int *entry_count, struct ltfs
 					if (type == XML_READER_TYPE_ELEMENT &&
 						xmlStrcmp(name, BAD_CAST "contents") == 0) {
 						xmlFree(name);
-						ret = _xml_apply_incindex_contents(reader,
-														   vol->index->root,
-														   &count, vol);
+						/* <contents/>: nothing to apply, same result as an applied list */
+						ret = xmlTextReaderIsEmptyElement(reader);
+						if (ret < 0) {
+							ltfsmsg(ALX0010E);
+							ret = -LTFS_XML_EMPTY_UNKNOWN;
+						} else if (ret == 0)
+							ret = _xml_apply_incindex_contents(reader,
+															   vol->index->root,
+															   &count, vol);
+						else
+							ret = 0;
 						goto done_scanning;
 					}
 					if (type == XML_READER_TYPE_ELEMENT) {

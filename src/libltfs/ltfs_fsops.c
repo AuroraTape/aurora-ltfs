@@ -840,8 +840,17 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 			releasewrite_mrsw(&todentry->meta_lock);
 			goto out_unlock;
 		}
-		if (! todir->isdir)
+		if (! todentry->isdir)
 			fs_decrement_file_count(vol->index);
+
+		/* The replaced object is deleted: tell the incremental journal before the dentry goes */
+		ltfs_mutex_lock(&vol->index->dirty_lock);
+		if (todentry->isdir)
+			incj_rmdir(to_norm_copy, todentry, vol);
+		else
+			incj_rmfile(to_norm_copy, todentry, vol);
+		ltfs_mutex_unlock(&vol->index->dirty_lock);
+
 		fs_release_dentry_unlocked(todentry);
 		todentry = NULL;
 	} else if (todentry) {
