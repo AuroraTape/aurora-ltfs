@@ -230,5 +230,11 @@ root:table {
 
 		// Help messages (continued)
 		AFS0136I:string { "    -o devname=<dev>          Tape device (default: %s)" }
+
+		// Locale fallback at startup. The E message is printed before the catalogs
+		// are loaded, so its text is duplicated in the source.
+		AFS0137W:string { "The locale \'%s\' is not available; falling back. Set LANG to an installed locale to suppress this warning" }
+		AFS0138W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfs" }
+		AFS0139E:string { "Cannot set the LANG environment variable" }
 	}
 }
