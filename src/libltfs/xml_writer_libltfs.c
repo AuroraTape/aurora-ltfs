@@ -516,7 +516,6 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 	return 0;
 }
 
-#ifdef FORMAT_SPEC25
 static int _xml_write_incremental_dir(xmlTextWriterPtr writer, struct dentry *dir)
 {
 	/* Handle R/O and timestamp if it is dirty */
@@ -933,7 +932,6 @@ static int _xml_write_incremental_schema(xmlTextWriterPtr writer, const char *cr
 	free(update_time);
 	return 0;
 }
-#endif
 
 /**************************************************************************************
  * Global Functions
@@ -1174,11 +1172,9 @@ int xml_schema_to_tape(char *reason, int type, struct ltfs_volume *vol)
 			case LTFS_FULL_INDEX:
 				ret = _xml_write_schema(writer, creator, vol->index);
 				break;
-#ifdef FORMAT_SPEC25
 			case LTFS_INCREMENTAL_INDEX:
 				ret = _xml_write_incremental_schema(writer, creator, vol);
 				break;
-#endif
 			default:
 				ret = -LTFS_BAD_INDEX_TYPE;
 				break;

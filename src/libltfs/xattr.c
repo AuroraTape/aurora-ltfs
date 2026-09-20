@@ -924,16 +924,10 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 			ret = -LTFS_LARGE_XATTR;
 		}
 
-#ifdef FORMAT_SPEC25
 		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync"))
 			idx_type = LTFS_FULL_INDEX;
 		else if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync"))
 			idx_type = LTFS_INCREMENTAL_INDEX;
-#else
-		if (! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".FullSync") ||
-			! strcmp(name, "ltfs.vendor." LTFS_VENDOR_NAME ".IncrementalSync")) {
-		}
-#endif
 
 		ltfs_mutex_lock(&vol->index->dirty_lock);
 		if (! vol->index->dirty) {

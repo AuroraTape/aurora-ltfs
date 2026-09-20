@@ -127,6 +127,8 @@ LTFS Format Specification defines data placement, index structure, and extended 
   | 2.4     | [Published](https://www.snia.org/sites/default/files/technical_work/LTFS/LTFS_Format_2.4.0_TechPosition.pdf)               | -                                                                    |
   | 2.5.1   | [Published](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf) | [Published as `20919:2021`](https://www.iso.org/standard/80598.html) |
 
+Aurora LTFS reads volumes of any format version from 1.0 to 2.x and writes labels and indexes at version 2.5.0. Incremental indexes, the on-tape addition of version 2.5, are only written on request. When a volume written at an older version is modified, its next index is written at 2.5.0 (announced by `ALX0074W` at mount); other LTFS implementations may then refuse the volume. Preserving the version of existing volumes is tracked in [#66](https://github.com/AuroraTape/aurora-ltfs/issues/66).
+
 # Quick Start
 
 This section is for users who already have Aurora LTFS installed.

@@ -92,7 +92,6 @@ int xml_schema_from_file(const char *filename, struct ltfs_index *idx, struct lt
 int xml_schema_from_tape(uint64_t eod_pos, bool skip_dir, struct ltfs_volume *vol);
 int xml_extent_symlink_info_from_file(const char *filename, struct dentry *d);
 
-#ifdef FORMAT_SPEC25
 /**
  * Structure to hold incremental index operation data
  */
@@ -128,6 +127,5 @@ int _xml_parse_incindex_contents(xmlTextReaderPtr reader,
 								  void *user_data,
 								  int *entry_count,
 								  struct ltfs_volume *vol);
-#endif /* FORMAT_SPEC25 */
 
 #endif /* __xml_libltfs_h */
