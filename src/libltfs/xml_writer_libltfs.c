@@ -593,10 +593,9 @@ static int _xml_open_incremental_dir(xmlTextWriterPtr writer, struct dentry *dir
 {
 	int ret = 0;
 
-	/* Handle name tag */
+	/* Handle name tag, _xml_write_nametype() writes a complete element */
 	xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "directory"), -1);
 	xml_mktag(_xml_write_nametype(writer, "name", &dir->name), -1);
-	xml_mktag(xmlTextWriterEndElement(writer), -1);
 
 	ret = _xml_open_incremental_dir_ent(writer, dir);
 
@@ -605,7 +604,8 @@ static int _xml_open_incremental_dir(xmlTextWriterPtr writer, struct dentry *dir
 
 static inline int _xml_close_incremental_dir(xmlTextWriterPtr writer)
 {
-	xml_mktag(xmlTextWriterEndElement(writer), -1);
+	xml_mktag(xmlTextWriterEndElement(writer), -1); /* close contents tag */
+	xml_mktag(xmlTextWriterEndElement(writer), -1); /* close directory tag */
 	return 0;
 }
 

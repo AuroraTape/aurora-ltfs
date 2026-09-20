@@ -2478,6 +2478,11 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		}
 	}
 
+	if (type == LTFS_INCREMENTAL_INDEX && vol->journal_err) {
+		/* The journal missed a change, only a full index describes the volume correctly */
+		type = LTFS_FULL_INDEX;
+	}
+
 	switch (type) {
 		case LTFS_FULL_INDEX:
 			if (vol->index->full_index_interval)
