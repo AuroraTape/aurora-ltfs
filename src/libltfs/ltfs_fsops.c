@@ -381,6 +381,7 @@ int ltfs_fsops_create(const char *path, bool isdir, bool readonly, bool overwrit
 	ltfs_set_index_dirty(false, false, vol->index);
 	incj_create(path_norm, d, vol);
 	d->dirty = true;
+	ltfs_set_dentry_dirty(parent, vol); /* modify_time and change_time of the parent are updated */
 	ltfs_mutex_unlock(&vol->index->dirty_lock);
 	vol->file_open_count++;
 
@@ -552,6 +553,7 @@ int ltfs_fsops_unlink(const char *path, ltfs_file_id *id, struct ltfs_volume *vo
 		incj_rmfile(path_norm, d, vol);
 		--vol->index->file_count;
 	}
+	ltfs_set_dentry_dirty(parent, vol); /* modify_time and change_time of the parent are updated */
 	ltfs_set_index_dirty(false, false, vol->index);
 	ltfs_mutex_unlock(&vol->index->dirty_lock);
 
@@ -906,6 +908,11 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 
 	fs_split_path(to_norm_copy, &to_filename_incj, strlen(to_norm_copy) + 1);
 	incj_create(to_norm_copy, fromdentry, vol);
+
+	/* modify_time and change_time of both directories are updated */
+	ltfs_set_dentry_dirty(fromdir, vol);
+	if (todir != fromdir)
+		ltfs_set_dentry_dirty(todir, vol);
 
 	/* Release dentry of source */
 	releasewrite_mrsw(&fromdentry->meta_lock);

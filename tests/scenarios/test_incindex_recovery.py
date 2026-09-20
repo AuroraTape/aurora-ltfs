@@ -12,6 +12,13 @@ when the last incremental index was written: names, file contents,
 link targets, the read-only flag and the extended attributes
 (issue #136).
 
+The recovered full index is also compared with the full index that
+the clean unmount of the original volume wrote (the ground truth): same
+objects, UIDs, time stamps, flags, extended attributes and extents.
+
+This module replaces the shell harness ``tests/incindex-recovery``
+(issue #79); its scenario 1 is the case ``foundation``.
+
 The cases concentrate on what the incremental index has to express
 beyond "a new file in the root directory": changes below directories
 that already exist in the full index, renames, and paths that share a
@@ -32,6 +39,7 @@ from common.altfs import (
     umount_tape,
 )
 from common.helpers import full_sync, incremental_sync
+from common.index import index_records, parse_latest_index
 
 
 def _tree(mnt):
@@ -66,6 +74,20 @@ def _setup_base(mnt):
     (mnt / "d2" / "keep.txt").write_text("keep\n")
     os.setxattr(mnt / "d2" / "keep.txt", "user.test.base", b"set before")
     os.setxattr(mnt / "d2", "user.test.base", b"set before")
+
+
+def _foundation(mnt):
+    """Scenario 1 of the former shell harness: an unchanged file stays
+    (L01), a file is modified (L02), a file is deleted (L03), a directory
+    is created (D02) with a new file in it (L06), and a directory is
+    deleted together with its child (D03)."""
+    with open(mnt / "top.txt", "a") as f:
+        f.write("changed\n")
+    (mnt / "d.txt").unlink()
+    (mnt / "new_dir").mkdir()
+    (mnt / "new_dir" / "child.txt").write_text("hello\n")
+    (mnt / "d" / "sub" / "deep.txt").unlink()
+    (mnt / "d" / "sub").rmdir()
 
 
 def _create_in_existing_dir(mnt):
@@ -188,6 +210,7 @@ def _delete_dir_with_prefix_sibling(mnt):
 
 
 _CASES = [
+    ("foundation", [_foundation]),
     ("create-in-existing-dir", [_create_in_existing_dir]),
     ("modify-in-existing-dirs", [_modify_in_existing_dirs]),
     ("delete-in-existing-dir", [_delete_in_existing_dir]),
@@ -242,10 +265,23 @@ def test_recovered_tree_matches_mounted_tree(tmp_path, steps):
     finally:
         umount_tape(mnt)
 
+    # Nothing changed between the snapshot and the clean unmount, so the
+    # full index of the unmount is the ground truth for the index that
+    # the recovery has to come up with.
+    ground_truth = index_records(parse_latest_index(tape_dir))
+
     check = run_altfsck(tape_dir=crashed_dir)
     check_out = check.stdout + check.stderr
     assert check.returncode == LTFSCK_CORRECTED, check_out
     assert "ALB0189I" in check_out, "recovery must complete"
+
+    # The recovered full index, on both partitions, describes every
+    # object like the ground truth does: UIDs, time stamps, read-only
+    # flags, extended attributes, symlink targets and — the extents —
+    # where the data of each file is on the tape.
+    for partition in (0, 1):
+        recovered = index_records(parse_latest_index(crashed_dir, partition))
+        assert recovered == ground_truth, f"partition {partition}"
 
     mount_tape(crashed_dir, mnt)
     try:

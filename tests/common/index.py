@@ -68,3 +68,54 @@ def find_entries_by_name(root, names):
             if name_el is not None and name_el.text in target:
                 found[name_el.text] = elem
     return found
+
+
+# accesstime is left out: reading a file moves it without making the
+# index dirty, so it is no part of what an index has to reproduce.
+_TIME_TAGS = ("creationtime", "changetime", "modifytime", "backuptime")
+
+
+def index_records(root, with_times=True):
+    """Flatten an index into a dict: path -> what the index records
+    about the object (kind, UID, read-only flag, time stamps, and for a
+    file its length, symlink target, extended attributes and extents).
+
+    Two indexes that describe the same file system state produce equal
+    dicts, wherever they sit on the tape and whatever their generation
+    is; this is what a recovered index is compared against."""
+    records = {}
+
+    def text(elem, tag):
+        child = elem.find(tag)
+        return None if child is None else (child.text or "")
+
+    def walk(directory, prefix):
+        contents = directory.find("contents")
+        for elem in (contents if contents is not None else ()):
+            if elem.tag not in ("file", "directory"):
+                continue
+            path = prefix + text(elem, "name")
+            record = {
+                "kind": elem.tag,
+                "fileuid": text(elem, "fileuid"),
+                "readonly": text(elem, "readonly"),
+                "xattrs": sorted(
+                    (text(x, "key"), text(x, "value"))
+                    for x in elem.iterfind("extendedattributes/xattr")),
+            }
+            if with_times:
+                record["times"] = {t: text(elem, t) for t in _TIME_TAGS}
+            if elem.tag == "file":
+                record["length"] = text(elem, "length")
+                record["symlink"] = text(elem, "symlink")
+                record["extents"] = [
+                    tuple(text(x, t) for t in
+                          ("fileoffset", "partition", "startblock",
+                           "byteoffset", "bytecount"))
+                    for x in elem.iterfind("extentinfo/extent")]
+            records[path] = record
+            if elem.tag == "directory":
+                walk(elem, path + "/")
+
+    walk(root.find("directory"), "")
+    return records

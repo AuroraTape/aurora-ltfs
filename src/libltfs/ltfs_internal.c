@@ -1557,7 +1557,9 @@ int ltfs_set_dentry_dirty(struct dentry *d, struct ltfs_volume *vol)
 	int ret = 0;
 	char *full_path = NULL;
 
-	if (!d->dirty) {
+	/* The root directory is no entry of the journal: an incremental index always opens with
+	 * it, and writes its fields when it is dirty. */
+	if (!d->dirty && d->parent) {
 		ret = ltfs_build_fullpath(&full_path, d);
 		if (!ret) {
 			incj_modify(full_path, d, vol);
