@@ -1,4 +1,9 @@
-dist_sysconf_DATA = altfs.conf
+# altfs.conf is generated with the directories of this build (libdir,
+# sysconfdir), so it must not be distributed: a copy made by "make dist"
+# carries the paths of the tree that ran "make dist", is newer than
+# altfs.conf.in, and would be installed as is by the build from the tarball
+# (the 1.0.0 rpm shipped /usr/local paths that way).
+sysconf_DATA = altfs.conf
 
 PLAT_OPT =
 
@@ -18,8 +23,8 @@ if PLATFORM_NETBSD
 PLAT_OPT += plugin tape scsipi-ibmtape __LIBDIR__/altfs/libtape-scsipi-ibmtape.so
 endif
 
-altfs.conf: altfs.conf.in
-	${SED} -e "s!__PLATFORM_DRIVERS__!${PLAT_OPT}!" altfs.conf.in >altfs.conf.in1
+altfs.conf: altfs.conf.in Makefile
+	${SED} -e "s!__PLATFORM_DRIVERS__!${PLAT_OPT}!" $(srcdir)/altfs.conf.in >altfs.conf.in1
 	${SED} -e "s!__LIBDIR__!@libdir@!" altfs.conf.in1 >altfs.conf
 	rm altfs.conf.in1
 	mv altfs.conf altfs.conf.tmp
