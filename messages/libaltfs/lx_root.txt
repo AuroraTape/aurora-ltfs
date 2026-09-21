@@ -141,7 +141,7 @@ root:table {
 		ALX0101W:string { "Invalid value (%s) in the %s tag in UID %lld" }
 		//unused ALX0102I:string { "Cannot open %s cache for sync (%d)" }
 		ALX0103I:string { "An unexpected character exists in the decoded name object (%s). Revert to the encoded character" }
-		ALX0104I:string { "0x2f (/) or 0x1f (US) exists in name object (%s): Replace it with '_'" }
+		//unused ALX0104I:string { "0x2f (/) or 0x1f (US) exists in name object (%s): Replace it with '_'" }
 		ALX0105I:string { "Sleep was interrupted by a signal while taking the advisory lock '%s'" }
 		ALX0106I:string { "The kernel detected a false deadlock retry to acquire the advisory lock '%s' (%d)" }
 		ALX0107I:string { "Sleep failed while taking the advisory lock '%s' (%d, %d)" }
@@ -159,5 +159,6 @@ root:table {
 		ALX0119E:string { "Incremental index: unexpected tag in a contents tag (%s)" }
 		ALX0120E:string { "Incremental index: entry has no name or no valid UID (%s)" }
 		ALX0121E:string { "Incremental index: entry conflicts with the existing object of the same name (%s)" }
+		ALX0122I:string { "0x2f (/) exists in name object (%s): Replace it with '_'" }
 	}
 }

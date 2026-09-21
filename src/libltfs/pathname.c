@@ -433,13 +433,18 @@ int _pathname_validate(const char *name, bool allow_slash)
 }
 
 /**
- * Determine whether a given Unicode code point is valid in XML.
+ * Determine whether a given Unicode code point can be a part of a name that is stored in an
+ * index. This is not the same as "valid in XML 1.0", which is what _chars_valid_in_xml() checks:
+ * the control characters U+0001 - U+001F, US (U+001F) included, are no XML characters, but a name
+ * that holds one is written percent encoded (fs_is_percent_encode_required(); TAB, LF and CR are
+ * XML characters and are written as they are). See Annex G of the LTFS format specification.
+ * NUL, surrogates and the non-characters cannot be a part of a name.
  * @param c Code point to check.
  * @return 1 if valid or 0 if not.
  */
 int _pathname_valid_in_xml(UChar32 c)
 {
-	if (c == 0 || c == 0x1f || (c >= 0xd800 && c <= 0xdfff) || c == 0xfffe || c == 0xffff)
+	if (c == 0 || (c >= 0xd800 && c <= 0xdfff) || c == 0xfffe || c == 0xffff)
 		return 0;
 	else
 		return 1;
