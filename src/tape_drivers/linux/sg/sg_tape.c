@@ -296,8 +296,11 @@ static int _get_dump(struct sg_data *priv, char *fname)
 
 	ltfsmsg(ATG0054I, fname);
 
-	/* Set transfer size */
+	/* Set transfer size, within the transfer limit of the host path: a
+	 * larger READ BUFFER fails with EINVAL and no dump is taken at all */
 	transfer_size = DUMP_TRANSFER_SIZE;
+	if (priv->max_xfer_len > 0 && priv->max_xfer_len < transfer_size)
+		transfer_size = priv->max_xfer_len;
 	dump_buf = calloc(1, DUMP_TRANSFER_SIZE);
 	if(!dump_buf){
 		ltfsmsg(ALC0002E, __FUNCTION__);
