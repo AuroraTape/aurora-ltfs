@@ -92,6 +92,7 @@ struct other_format_opts {
 	char *filterrules;          /**< Rules for files that should go to the index partition */
 	char *barcode;              /**< 6-character cartridge barcode number */
 	unsigned long blocksize;    /**< Nominal tape block size */
+	bool blocksize_given;       /**< Was the block size given with -b? */
 	bool enable_compression;    /**< Use compression on the tape? */
 	bool allow_update;          /**< Allow overriding index rules at mount time? */
 	bool keep_capacity;         /**< Reset tape capacity? */
@@ -317,6 +318,7 @@ int main(int argc, char **argv)
 				break;
 			case 'b':
 				opt.blocksize = atoi(optarg);
+				opt.blocksize_given = true;
 				break;
 			case 's':
 				opt.barcode = strdup(optarg);
@@ -604,6 +606,25 @@ int format_tape(struct ltfs_volume *vol, struct other_format_opts *opt, void *ar
 		goto out_close;
 	}
 	ltfsmsg(AMK0008D);
+
+	/* Without -b, never write a block the drive or the host path cannot transfer
+	 * in one command: such a volume could not be read back on this host. Use the
+	 * largest power of two within the limit. A -b above the limit is refused by
+	 * ltfs_format_tape(). */
+	if (! opt->blocksize_given) {
+		unsigned int max_blksize = 0;
+
+		if (tape_get_max_blocksize(vol->device, &max_blksize) == 0 && max_blksize < opt->blocksize) {
+			unsigned long blocksize = LTFS_MIN_BLOCKSIZE;
+
+			while (blocksize * 2 <= max_blksize)
+				blocksize *= 2;
+			if (blocksize <= max_blksize && ltfs_set_blocksize(blocksize, vol) == 0) {
+				ltfsmsg(AMK0084I, blocksize, max_blksize);
+				opt->blocksize = blocksize;
+			}
+		}
+	}
 
 	ltfs_set_partition_map(DATA_PART_ID, INDEX_PART_ID, DATA_PART_NUM, INDEX_PART_NUM, vol);
 

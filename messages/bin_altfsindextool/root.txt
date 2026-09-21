@@ -113,5 +113,9 @@ root:table {
 		// are loaded, so its text is duplicated in the source.
 		AIX0067W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfsindextool" }
 		AIX0068E:string { "Cannot set the LANG environment variable" }
+
+		// Read size against the device limit (issue #148)
+		AIX0069I:string { "Reading with %lu byte blocks: the drive or the host transfer path supports at most %u bytes per block. Larger blocks cannot be read on this host" }
+		AIX0070E:string { "Cannot read with block size %lu: the drive or the host transfer path supports at most %u bytes per block" }
 	}
 }

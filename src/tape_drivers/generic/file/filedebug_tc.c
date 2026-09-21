@@ -521,6 +521,7 @@ int filedebug_open(const char *name, void **handle)
 	state->conf.eot_to_bot_sec      = DEFAULT_EOT_TO_BOT;
 	state->conf.change_direction_us = DEFAULT_CHANGE_DIRECTION;
 	state->conf.change_track_us     = DEFAULT_CHANGE_TRACK;
+	state->conf.max_transfer_bytes  = 0;
 
 	/* Set drive type if it is provided */
 	struct supported_device **d_cur = ibm_supported_drives;
@@ -615,6 +616,16 @@ int filedebug_test_unit_ready(void *device)
 	return DEVICE_GOOD;
 }
 
+/**
+ * Emulate the transfer limit of a host path (max_transfer_bytes in the
+ * cartridge configuration): a request longer than the limit fails like the
+ * kernel rejects an oversized SG_IO request.
+ */
+static inline bool _exceeds_max_transfer(const struct filedebug_data *state, size_t count)
+{
+	return state->conf.max_transfer_bytes && count > state->conf.max_transfer_bytes;
+}
+
 int filedebug_read(void *device, char *buf, size_t count, struct tc_position *pos,
 	const bool unusual_size)
 {
@@ -633,6 +644,9 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 		ltfsmsg(ATF0007E);
 		return -EDEV_NOT_READY;
 	}
+
+	if (_exceeds_max_transfer(state, count))
+		return -EDEV_INVALID_ARG;
 
 	/* Emulate unsupported cart/format */
 	if (state->unsupported_tape || state->unsupported_format) {
@@ -766,6 +780,9 @@ int filedebug_write(void *device, const char *buf, size_t count, struct tc_posit
 		ret = -EDEV_NOT_READY;
 		return ret;
 	}
+
+	if (_exceeds_max_transfer(state, count))
+		return -EDEV_INVALID_ARG;
 
 	/* Emulate WORM */
 	if (state->is_worm && state->eod[pos->partition] != pos->block) {
@@ -2171,6 +2188,8 @@ int filedebug_get_parameters(void *device, struct tc_drive_param *params)
 	struct filedebug_data *state = (struct filedebug_data *)device;
 
 	params->max_blksize           = FILE_DEBUG_MAX_BLOCK_SIZE;
+	if (state->conf.max_transfer_bytes && state->conf.max_transfer_bytes < params->max_blksize)
+		params->max_blksize = state->conf.max_transfer_bytes;
 
 	params->cart_type             = state->conf.cart_type;
 	params->density               = state->conf.density_code;

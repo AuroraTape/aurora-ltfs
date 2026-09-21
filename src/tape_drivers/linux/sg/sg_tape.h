@@ -83,6 +83,7 @@ struct sg_data {
 	struct tc_drive_info info;                 /**< Drive information */
 	FILE*                profiler;             /**< The file pointer for profiler */
 	int                  recursive_counter;    /**< Recursive counter for take dump */
+	int                  max_xfer_len;         /**< Max transfer length of the host path in bytes, 0 if unknown */
 };
 
 struct sg_global_data {
