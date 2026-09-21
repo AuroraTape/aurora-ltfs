@@ -124,6 +124,10 @@ static int _filedebug_tc_write_schema(xmlTextWriterPtr writer, const struct file
 											  BAD_CAST "threading_sec",
 											  "%"PRIu64, conf->threading_sec), -1);
 
+	xml_mktag(xmlTextWriterWriteFormatElement(writer,
+											  BAD_CAST "max_transfer_bytes",
+											  "%"PRIu64, conf->max_transfer_bytes), -1);
+
 
 	xml_mktag(xmlTextWriterEndElement(writer), -1);
 
@@ -302,6 +306,13 @@ static int _filedebug_tc_parse_schema(xmlTextReaderPtr reader, struct filedebug_
 			else
 				conf->threading_sec = DEFAULT_CHANGE_TRACK;
 
+		} else if (! strcmp(name, "max_transfer_bytes")) {
+			get_tag_text();
+
+			if (xml_parse_ull(&value_ll, value) < 0)
+				return -1;
+
+			conf->max_transfer_bytes = value_ll;
 		}
 	}
 

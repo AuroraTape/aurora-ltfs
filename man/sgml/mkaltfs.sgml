@@ -196,7 +196,11 @@
         <varlistentry>
           <term><option>-b, --blocksize=<replaceable>num</replaceable></option></term>
           <listitem>
-            <para>Set the LTFS record size (default: 524288)</para>
+            <para>Set the LTFS record size (default: 524288). Every block is transferred to the drive with one
+            command, so the record size cannot exceed what the drive and the host transfer path support; an HBA
+            behind a Thunderbolt or USB4 port, for example, is typically limited to 262144 bytes. Without this
+            option a lower limit lowers the default to the largest power of two within the limit; a larger value
+            given with this option is refused, because the volume could not be read back on this host</para>
           </listitem>
         </varlistentry>
         <varlistentry>
