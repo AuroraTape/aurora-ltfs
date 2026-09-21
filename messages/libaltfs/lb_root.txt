@@ -50,7 +50,7 @@ root:table {
 		ALB0010D:string { "Reading partition labels" }
 		ALB0011E:string { "Cannot read volume: failed to read partition labels" }
 		ALB0012E:string { "Cannot read volume: failed to set medium compression" }
-		ALB0013E:string { "Cannot read volume: block size is %lu, but the device only supports a block size of %u" }
+		ALB0013E:string { "Cannot read volume: block size is %lu, but the drive or the host transfer path supports at most %u bytes per block. Read it on a host that can transfer at least %lu bytes at once" }
 		ALB0014D:string { "Loading the tape" }
 		ALB0015D:string { "Partition labels are valid" }
 		ALB0016D:string { "Reading MAM parameters" }
@@ -94,7 +94,7 @@ root:table {
 		ALB0054W:string { "Index partition identifier requested on an uninitialized volume" }
 		ALB0055E:string { "Cannot format: failed to load the medium (%d)" }
 		ALB0056E:string { "Cannot format: the medium is write protected" }
-		ALB0057E:string { "Cannot format: requested block size is %lu bytes, but the device only supports %u" }
+		ALB0057E:string { "Cannot format: requested block size is %lu bytes, but the drive or the host transfer path supports at most %u bytes per block" }
 		ALB0058I:string { "Partitioning the medium" }
 		ALB0059E:string { "Cannot format: failed to partition the medium (%d)" }
 		ALB0060E:string { "Cannot format: failed to set the medium compression (%d)" }

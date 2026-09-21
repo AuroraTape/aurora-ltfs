@@ -91,6 +91,12 @@ struct sg_global_data global_data;
 #define LOG_PAGE_PARAM_OFFSET     (4)
 
 #define SG_MAX_BLOCK_SIZE (1 * MB)
+
+/* On an sg device BLKSECTGET returns the maximum transfer length of the
+ * host path in bytes (unlike block devices, where it is in sectors). */
+#ifndef BLKSECTGET
+#define BLKSECTGET _IO(0x12, 103)
+#endif
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define TU_DEFAULT_TIMEOUT (60)
@@ -290,8 +296,11 @@ static int _get_dump(struct sg_data *priv, char *fname)
 
 	ltfsmsg(ATG0054I, fname);
 
-	/* Set transfer size */
+	/* Set transfer size, within the transfer limit of the host path: a
+	 * larger READ BUFFER fails with EINVAL and no dump is taken at all */
 	transfer_size = DUMP_TRANSFER_SIZE;
+	if (priv->max_xfer_len > 0 && priv->max_xfer_len < transfer_size)
+		transfer_size = priv->max_xfer_len;
 	dump_buf = calloc(1, DUMP_TRANSFER_SIZE);
 	if(!dump_buf){
 		ltfsmsg(ALC0002E, __FUNCTION__);
@@ -714,6 +723,38 @@ static void _order_free(struct open_order **order, int n)
 	}
 }
 
+/**
+ * Get the maximum transfer length of the host path to the drive.
+ *
+ * The HBA, the IOMMU / bounce buffering and the DMA constraints of the path
+ * can limit a single SG_IO transfer below what the drive supports, e.g. to
+ * 256 KiB for an HBA behind a Thunderbolt port. A tape block cannot be split
+ * into several commands, so the limit caps the usable block size. Without it
+ * a volume with larger blocks fails with EINVAL on the first read or write.
+ * @param priv sg private data, the device must be open
+ * @param reserved_size reserved buffer size granted by SG_SET_RESERVED_SIZE,
+ *        which sg clamps to the same limit; used when BLKSECTGET fails
+ * @param verbose print the limit
+ */
+static void _update_max_xfer_len(struct sg_data *priv, int reserved_size, bool verbose)
+{
+	int max_xfer = 0;
+
+	if (ioctl(priv->dev.fd, BLKSECTGET, &max_xfer) < 0 || max_xfer <= 0) {
+		if (reserved_size > 0 && reserved_size < SG_MAX_BLOCK_SIZE)
+			max_xfer = reserved_size;
+		else
+			max_xfer = 0;
+	}
+	priv->max_xfer_len = max_xfer;
+
+	if (verbose && max_xfer > 0) {
+		ltfsmsg(ATG0107I, priv->drive_serial, max_xfer);
+		if (max_xfer < LTFS_DEFAULT_BLOCKSIZE)
+			ltfsmsg(ATG0108W, priv->drive_serial, max_xfer);
+	}
+}
+
 static int _reconnect_device(void *device)
 {
 	int ret = -EDEV_UNKNOWN, f_ret;
@@ -803,6 +844,7 @@ static int _reconnect_device(void *device)
 	} else {
 		ltfsmsg(ATG0086I, priv->drive_serial, reserved_size);
 	}
+	_update_max_xfer_len(priv, ret < 0 ? 0 : reserved_size, false);
 
 	increment_openfactor(priv->info.host, priv->info.channel);
 
@@ -1438,6 +1480,7 @@ int sg_open(const char *devname, void **handle)
 		goto free;
 	}
 	ltfsmsg(ATG0086I, devname, reserved_size);
+	_update_max_xfer_len(priv, reserved_size, true);
 
 	increment_openfactor(priv->info.host, priv->info.channel);
 
@@ -4240,6 +4283,7 @@ static int _cdb_read_block_limits(void *device) {
 int sg_get_parameters(void *device, struct tc_drive_param *params)
 {
 	int ret = -EDEV_UNKNOWN;
+	int max_xfer;
 	struct sg_data *priv = (struct sg_data*)device;
 
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_GETPARAM));
@@ -4308,10 +4352,15 @@ int sg_get_parameters(void *device, struct tc_drive_param *params)
 		params->density   = priv->density_code;
 	}
 
+	/* One block is one transfer: cap by the host path as well as by the drive */
+	max_xfer = SG_MAX_BLOCK_SIZE;
+	if (priv->max_xfer_len > 0 && priv->max_xfer_len < max_xfer)
+		max_xfer = priv->max_xfer_len;
+
 	if (global_data.crc_checking)
-		params->max_blksize = MIN(_cdb_read_block_limits(device), SG_MAX_BLOCK_SIZE - 4);
+		params->max_blksize = MIN(_cdb_read_block_limits(device), max_xfer - 4);
 	else
-		params->max_blksize = MIN(_cdb_read_block_limits(device), SG_MAX_BLOCK_SIZE);
+		params->max_blksize = MIN(_cdb_read_block_limits(device), max_xfer);
 
 	ret = 0;
 

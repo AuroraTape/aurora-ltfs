@@ -128,5 +128,8 @@ root:table {
 		// are loaded, so its text is duplicated in the source.
 		AMK0082W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting mkaltfs" }
 		AMK0083E:string { "Cannot set the LANG environment variable" }
+
+		// Block size chosen from the device limit (issue #148)
+		AMK0084I:string { "Block size lowered to %lu bytes: the drive or the host transfer path supports at most %u bytes per block" }
 	}
 }
