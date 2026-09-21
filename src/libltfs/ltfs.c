@@ -4483,6 +4483,44 @@ int ltfs_wait_device_ready(struct ltfs_volume *vol)
 }
 
 /**
+ * Wait until a medium is loaded into an empty drive.
+ * The drive is polled every LTFS_WAIT_MEDIUM_INTERVAL seconds; a termination signal
+ * (see ltfs_set_signal_handlers()) ends the wait within a second.
+ * @param timeout_sec give up after this many seconds, 0 to wait without a limit
+ * @param vol LTFS volume
+ * @return 0 when a medium is present, -LTFS_INTERRUPTED when interrupted by a signal,
+ *         -EDEV_NO_MEDIUM when the time limit is reached, or another negative value on error
+ */
+int ltfs_wait_medium(unsigned long timeout_sec, struct ltfs_volume *vol)
+{
+	unsigned long elapsed = 0;
+	int ret;
+
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	while (true) {
+		bool expired = (timeout_sec && elapsed >= timeout_sec);
+
+		if (ltfs_is_interrupted())
+			return -LTFS_INTERRUPTED;
+
+		/* Look at the drive on every interval, and once more before giving up so that a
+		 * time limit which is no multiple of the interval is used up to its end */
+		if (expired || elapsed % LTFS_WAIT_MEDIUM_INTERVAL == 0) {
+			ret = tape_medium_present(vol->device);
+			if (ret != 0)
+				return (ret < 0) ? ret : 0;
+		}
+
+		if (expired)
+			return -EDEV_NO_MEDIUM;
+
+		sleep(1);
+		++elapsed;
+	}
+}
+
+/**
  * Recover EOD missing status simlpy (only try to spece EOD)
  * @param vol LTFS volume. The label structure receives a new UUID and format time; all other
  *            label fields should be filled in correctly before calling this function.

@@ -130,6 +130,7 @@ struct device_data;
 #define LTFS_MIN_CACHE_SIZE_DEFAULT   25 /* Default minimum cache size (MiB) */
 #define LTFS_MAX_CACHE_SIZE_DEFAULT   50 /* Default maximum cache size (MiB) */
 #define LTFS_SYNC_PERIOD_DEFAULT (5 * 60) /* default sync period (5 minutes) */
+#define LTFS_WAIT_MEDIUM_INTERVAL     5  /* polling interval for an empty drive (seconds) */
 
 #define LTFS_NUM_PARTITIONS           2
 #define LTFS_FILENAME_MAX             255
@@ -738,6 +739,7 @@ int ltfs_logpage(const uint8_t page, const uint8_t subpage, unsigned char *buf,
 int ltfs_mam(const tape_partition_t part, unsigned char *buf,
 			 const size_t size, struct ltfs_volume *vol);
 int ltfs_wait_device_ready(struct ltfs_volume *vol);
+int ltfs_wait_medium(unsigned long timeout_sec, struct ltfs_volume *vol);
 void ltfs_recover_eod_simple(struct ltfs_volume *vol);
 
 int ltfs_print_device_list(struct tape_ops *ops);
