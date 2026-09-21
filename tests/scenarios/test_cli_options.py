@@ -12,6 +12,7 @@ Every invocation has a short timeout so a regression that hangs a
 command fails the test cleanly instead of stalling CI.
 """
 
+import platform
 import re
 import shlex
 import subprocess
@@ -231,3 +232,16 @@ def test_altfsindextool_open_failure_on_bogus_device(tmp_path):
     )
     assert r.returncode != 0
     assert "open" in (r.stdout + r.stderr).lower()
+
+
+def test_kernel_version_names_the_machine(tmp_path):
+    """ALG0027I ends with the machine the kernel runs on (issue #147: it
+    said "i386" on x86_64 because it probed /proc/sys/kernel/vsyscall64)."""
+    tape = tmp_path / "tape"
+    tape.mkdir()
+    r = subprocess.run(["mkaltfs", "-e", "file", "-d", str(tape),
+                        "-s", "ARCH00", "-n", "arch", "-f"],
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    line = next(l for l in (r.stdout + r.stderr).splitlines() if "ALG0027I" in l)
+    assert line.endswith(" " + platform.machine()), line
