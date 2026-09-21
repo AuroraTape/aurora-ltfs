@@ -55,6 +55,7 @@
 *************************************************************************************
 */
 #include <syslog.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
@@ -450,10 +451,12 @@ int validate_wait_medium_option(struct ltfs_fuse_data *priv)
 	if (! priv->wait_medium_str)
 		return 0;
 
+	/* Digits only: strtoul() would accept leading blanks and a sign. 0 is refused, the way
+	 * to wait without a limit is to give no value. */
 	errno = 0;
 	priv->wait_medium_sec = strtoul(priv->wait_medium_str, &end, 10);
-	if (errno || end == priv->wait_medium_str || *end != '\0' ||
-		priv->wait_medium_str[0] == '-' || priv->wait_medium_sec == 0) {
+	if (errno || ! isdigit((unsigned char)priv->wait_medium_str[0]) || *end != '\0' ||
+		priv->wait_medium_sec == 0) {
 		ltfsmsg(AFS0146E, priv->wait_medium_str);
 		return 1;
 	}
@@ -1095,6 +1098,8 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 			} else if (ret == -EDEV_NO_MEDIUM) {
 				ltfsmsg(AFS0145E, priv->wait_medium_sec);
 			} else if (ret == 0) {
+				/* The drive may still be loading the cartridge on its own: LOAD returns
+				 * when that is done, like for a cartridge a library has just inserted */
 				ltfsmsg(AFS0143I);
 				ltfs_load_tape(priv->data);
 				ret = ltfs_wait_device_ready(priv->data);

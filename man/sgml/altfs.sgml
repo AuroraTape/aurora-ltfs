@@ -174,7 +174,12 @@
             <para>
               Wait for a cartridge when the drive is empty at startup, instead of failing.
               The drive is polled until a cartridge is loaded, then the mount continues as usual.
-              With <replaceable>sec</replaceable>, give up after that many seconds; without it, wait without a limit.
+              With <replaceable>sec</replaceable> (1 or more), give up after that many seconds; without it, wait without a limit.
+              The drive is polled about every 5 seconds.
+            </para>
+            <para>
+              altfs waits before it goes to the background: also without -f the command does not return
+              until a cartridge is loaded and the mount is set up, or until the wait ends.
             </para>
             <para>
               Only an empty drive is waited for. Any other error, and a cartridge that cannot be mounted

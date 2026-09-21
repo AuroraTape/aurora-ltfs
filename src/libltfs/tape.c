@@ -2797,8 +2797,10 @@ make_ready:
 				return ret;
 			}
 			if (load_rc == -LTFS_NO_MEDIUM) {
-				/* Nothing to become ready. A backend that reports "need initialize" for an
-				 * empty drive would keep this loop spinning forever otherwise. */
+				/*
+				 * Nothing to become ready. A backend that reports "need initialize" for an
+				 * empty drive would keep this loop spinning forever otherwise.
+				 */
 				return -EDEV_NO_MEDIUM;
 			}
 			goto make_ready;
@@ -2821,10 +2823,18 @@ make_ready:
 
 /**
  * Check quietly if a medium is in the drive, for polling an empty drive.
- * A positive answer only means "worth trying": the regular load and
- * tape_wait_device_ready() sequence decides if the medium is usable.
+ * The only negative answer is "no medium". Everything else the drive says, errors included
+ * (becoming ready, unit attention, a reservation that needs to be revalidated, a hardware
+ * error), means "stop polling": the caller then runs the regular load sequence, which
+ * retries what can be retried and reports what is wrong with the proper messages.
+ *
+ * A drive that has just received a cartridge loads it on its own and answers "becoming
+ * ready" meanwhile. That needs no special handling here: the LOAD command of the regular
+ * sequence is not an immediate one, it returns when the cartridge is loaded. It is the same
+ * as loading a cartridge that a library has just moved into the drive (tape_load_tape()).
  * @param dev device handle
- * @return 1 if a medium seems to be present, 0 if the drive is empty, or a negative value on error
+ * @return 1 if polling should stop, 0 if the drive is empty, or a negative value when the
+ *         device handle is not usable
  */
 int tape_medium_present(struct device_data *dev)
 {
@@ -2836,6 +2846,8 @@ int tape_medium_present(struct device_data *dev)
 	ret = _tape_test_unit_ready(dev);
 	if (ret == -EDEV_NO_MEDIUM)
 		return 0;
+	if (ret == -LTFS_NULL_ARG)
+		return ret;
 
 	if (ret == -EDEV_NEED_INITIALIZE) {
 		/* Not loaded, which says nothing about a medium for some backends: ask for a load */

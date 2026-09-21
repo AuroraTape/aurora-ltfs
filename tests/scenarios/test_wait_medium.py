@@ -42,7 +42,23 @@ def station(tmp_path):
 
     drive = tmp_path / "Drive_DRV001.ULT3580-TD5"
     _set_drive(drive, "empty")
-    return drive, mnt, tmp_path / "altfs.log"
+    yield drive, mnt, tmp_path / "altfs.log"
+
+    # Whatever a failed assertion left behind: an altfs that waits
+    # without a time limit would keep the drive, and a mount would keep
+    # the temporary directory busy.
+    for proc in _started:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        if not proc.altfs_log.closed:
+            proc.altfs_log.close()
+    _started.clear()
+    if os.path.ismount(mnt):
+        subprocess.run(["fusermount", "-u", "-z", str(mnt)], check=False)
+
+
+_started = []
 
 
 def _start(drive, mnt, log_path, *options):
@@ -53,6 +69,7 @@ def _start(drive, mnt, log_path, *options):
         cmd += ["-o", option]
     proc = subprocess.Popen(cmd + [str(mnt)], stdout=log, stderr=log)
     proc.altfs_log = log
+    _started.append(proc)
     return proc
 
 
@@ -152,7 +169,22 @@ def test_signal_ends_the_wait_cleanly(station, signum):
     assert umount_tape_foreground(proc, mnt) == 0
 
 
-@pytest.mark.parametrize("value", ["abc", "0", "-5", "10s"])
+def test_time_limit_shorter_than_the_polling_interval(station):
+    """The drive is looked at once more before altfs gives up, so a
+    time limit below the polling interval is not a plain sleep."""
+    drive, mnt, log_path = station
+
+    proc = _start(drive, mnt, log_path, "wait_medium=3")
+    assert _wait_for(
+        lambda: "AFS0142I" in log_path.read_text(errors="replace"), 10)
+    _set_drive(drive, _CARTRIDGE)
+
+    assert _wait_for(lambda: os.path.ismount(mnt), 20), \
+        log_path.read_text(errors="replace")
+    assert umount_tape_foreground(proc, mnt) == 0
+
+
+@pytest.mark.parametrize("value", ["abc", "0", "-5", "+5", " 5", "10s"])
 def test_invalid_time_limit_is_refused(station, value):
     drive, mnt, log_path = station
 

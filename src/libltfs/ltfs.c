@@ -4499,16 +4499,20 @@ int ltfs_wait_medium(unsigned long timeout_sec, struct ltfs_volume *vol)
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	while (true) {
+		bool expired = (timeout_sec && elapsed >= timeout_sec);
+
 		if (ltfs_is_interrupted())
 			return -LTFS_INTERRUPTED;
 
-		if (elapsed % LTFS_WAIT_MEDIUM_INTERVAL == 0) {
+		/* Look at the drive on every interval, and once more before giving up so that a
+		 * time limit which is no multiple of the interval is used up to its end */
+		if (expired || elapsed % LTFS_WAIT_MEDIUM_INTERVAL == 0) {
 			ret = tape_medium_present(vol->device);
 			if (ret != 0)
 				return (ret < 0) ? ret : 0;
 		}
 
-		if (timeout_sec && elapsed >= timeout_sec)
+		if (expired)
 			return -EDEV_NO_MEDIUM;
 
 		sleep(1);
