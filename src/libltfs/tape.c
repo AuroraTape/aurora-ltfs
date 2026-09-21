@@ -2796,6 +2796,11 @@ make_ready:
 			if (IS_HARDWARE_ERROR(-load_rc) || load_rc == -EDEV_LOAD_UNLOAD_ERROR) {
 				return ret;
 			}
+			if (load_rc == -LTFS_NO_MEDIUM) {
+				/* Nothing to become ready. A backend that reports "need initialize" for an
+				 * empty drive would keep this loop spinning forever otherwise. */
+				return -EDEV_NO_MEDIUM;
+			}
 			goto make_ready;
 		} else if (ret == -LTFS_NULL_ARG)
 			return ret;
@@ -2812,6 +2817,34 @@ make_ready:
 	}
 
 	return ret;
+}
+
+/**
+ * Check quietly if a medium is in the drive, for polling an empty drive.
+ * A positive answer only means "worth trying": the regular load and
+ * tape_wait_device_ready() sequence decides if the medium is usable.
+ * @param dev device handle
+ * @return 1 if a medium seems to be present, 0 if the drive is empty, or a negative value on error
+ */
+int tape_medium_present(struct device_data *dev)
+{
+	int ret;
+
+	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
+	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	ret = _tape_test_unit_ready(dev);
+	if (ret == -EDEV_NO_MEDIUM)
+		return 0;
+
+	if (ret == -EDEV_NEED_INITIALIZE) {
+		/* Not loaded, which says nothing about a medium for some backends: ask for a load */
+		ret = dev->backend->load(dev->backend_data, &dev->position);
+		if (ret == -EDEV_NO_MEDIUM)
+			return 0;
+	}
+
+	return 1;
 }
 
 /**

@@ -127,6 +127,9 @@ struct ltfs_fuse_data {
 	char *rollback_str;            /**< Target generation to roll back mount (string) */
 	unsigned int rollback_gen;     /**< Target generation to roll back mount */
 	int release_device;            /**< Release device? */
+	int wait_medium;               /**< Wait for a medium when the drive is empty at startup? */
+	char *wait_medium_str;         /**< Time limit of wait_medium in seconds, as specified */
+	unsigned long wait_medium_sec; /**< Time limit of wait_medium in seconds, 0 for no limit */
 	int allow_other;               /**< Allow all users to access the volume? */
 	char *capture_dir;             /**< Directory to capture index information  */
 	char *symlink_str;             /**< Symbolic Link type fetched by option (live or posix)*/

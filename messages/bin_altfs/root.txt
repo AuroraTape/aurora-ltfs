@@ -236,5 +236,12 @@ root:table {
 		AFS0137W:string { "The locale \'%s\' is not available; falling back. Set LANG to an installed locale to suppress this warning" }
 		AFS0138W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfs" }
 		AFS0139E:string { "Cannot set the LANG environment variable" }
+		AFS0140I:string { "    -o wait_medium[=<sec>]    Wait for a cartridge when the drive is empty at startup, for <sec> seconds or without a limit" }
+		AFS0141I:string { "No medium in the drive. Waiting for a cartridge to be loaded (no time limit). The drive stays reserved" }
+		AFS0142I:string { "No medium in the drive. Waiting up to %lu seconds for a cartridge to be loaded. The drive stays reserved" }
+		AFS0143I:string { "A medium is detected. Continuing with the mount" }
+		AFS0144I:string { "Interrupted while waiting for a medium. The drive is released" }
+		AFS0145E:string { "No medium was loaded within %lu seconds" }
+		AFS0146E:string { "Invalid value for the wait_medium option (%s)" }
 	}
 }

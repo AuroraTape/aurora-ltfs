@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS" "8" "05 April 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS" "8" "21 September 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs \- File system based on a linear tape drive
@@ -83,6 +83,17 @@ When index_file is only specified, meta-data read-only mode is attempted. EAGAIN
 .TP
 \fB-o release_device\fR
 Clear device reservation (should be specified with -o devname
+.TP
+\fB-o wait_medium[=\fIsec\fB]\fR
+Wait for a cartridge when the drive is empty at startup, instead of failing.
+The drive is polled until a cartridge is loaded, then the mount continues as usual.
+With \fIsec\fR, give up after that many seconds; without it, wait without a limit.
+
+Only an empty drive is waited for. Any other error, and a cartridge that cannot be mounted
+(unformatted, inconsistent, medium error), ends altfs as without this option.
+The drive stays reserved while altfs is waiting, so other commands cannot use it until
+the waiting altfs is stopped. SIGTERM or SIGINT ends the wait; altfs releases the drive
+and exits with status 0 because nothing has failed.
 .TP
 \fB-o symlink_type=\fItype\fB\fR
 Specify symbolic link type (default: posix)

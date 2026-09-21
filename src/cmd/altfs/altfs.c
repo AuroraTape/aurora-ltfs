@@ -126,6 +126,8 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("device_list",            device_list, 1),
 	LTFS_OPT("rollback_mount=%s",      rollback_str, 0),
 	LTFS_OPT("release_device",         release_device, 1),
+	LTFS_OPT("wait_medium",            wait_medium, 1),
+	LTFS_OPT("wait_medium=%s",         wait_medium_str, 0),
 	LTFS_OPT("allow_other",            allow_other, 1),
 	LTFS_OPT("noallow_other",          allow_other, 0),
 	LTFS_OPT("capture_index=%s",       capture_dir, 0),
@@ -171,6 +173,7 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0119I);                              /* -o device_list */
 	ltfsresult(AFS0120I);                              /* -o rollback_mount */
 	ltfsresult(AFS0125I);                              /* -o release_device */
+	ltfsresult(AFS0140I);                              /* -o wait_medium[=<sec>] */
 	ltfsresult(AFS0128I);                              /* -o symlink_type=type */
 	ltfsresult(AFS0127I);                              /* -o capture_index */
 	ltfsresult(AFS0129I);                              /* -o scsi_append_only_mode=<on|off> */
@@ -436,6 +439,29 @@ static int create_workdir(struct ltfs_fuse_data *priv)
 	return 0;
 }
 
+/**
+ * -o wait_medium[=<sec>]: the form with a value also enables the option
+ */
+int validate_wait_medium_option(struct ltfs_fuse_data *priv)
+{
+	char *end = NULL;
+
+	priv->wait_medium_sec = 0;
+	if (! priv->wait_medium_str)
+		return 0;
+
+	errno = 0;
+	priv->wait_medium_sec = strtoul(priv->wait_medium_str, &end, 10);
+	if (errno || end == priv->wait_medium_str || *end != '\0' ||
+		priv->wait_medium_str[0] == '-' || priv->wait_medium_sec == 0) {
+		ltfsmsg(AFS0146E, priv->wait_medium_str);
+		return 1;
+	}
+
+	priv->wait_medium = 1;
+	return 0;
+}
+
 int validate_sync_option(struct ltfs_fuse_data *priv)
 {
 	char *sync_time_str, *end_time_str;
@@ -689,6 +715,11 @@ int main(int argc, char **argv)
 
 	/* Validate sync option */
 	ret = validate_sync_option(priv);
+	if (ret != 0)
+		return 1; /* Error message was already displayed */
+
+	/* Validate wait_medium option */
+	ret = validate_wait_medium_option(priv);
 	if (ret != 0)
 		return 1; /* Error message was already displayed */
 
@@ -1043,6 +1074,32 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 		/* Setup tape drive */
 		ltfs_load_tape(priv->data);
 		ret = ltfs_wait_device_ready(priv->data);
+		if (ret == -EDEV_NO_MEDIUM && priv->wait_medium) {
+			/*
+			 * Only an empty drive is waited for. Every other error, and a medium that turns
+			 * out to be unusable once it is there, fails as it does without the option.
+			 * The drive is already reserved by ltfs_device_open(); ltfs_volume_free()
+			 * closes the device and releases it on every exit from here.
+			 */
+			if (priv->wait_medium_sec)
+				ltfsmsg(AFS0142I, priv->wait_medium_sec);
+			else
+				ltfsmsg(AFS0141I);
+
+			ret = ltfs_wait_medium(priv->wait_medium_sec, priv->data);
+			if (ret == -LTFS_INTERRUPTED) {
+				/* Asked to stop before there was anything to mount: not a failure */
+				ltfs_volume_free(&priv->data);
+				ltfsmsg(AFS0144I);
+				return 0;
+			} else if (ret == -EDEV_NO_MEDIUM) {
+				ltfsmsg(AFS0145E, priv->wait_medium_sec);
+			} else if (ret == 0) {
+				ltfsmsg(AFS0143I);
+				ltfs_load_tape(priv->data);
+				ret = ltfs_wait_device_ready(priv->data);
+			}
+		}
 		if (ret < 0) {
 			ltfsmsg(AFS0068E);
 			ltfs_volume_free(&priv->data);
