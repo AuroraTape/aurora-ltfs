@@ -1897,6 +1897,10 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	 */
 	tape_refresh_encryption_status(vol->device);
 
+	/* The index just read is the last full index of this volume (a different cartridge may
+	 * be mounted on a revalidation) */
+	vol->full_index_to_go = vol->full_index_interval;
+
 	barcode = _get_barcode(vol);
 
 	ltfsmsg(ALB0032I,
@@ -2525,7 +2529,6 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	bool update_vollock = false;
 	int volstat = -1, new_volstat = 0;
 	char *bc_print = NULL;
-	const char *fallback = NULL;
 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
@@ -2535,13 +2538,13 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		return ret;
 	}
 
-	type = _ltfs_resolve_index_type(type, vol, &fallback);
+	/* ltfs_sync_index() resolves and reports the type before it gets here; this is for the
+	 * callers that come with a resolved type already */
+	type = _ltfs_resolve_index_type(type, vol, NULL);
 	if (type == LTFS_INCREMENTAL_INDEX && partition != ltfs_dp_id(vol)) {
 		/* An incremental index is a construct of the data partition */
 		type = LTFS_FULL_INDEX;
 	}
-	if (fallback)
-		ltfsmsg(ALB0286W, fallback);
 
 	bc_print = _get_barcode(vol);
 
@@ -3717,6 +3720,7 @@ int ltfs_sync_index(char *reason, bool index_locking, enum ltfs_index_type type,
 	char partition;
 	bool dp_index_file_end, ip_index_file_end;
 	char *bc_print = NULL;
+	const char *fallback = NULL;
 
 start:
 	ret = ltfs_get_partition_readonly(ltfs_dp_id(vol), vol);
@@ -3744,7 +3748,10 @@ start:
 	if (type != LTFS_FULL_INDEX && ! inc_dirty &&
 		! (type == LTFS_INDEX_AUTO && _ltfs_full_index_due(vol)))
 		dirty = false;
-	type = _ltfs_resolve_index_type(type, vol, NULL);
+	/* full_index_to_go is read under the read lock and updated under the write lock, like
+	 * dirty: two syncs that overlap may both find the full index due and both write one.
+	 * That is one full index too many, not a wrong one. */
+	type = _ltfs_resolve_index_type(type, vol, &fallback);
 
 	dp_index_file_end = vol->dp_index_file_end;
 	ip_index_file_end = vol->ip_index_file_end;
@@ -3759,6 +3766,8 @@ start:
 
 		/* Force a new XML schema to be flushed to the tape */
 		ltfsmsg(ALB0191I, bc_print, reason, vol->device->serial_number);
+		if (fallback)
+			ltfsmsg(ALB0286W, fallback);
 		/* If the DP ends in an index and the IP doesn't, then we're most likely positioned
 		 * at the end of the IP, and writing an index there is allowed without first putting
 		 * down a DP index. */

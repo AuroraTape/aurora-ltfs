@@ -1163,7 +1163,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 		/* Index type policy of the periodic sync and the sync on close */
 		ltfs_set_full_index_interval(priv->full_index_interval, priv->data);
 		if (priv->full_index_interval_str)
-			ltfsmsg(AFS0149I, priv->full_index_interval);
+			ltfsmsg(AFS0149I, (long long)priv->full_index_interval);
 
 		/* Validate symbolic link type */
 		priv->data->livelink = false;

@@ -272,7 +272,11 @@ def test_interval_n_writes_n_incremental_indexes_then_a_full_one(tmp_path):
 
 @pytest.mark.parametrize("value", ["", "x", "1.5", "--1", "+1", " 1", "1 "])
 def test_invalid_full_index_interval_is_rejected(tmp_path, value):
-    tape_dir, mnt = _new_tape(tmp_path, "POLBAD")
+    # The option is checked before the device is opened: no tape needed.
+    tape_dir = tmp_path / "tape"
+    mnt = tmp_path / "mnt"
+    tape_dir.mkdir()
+    mnt.mkdir()
 
     result = try_mount_tape(tape_dir, mnt,
                             extra_opts=(f"full_index_interval={value}",))
