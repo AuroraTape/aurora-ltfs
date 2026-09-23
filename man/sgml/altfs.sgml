@@ -139,6 +139,51 @@
           </listitem>
         </varlistentry>
         <varlistentry>
+          <term><option>-o full_index_interval=<replaceable>num</replaceable></option></term>
+          <listitem>
+            <para>
+              Type of the indexes written by the periodic sync and the sync on close (default: -1).
+              These syncs promise nothing about the state of the files, they only bring the volume
+              back to a recent index after a failure. An incremental index (format specification 2.5)
+              records the changes since the previous index and is much smaller than a full index on a
+              volume with many files, but a volume whose last index is incremental has to be repaired
+              with altfsck after a failure, and other LTFS implementations recover it to its last full
+              index only.
+            </para>
+            <para>
+              <variablelist>
+                <varlistentry><term>negative</term>
+                  <listitem>
+                    <para>
+                      Incremental indexes only. A full index is written at unmount and on request
+                      (ltfs.sync, ltfs.commitMessage, ltfs.vendor.Aurora.FullSync).
+                    </para>
+                  </listitem>
+                </varlistentry>
+                <varlistentry><term>0</term>
+                  <listitem>
+                    <para>Full indexes only, the behaviour of the LTFS reference implementation.</para>
+                  </listitem>
+                </varlistentry>
+                <varlistentry><term>N</term>
+                  <listitem>
+                    <para>
+                      N incremental indexes, then a full index. Every full index starts the count
+                      again, and an incremental index written on request (ltfs.vendor.Aurora.IncrementalSync)
+                      counts as well.
+                    </para>
+                  </listitem>
+                </varlistentry>
+              </variablelist>
+            </para>
+            <para>
+              The sync extended attributes always write the type they name, whatever the value.
+              An incremental index is replaced by a full index, with a warning, when the change
+              cannot be described incrementally.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
           <term><option>-o force_mount_no_eod</option></term>
           <listitem>
             <para>

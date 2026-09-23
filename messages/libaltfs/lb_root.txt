@@ -323,5 +323,6 @@ root:table {
 		//unused ALB0283E:string { "An incremental index (format spec 2.5) was found on partition %c after the last full index. This build supports format spec 2.4 and cannot recover it. Use a build with format spec 2.5 support to recover this volume" }
 		ALB0284E:string { "Incremental index recovery: cannot apply the incremental index at block %llu of the data partition (%d). Nothing is written, the volume keeps its last full index" }
 		ALB0285E:string { "Incremental index recovery: the recovered tree is not consistent (%s, UID %llu). Nothing is written, the volume keeps its last full index" }
+		ALB0286W:string { "An incremental index was requested but a full index is written instead (%s)" }
 	}
 }

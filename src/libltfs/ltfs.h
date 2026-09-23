@@ -130,6 +130,7 @@ struct device_data;
 #define LTFS_MIN_CACHE_SIZE_DEFAULT   25 /* Default minimum cache size (MiB) */
 #define LTFS_MAX_CACHE_SIZE_DEFAULT   50 /* Default maximum cache size (MiB) */
 #define LTFS_SYNC_PERIOD_DEFAULT (5 * 60) /* default sync period (5 minutes) */
+#define LTFS_FULL_INDEX_INTERVAL_DEFAULT (-1) /* LTFS_INDEX_AUTO writes incremental indexes, never a full one */
 #define LTFS_WAIT_MEDIUM_INTERVAL     5  /* polling interval for an empty drive (seconds) */
 
 #define LTFS_NUM_PARTITIONS           2
@@ -168,7 +169,7 @@ struct device_data;
 #define INDEX_MAX_COMMENT_LEN         65536 /* Maximum comment field length (per LTFS Format) */
 
 enum ltfs_index_type {
-	LTFS_INDEX_AUTO = 0,   /**< Select index type to write based on specified options */
+	LTFS_INDEX_AUTO = 0,   /**< Select index type to write from vol->full_index_interval */
 	LTFS_FULL_INDEX,       /**< Forcibly write full index */
 	LTFS_INCREMENTAL_INDEX /**< Forcibly write incremental index */
 };
@@ -477,6 +478,11 @@ struct ltfs_volume {
 	TAILQ_HEAD(jcreated_struct, jcreated_entry) created_dirs;
 	bool                journal_err;   /**< Journal error flag, write a full index next time forcibly */
 
+	/* Index type policy of the syncs that pass LTFS_INDEX_AUTO (periodic sync, sync on close, volume sync).
+	 * Only those look at it; an explicit request always writes what it asks for. */
+	int64_t full_index_interval;       /**< < 0: never a full index, 0: always a full index, N > 0: N incremental indexes, then a full one */
+	int64_t full_index_to_go;          /**< Incremental indexes still to be written before the next full index (N > 0 only) */
+
 	/* Misc */
 	const char *work_directory;    /**< work directory for profiler data, dump etc.*/
 };
@@ -558,8 +564,6 @@ struct ltfs_index {
 	mam_lockval_t vollock;              /**< volume lock status on index */
 
 	/* Incremental index */
-	uint64_t full_index_interval;       /**< Number of indexes between full indexes */
-	uint64_t full_index_to_go;          /**< How many incremental index shall be written to the next full index */
 	struct tape_offset selfptr_inc;     /**< self-pointer of previous incremental index (to prior generation on data partition) */
 	struct tape_offset backptr_inc;     /**< back pointer of previous incremental index (to prior generation on data partition) */
 };
@@ -704,6 +708,7 @@ int ltfs_revalidate(bool reacquire, struct ltfs_volume *vol);
 void ltfs_use_atime(bool use_atime, struct ltfs_volume *vol);
 void ltfs_set_work_dir(const char *dir, struct ltfs_volume *vol);
 void ltfs_set_eod_check(bool use, struct ltfs_volume *vol);
+void ltfs_set_full_index_interval(int64_t interval, struct ltfs_volume *vol);
 void ltfs_set_traverse_mode(int mode, struct ltfs_volume *vol);
 int ltfs_override_policy(const char *rules, bool permanent, struct ltfs_volume *vol);
 int ltfs_set_scheduler_cache(size_t min_size, size_t max_size, struct ltfs_volume *vol);
