@@ -55,6 +55,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#if defined(__linux__)
+#include <sys/utsname.h>
+#endif
 
 void show_runtime_system_info(void)
 #if defined(__linux__)
@@ -64,35 +67,24 @@ void show_runtime_system_info(void)
 	char destribution[256];
 	DIR *dir;
 	struct dirent *dent;
-	struct stat stat_vm64, stat_rel;
+	struct stat stat_rel;
+	struct utsname uts;
 	char *path, *tmp;
+	ssize_t len;
 
 	fd = open("/proc/version", O_RDONLY);
 	if( fd == -1) {
 		ltfsmsg(ALG0026W);
 	} else {
-		memset(kernel_version, 0, sizeof(kernel_version));
-		read(fd, kernel_version, sizeof(kernel_version));
+		len = read(fd, kernel_version, sizeof(kernel_version) - 1);
+		kernel_version[len > 0 ? len : 0] = '\0';
 		if((tmp = strchr(kernel_version, '\n')) != NULL)
 			*tmp = '\0';
 
-		if(stat("/proc/sys/kernel/vsyscall64", &stat_vm64) != -1 && S_ISREG(stat_vm64.st_mode)) {
-#if defined(__i386__) || defined(__x86_64__)
-			strcat(kernel_version, " x86_64");
-#elif defined(__ppc__) || defined(__ppc64__)
-			strcat(kernel_version, " ppc64");
-#else
-			strcat(kernel_version, " unknown");
-#endif
-		}
-		else {
-#if defined(__i386__) || defined(__x86_64__)
-			strcat(kernel_version, " i386");
-#elif defined(__ppc__) || defined(__ppc64__)
-			strcat(kernel_version, " ppc");
-#else
-			strcat(kernel_version, " unknown");
-#endif
+		/* Machine the kernel runs on (x86_64, aarch64, ppc64le, ...) */
+		if (uname(&uts) == 0) {
+			len = strlen(kernel_version);
+			snprintf(kernel_version + len, sizeof(kernel_version) - len, " %s", uts.machine);
 		}
 		ltfsmsg(ALG0027I, kernel_version);
 		close(fd);
