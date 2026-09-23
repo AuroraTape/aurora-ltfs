@@ -85,6 +85,7 @@ struct indextool_opts {
 	uint64_t start_pos;         /**< start position */
 	char *out_dir;              /**< Output dir for captured indexes */
 	unsigned long blocksize;    /**< Nominal tape block size */
+	bool blocksize_given;       /**< Was the block size given with -b? */
 	struct config_file *config; /**< Configuration data read from the global LTFS config file */
 	char *backend_path;         /**< Path to tape backend shared library */
 	char *kmi_backend_name;     /**< Name or path to the key manager interface backend library */
@@ -436,6 +437,22 @@ static int capture_index(struct ltfs_volume *vol, struct indextool_opts *opt, vo
 	}
 	ltfsmsg(AIX0008D);
 
+	/* A block is read with one command, so the read size cannot exceed what
+	 * the drive and the host transfer path support */
+	{
+		unsigned int max_blksize = 0;
+
+		if (tape_get_max_blocksize(vol->device, &max_blksize) == 0 && max_blksize < opt->blocksize) {
+			if (opt->blocksize_given) {
+				ltfsmsg(AIX0070E, opt->blocksize, max_blksize);
+				ret = INDEXTOOL_USAGE_SYNTAX_ERROR;
+				goto out_close;
+			}
+			opt->blocksize = max_blksize;
+			ltfsmsg(AIX0069I, opt->blocksize, max_blksize);
+		}
+	}
+
 	/* Capture_index */
 	ret = _capture(opt, vol);
 
@@ -644,6 +661,7 @@ int main(int argc, char **argv)
 				break;
 			case 'b':
 				opt.blocksize = atoi(optarg);
+				opt.blocksize_given = true;
 				break;
 			case '-':
 				opt.kmi_backend_name = strdup(optarg);

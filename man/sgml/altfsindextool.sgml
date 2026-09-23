@@ -90,7 +90,9 @@
         <varlistentry>
           <term><option>-b, --blocksize=<replaceable>num</replaceable></option></term>
           <listitem>
-            <para>Specify the LTFS record size</para>
+            <para>Specify the LTFS record size, i.e. the read size for one block. Without this option the
+            default (524288) is lowered to what the drive and the host transfer path support; a larger value
+            given with this option is refused. Blocks larger than that limit cannot be read on this host</para>
           </listitem>
         </varlistentry>
         <varlistentry>

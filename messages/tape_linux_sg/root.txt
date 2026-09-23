@@ -148,5 +148,9 @@ root:table {
 						"    -o autodump                enable autodump (default)\n"
 						"    -o noautodump              disable autodump\n"
 						"    -o scsi_lbprotect=<on|off> enable drive logical block protection (default=off)\n" }
+
+		// Host transfer limit (issue #148)
+		ATG0107I:string { "The maximum transfer length to %s is %d bytes" }
+		ATG0108W:string { "The host transfer path limits a single transfer to %s to %d bytes: volumes with a larger block size cannot be read or written through this path" }
         }
 }

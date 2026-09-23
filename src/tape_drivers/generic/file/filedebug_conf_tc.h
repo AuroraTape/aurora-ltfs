@@ -87,6 +87,7 @@ struct filedebug_conf_tc
 	uint64_t  change_direction_us; /**< Time to change direction for emulate delay */
 	uint64_t  change_track_us;     /**< Time to change track for emulate delay */
 	uint64_t  threading_sec;       /**< Time to mechanical threading/unthreading */
+	uint64_t  max_transfer_bytes;  /**< Emulated maximum transfer length of the host path, 0 = no limit */
 };
 
 int filedebug_conf_tc_write_xml(char *filename, const struct filedebug_conf_tc *conf);

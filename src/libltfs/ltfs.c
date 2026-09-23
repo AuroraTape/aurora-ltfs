@@ -1467,7 +1467,7 @@ int ltfs_start_mount(bool trial, struct ltfs_volume *vol)
 	}
 	if (tape_maxblk < vol->label->blocksize) {
 		/* Blocksize too large for device */
-		ltfsmsg(ALB0013E, vol->label->blocksize, tape_maxblk);
+		ltfsmsg(ALB0013E, vol->label->blocksize, tape_maxblk, vol->label->blocksize);
 		return -LTFS_LARGE_BLOCKSIZE;
 	}
 
