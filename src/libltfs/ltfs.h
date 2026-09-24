@@ -635,6 +635,7 @@ int ltfs_finish();
 const char *ltfs_default_device_name(struct tape_ops *ops);
 int ltfs_device_open(const char *devname, struct tape_ops *ops, struct ltfs_volume *vol);
 int ltfs_device_reopen(const char *devname, struct ltfs_volume *vol);
+void ltfs_device_close_raw(struct ltfs_volume *vol);
 void ltfs_device_close(struct ltfs_volume *vol);
 void ltfs_device_close_skip_append_only_mode(struct ltfs_volume *vol);
 int ltfs_setup_device(struct ltfs_volume *vol);

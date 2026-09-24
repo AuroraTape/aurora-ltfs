@@ -78,6 +78,7 @@ struct ltfs_fuse_data {
 	struct statvfs fs_stats;       /**< Filesystem stats */
 
 	pid_t pid_orig;                /**< Process ID of LTFS at launched (before background exec) */
+	bool device_closed;            /**< Device was closed before fuse_main(); ltfs_fuse_mount() must reopen it */
 
 	bool perm_override;            /**< Did the user ask for any permissions override? */
 	uid_t mount_uid;               /**< Real UID of the mounting user */

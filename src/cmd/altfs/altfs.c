@@ -980,6 +980,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	char *mountpoint = NULL;
 	struct fuse_args tmpa=FUSE_ARGS_INIT(0, NULL);
 	int i;
+	int foreground = 0;
 	bool is_worm = false, is_ro = false;
 
 	if (priv->devname) {
@@ -1389,7 +1390,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	for ( i=0; i<args->argc; i++) {
 		fuse_opt_add_arg(&tmpa, args->argv[i]);
 	}
-	ret = fuse_parse_cmdline( &tmpa, &mountpoint, NULL, NULL);
+	ret = fuse_parse_cmdline( &tmpa, &mountpoint, NULL, &foreground);
 	fuse_opt_free_args(&tmpa);
 	if (ret < 0 || mountpoint == NULL) {
 		ltfsmsg(AFS0079E, ret);
@@ -1399,6 +1400,22 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	priv->data->mountpoint = mountpoint;
 	priv->data->mountpoint_len = strlen(mountpoint);
 
+#ifdef __APPLE__
+	/*
+	 * macFUSE 5.4.0 keeps the daemonizing parent alive until the mount,
+	 * including the FUSE INIT exchange, has completed. The parent's
+	 * SCSITaskUserClient blocks the reopen in the forked child (the kernel
+	 * allows one user client per device), so close the device here and let
+	 * ltfs_fuse_mount() reopen it in the process that serves the requests
+	 * (see #157).
+	 */
+	if (priv->devname && !foreground) {
+		ltfsmsg(AFS0151I);
+		ltfs_device_close_raw(priv->data);
+		priv->device_closed = true;
+	}
+#endif
+
 	/* now we can safely call FUSE */
 	ltfsmsg(AFS0086I);
 	ltfsmsg(AFS0087I);
@@ -1407,6 +1424,21 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	if (ret != 0) {
 		ltfsmsg(AFS0098W, ret);
 	}
+
+#ifdef __APPLE__
+	/*
+	 * fuse_main() failed before the forked child took the device over
+	 * (e.g. the FUSE mount itself failed). Reopen so the eject and the
+	 * close below can talk to the drive. The daemonizing parent never
+	 * gets here: it exits inside fuse_daemonize() once the mount result
+	 * is known, so the ret check is only a guard against reopening a
+	 * device that a running daemon owns.
+	 */
+	if (priv->device_closed && ret != 0) {
+		if (ltfs_device_reopen(priv->devname, priv->data) == 0)
+			priv->device_closed = false;
+	}
+#endif
 
 	/*  Setup signal handler again to terminate cleanly */
 	ret = ltfs_set_signal_handlers();
