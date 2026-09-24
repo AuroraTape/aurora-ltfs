@@ -974,6 +974,7 @@ int iokit_reopen(const char *devname, void *device)
 
 	ret = iokit_find_ssc_device(&priv->dev, priv->drive_number);
 	if(ret < 0){
+		ltfsmsg(ATK0077E, "iokit_find_ssc_device", ret);
 		ret = -EDEV_DEVICE_UNOPENABLE;
 		ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REOPEN));
 		return ret;
@@ -981,22 +982,32 @@ int iokit_reopen(const char *devname, void *device)
 
 	ret = iokit_obtain_exclusive_access(&priv->dev);
 	if(ret < 0) {
-		ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REOPEN));
-		return ret;
+		ltfsmsg(ATK0077E, "iokit_obtain_exclusive_access", ret);
+		goto free;
 	}
 
 	ret = iokit_get_drive_identifier(&priv->dev, &id_data);
 	if(ret < 0) {
-		ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REOPEN));
-		return ret;
+		ltfsmsg(ATK0077E, "iokit_get_drive_identifier", ret);
+		iokit_release_exclusive_access(&priv->dev);
+		goto free;
 	}
-	strncpy(priv->drive_serial, id_data.unit_serial, UNIT_SERIAL_LENGTH - 1);
+
+	/* The drive numbering can change between the open and the reopen,
+	   so make sure the same drive was found again */
+	if (strncmp(priv->drive_serial, id_data.unit_serial, UNIT_SERIAL_LENGTH)) {
+		ltfsmsg(ATK0079E, id_data.unit_serial, priv->drive_serial);
+		iokit_release_exclusive_access(&priv->dev);
+		ret = -EDEV_DEVICE_UNOPENABLE;
+		goto free;
+	}
 
 	/* Check the drive is supportable */
-	struct supported_device **cur = ibm_supported_drives;
-	while(*cur) {
+	struct supported_device **cur = get_supported_devs(id_data.vendor_id);
+	while(cur && *cur) {
 		if((! strncmp(id_data.vendor_id, (*cur)->vendor_id, strlen((*cur)->vendor_id)) ) &&
 		   (! strncmp(id_data.product_id, (*cur)->product_id, strlen((*cur)->product_id)) ) ) {
+			priv->vendor = (*cur)->vendor_type;
 			drive_type = (*cur)->drive_type;
 			break;
 		}
@@ -1004,17 +1015,26 @@ int iokit_reopen(const char *devname, void *device)
 	}
 
 	if(drive_type > 0) {
-		if (!ibm_tape_is_supported_firmware(drive_type, (unsigned char*)id_data.product_rev)) {
+		if (!drive_has_supported_fw(priv->vendor, drive_type, (unsigned char*)id_data.product_rev)) {
 			iokit_release_exclusive_access(&priv->dev);
 			ret = -EDEV_UNSUPPORTED_FIRMWARE;
+			goto free;
 		} else
 			priv->drive_type = drive_type;
 	} else {
 		ltfsmsg(ATK0014I, id_data.vendor_id, id_data.product_id);
 		iokit_release_exclusive_access(&priv->dev);
 		ret = -EDEV_DEVICE_UNSUPPORTABLE; /* Unsupported device */
+		goto free;
 	}
 
+	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REOPEN));
+	return ret;
+
+free:
+	/* Do not keep a half-opened interface: it holds the device's only
+	   SCSITaskUserClient and would make any further reopen fail */
+	iokit_free_device(&priv->dev);
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_REOPEN));
 	return ret;
 }
@@ -1056,10 +1076,23 @@ int iokit_close_raw(void *device)
 	int ret = 0;
 	struct iokit_data *priv = (struct iokit_data*)device;
 
-	/* This operation is called only after resource is forked. */
-	/* On OSX environment, this operation is not required      */
-	/* because file discripter is not inherited.               */
+	/*
+	 * Called in the process that does not serve requests around a fork.
+	 * The kernel allows only one SCSITaskUserClient per device and it lives
+	 * until the plug-in interface is destroyed, so the interface must be torn
+	 * down completely here or iokit_reopen() in the serving process fails
+	 * with kIOReturnNoResources (#157). No SCSI command is issued: the IOKit
+	 * exclusive access is given up until the reopen (leaving a window where
+	 * another process can open the drive), but the medium state and the SCSI
+	 * persistent reservation are kept for the reopening process.
+	 */
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_ENTER(REQ_TC_CLOSERAW));
+
+	if(priv->dev.exclusive_lock)
+		iokit_release_exclusive_access(&priv->dev);
+
+	ret = iokit_free_device(&priv->dev);
+
 	ltfs_profiler_add_entry(priv->profiler, NULL, TAPEBEND_REQ_EXIT(REQ_TC_CLOSERAW));
 	return ret;
 }

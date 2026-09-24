@@ -236,5 +236,7 @@ root:table {
 		AFS0137W:string { "The locale \'%s\' is not available; falling back. Set LANG to an installed locale to suppress this warning" }
 		AFS0138W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfs" }
 		AFS0139E:string { "Cannot set the LANG environment variable" }
+		AFS0150E:string { "Cannot reopen the tape device (%d). Aborting the mount" }
+		AFS0151I:string { "Closing the tape device until the process serving the file system requests starts" }
 	}
 }

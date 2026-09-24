@@ -132,6 +132,8 @@ static int _find_device(struct iokit_device *device, int device_number, CFMutabl
 
 	if( (serviceIterator == IO_OBJECT_NULL) || (IOIteratorNext(serviceIterator) == 0) ) {
 		/* TODO: Replace to better logic*/
+		if (serviceIterator != IO_OBJECT_NULL)
+			IOObjectRelease(serviceIterator);
 		ret = -101;
 		return ret;
 	}
@@ -151,6 +153,9 @@ static int _find_device(struct iokit_device *device, int device_number, CFMutabl
 				count++;
 			}
 		}
+
+		IOObjectRelease(serviceIterator);
+		serviceIterator = IO_OBJECT_NULL;
 
 		if(scsiDevice == IO_OBJECT_NULL) {
 			/* TODO: Replace to better logic*/
@@ -174,7 +179,11 @@ static int _find_device(struct iokit_device *device, int device_number, CFMutabl
 														 &plugin_interface,
 														 &score);
 		if (kernelResult != kIOReturnSuccess) {
-			/* TODO: Replace to better logic*/
+			/* kIOReturnNoResources (0xe00002be) here: another process still holds
+			 * the device's SCSITaskUserClient (one user client per device) */
+			ltfsmsg(ATK0078E, "IOCreatePlugInInterfaceForService", (unsigned int)kernelResult);
+			IOObjectRelease(device->ioservice);
+			device->ioservice = IO_OBJECT_NULL;
 			ret = -1;
 			return ret;
 		} else {
@@ -185,7 +194,12 @@ static int _find_device(struct iokit_device *device, int device_number, CFMutabl
 																	  (LPVOID *) &task_device_interface);
 
 			if (plugin_query_result != S_OK) {
-				/* TODO: Replace to better logic*/
+				ltfsmsg(ATK0078E, "QueryInterface", (unsigned int)plugin_query_result);
+				// The SCSITaskUserClient lives until the plug-in interface is
+				// destroyed, so it must not be left behind on failure
+				IODestroyPlugInInterface(plugin_interface);
+				IOObjectRelease(device->ioservice);
+				device->ioservice = IO_OBJECT_NULL;
 				ret = -2;
 				return ret;
 			}
@@ -390,20 +404,33 @@ int iokit_free_device(struct iokit_device *device)
 	if(device == NULL)
 		return ret;
 
-	_release_scsitask(device);
+	// Release the SCSI task created on the task interface
+	if(device->task != NULL) {
+		(*device->task)->Release(device->task);
+		device->task = NULL;
+	}
 
-	// Release PlugInInterface
+	_release_scsitask(device);
+	device->scsiTaskInterface = NULL;
+
+	// Release PlugInInterface. The device's SCSITaskUserClient lives until this
+	// is destroyed, so it must be nulled out here to let iokit_find_ssc_device()
+	// create a fresh one on reopen.
 	if(device->plugInInterface != NULL) {
 		kernelResult = IODestroyPlugInInterface(device->plugInInterface);
 		if(kernelResult != kIOReturnSuccess) {
 			ret = -100;
 		}
+		device->plugInInterface = NULL;
 	}
 
 	// Release SCSI object from I/O Registry.
-	kernelResult = IOObjectRelease(device->ioservice);
-	if(kernelResult != kIOReturnSuccess) {
-		ret = -101;
+	if(device->ioservice != IO_OBJECT_NULL) {
+		kernelResult = IOObjectRelease(device->ioservice);
+		if(kernelResult != kIOReturnSuccess) {
+			ret = -101;
+		}
+		device->ioservice = IO_OBJECT_NULL;
 	}
 
 	return ret;

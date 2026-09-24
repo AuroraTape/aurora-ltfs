@@ -126,5 +126,8 @@ root:table {
 		ATK0075D:string { "Backend %s: (%llu, %llu) FM = %llu %s" }
 		ATK0076I:string { "iokit backend options:\n    -o devname=<dev>          tape device (default=%s)\n"
 						"    -o scsi_lbprotect=<on|off> enable drive logical block protection (default=off)\n" }
+		ATK0077E:string { "Cannot reopen device: %s failed (%d)" }
+		ATK0078E:string { "Cannot create a plug-in interface for the device: %s (0x%x)" }
+		ATK0079E:string { "Reopened device has an unexpected serial: %s (expected %s)" }
         }
 }
