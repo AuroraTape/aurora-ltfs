@@ -1107,18 +1107,35 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 {
 	struct ltfs_fuse_data *priv = fuse_get_context()->private_data;
 	struct statvfs *stats = &priv->fs_stats;
+	int ret;
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_MOUNT), 0, 0);
 
-	if (priv->pid_orig != getpid()) {
+	if (priv->device_closed || priv->pid_orig != getpid()) {
 		/*
-		 * Reopen device when LTFS was forked in fuse_main().
-		 * Backend must handle reopen correctly if it sis needed.
-		 * For example, iokit backend must handle reopen. But ibmtape backend
+		 * Reopen device when it was closed before fuse_main() (macOS
+		 * backgrounding, see #157) or when LTFS was forked in fuse_main().
+		 * Backend must handle reopen correctly if it is needed.
+		 * For example, iokit backend must handle reopen. But sg backend
 		 * doesn't need handle reopen because file descriptor is took over to a child
 		 * process.
 		 */
-		ltfs_device_reopen(priv->devname, priv->data);
+		ret = ltfs_device_reopen(priv->devname, priv->data);
+		if (ret < 0) {
+			/*
+			 * No request can be served without the device. Exit the FUSE
+			 * loop so the volume does not stay mounted with every access
+			 * failing on a dead handle. The destroy callback then runs
+			 * against the closed device, which is safe: no request was
+			 * served, so the volume is not dirty and the unmount path has
+			 * nothing to write.
+			 */
+			ltfsmsg(AFS0150E, ret);
+			fuse_exit(fuse_get_context()->fuse);
+			ltfs_request_trace(FUSE_REQ_EXIT(REQ_MOUNT), ret, 0);
+			return priv;
+		}
+		priv->device_closed = false;
 	}
 
 #ifndef mingw_PLATFORM

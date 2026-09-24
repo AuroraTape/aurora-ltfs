@@ -246,5 +246,7 @@ root:table {
 		AFS0147I:string { "    -o full_index_interval=<num> Type of the indexes written by the periodic sync and the sync on close (default: %d)\n                              <num> < 0: incremental indexes only, a full index at unmount and on request\n                              <num> = 0: full indexes only\n                              <num> > 0: <num> incremental indexes, then a full index" }
 		AFS0148E:string { "Invalid value for the full_index_interval option (%s)" }
 		AFS0149I:string { "Full index interval is %lld (negative: incremental indexes only, 0: full indexes only, N: N incremental indexes, then a full one)" }
+		AFS0150E:string { "Cannot reopen the tape device (%d). Aborting the mount" }
+		AFS0151I:string { "Closing the tape device until the process serving the file system requests starts" }
 	}
 }

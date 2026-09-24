@@ -479,6 +479,15 @@ int ltfs_device_reopen(const char *devname, struct ltfs_volume *vol)
 }
 
 /**
+ * Convenience wrapper for tape_device_close_raw.
+ */
+void ltfs_device_close_raw(struct ltfs_volume *vol)
+{
+	if (vol)
+		tape_device_close_raw(vol->device);
+}
+
+/**
  * Convenience wrappers for tape_device_close.
  */
 void ltfs_device_close(struct ltfs_volume *vol)

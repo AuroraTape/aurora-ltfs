@@ -302,7 +302,10 @@ void _tape_device_close(struct device_data *device, void * const kmi_handle,
 }
 
 /**
- * Just close device driver instance
+ * Close only the OS-level device instance, without touching the medium or the
+ * reservation. The backend stays attached so tape_device_reopen() can
+ * re-establish the connection. Called in the process that does not serve
+ * requests around the fork of LTFS.
  * @param device the device to close
  */
 void tape_device_close_raw(struct device_data *device)
@@ -314,8 +317,6 @@ void tape_device_close_raw(struct device_data *device)
 
 	if (device->backend && device->backend_data)
 		device->backend->close_raw(device->backend_data);
-	device->backend_data = NULL;
-	device->backend = NULL;
 
 	/* Invalidate previous drive presence */
 	device->previous_exist.tv_sec = 0;
