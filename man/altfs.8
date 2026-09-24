@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS" "8" "21 September 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS" "8" "23 September 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs \- File system based on a linear tape drive
@@ -67,6 +67,34 @@ LTFS attempts to write an index when a file is closed
 \fBunmount\fR
 LTFS attempts to write an index when the medium is unmounted
 .RE
+.TP
+\fB-o full_index_interval=\fInum\fB\fR
+Type of the indexes written by the periodic sync and the sync on close (default: -1).
+These syncs promise nothing about the state of the files, they only bring the volume
+back to a recent index after a failure. An incremental index (format specification 2.5)
+records the changes since the previous index and is much smaller than a full index on a
+volume with many files, but a volume whose last index is incremental has to be repaired
+with altfsck after a failure, and other LTFS implementations recover it to its last full
+index only.
+
+.RS
+.TP
+\fBnegative\fR
+Incremental indexes only. A full index is written at unmount and on request
+(ltfs.sync, ltfs.commitMessage, ltfs.vendor.Aurora.FullSync).
+.TP
+\fB0\fR
+Full indexes only, the behaviour of the LTFS reference implementation.
+.TP
+\fBN\fR
+N incremental indexes, then a full index. Every full index starts the count
+again, and an incremental index written on request (ltfs.vendor.Aurora.IncrementalSync)
+counts as well.
+.RE
+
+The sync extended attributes always write the type they name, whatever the value.
+An incremental index is replaced by a full index, with a warning, when the change
+cannot be described incrementally.
 .TP
 \fB-o force_mount_no_eod\fR
 Skip EOD existence check when mounting (read-only mount).

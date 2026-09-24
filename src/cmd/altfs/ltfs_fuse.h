@@ -95,6 +95,8 @@ struct ltfs_fuse_data {
 	char *sync_type_str;           /**< Sync type fetched by option (time, close or none)*/
 	ltfs_sync_type_t sync_type;    /**< Sync type (time, close or none)*/
 	long sync_time;                /**< Sync time*/
+	char *full_index_interval_str; /**< Index type policy of the automatic syncs, as specified */
+	int64_t full_index_interval;   /**< < 0: incremental indexes only, 0: full indexes only, N: N incremental then a full one */
 
 	const char *devname;              /**< Device where tape resides */
 	const char *tape_backend_name;    /**< Name of tape backend library or path to library */

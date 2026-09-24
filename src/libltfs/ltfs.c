@@ -340,6 +340,7 @@ int ltfs_volume_alloc(const char *execname, struct ltfs_volume **volume)
 	newvol->mountpoint_len = 0;
 	newvol->set_pew = true;
 	newvol->file_open_count = 0;
+	ltfs_set_full_index_interval(LTFS_FULL_INDEX_INTERVAL_DEFAULT, newvol);
 
 	ret = init_mrsw(&newvol->lock);
 	if (ret < 0) {
@@ -1896,6 +1897,10 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	 */
 	tape_refresh_encryption_status(vol->device);
 
+	/* The index just read is the last full index of this volume (a different cartridge may
+	 * be mounted on a revalidation) */
+	vol->full_index_to_go = vol->full_index_interval;
+
 	barcode = _get_barcode(vol);
 
 	ltfsmsg(ALB0032I,
@@ -2365,6 +2370,21 @@ void ltfs_set_eod_check(bool use, struct ltfs_volume *vol)
 }
 
 /**
+ * Set the index type policy of the syncs that pass LTFS_INDEX_AUTO. This should be done
+ * before calling ltfs_mount.
+ * @param interval < 0: never write a full index, 0: always write a full index,
+ *                 N > 0: write N incremental indexes, then a full one
+ * @param vol LTFS volume
+ */
+void ltfs_set_full_index_interval(int64_t interval, struct ltfs_volume *vol)
+{
+	if (vol) {
+		vol->full_index_interval = interval;
+		vol->full_index_to_go = interval; /* The index read at mount counts as the last full index */
+	}
+}
+
+/**
  * Set the index traversal mode. Used when looking for indexes.
  * @param mode Traversal mode, must be TRAVERSE_FORWARD or TRAVERSE_BACKWARD.
  * @param vol LTFS volume.
@@ -2439,14 +2459,21 @@ size_t ltfs_max_cache_size(struct ltfs_volume *vol)
 }
 
 /**
+ * Is the full index of the LTFS_INDEX_AUTO policy due?
+ * With full_index_interval < 0 it never is, with 0 it always is, with N > 0 it is once
+ * N incremental indexes were written since the last full index.
+ */
+static inline bool _ltfs_full_index_due(struct ltfs_volume *vol)
+{
+	return vol->full_index_interval >= 0 && vol->full_index_to_go == 0;
+}
+
+/**
  * Decide the type of index to write.
  *
  * LTFS_INDEX_AUTO is used by the syncs that promise nothing about the state of the files
- * (periodic sync, sync on close, volume sync). They only have to bring the volume back to a
- * recent index after a failure, so they write incremental indexes. Whoever needs a guarantee
- * asks for a full index explicitly.
- *  - full_index_interval == 0: always an incremental index
- *  - full_index_interval != 0: a full index after full_index_interval incremental indexes
+ * (periodic sync, sync on close, volume sync). Only those follow vol->full_index_interval;
+ * an explicit request (the sync extended attributes, unmount) writes what it asks for.
  *
  * An incremental index is turned into a full index when the journal cannot describe the
  * changes: it missed a change (journal_err) or the change is not in the journal at all
@@ -2454,19 +2481,27 @@ size_t ltfs_max_cache_size(struct ltfs_volume *vol)
  *
  * @param type requested type of index
  * @param vol LTFS volume
+ * @param fallback set to the reason when a requested incremental index is turned into a
+ *                 full index, NULL when the caller does not care
  * @return LTFS_FULL_INDEX or LTFS_INCREMENTAL_INDEX
  */
-static enum ltfs_index_type _ltfs_resolve_index_type(enum ltfs_index_type type, struct ltfs_volume *vol)
+static enum ltfs_index_type _ltfs_resolve_index_type(enum ltfs_index_type type, struct ltfs_volume *vol,
+													 const char **fallback)
 {
-	if (type == LTFS_INDEX_AUTO) {
-		if (vol->index->full_index_interval && ! vol->index->full_index_to_go)
-			type = LTFS_FULL_INDEX;
-		else
-			type = LTFS_INCREMENTAL_INDEX;
-	}
+	if (type == LTFS_INDEX_AUTO)
+		type = _ltfs_full_index_due(vol) ? LTFS_FULL_INDEX : LTFS_INCREMENTAL_INDEX;
 
-	if (type == LTFS_INCREMENTAL_INDEX && (vol->journal_err || ! HASH_COUNT(vol->journal)))
-		type = LTFS_FULL_INDEX;
+	if (type == LTFS_INCREMENTAL_INDEX) {
+		if (vol->journal_err) {
+			if (fallback)
+				*fallback = "journal error";
+			type = LTFS_FULL_INDEX;
+		} else if (! HASH_COUNT(vol->journal)) {
+			if (fallback)
+				*fallback = "the change is not in the journal";
+			type = LTFS_FULL_INDEX;
+		}
+	}
 
 	return type;
 }
@@ -2503,24 +2538,12 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		return ret;
 	}
 
-	type = _ltfs_resolve_index_type(type, vol);
+	/* ltfs_sync_index() resolves and reports the type before it gets here; this is for the
+	 * callers that come with a resolved type already */
+	type = _ltfs_resolve_index_type(type, vol, NULL);
 	if (type == LTFS_INCREMENTAL_INDEX && partition != ltfs_dp_id(vol)) {
 		/* An incremental index is a construct of the data partition */
 		type = LTFS_FULL_INDEX;
-	}
-
-	switch (type) {
-		case LTFS_FULL_INDEX:
-			if (vol->index->full_index_interval)
-				vol->index->full_index_to_go = vol->index->full_index_interval;
-			break;
-		case LTFS_INCREMENTAL_INDEX:
-			if (vol->index->full_index_interval && vol->index->full_index_to_go)
-				vol->index->full_index_to_go--;
-			break;
-		default:
-			/* TODO: Unexpected index type error */
-			break;
 	}
 
 	bc_print = _get_barcode(vol);
@@ -2769,6 +2792,9 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 
 		incj_clear(vol); /* Clear incremental journal data */
 		ltfs_unset_index_dirty(true, vol->index);
+
+		/* A full index of any origin starts a new chain of incremental indexes */
+		vol->full_index_to_go = vol->full_index_interval;
 	} else {
 		/* The data partition does not end in a full index any more */
 		vol->dp_index_file_end = false;
@@ -2777,6 +2803,10 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		ltfs_mutex_lock(&vol->index->dirty_lock);
 		vol->index->inc_dirty = false;
 		ltfs_mutex_unlock(&vol->index->dirty_lock);
+
+		/* An incremental index of any origin counts against the interval */
+		if (vol->full_index_to_go > 0)
+			vol->full_index_to_go--;
 
 		ltfsmsg(ALB0281I,
 				bc_print,
@@ -3690,6 +3720,7 @@ int ltfs_sync_index(char *reason, bool index_locking, enum ltfs_index_type type,
 	char partition;
 	bool dp_index_file_end, ip_index_file_end;
 	char *bc_print = NULL;
+	const char *fallback = NULL;
 
 start:
 	ret = ltfs_get_partition_readonly(ltfs_dp_id(vol), vol);
@@ -3710,13 +3741,17 @@ start:
 	/*
 	 * Nothing is changed since the last index: do not write an empty incremental index, and
 	 * do not let an empty journal turn the request into a full index on every sync.
-	 * The exception is the full index that is due after full_index_interval incremental
-	 * indexes, it closes the chain even when the volume is idle.
+	 * The exception is the full index that is due by the full_index_interval policy: it
+	 * closes the chain of incremental indexes even when the volume is idle (dirty says
+	 * whether there is a chain to close).
 	 */
 	if (type != LTFS_FULL_INDEX && ! inc_dirty &&
-		! (type == LTFS_INDEX_AUTO && vol->index->full_index_interval && ! vol->index->full_index_to_go))
+		! (type == LTFS_INDEX_AUTO && _ltfs_full_index_due(vol)))
 		dirty = false;
-	type = _ltfs_resolve_index_type(type, vol);
+	/* full_index_to_go is read under the read lock and updated under the write lock, like
+	 * dirty: two syncs that overlap may both find the full index due and both write one.
+	 * That is one full index too many, not a wrong one. */
+	type = _ltfs_resolve_index_type(type, vol, &fallback);
 
 	dp_index_file_end = vol->dp_index_file_end;
 	ip_index_file_end = vol->ip_index_file_end;
@@ -3731,6 +3766,8 @@ start:
 
 		/* Force a new XML schema to be flushed to the tape */
 		ltfsmsg(ALB0191I, bc_print, reason, vol->device->serial_number);
+		if (fallback)
+			ltfsmsg(ALB0286W, fallback);
 		/* If the DP ends in an index and the IP doesn't, then we're most likely positioned
 		 * at the end of the IP, and writing an index there is allowed without first putting
 		 * down a DP index. */

@@ -123,6 +123,7 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("eject",                  eject, 1),
 	LTFS_OPT("noeject",                eject, 0),
 	LTFS_OPT("sync_type=%s",           sync_type_str, 0),
+	LTFS_OPT("full_index_interval=%s", full_index_interval_str, 0),
 	LTFS_OPT("force_mount_no_eod",     skip_eod_check, 1),
 	LTFS_OPT("device_list",            device_list, 1),
 	LTFS_OPT("rollback_mount=%s",      rollback_str, 0),
@@ -170,6 +171,7 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0117I);                              /* -o eject */
 	ltfsresult(AFS0121I);                              /* -o noeject */
 	ltfsresult(AFS0118I, LONG_MAX / 60);               /* -o sync_type=type */
+	ltfsresult(AFS0147I, LTFS_FULL_INDEX_INTERVAL_DEFAULT); /* -o full_index_interval=<num> */
 	ltfsresult(AFS0124I);                              /* -o force_mount_no_eod */
 	ltfsresult(AFS0119I);                              /* -o device_list */
 	ltfsresult(AFS0120I);                              /* -o rollback_mount */
@@ -465,6 +467,34 @@ int validate_wait_medium_option(struct ltfs_fuse_data *priv)
 	return 0;
 }
 
+/**
+ * -o full_index_interval=<num>: index type policy of the syncs that pass LTFS_INDEX_AUTO
+ * (periodic sync, sync on close). Negative: incremental indexes only, 0: full indexes only,
+ * N: N incremental indexes, then a full one.
+ */
+int validate_full_index_interval_option(struct ltfs_fuse_data *priv)
+{
+	char *end = NULL;
+	const char *digits;
+
+	priv->full_index_interval = LTFS_FULL_INDEX_INTERVAL_DEFAULT;
+	if (! priv->full_index_interval_str)
+		return 0;
+
+	/* An optional minus sign and digits: strtoll() would accept leading blanks and a plus */
+	digits = priv->full_index_interval_str;
+	if (*digits == '-')
+		digits++;
+	errno = 0;
+	priv->full_index_interval = strtoll(priv->full_index_interval_str, &end, 10);
+	if (errno || ! isdigit((unsigned char)*digits) || *end != '\0') {
+		ltfsmsg(AFS0148E, priv->full_index_interval_str);
+		return 1;
+	}
+
+	return 0;
+}
+
 int validate_sync_option(struct ltfs_fuse_data *priv)
 {
 	char *sync_time_str, *end_time_str;
@@ -723,6 +753,11 @@ int main(int argc, char **argv)
 
 	/* Validate wait_medium option */
 	ret = validate_wait_medium_option(priv);
+	if (ret != 0)
+		return 1; /* Error message was already displayed */
+
+	/* Validate full_index_interval option */
+	ret = validate_full_index_interval_option(priv);
 	if (ret != 0)
 		return 1; /* Error message was already displayed */
 
@@ -1124,6 +1159,11 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 			ltfsmsg(AFS0070I);
 			ltfs_set_eod_check(! priv->skip_eod_check, priv->data);
 		}
+
+		/* Index type policy of the periodic sync and the sync on close */
+		ltfs_set_full_index_interval(priv->full_index_interval, priv->data);
+		if (priv->full_index_interval_str)
+			ltfsmsg(AFS0149I, (long long)priv->full_index_interval);
 
 		/* Validate symbolic link type */
 		priv->data->livelink = false;
