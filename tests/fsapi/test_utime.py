@@ -1,6 +1,7 @@
 import ctypes
 import ctypes.util
 import os
+import sys
 import time
 
 import pytest
@@ -8,12 +9,19 @@ import pytest
 from common.altfs import format_tape, mount_tape, umount_tape
 from common.index import find_entries_by_name, parse_latest_index
 
-# utimensat(2) special tv_nsec values (linux/stat.h), exposed to tests as
-# string sentinels so they cannot collide with a genuine nanosecond value.
+# utimensat(2) special tv_nsec values, exposed to tests as string
+# sentinels so they cannot collide with a genuine nanosecond value.
+# The numeric values (UTIME_NOW, UTIME_OMIT, AT_FDCWD) are platform ABI:
+# linux/stat.h + fcntl.h on Linux, sys/stat.h + sys/fcntl.h on macOS.
+# Other platforms differ again (FreeBSD: -1 / -2 / -100), so the
+# utimensat tests skip where the values have not been verified.
 _NOW = "now"
 _OMIT = "omit"
-_SPECIAL_NSEC = {_NOW: (1 << 30) - 1, _OMIT: (1 << 30) - 2}
-_AT_FDCWD = -100
+_PLATFORM_ABI = {
+    "linux": ({_NOW: (1 << 30) - 1, _OMIT: (1 << 30) - 2}, -100),
+    "darwin": ({_NOW: -1, _OMIT: -2}, -2),
+}
+_SPECIAL_NSEC, _AT_FDCWD = _PLATFORM_ABI.get(sys.platform, ({}, None))
 
 
 class _Timespec(ctypes.Structure):
@@ -30,6 +38,8 @@ def _utimensat(path, atime, mtime):
     """Call utimensat(2) directly: os.utime() cannot express the
     UTIME_NOW / UTIME_OMIT special values. atime/mtime are nanosecond
     timestamps, or the _NOW / _OMIT sentinels."""
+    if _AT_FDCWD is None:
+        pytest.skip(f"utimensat constants not verified on {sys.platform}")
     times = (_Timespec * 2)()
     for i, val in enumerate((atime, mtime)):
         if val in _SPECIAL_NSEC:
