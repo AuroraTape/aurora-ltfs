@@ -63,6 +63,111 @@ jobs:
           ALTFS_PREFIX: ${{ github.workspace }}/_install
         run: bash tests/scenarios/run.sh -v
 
+      # Cross-platform volume check (issue #141): volumes with content can
+      # only be written where a FUSE mount is possible. Build them here, check
+      # them here first (that keeps the check itself honest), and hand them to
+      # the macOS job below. A tarball keeps the zero-length record files and
+      # the exact names of the file backend intact.
+      - name: Build the volume images
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: |
+          export PATH="${ALTFS_PREFIX}/bin:${PATH}"
+          export LD_LIBRARY_PATH="${ALTFS_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+          # mkaltfs / altfs log every step; keep that out of the job log
+          # unless something fails.
+          log="${RUNNER_TEMP}/make_images.log"
+          python3 tests/xplat/make_images.py --keep-going "${RUNNER_TEMP}/altfs-images" > "$log" 2>&1 \
+            || { tail -n 80 "$log"; exit 1; }
+          tail -n 1 "$log"
+          tar -C "${RUNNER_TEMP}" -czf "${RUNNER_TEMP}/altfs-volume-images.tgz" altfs-images
+
+      - name: Check the volume images (Linux)
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+          ALTFS_IMAGE_DIR: ${{ runner.temp }}/altfs-images
+        run: bash tests/xplat/run.sh -v
+
+      - name: Upload the volume images
+        uses: actions/upload-artifact@v4
+        with:
+          name: altfs-volume-images
+          path: ${{ runner.temp }}/altfs-volume-images.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  # Read and recover on macOS what Linux wrote (issue #141). The hosted
+  # macOS runners cannot mount (macFUSE kext / FSKit need an interactive
+  # approval), so this is how the index reader, altfsck's recovery and the
+  # file backend see real volume data there. Tier 2: non-blocking.
+  #
+  # The steps up to "Install pytest" are those of the macos job in
+  # build.yml; keep the two in sync (the artifact can only be consumed
+  # inside this workflow, hence the second build).
+  macos-volume-check:
+    name: Volume check (macOS 15)
+    runs-on: macos-15
+    needs: tests
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Homebrew)
+        run: |
+          brew install \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            ossp-uuid \
+            libxml2 \
+            icu4c
+          brew install --cask macfuse
+
+      # icu4c and libxml2 are keg-only; macFUSE installs fuse.pc under
+      # /usr/local/lib/pkgconfig even on Apple Silicon.
+      - name: Set up Homebrew paths
+        run: |
+          echo "PKG_CONFIG_PATH=$(brew --prefix icu4c)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig:/usr/local/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "$(brew --prefix icu4c)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix libxml2)/bin" >> "$GITHUB_PATH"
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: configure
+        run: LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --prefix="${GITHUB_WORKSPACE}/_install"
+
+      - name: make
+        run: make -k -j"$(sysctl -n hw.ncpu)"
+
+      - name: make install
+        run: make install
+
+      # The runner's python3 is Homebrew's and refuses pip installs outside
+      # a virtual environment (PEP 668), so pytest goes into one.
+      - name: Install pytest
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "pytest>=7,<10"
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Download the volume images
+        uses: actions/download-artifact@v4
+        with:
+          name: altfs-volume-images
+          path: ${{ runner.temp }}
+
+      - name: Check the volume images (macOS)
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+          ALTFS_IMAGE_DIR: ${{ runner.temp }}/altfs-images
+        run: |
+          tar -C "${RUNNER_TEMP}" -xzf "${RUNNER_TEMP}/altfs-volume-images.tgz"
+          python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print("images written by", m["generator"], "with", m["altfs"])' "${ALTFS_IMAGE_DIR}/manifest.json"
+          bash tests/xplat/run.sh -v
+
   coverage:
     name: Coverage (Ubuntu 24.04)
     runs-on: ubuntu-24.04
