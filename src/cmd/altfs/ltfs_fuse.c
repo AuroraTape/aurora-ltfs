@@ -823,6 +823,105 @@ int ltfs_fuse_ftruncate(const char *path, off_t length, struct fuse_file_info *f
 	return errormap_fuse_error(ret);
 }
 
+#if defined(__APPLE__) && defined(UTIME_NOW) && defined(UTIME_OMIT)
+/*
+ * SETATTR on macFUSE.
+ *
+ * macFUSE delivers every attribute change (chmod, chown, truncate, utimes)
+ * as one SETATTR request. When a filesystem does not implement setattr_x,
+ * libfuse splits the request into the per-attribute operations above, but
+ * that generic path calls utimens() only when both timestamps change: an
+ * mtime-only update gets the current time as its atime, and an atime-only
+ * update is dropped. The flag_utime_omit_ok path that fixes this on Linux
+ * is not compiled into macFUSE (and the volicon module it stacks by default
+ * clears the flag anyway). Handling SETATTR here lets the valid mask decide
+ * exactly which attributes change.
+ *
+ * Once setattr_x exists libfuse no longer falls back to the generic path,
+ * so every attribute macFUSE can send is covered: mode, uid/gid, size and
+ * atime/mtime go to the handlers above. Creation, change and backup times
+ * and the BSD flags have no place in the LTFS index; they are accepted
+ * without effect, as the generic path did.
+ *
+ * The timestamps are handed to ltfs_fuse_utimens() as UTIME_OMIT /
+ * UTIME_NOW markers, so this block needs the same macros as the marker
+ * resolution there; without them macFUSE keeps its generic path.
+ */
+
+/* Valid-mask bits for "set the time to now", named FUSE_SET_ATTR_ATIME_NOW /
+ * FUSE_SET_ATTR_MTIME_NOW in fuse_lowlevel.h, which fuse.h does not expose. */
+#define _SETATTR_WANTS_ACCTIME_NOW(attr) ((attr)->valid & (1 << 7))
+#define _SETATTR_WANTS_MODTIME_NOW(attr) ((attr)->valid & (1 << 8))
+
+static int _ltfs_fuse_setattr_x(const char *path, struct setattr_x *attr, struct fuse_file_info *fi)
+{
+	bool wants_time = SETATTR_WANTS_ACCTIME(attr) || SETATTR_WANTS_MODTIME(attr) ||
+		_SETATTR_WANTS_ACCTIME_NOW(attr) || _SETATTR_WANTS_MODTIME_NOW(attr);
+	bool wants_path = SETATTR_WANTS_MODE(attr) || SETATTR_WANTS_UID(attr) ||
+		SETATTR_WANTS_GID(attr) || wants_time;
+	int ret = 0;
+
+	/* Only the size can be changed through the file handle alone. libfuse
+	 * hands a NULL path only to fsetattr_x, and only for a node that no
+	 * longer has a name. */
+	if (! path && (! fi || wants_path))
+		return -ENOENT;
+
+	if (SETATTR_WANTS_SIZE(attr)) {
+		if (fi)
+			ret = ltfs_fuse_ftruncate(path, attr->size, fi);
+		else
+			ret = ltfs_fuse_truncate(path, attr->size);
+	}
+
+	if (! ret && SETATTR_WANTS_MODE(attr))
+		ret = ltfs_fuse_chmod(path, attr->mode);
+
+	if (! ret && (SETATTR_WANTS_UID(attr) || SETATTR_WANTS_GID(attr)))
+		ret = ltfs_fuse_chown(path,
+							  SETATTR_WANTS_UID(attr) ? attr->uid : (uid_t) -1,
+							  SETATTR_WANTS_GID(attr) ? attr->gid : (gid_t) -1);
+
+	if (! ret && wants_time) {
+		struct timespec ts[2];
+
+		/* The kernel resolves UTIME_NOW before the request reaches us, so a
+		 * requested time is a concrete value. Hand the pair to
+		 * ltfs_fuse_utimens() with the UTIME_OMIT / UTIME_NOW markers it
+		 * already resolves, so the time that was not requested keeps its
+		 * stored value. */
+		ts[0].tv_sec = 0;
+		ts[0].tv_nsec = UTIME_OMIT;
+		ts[1].tv_sec = 0;
+		ts[1].tv_nsec = UTIME_OMIT;
+
+		if (_SETATTR_WANTS_ACCTIME_NOW(attr))
+			ts[0].tv_nsec = UTIME_NOW;
+		else if (SETATTR_WANTS_ACCTIME(attr))
+			ts[0] = attr->acctime;
+
+		if (_SETATTR_WANTS_MODTIME_NOW(attr))
+			ts[1].tv_nsec = UTIME_NOW;
+		else if (SETATTR_WANTS_MODTIME(attr))
+			ts[1] = attr->modtime;
+
+		ret = ltfs_fuse_utimens(path, ts);
+	}
+
+	return ret;
+}
+
+int ltfs_fuse_setattr_x(const char *path, struct setattr_x *attr)
+{
+	return _ltfs_fuse_setattr_x(path, attr, NULL);
+}
+
+int ltfs_fuse_fsetattr_x(const char *path, struct setattr_x *attr, struct fuse_file_info *fi)
+{
+	return _ltfs_fuse_setattr_x(path, attr, fi);
+}
+#endif /* __APPLE__ && UTIME_NOW && UTIME_OMIT */
+
 int ltfs_fuse_unlink(const char *path)
 {
 	struct ltfs_fuse_data *priv = fuse_get_context()->private_data;
@@ -1291,6 +1390,12 @@ struct fuse_operations ltfs_ops = {
 	.removexattr = ltfs_fuse_removexattr,
 	.symlink     = ltfs_fuse_symlink,
 	.readlink    = ltfs_fuse_readlink,
+#if defined(__APPLE__) && defined(UTIME_NOW) && defined(UTIME_OMIT)
+	/* macFUSE: take every SETATTR so partial timestamp updates are applied
+	 * as requested (see _ltfs_fuse_setattr_x). */
+	.setattr_x   = ltfs_fuse_setattr_x,
+	.fsetattr_x  = ltfs_fuse_fsetattr_x,
+#endif
 #if FUSE_VERSION >= 28
 	.flag_nullpath_ok = 1,
 #endif
