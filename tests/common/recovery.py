@@ -26,6 +26,7 @@ from common.altfs import (
     run_altfsck,
     umount_tape,
 )
+from common.helpers import get_xattr_bytes, list_xattrs
 from common.index import index_records, parse_latest_index
 
 
@@ -33,7 +34,8 @@ def visible_tree(mnt):
     """Map of relative path -> everything the index records about the
     object that a user can see: kind and content (link target for a
     symlink), the write permission bits (read-only flag) and the
-    ``user.test.*`` extended attributes. The mount point itself is the
+    ``test.*`` extended attributes (named as altfs sees them, see
+    common.helpers.list_xattrs). The mount point itself is the
     entry "."."""
     tree = {}
     for path in [mnt] + sorted(mnt.rglob("*")):
@@ -44,9 +46,9 @@ def visible_tree(mnt):
             content = ("dir", None)
         else:
             content = ("file", path.read_bytes())
-        xattrs = {key: os.getxattr(path, key, follow_symlinks=False)
-                  for key in os.listxattr(path, follow_symlinks=False)
-                  if key.startswith("user.test.")}
+        xattrs = {key: get_xattr_bytes(path, key, follow_symlinks=False)
+                  for key in list_xattrs(path, follow_symlinks=False)
+                  if key.startswith("test.")}
         writable = bool(stat.S_IMODE(os.lstat(path).st_mode) & 0o222)
         tree[rel] = (content, writable, xattrs)
     return tree
