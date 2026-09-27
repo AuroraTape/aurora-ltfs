@@ -27,6 +27,8 @@ import pytest
 from common.altfs import format_tape, mount_tape, umount_tape
 from common.helpers import get_xattr, set_xattr
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 _PROFILER = "ltfs.vendor.Aurora.profiler"
 
 PROF_REQ = 0x1

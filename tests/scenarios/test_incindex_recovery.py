@@ -40,6 +40,8 @@ from common.altfs import (
 from common.helpers import full_sync, incremental_sync
 from common.recovery import crash_and_recover
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 def _setup_base(mnt):
     (mnt / "d" / "sub").mkdir(parents=True)

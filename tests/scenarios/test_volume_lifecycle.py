@@ -48,6 +48,8 @@ from common.altfs import (
 )
 from common.helpers import list_records, set_xattr
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 _FIRST_CONTENT = "written before point-one\n"
 _SECOND_CONTENT = "written before point-two\n"

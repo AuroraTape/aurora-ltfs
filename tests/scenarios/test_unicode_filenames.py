@@ -13,8 +13,12 @@ editor.
 
 import unicodedata
 
+import pytest
+
 from common.altfs import format_tape, mount_tape, umount_tape
 from common.index import parse_latest_index
+
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
 NFC_CAFE = "café.txt"        # é = U+00E9 (precomposed)
 NFD_CAFE = "café.txt"       # e + combining acute (decomposed)

@@ -41,6 +41,8 @@ from common.altfs import (
 )
 from common.helpers import set_xattr
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 _CHUNK = 512 * 1024
 # Enough chunks to guarantee tape writes happen while we are still

@@ -53,6 +53,8 @@ from common.altfs import (
 from common.helpers import full_sync, incremental_sync
 from common.index import parse_latest_index
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 _KEEP_CONTENT = "data written before the last full index\n"
 _LATE_CONTENT = "data recorded only in the incremental index\n"

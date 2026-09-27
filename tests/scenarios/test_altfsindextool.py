@@ -16,6 +16,8 @@ exit-zero, which is exactly what every assertion below catches.
 import subprocess
 import xml.etree.ElementTree as ET
 
+import pytest
+
 from common.altfs import format_tape, mount_tape, umount_tape
 
 
@@ -74,6 +76,7 @@ def test_capture_partition_override_restricts_output(tmp_path_factory):
     assert names == ["ltfs-index-0-5.xml"], names
 
 
+@pytest.mark.mount
 def test_capture_after_writes_picks_up_new_dp_index(tmp_path_factory):
     """Mount → write → unmount (sync_type=unmount) appends new
     DP indexes past block 5. Capture on partition 1 must therefore

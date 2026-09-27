@@ -16,6 +16,8 @@ import pytest
 from common.altfs import format_tape, mount_tape, run_altfsck, try_mount_tape, umount_tape
 from common.helpers import get_xattr
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 _CONFIG = "filedebug_tc_conf.xml"
 _RUN_TIMEOUT = 60
 

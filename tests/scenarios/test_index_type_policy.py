@@ -28,6 +28,8 @@ from common.altfs import (
 from common.helpers import set_xattr
 from common.index import parse_latest_index
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 INC_SYNC = "ltfs.vendor.Aurora.IncrementalSync"
 
 

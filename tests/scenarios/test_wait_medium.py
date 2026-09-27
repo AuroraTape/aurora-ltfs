@@ -22,6 +22,8 @@ import pytest
 
 from common.altfs import format_tape, umount_tape_foreground
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 _DRIVE_RECORD_SIZE = 36
 _CARTRIDGE = "CART01"
