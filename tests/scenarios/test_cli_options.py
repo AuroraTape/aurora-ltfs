@@ -16,7 +16,10 @@ import platform
 import re
 import shlex
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 
 _TIMEOUT = 10
@@ -235,8 +238,12 @@ def test_altfsindextool_open_failure_on_bogus_device(tmp_path):
 
 
 def test_kernel_version_names_the_machine(tmp_path):
-    """ALG0027I ends with the machine the kernel runs on (issue #147: it
-    said "i386" on x86_64 because it probed /proc/sys/kernel/vsyscall64)."""
+    """ALG0027I names the machine the kernel runs on (issue #147: it said
+    "i386" on x86_64 because it probed /proc/sys/kernel/vsyscall64).
+
+    Linux appends the machine to /proc/version itself, so the line ends
+    with it. Other kernels report it inside their own version string
+    (Darwin: "... RELEASE_X86_64", "... RELEASE_ARM64_T8103")."""
     tape = tmp_path / "tape"
     tape.mkdir()
     r = subprocess.run(["mkaltfs", "-e", "file", "-d", str(tape),
@@ -244,4 +251,9 @@ def test_kernel_version_names_the_machine(tmp_path):
                        capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     line = next(l for l in (r.stdout + r.stderr).splitlines() if "ALG0027I" in l)
-    assert line.endswith(" " + platform.machine()), line
+    if sys.platform.startswith("linux"):
+        assert line.endswith(" " + platform.machine()), line
+    elif sys.platform == "darwin":
+        assert platform.machine().upper() in line.upper(), line
+    else:
+        pytest.skip(f"kernel version string format not known on {sys.platform}")

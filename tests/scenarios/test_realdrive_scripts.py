@@ -3,7 +3,7 @@
 The scripts are run by hand on a real drive as root. Here they run in
 their dry-run modes against the file backend, so a change in altfs or in
 the scripts that would break them shows up in CI instead of at the next
-real-drive session.
+real-drive session. Dry run or not, the scripts mount the volume.
 """
 import os
 import shutil
@@ -11,7 +11,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from common.altfs import format_tape
+
+pytestmark = pytest.mark.mount  # the scripts mount the file backend volume
 
 _SCRIPTS = Path(__file__).resolve().parents[1] / "realdrive"
 _RECORD = 36    # file backend drive file: cartridge name or "empty", NUL padded

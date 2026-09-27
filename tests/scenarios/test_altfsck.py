@@ -21,6 +21,8 @@ import signal
 import subprocess
 import time
 
+import pytest
+
 from common.altfs import (
     LTFSCK_CORRECTED,
     format_tape,
@@ -76,6 +78,7 @@ def test_altfsck_modes_on_clean_tape(tmp_path_factory):
     assert b"<ltfsindex" in head
 
 
+@pytest.mark.mount
 def test_altfsck_l_lists_commit_messages_from_synced_writes(tmp_path_factory):
     """Each `setxattr user.ltfs.sync = <msg>` on the mount root
     forces a full index write tagged with the message. After three
@@ -135,6 +138,7 @@ def _kill_altfs_daemon(mnt):
     raise RuntimeError(f"could not detach dead mount: {mnt}")
 
 
+@pytest.mark.mount
 def test_altfsck_recovers_volume_after_daemon_crash(tmp_path_factory):
     """Crash recovery: kill the daemon after a synced generation plus
     unsynced changes. altfsck must bring the volume back to the last

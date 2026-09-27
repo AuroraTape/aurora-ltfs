@@ -22,6 +22,8 @@ from common.fssim import Replay
 from common.helpers import list_records
 from common.recovery import crash_and_recover
 
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
+
 
 _TESTCASES = sorted(
     (Path(__file__).resolve().parents[2] / "contrib" / "fssim" /

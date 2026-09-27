@@ -23,6 +23,8 @@ Expected behavior, verified against src/libltfs/ltfs.c
 
 import os
 
+import pytest
+
 from common.altfs import (
     LTFSCK_CORRECTED,
     LTFSCK_UNCORRECTED,
@@ -34,6 +36,8 @@ from common.altfs import (
     umount_tape,
 )
 from common.helpers import set_xattr
+
+pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
 
 _KEEP_CONTENT = "data written before the EOD was lost\n"

@@ -114,10 +114,16 @@ jobs:
         run: make install
 
   # Build verification for the non-Linux platforms (issue #73). Tier 2/3
-  # platforms, build only — no tape hardware and no FUSE mount in CI, so
-  # nothing is executed. --enable-warning-as-error is deliberately not
-  # used here: these builds compile with clang or older gcc and warning
-  # sets differ from the Tier 1 gcc baseline.
+  # platforms: no tape hardware in CI, and no FUSE mount either (the macFUSE
+  # kernel extension and the FSKit extension both need an interactive
+  # approval an unattended runner cannot give). --enable-warning-as-error is
+  # deliberately not used here: these builds compile with clang or older gcc
+  # and warning sets differ from the Tier 1 gcc baseline.
+  #
+  # macOS additionally runs the tests that do not mount (issue #141): the
+  # installed mkaltfs / altfsck / altfsindextool / altfs start up through the
+  # real plugin loader against the file backend. Non-blocking, as for every
+  # Tier 2 platform.
   macos:
     name: macOS 15
     runs-on: macos-15
@@ -156,6 +162,20 @@ jobs:
 
       - name: make install
         run: make install
+
+      # The runner's python3 is Homebrew's and refuses pip installs outside
+      # a virtual environment (PEP 668), so pytest goes into one.
+      - name: Install pytest
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet "pytest>=7,<10"
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Run mount-free tests
+        continue-on-error: true
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+        run: bash tests/scenarios/run.sh -v -m "not mount"
 
   freebsd:
     name: FreeBSD 14.3

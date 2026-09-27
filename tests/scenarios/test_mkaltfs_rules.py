@@ -18,6 +18,8 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 
+import pytest
+
 from common.altfs import mount_tape, umount_tape
 from common.helpers import list_records, set_xattr
 
@@ -64,6 +66,7 @@ def _file_extent_partition(root, filename):
     return None
 
 
+@pytest.mark.mount
 def test_mkaltfs_rules_size_and_name_route_only_matches_to_ip(tmp_path_factory):
     """`size=1M/name=*.jpg` caches a matching, under-cap file on
     the IP. A name mismatch or a name match that overshoots the
@@ -141,6 +144,7 @@ def test_mkaltfs_rules_size_and_name_route_only_matches_to_ip(tmp_path_factory):
     assert _file_extent_partition(prev_dp_root, "photo.jpg") == "b"
 
 
+@pytest.mark.mount
 def test_mkaltfs_rules_size_only_caches_any_small_file_on_ip(tmp_path_factory):
     """A `size=…` rule with no `name=…` leg lets every under-cap
     file land on the IP — this is the index_criteria_match
@@ -170,6 +174,7 @@ def test_mkaltfs_rules_size_only_caches_any_small_file_on_ip(tmp_path_factory):
     assert b_marker in ip_bytes
 
 
+@pytest.mark.mount
 def test_mkaltfs_rules_multiple_name_globs(tmp_path_factory):
     """`name=*.jpg:*.png` accepts files matching either extension.
     A file matching neither stays on the DP only."""
