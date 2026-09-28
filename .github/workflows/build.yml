@@ -215,6 +215,17 @@ jobs:
             export LD_LIBRARY_PATH=/usr/local/lib
             python3 -m pytest tests/scenarios -v -m "not mount" \
               || echo "::warning::mount-free tests failed on FreeBSD 14.3 (Tier 2, non-blocking)"
+            # Unlike the hosted macOS runners, the VM has a full kernel and
+            # root, so FUSE mounts work: load fusefs and run the mounted
+            # tests as well. Exploratory for now - the harness still carries
+            # Linux assumptions (os.*xattr, fusermount, mountpoint), so
+            # failures are expected and only warn. The timeout bounds a hung
+            # mount; the job limit would otherwise be the only stop.
+            kldload fusefs || true
+            printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
+            chmod +x /usr/local/bin/fusermount
+            timeout 1500 python3 -m pytest tests/fsapi tests/scenarios -v -m mount -rfE \
+              || echo "::warning::mounted tests failed on FreeBSD 14.3 (exploratory, non-blocking)"
 
   netbsd:
     name: NetBSD 10.1
@@ -254,6 +265,12 @@ jobs:
             export PATH=/usr/local/bin:$PATH LD_LIBRARY_PATH=/usr/local/lib
             python3.12 -m pytest tests/scenarios -v -m "not mount" \
               || echo "::warning::mount-free tests failed on NetBSD 10.1 (Tier 3, non-blocking)"
+            # Mounted tests through puffs (librefuse); see the FreeBSD job.
+            modload puffs || true
+            printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
+            chmod +x /usr/local/bin/fusermount
+            timeout 1500 python3.12 -m pytest tests/fsapi tests/scenarios -v -m mount -rfE \
+              || echo "::warning::mounted tests failed on NetBSD 10.1 (exploratory, non-blocking)"
 
   # Message catalog consistency: every ID referenced from src/ is defined
   # under messages/ and vice versa. For a pull request into release/X.Y it

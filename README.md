@@ -54,7 +54,7 @@ We use a tiered support model combined with OS lifecycle tracking.
 | Tier 2 | Best effort. Builds are verified in CI, but failures do not block releases. | macOS, Debian, FreeBSD |
 | Tier 3 | Community-contributed. No guarantees from maintainers. | NetBSD, other platforms |
 
-CI verifies that all Tier 2 platforms (macOS, Debian, FreeBSD) and NetBSD build successfully. On macOS, FreeBSD and NetBSD it also runs the tests that need no FUSE mount (command-line paths, plugin loading, `mkaltfs` / `altfsck` / `altfsindextool` on the file backend), and on macOS it checks and recovers volumes written by the Linux job. The tests that mount run on Linux only: CI has no tape hardware, and the hosted macOS and BSD runners cannot mount. Test failures on Tier 2 and Tier 3 platforms do not block.
+CI verifies that all Tier 2 platforms (macOS, Debian, FreeBSD) and NetBSD build successfully. On macOS, FreeBSD and NetBSD it also runs the tests that need no FUSE mount (command-line paths, plugin loading, `mkaltfs` / `altfsck` / `altfsindextool` on the file backend), and on macOS it checks and recovers volumes written by the Linux job. The tests that mount run on Linux, and experimentally on the FreeBSD and NetBSD VMs, which have a full kernel; the hosted macOS runners cannot mount, and CI has no tape hardware. Test failures on Tier 2 and Tier 3 platforms do not block.
 
 **Tier 1 selection policy:**
 
