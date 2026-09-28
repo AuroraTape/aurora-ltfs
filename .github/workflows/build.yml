@@ -263,8 +263,6 @@ jobs:
             for v in 312 313 311; do
               /usr/sbin/pkg_add "python$v" "py$v-test" && break
             done
-            # per-test timeout for the mounted run; optional
-            /usr/sbin/pkg_add "py$v-test-timeout" || true
           # The default prefix is /usr/local, which is on root's PATH in the
           # VM. See the FreeBSD job for the "|| echo".
           run: |
@@ -279,18 +277,13 @@ jobs:
             done
             "$PY" -m pytest tests/scenarios -v -m "not mount" \
               || echo "::warning::mount-free tests failed on NetBSD 10.1 (Tier 3, non-blocking)"
-            # Mounted tests through puffs (librefuse); see the FreeBSD job.
-            # test_readdir_large_directory hangs in the kernel on puffs
-            # (readdir of a large directory), uninterruptible even by the
-            # per-test timeout, so it is left out here; the outer timeout is
-            # the last resort for the next one of its kind.
-            modload puffs || true
-            printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
-            chmod +x /usr/local/bin/fusermount
-            TO=$("$PY" -c 'import pytest_timeout' 2>/dev/null && echo "--timeout=120")
-            timeout 900 "$PY" -m pytest tests/fsapi tests/scenarios -v -m mount -rfE $TO \
-                --deselect tests/fsapi/test_readdir.py::test_readdir_large_directory \
-              || echo "::warning::mounted tests failed on NetBSD 10.1 (exploratory, non-blocking)"
+            # No mounted tests here. They do run through puffs (librefuse):
+            # modload puffs, a fusermount shim, and 106 of the first 110
+            # passed - but test_readdir_large_directory and then
+            # test_modify_persists_across_remount hung in the kernel,
+            # uninterruptible even by pytest-timeout, until the outer
+            # timeout. Until the puffs side is understood, only the
+            # mount-free tests run on NetBSD.
 
   # Message catalog consistency: every ID referenced from src/ is defined
   # under messages/ and vice versa. For a pull request into release/X.Y it
