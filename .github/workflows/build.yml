@@ -120,10 +120,10 @@ jobs:
   # deliberately not used here: these builds compile with clang or older gcc
   # and warning sets differ from the Tier 1 gcc baseline.
   #
-  # macOS additionally runs the tests that do not mount (issue #141): the
-  # installed mkaltfs / altfsck / altfsindextool / altfs start up through the
-  # real plugin loader against the file backend. Non-blocking, as for every
-  # Tier 2 platform.
+  # macOS, FreeBSD and NetBSD additionally run the tests that do not mount
+  # (issue #141): the installed mkaltfs / altfsck / altfsindextool / altfs
+  # start up through the real plugin loader against the file backend.
+  # Non-blocking, as for every Tier 2/3 platform.
   macos:
     name: macOS 15
     runs-on: macos-15
@@ -200,13 +200,21 @@ jobs:
               fusefs-libs \
               libuuid \
               libxml2 \
-              icu
+              icu \
+              python3 \
+              py311-pytest
+          # The VM action is one step, so the tests cannot get their own
+          # continue-on-error: the "|| echo ::warning::" keeps a test failure
+          # visible in the job log and annotations without failing the job.
           run: |
             set -e
             ./autogen.sh
             ./configure --prefix=/usr/local --mandir=/usr/local/man
             gmake -k -j"$(sysctl -n hw.ncpu)"
             gmake install
+            export LD_LIBRARY_PATH=/usr/local/lib
+            python3 -m pytest tests/scenarios -v -m "not mount" \
+              || echo "::warning::mount-free tests failed on FreeBSD 14.3 (Tier 2, non-blocking)"
 
   netbsd:
     name: NetBSD 10.1
@@ -231,13 +239,21 @@ jobs:
               fuse \
               libuuid \
               libxml2 \
-              icu
+              icu \
+              python312 \
+              py312-test
+          # pkgsrc installs pytest as pytest-3.12 only; go through the
+          # interpreter. The default prefix is /usr/local, which is on
+          # root's PATH in the VM. See the FreeBSD job for the "|| echo".
           run: |
             set -e
             ./autogen.sh
             ./configure
             gmake -k -j"$(sysctl -n hw.ncpu)"
             gmake install
+            export PATH=/usr/local/bin:$PATH LD_LIBRARY_PATH=/usr/local/lib
+            python3.12 -m pytest tests/scenarios -v -m "not mount" \
+              || echo "::warning::mount-free tests failed on NetBSD 10.1 (Tier 3, non-blocking)"
 
   # Message catalog consistency: every ID referenced from src/ is defined
   # under messages/ and vice versa. For a pull request into release/X.Y it
