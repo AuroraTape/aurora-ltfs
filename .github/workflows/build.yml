@@ -204,7 +204,10 @@ jobs:
               python3
             # pytest is a flavored package named after the default python
             # (py311-pytest, py312-pytest, ...): ask the interpreter.
-            pkg install -y "py$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])')-pytest"
+            pyver=$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])')
+            pkg install -y "py${pyver}-pytest"
+            # per-test timeout for the mounted run; optional
+            pkg install -y "py${pyver}-pytest-timeout" || true
           # The VM action is one step, so the tests cannot get their own
           # continue-on-error: the "|| echo ::warning::" keeps a test failure
           # visible in the job log and annotations without failing the job.
@@ -226,7 +229,8 @@ jobs:
             kldload fusefs || true
             printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
             chmod +x /usr/local/bin/fusermount
-            timeout 1500 python3 -m pytest tests/fsapi tests/scenarios -v -m mount -rfE \
+            TO=$(python3 -c 'import pytest_timeout' 2>/dev/null && echo "--timeout=120")
+            timeout 900 python3 -m pytest tests/fsapi tests/scenarios -v -m mount -rfE $TO \
               || echo "::warning::mounted tests failed on FreeBSD 14.3 (exploratory, non-blocking)"
 
   netbsd:
@@ -259,6 +263,8 @@ jobs:
             for v in 312 313 311; do
               /usr/sbin/pkg_add "python$v" "py$v-test" && break
             done
+            # per-test timeout for the mounted run; optional
+            /usr/sbin/pkg_add "py$v-test-timeout" || true
           # The default prefix is /usr/local, which is on root's PATH in the
           # VM. See the FreeBSD job for the "|| echo".
           run: |
@@ -274,10 +280,14 @@ jobs:
             "$PY" -m pytest tests/scenarios -v -m "not mount" \
               || echo "::warning::mount-free tests failed on NetBSD 10.1 (Tier 3, non-blocking)"
             # Mounted tests through puffs (librefuse); see the FreeBSD job.
+            # The first run hung in test_readdir_large_directory (readdir of
+            # a large directory over puffs) until the outer timeout: hence
+            # the per-test timeout, and the outer one as the last resort.
             modload puffs || true
             printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
             chmod +x /usr/local/bin/fusermount
-            timeout 1500 "$PY" -m pytest tests/fsapi tests/scenarios -v -m mount -rfE \
+            TO=$("$PY" -c 'import pytest_timeout' 2>/dev/null && echo "--timeout=120")
+            timeout 900 "$PY" -m pytest tests/fsapi tests/scenarios -v -m mount -rfE $TO \
               || echo "::warning::mounted tests failed on NetBSD 10.1 (exploratory, non-blocking)"
 
   # Message catalog consistency: every ID referenced from src/ is defined
