@@ -234,32 +234,6 @@ jobs:
             # 3. ... and checks them itself (FreeBSD reads FreeBSD)
             ALTFS_IMAGE_DIR="$PWD/_images-freebsd/altfs-images" python3 -m pytest tests/xplat -v -rfE \
               || echo "::warning::FreeBSD could not check / recover its own volumes (see #167)"
-            # 4. Diagnostics for #167: the mounted recovery test fails here
-            # although the volumes are fine. Show the fusefs cache mode, the
-            # index diff of one case, and the record layout of the original
-            # and of the crash copy.
-            echo "=== #167 diagnostics"
-            sysctl vfs.fusefs.data_cache_mode vfs.fusefs.mmap_enable 2>/dev/null || true
-            python3 -m pytest tests/scenarios/test_incindex_recovery.py -k "foundation or clean_recovery" -vv -rfE \
-              -o cache_dir=/tmp/pytest-cache --basetemp=/tmp/xp167 || true
-            for d in /tmp/xp167/*/tape /tmp/xp167/*/tape-crashed _images-freebsd/altfs-images/crash/foundation/tape; do
-              echo "--- $d"; ls -l "$d" | awk '$9 ~ /^1_/ {split($9,a,"_"); printf "#%d %s %s  ", a[2], a[3], $5}' ; echo
-            done
-            # the index records that differ (ground truth = clean unmount of
-            # the original, recovered = partition 0 of the crash copy)
-            PYTHONPATH=tests python3 - <<'PYEOF'
-            import sys
-            from pathlib import Path
-            from common.index import index_records, parse_latest_index
-            base = Path("/tmp/xp167/test_recovered_tree_matches_mo0")
-            truth = index_records(parse_latest_index(base / "tape"))
-            for part in (0, 1):
-                rec = index_records(parse_latest_index(base / "tape-crashed", part))
-                print(f"=== partition {part}: {'equal' if rec == truth else 'DIFFERENT'}")
-                for k in sorted(set(truth) | set(rec)):
-                    if truth.get(k) != rec.get(k):
-                        print(k); print("  truth:", truth.get(k)); print("  recov:", rec.get(k))
-            PYEOF
 
       - name: Upload the FreeBSD volume images
         uses: actions/upload-artifact@v4
