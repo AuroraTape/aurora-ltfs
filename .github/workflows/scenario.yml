@@ -234,6 +234,17 @@ jobs:
             # 3. ... and checks them itself (FreeBSD reads FreeBSD)
             ALTFS_IMAGE_DIR="$PWD/_images-freebsd/altfs-images" python3 -m pytest tests/xplat -v -rfE \
               || echo "::warning::FreeBSD could not check / recover its own volumes (see #167)"
+            # 4. Diagnostics for #167: the mounted recovery test fails here
+            # although the volumes are fine. Show the fusefs cache mode, the
+            # index diff of one case, and the record layout of the original
+            # and of the crash copy.
+            echo "=== #167 diagnostics"
+            sysctl vfs.fusefs.data_cache_mode vfs.fusefs.mmap_enable 2>/dev/null || true
+            python3 -m pytest tests/scenarios/test_incindex_recovery.py -k "foundation or clean_recovery" -vv -rfE \
+              -o cache_dir=/tmp/pytest-cache --basetemp=/tmp/xp167 || true
+            for d in /tmp/xp167/*/tape /tmp/xp167/*/tape-crashed; do
+              echo "--- $d"; ls -l "$d" | awk '{print $5, $9}' | sort -t_ -k1,1n -k2,2n
+            done
 
       - name: Upload the FreeBSD volume images
         uses: actions/upload-artifact@v4
