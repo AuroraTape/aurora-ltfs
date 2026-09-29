@@ -80,7 +80,7 @@ root:table {
 		AEI1027E:string { "Cannot remove the existing target path" }
 		AEI1028E:string { "Cannot remove the non-empty directory" }
 		AEI1029E:string { "Cannot remove the root directory" }
-		AEI1030E:string { "Cannot move the directory because of the MacFUSE bug" }
+		//unused AEI1030E:string { "Cannot move the directory because of the MacFUSE bug" }
 		AEI1031E:string { "Cannot rename files or directories in the directory" }
 		AEI1032E:string { "Block read from tape is smaller than expected" }
 		AEI1033E:string { "Operation is only valid on files" }

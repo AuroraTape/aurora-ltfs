@@ -117,7 +117,6 @@ static struct error_map fuse_error_list[] = {
 	{ LTFS_DENTRY_EXISTS,            "AEI1027E", EEXIST},
 	{ LTFS_DIRNOTEMPTY,              "AEI1028E", ENOTEMPTY},
 	{ LTFS_UNLINKROOT,               "AEI1029E", EBUSY},
-	{ LTFS_DIRMOVE,                  "AEI1030E", EIO},
 	{ LTFS_RENAMELOOP,               "AEI1031E", EINVAL},
 	{ LTFS_SMALL_BLOCK,              "AEI1032E", EIO},
 	{ LTFS_ISDIRECTORY,              "AEI1033E", EINVAL},

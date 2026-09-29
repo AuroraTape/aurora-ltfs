@@ -86,7 +86,7 @@
 #define LTFS_DENTRY_EXISTS        1027  /* Target path exists and cannot remove it */
 #define LTFS_DIRNOTEMPTY          1028  /* Cannot remove non-empty directory */
 #define LTFS_UNLINKROOT           1029  /* Cannot remove the root directory */
-#define LTFS_DIRMOVE              1030  /* Cannot move directory due to MacFUSE bug */
+/* 1030 (LTFS_DIRMOVE) retired: the macOS directory-move refusal is gone */
 #define LTFS_RENAMELOOP           1031  /* Cannot rename directory underneath itself */
 #define LTFS_SMALL_BLOCK          1032  /* Block read from tape is smaller than expected */
 #define LTFS_ISDIRECTORY          1033  /* Operation is only valid on files */
