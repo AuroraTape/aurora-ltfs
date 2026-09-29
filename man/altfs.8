@@ -84,7 +84,9 @@ Incremental indexes only. A full index is written at unmount and on request
 (ltfs.sync, ltfs.commitMessage, ltfs.vendor.Aurora.FullSync).
 .TP
 \fB0\fR
-Full indexes only, the behaviour of the LTFS reference implementation.
+Full indexes only, the behaviour of the LTFS reference implementation. Use it
+for a volume that other LTFS implementations will read after a failure: they
+recover such a volume to its last full index.
 .TP
 \fBN\fR
 N incremental indexes, then a full index. Every full index starts the count
