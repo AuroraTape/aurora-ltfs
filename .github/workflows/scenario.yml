@@ -168,6 +168,141 @@ jobs:
           python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print("images written by", m["generator"], "with", m["altfs"])' "${ALTFS_IMAGE_DIR}/manifest.json"
           bash tests/xplat/run.sh -v
 
+  # FreeBSD, both directions (issue #167): the VM has a full kernel, so it
+  # can read the Linux-written images *and* write its own through fusefs.
+  # Linux then checks the FreeBSD-written ones (job below). Which of the two
+  # fails tells whether FreeBSD's index reader / recovery or its writing
+  # through fusefs is at fault. Tier 2: non-blocking. The VM step syncs the
+  # workspace in and back out, so everything the VM needs or produces lives
+  # under the workspace, not RUNNER_TEMP.
+  freebsd-volume-check:
+    name: Volume check (FreeBSD 14.3)
+    runs-on: ubuntu-latest
+    needs: tests
+    continue-on-error: true
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download the Linux volume images
+        uses: actions/download-artifact@v4
+        with:
+          name: altfs-volume-images
+          path: ${{ github.workspace }}/_images-linux
+
+      - name: Check and write volume images in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.3"
+          usesh: true
+          prepare: |
+            pkg install -y \
+              autoconf \
+              automake \
+              libtool \
+              pkgconf \
+              gmake \
+              fusefs-libs \
+              libuuid \
+              libxml2 \
+              icu \
+              python3
+            pyver=$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])')
+            pkg install -y "py${pyver}-pytest"
+          run: |
+            set -e
+            ./autogen.sh
+            ./configure --prefix=/usr/local --mandir=/usr/local/man
+            gmake -k -j"$(sysctl -n hw.ncpu)"
+            gmake install
+            export LD_LIBRARY_PATH=/usr/local/lib
+            # 1. FreeBSD reads what Linux wrote
+            tar -C _images-linux -xzf _images-linux/altfs-volume-images.tgz
+            ALTFS_IMAGE_DIR="$PWD/_images-linux/altfs-images" python3 -m pytest tests/xplat -v -rfE \
+              || echo "::warning::FreeBSD could not check / recover the Linux-written volumes (see #167)"
+            # 2. FreeBSD writes its own images through fusefs ...
+            kldload fusefs || true
+            printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
+            chmod +x /usr/local/bin/fusermount
+            mkdir -p _images-freebsd
+            log=_images-freebsd/make_images.log
+            python3 tests/xplat/make_images.py --keep-going _images-freebsd/altfs-images > "$log" 2>&1 \
+              || { tail -n 40 "$log"; echo "::warning::not every volume image could be written on FreeBSD"; }
+            tail -n 1 "$log"
+            tar -C _images-freebsd -czf _images-freebsd/altfs-volume-images-freebsd.tgz altfs-images
+            # 3. ... and checks them itself (FreeBSD reads FreeBSD)
+            ALTFS_IMAGE_DIR="$PWD/_images-freebsd/altfs-images" python3 -m pytest tests/xplat -v -rfE \
+              || echo "::warning::FreeBSD could not check / recover its own volumes (see #167)"
+
+      - name: Upload the FreeBSD volume images
+        uses: actions/upload-artifact@v4
+        with:
+          name: altfs-volume-images-freebsd
+          path: ${{ github.workspace }}/_images-freebsd/altfs-volume-images-freebsd.tgz
+          if-no-files-found: warn
+          retention-days: 7
+
+  # Linux reads what FreeBSD wrote (issue #167).
+  linux-check-freebsd-images:
+    name: Volume check (Ubuntu 24.04 reads FreeBSD)
+    runs-on: ubuntu-24.04
+    needs: freebsd-volume-check
+    continue-on-error: true
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            gcc \
+            pkg-config \
+            libfuse-dev \
+            libxml2-dev \
+            libicu-dev \
+            uuid-dev \
+            icu-devtools \
+            fuse \
+            python3 \
+            python3-pytest \
+            git \
+            ca-certificates
+
+      - name: autogen
+        run: ./autogen.sh
+
+      - name: configure
+        run: ./configure --prefix="${GITHUB_WORKSPACE}/_install"
+
+      - name: make
+        run: make -j"$(nproc)"
+
+      - name: make install
+        run: make install
+
+      - name: Download the FreeBSD volume images
+        uses: actions/download-artifact@v4
+        with:
+          name: altfs-volume-images-freebsd
+          path: ${{ runner.temp }}
+
+      - name: Check the FreeBSD volume images (Linux)
+        env:
+          ALTFS_PREFIX: ${{ github.workspace }}/_install
+          ALTFS_IMAGE_DIR: ${{ runner.temp }}/altfs-images
+        run: |
+          tar -C "${RUNNER_TEMP}" -xzf "${RUNNER_TEMP}/altfs-volume-images-freebsd.tgz"
+          python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print("images written by", m["generator"], "with", m["altfs"], "-", len(m["images"]), "images")' "${ALTFS_IMAGE_DIR}/manifest.json"
+          bash tests/xplat/run.sh -v
+
   coverage:
     name: Coverage (Ubuntu 24.04)
     runs-on: ubuntu-24.04
