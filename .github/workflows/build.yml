@@ -120,10 +120,10 @@ jobs:
   # deliberately not used here: these builds compile with clang or older gcc
   # and warning sets differ from the Tier 1 gcc baseline.
   #
-  # macOS additionally runs the tests that do not mount (issue #141): the
-  # installed mkaltfs / altfsck / altfsindextool / altfs start up through the
-  # real plugin loader against the file backend. Non-blocking, as for every
-  # Tier 2 platform.
+  # macOS, FreeBSD and NetBSD additionally run the tests that do not mount
+  # (issue #141): the installed mkaltfs / altfsck / altfsindextool / altfs
+  # start up through the real plugin loader against the file backend.
+  # Non-blocking, as for every Tier 2/3 platform.
   macos:
     name: macOS 15
     runs-on: macos-15
@@ -200,13 +200,38 @@ jobs:
               fusefs-libs \
               libuuid \
               libxml2 \
-              icu
+              icu \
+              python3
+            # pytest is a flavored package named after the default python
+            # (py311-pytest, py312-pytest, ...): ask the interpreter.
+            pyver=$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])')
+            pkg install -y "py${pyver}-pytest"
+            # per-test timeout for the mounted run; optional
+            pkg install -y "py${pyver}-pytest-timeout" || true
+          # The VM action is one step, so the tests cannot get their own
+          # continue-on-error: the "|| echo ::warning::" keeps a test failure
+          # visible in the job log and annotations without failing the job.
           run: |
             set -e
             ./autogen.sh
             ./configure --prefix=/usr/local --mandir=/usr/local/man
             gmake -k -j"$(sysctl -n hw.ncpu)"
             gmake install
+            export LD_LIBRARY_PATH=/usr/local/lib
+            python3 -m pytest tests/scenarios -v -m "not mount" \
+              || echo "::warning::mount-free tests failed on FreeBSD 14.3 (Tier 2, non-blocking)"
+            # Unlike the hosted macOS runners, the VM has a full kernel and
+            # root, so FUSE mounts work: load fusefs and run the mounted
+            # tests as well. Exploratory for now - the harness still carries
+            # Linux assumptions (os.*xattr, fusermount, mountpoint), so
+            # failures are expected and only warn. The timeout bounds a hung
+            # mount; the job limit would otherwise be the only stop.
+            kldload fusefs || true
+            printf '#!/bin/sh\numount "$2"\n' > /usr/local/bin/fusermount
+            chmod +x /usr/local/bin/fusermount
+            TO=$(python3 -c 'import pytest_timeout' 2>/dev/null && echo "--timeout=120")
+            timeout 900 python3 -m pytest tests/fsapi tests/scenarios -v -m mount -rfE $TO \
+              || echo "::warning::mounted tests failed on FreeBSD 14.3 (exploratory, non-blocking)"
 
   netbsd:
     name: NetBSD 10.1
@@ -232,12 +257,33 @@ jobs:
               libuuid \
               libxml2 \
               icu
+            # pkgsrc names pytest after the python it is built for and
+            # installs it as pytest-3.NN only; take whichever version the
+            # binary repository carries and go through that interpreter.
+            for v in 312 313 311; do
+              /usr/sbin/pkg_add "python$v" "py$v-test" && break
+            done
+          # The default prefix is /usr/local, which is on root's PATH in the
+          # VM. See the FreeBSD job for the "|| echo".
           run: |
             set -e
             ./autogen.sh
             ./configure
             gmake -k -j"$(sysctl -n hw.ncpu)"
             gmake install
+            export PATH=/usr/local/bin:$PATH LD_LIBRARY_PATH=/usr/local/lib
+            for PY in /usr/pkg/bin/python3.1?; do
+              "$PY" -c 'import pytest' 2>/dev/null && break
+            done
+            "$PY" -m pytest tests/scenarios -v -m "not mount" \
+              || echo "::warning::mount-free tests failed on NetBSD 10.1 (Tier 3, non-blocking)"
+            # No mounted tests here. They do run through puffs (librefuse):
+            # modload puffs, a fusermount shim, and 106 of the first 110
+            # passed - but test_readdir_large_directory and then
+            # test_modify_persists_across_remount hung in the kernel,
+            # uninterruptible even by pytest-timeout, until the outer
+            # timeout. Until the puffs side is understood, only the
+            # mount-free tests run on NetBSD.
 
   # Message catalog consistency: every ID referenced from src/ is defined
   # under messages/ and vice versa. For a pull request into release/X.Y it

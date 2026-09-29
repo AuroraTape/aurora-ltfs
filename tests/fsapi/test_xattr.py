@@ -6,10 +6,16 @@ import uuid
 import pytest
 
 from common.altfs import format_tape, mount_tape, umount_tape
-from common.helpers import full_sync, get_xattr, get_xattr_int, set_xattr
+from common.helpers import (
+    full_sync,
+    get_xattr,
+    get_xattr_bytes,
+    get_xattr_int,
+    list_xattrs,
+    remove_xattr,
+    set_xattr,
+)
 from common.index import find_entries_by_name, parse_latest_index
-
-_USER_NS = "user."
 
 # xml_format_time() emits "%04d-%02d-%02dT%02d:%02d:%02d.%09ldZ"
 _LTFS_TIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{9}Z$")
@@ -27,15 +33,15 @@ def test_listxattr_includes_set_attribute(mounted_tape):
     p.write_text("payload")
     set_xattr(p, "test.a", "1")
     set_xattr(p, "test.b", "2")
-    names = set(os.listxattr(p))
-    assert {_USER_NS + "test.a", _USER_NS + "test.b"} <= names
+    names = set(list_xattrs(p))
+    assert {"test.a", "test.b"} <= names
 
 
 def test_removexattr_deletes_attribute(mounted_tape):
     p = mounted_tape / "xa_rm.txt"
     p.write_text("payload")
     set_xattr(p, "test.del", "x")
-    os.removexattr(p, _USER_NS + "test.del")
+    remove_xattr(p, "test.del")
     with pytest.raises(OSError):
         get_xattr(p, "test.del")
 
@@ -47,19 +53,23 @@ def test_getxattr_missing_raises(mounted_tape):
         get_xattr(p, "test.never_set")
 
 
+@pytest.mark.skipif(not hasattr(os, "setxattr"),
+                    reason="XATTR_REPLACE / XATTR_CREATE are Linux-only flags")
 def test_setxattr_replace_on_missing_raises(mounted_tape):
     p = mounted_tape / "xa_replace.txt"
     p.write_text("payload")
     with pytest.raises(OSError):
-        os.setxattr(p, _USER_NS + "test.r", b"x", flags=os.XATTR_REPLACE)
+        os.setxattr(p, "user.test.r", b"x", flags=os.XATTR_REPLACE)
 
 
+@pytest.mark.skipif(not hasattr(os, "setxattr"),
+                    reason="XATTR_REPLACE / XATTR_CREATE are Linux-only flags")
 def test_setxattr_create_on_existing_raises(mounted_tape):
     p = mounted_tape / "xa_create.txt"
     p.write_text("payload")
     set_xattr(p, "test.c", "first")
     with pytest.raises(FileExistsError):
-        os.setxattr(p, _USER_NS + "test.c", b"second", flags=os.XATTR_CREATE)
+        os.setxattr(p, "user.test.c", b"second", flags=os.XATTR_CREATE)
 
 
 def test_xattr_on_directory(mounted_tape):
@@ -136,32 +146,32 @@ def test_virtual_xattrs_hidden_from_listxattr(mounted_tape):
     p = mounted_tape / "vx_list.txt"
     p.write_text("payload")
     set_xattr(p, "test.real", "v")
-    names = os.listxattr(p)
-    assert _USER_NS + "test.real" in names
-    assert not any(n.startswith(_USER_NS + "ltfs.") for n in names)
+    names = list_xattrs(p)
+    assert "test.real" in names
+    assert not any(n.startswith("ltfs.") for n in names)
 
 
 def test_virtual_xattr_write_protected(mounted_tape):
     p = mounted_tape / "vx_ro.txt"
     p.write_text("payload")
     with pytest.raises(PermissionError):
-        os.setxattr(p, _USER_NS + "ltfs.fileUID", b"42")
+        set_xattr(p, "ltfs.fileUID", b"42")
     with pytest.raises(PermissionError):
-        os.setxattr(mounted_tape, _USER_NS + "ltfs.volumeUUID", b"x")
+        set_xattr(mounted_tape, "ltfs.volumeUUID", b"x")
     with pytest.raises(PermissionError):
-        os.setxattr(mounted_tape, _USER_NS + "ltfs.indexGeneration", b"9")
+        set_xattr(mounted_tape, "ltfs.indexGeneration", b"9")
     # The whole ltfs.* namespace is reserved: unknown names are rejected too.
     with pytest.raises(PermissionError):
-        os.setxattr(p, _USER_NS + "ltfs.notAVirtualXattr", b"x")
+        set_xattr(p, "ltfs.notAVirtualXattr", b"x")
 
 
 def test_virtual_xattr_not_removable(mounted_tape):
     p = mounted_tape / "vx_norm.txt"
     p.write_text("payload")
     with pytest.raises(PermissionError):
-        os.removexattr(p, _USER_NS + "ltfs.fileUID")
+        remove_xattr(p, "ltfs.fileUID")
     with pytest.raises(PermissionError):
-        os.removexattr(mounted_tape, _USER_NS + "ltfs.volumeUUID")
+        remove_xattr(mounted_tape, "ltfs.volumeUUID")
 
 
 def test_virtual_modify_time_is_settable(mounted_tape):
@@ -184,13 +194,13 @@ def test_volume_name_set_remove_and_persistence(tmp_path_factory):
     tape.mkdir()
     mnt.mkdir()
     format_tape(tape, serial="VOLNAM", label="before")
-    qname = _USER_NS + "ltfs.volumeName"
+    qname = "ltfs.volumeName"
 
     mount_tape(tape, mnt)
     try:
-        assert os.getxattr(mnt, qname) == b"before"
-        os.setxattr(mnt, qname, b"after")
-        assert os.getxattr(mnt, qname) == b"after"
+        assert get_xattr_bytes(mnt, qname) == b"before"
+        set_xattr(mnt, qname, b"after")
+        assert get_xattr_bytes(mnt, qname) == b"after"
     finally:
         umount_tape(mnt)
 
@@ -201,9 +211,9 @@ def test_volume_name_set_remove_and_persistence(tmp_path_factory):
 
     mount_tape(tape, mnt)
     try:
-        assert os.getxattr(mnt, qname) == b"after"
-        os.removexattr(mnt, qname)
-        assert os.getxattr(mnt, qname) == b""
+        assert get_xattr_bytes(mnt, qname) == b"after"
+        remove_xattr(mnt, qname)
+        assert get_xattr_bytes(mnt, qname) == b""
     finally:
         umount_tape(mnt)
 
@@ -221,13 +231,13 @@ def test_unprintable_xattr_value_is_base64_on_tape(tmp_path_factory):
     format_tape(tape, serial="XATTRB", label="xattr-bin")
 
     binary_value = b"\x00\x01\x02\x7f\x80\xfe\xff"
-    qname = _USER_NS + "test.binary"
+    qname = "test.binary"
 
     mount_tape(tape, mnt)
     try:
         f = mnt / "binxattr.txt"
         f.write_text("payload")
-        os.setxattr(os.fspath(f), qname, binary_value)
+        set_xattr(f, qname, binary_value)
     finally:
         umount_tape(mnt)
 
@@ -245,6 +255,6 @@ def test_unprintable_xattr_value_is_base64_on_tape(tmp_path_factory):
 
     mount_tape(tape, mnt)
     try:
-        assert os.getxattr(os.fspath(mnt / "binxattr.txt"), qname) == binary_value
+        assert get_xattr_bytes(mnt / "binxattr.txt", qname) == binary_value
     finally:
         umount_tape(mnt)

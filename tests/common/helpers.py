@@ -12,9 +12,19 @@ _RECORD_RE = re.compile(r"^(\d+)_(\d+)_R$")
 
 # Extended attributes as altfs exposes them: on Linux under the user.*
 # namespace (the kernel only lets unprivileged callers see and set that
-# namespace, and altfs strips the prefix), on macOS under their own name.
-# Python has os.*xattr only on Linux, so macOS goes through libc.
-_NS = "" if sys.platform == "darwin" else "user."
+# namespace, and altfs strips the prefix), elsewhere under their own name
+# (macOS has no namespaces; the BSDs pass the "user" namespace as a
+# separate argument and their FUSE layers add and strip the prefix).
+# Python has os.*xattr only on Linux, so the other platforms go through
+# libc.
+_NS = "user." if sys.platform.startswith("linux") else ""
+
+
+def _check(ret, path):
+    if ret < 0:
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno), os.fspath(path))
+    return ret
 
 
 if sys.platform == "darwin":
@@ -36,16 +46,12 @@ if sys.platform == "darwin":
     # com.apple.FinderInfo, ...): not something altfs stores.
     _SYSTEM_PREFIX = "com.apple."
 
-    def _check(ret, path):
-        if ret < 0:
-            errno = ctypes.get_errno()
-            raise OSError(errno, os.strerror(errno), os.fspath(path))
-        return ret
-
     def _getxattr(path, name, follow_symlinks=True):
         p, n = os.fsencode(os.fspath(path)), name.encode()
         opts = 0 if follow_symlinks else _XATTR_NOFOLLOW
         size = _check(_libc.getxattr(p, n, None, 0, 0, opts), path)
+        if size == 0:
+            return b""  # a zero-length buffer would be answered with ERANGE
         buf = ctypes.create_string_buffer(size)
         got = _check(_libc.getxattr(p, n, buf, size, 0, opts), path)
         return buf.raw[:got]
@@ -67,6 +73,56 @@ if sys.platform == "darwin":
         buf = ctypes.create_string_buffer(size)
         got = _check(_libc.listxattr(p, buf, size, opts), path)
         return [n.decode() for n in buf.raw[:got].split(b"\0") if n]
+elif sys.platform.startswith(("freebsd", "netbsd")):
+    _libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
+    # <sys/extattr.h>: the namespace is an argument, the name is bare
+    _EXTATTR_NAMESPACE_USER = 1
+    for _fn in ("extattr_get_file", "extattr_get_link", "extattr_set_file"):
+        getattr(_libc, _fn).argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p,
+                                        ctypes.c_void_p, ctypes.c_size_t]
+        getattr(_libc, _fn).restype = ctypes.c_ssize_t
+    _libc.extattr_delete_file.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p]
+    _libc.extattr_delete_file.restype = ctypes.c_int
+    for _fn in ("extattr_list_file", "extattr_list_link"):
+        getattr(_libc, _fn).argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p,
+                                        ctypes.c_size_t]
+        getattr(_libc, _fn).restype = ctypes.c_ssize_t
+    _SYSTEM_PREFIX = None
+
+    def _getxattr(path, name, follow_symlinks=True):
+        fn = _libc.extattr_get_file if follow_symlinks else _libc.extattr_get_link
+        p, n = os.fsencode(os.fspath(path)), name.encode()
+        size = _check(fn(p, _EXTATTR_NAMESPACE_USER, n, None, 0), path)
+        if size == 0:
+            return b""
+        buf = ctypes.create_string_buffer(size)
+        got = _check(fn(p, _EXTATTR_NAMESPACE_USER, n, buf, size), path)
+        return buf.raw[:got]
+
+    def _setxattr(path, name, value):
+        p, n = os.fsencode(os.fspath(path)), name.encode()
+        _check(_libc.extattr_set_file(p, _EXTATTR_NAMESPACE_USER, n, value,
+                                      len(value)), path)
+
+    def _removexattr(path, name):
+        _check(_libc.extattr_delete_file(os.fsencode(os.fspath(path)),
+                                         _EXTATTR_NAMESPACE_USER, name.encode()), path)
+
+    def _listxattr(path, follow_symlinks=True):
+        # The list is a sequence of (length byte, name) pairs.
+        fn = _libc.extattr_list_file if follow_symlinks else _libc.extattr_list_link
+        p = os.fsencode(os.fspath(path))
+        size = _check(fn(p, _EXTATTR_NAMESPACE_USER, None, 0), path)
+        if size == 0:
+            return []
+        buf = ctypes.create_string_buffer(size)
+        got = _check(fn(p, _EXTATTR_NAMESPACE_USER, buf, size), path)
+        data, names, i = buf.raw[:got], [], 0
+        while i < len(data):
+            length = data[i]
+            names.append(data[i + 1:i + 1 + length].decode())
+            i += 1 + length
+        return names
 else:
     _SYSTEM_PREFIX = None
 
