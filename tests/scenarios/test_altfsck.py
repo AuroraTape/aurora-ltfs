@@ -16,15 +16,12 @@ state we can assert against.
 """
 
 import os
-import re
-import signal
-import subprocess
-import time
 
 import pytest
 
 from common.altfs import (
     LTFSCK_CORRECTED,
+    crash_altfs_daemon,
     format_tape,
     mount_tape,
     run_altfsck,
@@ -109,35 +106,6 @@ def test_altfsck_l_lists_commit_messages_from_synced_writes(tmp_path_factory):
     assert "Initial Index" in out
 
 
-def _kill_altfs_daemon(mnt):
-    """SIGKILL the altfs daemon serving mnt, simulating a crash: the
-    final index write never happens, so the tape is left with data
-    blocks newer than its newest index."""
-    pattern = f"altfs.*{re.escape(str(mnt))}$"
-    pgrep = subprocess.run(
-        ["pgrep", "-f", pattern], capture_output=True, text=True)
-    pids = [int(p) for p in pgrep.stdout.split()]
-    assert pids, f"no altfs daemon found for {mnt}"
-    for pid in pids:
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass  # already gone
-    # Detach the dead FUSE endpoint and wait for both the kernel and
-    # the process to let go before altfsck touches the tape.
-    deadline = time.monotonic() + 5.0
-    while time.monotonic() < deadline:
-        subprocess.run(["fusermount", "-u", str(mnt)],
-                       capture_output=True, check=False)
-        daemon_alive = subprocess.call(
-            ["pgrep", "-f", pattern],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
-        if not os.path.ismount(mnt) and not daemon_alive:
-            return
-        time.sleep(0.1)
-    raise RuntimeError(f"could not detach dead mount: {mnt}")
-
-
 @pytest.mark.mount
 def test_altfsck_recovers_volume_after_daemon_crash(tmp_path_factory):
     """Crash recovery: kill the daemon after a synced generation plus
@@ -169,7 +137,7 @@ def test_altfsck_recovers_volume_after_daemon_crash(tmp_path_factory):
         umount_tape(mnt)
         raise
 
-    _kill_altfs_daemon(mnt)
+    crash_altfs_daemon(mnt)
 
     check = _altfsck(tape_dir=tape_dir)
     assert check.returncode == LTFSCK_CORRECTED, check.stdout + check.stderr

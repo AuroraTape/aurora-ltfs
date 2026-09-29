@@ -407,6 +407,7 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 	int ret;
 	size_t i;
 	char *update_time;
+	char verstr[LTFS_VERSION_STR_LEN];
 	struct ltfs_name *name_criteria;
 
 	ret = xml_format_time(idx->mod_time, &update_time);
@@ -430,10 +431,10 @@ static int _xml_write_schema(xmlTextWriterPtr writer, const char *creator,
 	xmlTextWriterSetIndentString(writer, BAD_CAST "");
 #endif
 
-	/* write index properties */
+	/* write index properties: the volume keeps its format version (ltfs_index_write_version) */
 	xml_mktag(xmlTextWriterStartElement(writer, BAD_CAST "ltfsindex"), -1);
 	xml_mktag(xmlTextWriterWriteAttribute(writer, BAD_CAST "version",
-		BAD_CAST LTFS_INDEX_VERSION_STR), -1);
+		BAD_CAST ltfs_format_version_str(idx->write_version, verstr, sizeof(verstr))), -1);
 	xml_mktag(xmlTextWriterWriteElement(writer, BAD_CAST "creator", BAD_CAST creator), -1);
 	if (idx->commit_message && strlen(idx->commit_message)) {
 		xml_mktag(xmlTextWriterWriteFormatElement(writer, BAD_CAST "comment",

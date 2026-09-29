@@ -26,24 +26,17 @@ from common.altfs import (
     umount_tape,
 )
 from common.helpers import set_xattr
-from common.index import parse_latest_index
+from common.index import parse_latest_index, records_with_tag
 
 pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
 INC_SYNC = "ltfs.vendor.Aurora.IncrementalSync"
 
 
-def _dp_records(tape_dir, top_tag):
-    stamp = f"<{top_tag} ".encode()
-    return sorted((p for p in tape_dir.glob("1_*_R")
-                   if stamp in p.read_bytes()[:512]),
-                  key=lambda p: int(p.name.split("_")[1]))
-
-
 def _counts(tape_dir):
     """(full, incremental) indexes on the data partition."""
-    return (len(_dp_records(tape_dir, "ltfsindex")),
-            len(_dp_records(tape_dir, "ltfsincrementalindex")))
+    return (len(records_with_tag(tape_dir, partition=1, tag="ltfsindex")),
+            len(records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex")))
 
 
 def _wait_for_counts(tape_dir, full, inc, timeout=10.0):
@@ -60,8 +53,8 @@ def _wait_for_counts(tape_dir, full, inc, timeout=10.0):
 def _last_index_kinds(tape_dir, n):
     """Kinds ('full' / 'inc') of the last n indexes on the data partition,
     in tape order."""
-    records = [(p, "full") for p in _dp_records(tape_dir, "ltfsindex")] + \
-              [(p, "inc") for p in _dp_records(tape_dir, "ltfsincrementalindex")]
+    records = [(p, "full") for p in records_with_tag(tape_dir, partition=1, tag="ltfsindex")] + \
+              [(p, "inc") for p in records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex")]
     records.sort(key=lambda r: int(r[0].name.split("_")[1]))
     return [kind for _, kind in records[-n:]]
 
@@ -69,10 +62,10 @@ def _last_index_kinds(tape_dir, n):
 def _wait_for_inc_indexes(tape_dir, count, timeout=10.0):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        if len(_dp_records(tape_dir, "ltfsincrementalindex")) >= count:
+        if len(records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex")) >= count:
             break
         time.sleep(0.05)
-    return len(_dp_records(tape_dir, "ltfsincrementalindex"))
+    return len(records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex"))
 
 
 def _new_tape(tmp_path, serial):
@@ -100,7 +93,7 @@ def test_sync_on_close_writes_incremental_indexes(tmp_path):
     mount_tape(tape_dir, mnt, sync_type="close",
                extra_opts=("full_index_interval=-1",))
     try:
-        full_before = len(_dp_records(tape_dir, "ltfsindex"))
+        full_before = len(records_with_tag(tape_dir, partition=1, tag="ltfsindex"))
 
         (mnt / "a.txt").write_text("a\n")
         assert _wait_for_inc_indexes(tape_dir, 1) == 1
@@ -112,16 +105,16 @@ def test_sync_on_close_writes_incremental_indexes(tmp_path):
         # in particular no empty incremental index.
         assert (mnt / "a.txt").read_text() == "a\n"
         time.sleep(0.5)
-        assert len(_dp_records(tape_dir, "ltfsincrementalindex")) == 2
-        assert len(_dp_records(tape_dir, "ltfsindex")) == full_before
+        assert len(records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex")) == 2
+        assert len(records_with_tag(tape_dir, partition=1, tag="ltfsindex")) == full_before
     finally:
         umount_tape(mnt)
 
-    for record in _dp_records(tape_dir, "ltfsincrementalindex"):
+    for record in records_with_tag(tape_dir, partition=1, tag="ltfsincrementalindex"):
         assert b"<contents/>" not in record.read_bytes()
 
     # Unmount ends with a full index on both partitions.
-    assert len(_dp_records(tape_dir, "ltfsindex")) == full_before + 1
+    assert len(records_with_tag(tape_dir, partition=1, tag="ltfsindex")) == full_before + 1
     for partition in (0, 1):
         names = {e.findtext("name")
                  for e in parse_latest_index(tape_dir, partition).iter("file")}

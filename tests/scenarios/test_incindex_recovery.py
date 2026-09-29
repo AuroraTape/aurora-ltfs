@@ -36,6 +36,7 @@ from common.altfs import (
 )
 from common.helpers import full_sync, incremental_sync
 from common.incindex_cases import CASES, setup_base
+from common.index import records_with_tag
 from common.recovery import crash_and_recover
 
 pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
@@ -63,12 +64,6 @@ def test_recovered_tree_matches_mounted_tree(tmp_path, steps):
         raise
 
     crash_and_recover(tape_dir, mnt, crashed_dir)
-
-
-def _inc_index_records(tape_dir):
-    records = [p for p in tape_dir.glob("1_*_R")
-               if b"<ltfsincrementalindex" in p.read_bytes()[:512]]
-    return sorted(records, key=lambda p: int(p.name.split("_")[1]))
 
 
 def _crashed_volume(tmp_path):
@@ -110,7 +105,7 @@ def test_bad_incremental_index_leaves_volume_untouched(tmp_path, old, new,
     index."""
     crashed_dir = _crashed_volume(tmp_path)
 
-    (record,) = _inc_index_records(crashed_dir)
+    (record,) = records_with_tag(crashed_dir, "ltfsincrementalindex", partition=1)
     data = record.read_bytes()
     if old is None:
         # <file><name>c.txt</name> ... <fileuid>N</fileuid>: bump N of

@@ -933,6 +933,13 @@ static int _xattr_set_virtual(struct dentry *d, const char *name, const char *va
 		else
 			idx_type = LTFS_FULL_INDEX;
 
+		if (idx_type == LTFS_INCREMENTAL_INDEX && ! ltfs_incremental_index_allowed(vol)) {
+			/* The volume keeps its format version, and the incremental index is a 2.5.0 construct */
+			char verstr[LTFS_VERSION_STR_LEN];
+			ltfsmsg(ALB0288E, ltfs_format_version_str(vol->index->write_version, verstr, sizeof(verstr)));
+			return -LTFS_OP_NOT_ALLOWED;
+		}
+
 		ltfs_mutex_lock(&vol->index->dirty_lock);
 		if (! vol->index->dirty) {
 			/* Do nothing because index is clean */

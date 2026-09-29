@@ -163,8 +163,14 @@ struct device_data;
 #define LTFS_INDEX_VERSION_MIN        MAKE_LTFS_VERSION(1,0,0)    /* Min supported index version */
 #define LTFS_INDEX_VERSION_MAX        MAKE_LTFS_VERSION(2,99,99)  /* Max supported index version */
 
-#define LTFS_INDEX_VERSION            MAKE_LTFS_VERSION(2,5,0)    /* Written index version */
+#define LTFS_INDEX_VERSION            MAKE_LTFS_VERSION(2,5,0)    /* Index version of a formatted volume */
 #define LTFS_INDEX_VERSION_STR        "2.5.0"  /* Index version string */
+/* An existing volume keeps its format version: its full indexes are written at the version
+ * read from it (ltfs_index_write_version()). The oldest version this software can write is
+ * 2.4.0, the version its full index content conforms to; a volume older than that gets 2.4.0. */
+#define LTFS_INDEX_VERSION_WRITE_MIN  MAKE_LTFS_VERSION(2,4,0)
+#define LTFS_INDEX_VERSION_WRITE_MIN_STR "2.4.0"
+#define LTFS_VERSION_STR_LEN          16       /* Room for "%d.%d.%d" of a MAKE_LTFS_VERSION value */
 
 #define INDEX_MAX_COMMENT_LEN         65536 /* Maximum comment field length (per LTFS Format) */
 
@@ -551,6 +557,7 @@ struct ltfs_index {
 	uint64_t valid_blocks;              /**< Numbert of valid blocks on tape */
 	char *commit_message;               /**< Commit message specified by the "user.ltfs.sync" xattr */
 	int version;                        /**< Index format version, as formatted by MAKE_LTFS_VERSION */
+	int write_version;                  /**< Format version the full indexes of this volume are written at */
 
 	/* Reference counts */
 	ltfs_mutex_t refcount_lock;      /**< Controls access to the refcount */
@@ -710,6 +717,9 @@ void ltfs_use_atime(bool use_atime, struct ltfs_volume *vol);
 void ltfs_set_work_dir(const char *dir, struct ltfs_volume *vol);
 void ltfs_set_eod_check(bool use, struct ltfs_volume *vol);
 void ltfs_set_full_index_interval(int64_t interval, struct ltfs_volume *vol);
+int ltfs_index_write_version(int label_version, int index_version);
+bool ltfs_incremental_index_allowed(struct ltfs_volume *vol);
+const char *ltfs_format_version_str(int version, char *buf, size_t len);
 void ltfs_set_traverse_mode(int mode, struct ltfs_volume *vol);
 int ltfs_override_policy(const char *rules, bool permanent, struct ltfs_volume *vol);
 int ltfs_set_scheduler_cache(size_t min_size, size_t max_size, struct ltfs_volume *vol);

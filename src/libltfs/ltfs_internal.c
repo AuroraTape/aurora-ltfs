@@ -114,6 +114,7 @@ int ltfs_index_alloc(struct ltfs_index **index, struct ltfs_volume *vol)
 	newindex->refcount = 1;
 	newindex->uid_number = 1;
 	newindex->version = LTFS_INDEX_VERSION;
+	newindex->write_version = LTFS_INDEX_VERSION;
 
 	newindex->root = fs_allocate_dentry(NULL, "/", NULL, true, false, false, newindex);
 	if (! newindex->root) {
@@ -439,6 +440,10 @@ int ltfs_read_index(uint64_t eod_pos, bool recover_symlink, bool skip_dir, struc
 	} else if (ret == LTFS_NO_TRAIL_FM)
 		end_fm = false;
 
+	/* The volume keeps its format version: write the indexes at the version read */
+	vol->index->write_version = ltfs_index_write_version(vol->label ? vol->label->version : 0,
+														 vol->index->version);
+
 	/* check volume UUID */
 	if (strncmp(vol->index->vol_uuid, vol->label->vol_uuid, 36)) {
 		ltfsmsg(ALB0085W);
@@ -501,6 +506,9 @@ int ltfs_read_indexfile(char* filename, bool recover_symlink, struct ltfs_volume
 
 	/* Parse and validate the schema */
 	ret = xml_schema_from_file(filename, vol->index, vol);
+	if (ret == 0)
+		vol->index->write_version = ltfs_index_write_version(vol->label ? vol->label->version : 0,
+															 vol->index->version);
 	if ( vol->index->symerr_count ) {
 		if ( recover_symlink ) {
 			ret_sym = ltfs_split_symlink( vol );
@@ -1196,6 +1204,9 @@ int ltfs_check_medium(bool fix, bool deep, bool recover_extra, bool recover_syml
 		ltfs_index_free(&dp_index);
 		ltfs_index_free(&ip_index);
 		check_err(ltfs_index_alloc(&vol->index, vol), ALB0113E, out_unlock);
+		/* The volume keeps the version its label carries */
+		vol->index->write_version = ltfs_index_write_version(vol->label->version, vol->label->version);
+		vol->index->version = vol->index->write_version;
 		strcpy(vol->index->vol_uuid, vol->label->vol_uuid);
 		vol->index->mod_time = vol->label->format_time;
 		vol->index->root->creation_time = vol->index->mod_time;

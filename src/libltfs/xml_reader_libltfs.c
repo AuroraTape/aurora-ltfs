@@ -1532,9 +1532,9 @@ static int _xml_parse_schema(xmlTextReaderPtr reader, bool skip_dir,
 	if (ret < 0)
 		return ret;
 
-	if (idx->version < LTFS_INDEX_VERSION)
+	if (idx->version < LTFS_INDEX_VERSION_WRITE_MIN)
 		ltfsmsg(ALX0074W,
-				LTFS_INDEX_VERSION_STR,
+				LTFS_INDEX_VERSION_WRITE_MIN_STR,
 				LTFS_FORMAT_MAJOR(idx->version),
 				LTFS_FORMAT_MINOR(idx->version),
 				LTFS_FORMAT_REVISION(idx->version));

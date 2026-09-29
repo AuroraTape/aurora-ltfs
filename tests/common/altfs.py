@@ -8,6 +8,7 @@ characters.
 
 import os
 import re
+import signal
 import subprocess
 import time
 
@@ -162,6 +163,40 @@ def run_altfsck(*args, tape_dir, timeout=30):
         text=True,
         timeout=timeout,
     )
+
+
+def crash_altfs_daemon(mnt, proc=None):
+    """SIGKILL the altfs daemon serving mnt and detach the dead mount,
+    simulating a crash: the final index write never happens, so the tape
+    is left with data blocks newer than its newest index. `proc` is the
+    Popen of a mount_tape_foreground() session, reaped and its log closed."""
+    pattern = f"altfs.*{re.escape(str(mnt))}$"
+    pids = [int(p) for p in subprocess.run(
+        ["pgrep", "-f", pattern], capture_output=True, text=True).stdout.split()]
+    assert pids, f"no altfs daemon found for {mnt}"
+    for pid in pids:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # already gone
+    try:
+        # Detach the dead FUSE endpoint and wait for both the kernel and
+        # the process to let go before anything touches the tape.
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            subprocess.run(["fusermount", "-u", str(mnt)],
+                           capture_output=True, check=False)
+            alive = subprocess.call(["pgrep", "-f", pattern],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+            if not os.path.ismount(mnt) and not alive:
+                break
+            time.sleep(0.1)
+        else:
+            raise RuntimeError(f"could not detach dead mount: {mnt}")
+    finally:
+        if proc is not None:
+            proc.wait(timeout=_TEARDOWN_TIMEOUT)
+            proc.altfs_log.close()
 
 
 def umount_tape(mnt):
