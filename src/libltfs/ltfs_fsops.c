@@ -776,22 +776,6 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 		goto out_unlock;
 	}
 
-#ifdef __APPLE__
-	/*
-	 * Directory move is inhibited because of a MacFUSE bug.
-	 * MacFUSE requests unexpected path after directory move, and that problem
-	 * causes an unexpected move.
-	 */
-	if (fromdentry->isdir && fromdir != todir) {
-		ltfsmsg(ALI0034I);
-		ret = -LTFS_DIRMOVE;
-		if (todentry && fromdentry != todentry)
-			fs_release_dentry(todentry);
-		fs_release_dentry(fromdentry);
-		goto out_unlock;
-	}
-#endif
-
 	if (fromdentry->is_immutable || fromdentry->is_appendonly) {
 		ltfsmsg(ALI0040E, "rename: src entry is WORM");
 		ret = -LTFS_WORM_ENABLED;

@@ -71,7 +71,7 @@ root:table {
 		ALI0031E:string { "Cannot remove extended attribute: failed to validate the name (%d)" }
 		ALI0032E:string { "Cannot remove extended attribute: failed to look up the path (%d)" }
 		ALI0033E:string { "Cannot create file or directory: failed to allocate dentry" }
-		ALI0034I:string { "Cannot move directory: Directory move is prohibited because of a MacFUSE bug" }
+		//unused ALI0034I:string { "Cannot move directory: Directory move is prohibited because of a MacFUSE bug" }
 		ALI0035D:string { "Making a symlink '%s' target '%s'" }
 		ALI0036D:string { "Symlink EA prefix value is (%s)" }
 		ALI0037D:string { "Path changed from '%s' to '%s'" }
