@@ -10,7 +10,7 @@ Core Members are the maintainers of the project. They are responsible for the di
 
 **Permissions:**
 
-- Direct commit access to all branches except release branches.
+- Direct commit access to all branches except `main` and the release branches (`release/X.Y`), which change through pull requests only (see the branch protection section of [RELEASE.md](RELEASE.md)). Core Members create the release tags.
 - Merge pull requests after review.
 - Manage issues, labels, and milestones.
 
