@@ -158,12 +158,21 @@ tracking issue as they land, so the notes are not written from memory.
 
 ## Branch protection
 
-`main` and `release/*` are protected: changes come through pull requests
-that pass the required checks (`Build` and `Scenario tests` jobs of the two
-workflows, `Message IDs`); direct pushes and force pushes are refused;
-`release/*` additionally requires a Core Member review, which is what
-[GOVERNANCE.md](GOVERNANCE.md) implies. Tags `v*` are created by Core
-Members only.
+Three repository rulesets enforce the branch rules (Settings, Rules):
+
+- `main`: no deletion, no force push, changes through pull requests only
+  (squash merges, signed commits), and the required checks `Ubuntu 24.04`,
+  `Rocky Linux 9`, `Message IDs` and `FS API + scenarios (Ubuntu 24.04)`.
+- `release/*`: the same, plus one approving review. Backports are pull
+  requests like any other change.
+- `v*` tags: created by repository admins only, never moved or deleted by
+  anyone else.
+
+Repository admins can bypass the pull request rules, but only from within a
+pull request (bypass mode "pull request"): with a single Core Member that is
+what lets the maintainer merge their own backports; direct pushes to `main`
+and `release/*` are refused for everyone. The review requirement on
+`release/*` binds every non-admin contributor.
 
 ## Deferred decisions
 
