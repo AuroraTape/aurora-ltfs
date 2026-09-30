@@ -47,7 +47,8 @@ jobs:
             install: true
             experimental: true
           - name: Rocky Linux 10
-            container: rockylinux:10
+            # the official-image repository stops at 9; 10 is published under the org
+            container: rockylinux/rockylinux:10
             id: rocky10
             pkg: dnf
             configure_extra: ""
