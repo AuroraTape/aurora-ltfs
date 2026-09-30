@@ -65,6 +65,8 @@ CI verifies that all Tier 2 platforms (macOS, Debian, FreeBSD) and NetBSD build 
 
 Tier 2 and Tier 3 platforms may be promoted or added based on community demand and contributor availability.
 
+**Support window:** a minor release line (`X.Y`) receives fixes on its `release/X.Y` branch until six months after the next minor release. How releases are made is described in [docs/RELEASE.md](docs/RELEASE.md).
+
 ## Supported Tape Drives
 
   | Vendor  | Drive Type              | Minimum F/W Level | Status                     |
@@ -190,10 +192,11 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 
 Release images are published to GHCR for x86_64. Images are tagged
 `X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
-version you run never changes behind your back. Pick one explicitly:
+version you run never changes behind your back. Pick one explicitly: `X.Y`
+follows the newest patch release of that line, `X.Y.Z` never moves.
 
 ```
-# docker pull ghcr.io/auroratape/aurora-ltfs:1.0.0
+# docker pull ghcr.io/auroratape/aurora-ltfs:1.0
 ```
 
 The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
@@ -202,18 +205,18 @@ passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
 
 ```
 # List drives
-docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0 \
   altfs -o device_list
 
 # Format a tape
-docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0 \
   mkaltfs -d /dev/sg0
 
 # Mount a tape (foreground; Ctrl-C unmounts)
 docker run --rm -it \
   --device /dev/fuse --device /dev/sg0 \
   --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
-  ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+  ghcr.io/auroratape/aurora-ltfs:1.0 \
   altfs -f -o devname=/dev/sg0 /ltfs
 ```
 

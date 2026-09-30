@@ -196,7 +196,11 @@ jobs:
       - name: Smoke test
         run: |
           IMG="$(echo '${{ steps.meta.outputs.tags }}' | head -n1)"
-          docker run --rm "$IMG" altfs -V
+          # The version the binaries report must be the tag's (as the
+          # packages carry it: '~' for '-' in a release candidate).
+          V="${GITHUB_REF_NAME#v}"
+          docker run --rm "$IMG" altfs -V | tee altfs-version.txt
+          grep -F -- "$(printf '%s' "$V" | tr -- '-' '~')" altfs-version.txt
           docker run --rm "$IMG" mkaltfs --help > /dev/null
           docker run --rm "$IMG" altfsck --help > /dev/null
           docker run --rm "$IMG" altfsindextool --help > /dev/null
@@ -226,10 +230,14 @@ jobs:
           find artifacts/ -type f -exec mv {} release/ \;
           ls -la release/
 
+      # The generated notes (merged PRs since the previous tag, compare link)
+      # seed the release; the maintainer replaces them with the hand-written
+      # notes described in docs/RELEASE.md.
       - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
           fail_on_unmatched_files: true
           files: release/*
