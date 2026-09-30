@@ -10,6 +10,8 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
+    # Tier 2 entries (experimental: true) never fail the workflow
+    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,14 +28,32 @@ jobs:
             pkg: dnf
             configure_extra: ""
             install: true
-          # Tier 2 platform (issue #73): build verified in CI, failures do
-          # not block releases.
+          # Tier 2 platforms (issues #73, #140): build verified in CI,
+          # failures do not block releases. Ubuntu 26.04 and Rocky Linux 10
+          # are the successors of the Tier 1 releases; they catch toolchain
+          # regressions before the Tier 1 move (#80).
           - name: Debian 13
             container: debian:13
             id: debian13
             pkg: apt
             configure_extra: ""
             install: true
+            experimental: true
+          - name: Ubuntu 26.04
+            container: ubuntu:26.04
+            id: ubuntu2604
+            pkg: apt
+            configure_extra: ""
+            install: true
+            experimental: true
+          - name: Rocky Linux 10
+            # the official-image repository stops at 9; 10 is published under the org
+            container: rockylinux/rockylinux:10
+            id: rocky10
+            pkg: dnf
+            configure_extra: ""
+            install: true
+            experimental: true
           # Compile-only validation that every ltfsmsg(...) call site agrees
           # with the printf format string in the message catalog. With
           # --enable-message-checker the ltfsmsg() macro expands to a raw
@@ -91,7 +111,6 @@ jobs:
             libuuid-devel \
             diffutils \
             redhat-rpm-config \
-            annobin \
             gcc-plugin-annobin \
             python3 \
             git \
