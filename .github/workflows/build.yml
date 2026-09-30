@@ -111,7 +111,6 @@ jobs:
             libuuid-devel \
             diffutils \
             redhat-rpm-config \
-            annobin \
             gcc-plugin-annobin \
             python3 \
             git \
