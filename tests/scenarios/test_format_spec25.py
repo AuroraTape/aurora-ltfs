@@ -7,13 +7,14 @@ module pins down:
 
 - A freshly formatted volume carries labels and indexes stamped 2.5.0.
 
-- A cleanly-closed volume written by a spec 2.4 implementation mounts
-  and its contents are readable. ALX0074W announces that the index is
-  upgraded when the volume is modified, and a modification indeed
-  writes the next index at 2.5.0: the historical "write the newest
-  version you support" policy. Issue #66 (version-preserving index
-  writes) is going to replace that policy; the expectation here has to
-  change together with it.
+- A volume keeps its format version (issue #66). A cleanly-closed
+  volume written by a spec 2.4 implementation mounts, its contents are
+  readable, and every index written to it, by altfs or by altfsck, is
+  stamped 2.4.0; no incremental index is written to it (the syncs that
+  pass LTFS_INDEX_AUTO write full indexes, the IncrementalSync attribute
+  is refused), which ALB0287I announces at mount. A volume older than
+  2.4.0 gets its next index at 2.4.0, the oldest version this software
+  writes, which ALX0074W announces.
 
 - An incremental index left behind by a crashed session is never
   truncated as stray data. Mount refuses the volume (ALB0108E) and
@@ -42,6 +43,7 @@ import pytest
 
 from common.altfs import (
     LTFSCK_CORRECTED,
+    crash_altfs_daemon,
     format_tape,
     mount_tape,
     mount_tape_foreground,
@@ -51,7 +53,7 @@ from common.altfs import (
     umount_tape_foreground,
 )
 from common.helpers import full_sync, incremental_sync
-from common.index import parse_latest_index
+from common.index import parse_latest_index, records_with_tag
 
 pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
@@ -119,32 +121,107 @@ def test_formatted_volume_is_stamped_25(tmp_path_factory):
         assert root.get("version") == "2.5.0"
 
 
-def test_24_stamped_volume_mounts_and_next_index_is_25(tmp_path_factory):
+def test_24_stamped_volume_keeps_its_version(tmp_path_factory):
     """A cleanly-closed volume whose labels and indexes are stamped
-    2.4.0 mounts and its contents are readable; ALX0074W announces the
-    upgrade. A modification stamps the next index 2.5.0 (see the module
-    docstring about issue #66), which parse_latest_index() verifies
-    through the independent altfsindextool capture path."""
+    2.4.0 mounts and its contents are readable. Every index written to
+    it stays at 2.4.0 (checked through the independent altfsindextool
+    capture path on both partitions), the sync on close writes a full
+    index although the default full_index_interval would make it
+    incremental, and the IncrementalSync attribute is refused. ALB0287I
+    says so at mount; ALX0074W is for volumes older than 2.4.0."""
     tape_dir, mnt = _make_populated_tape(
         tmp_path_factory, "spec24-stamp", serial="SPEC24", label="spec24")
 
     assert _restamp(tape_dir, "ltfslabel") == 2, "expected one label per partition"
     assert _restamp(tape_dir, "ltfsindex") > 0, "no index records found to re-stamp"
     assert parse_latest_index(tape_dir).get("version") == "2.4.0"
+    full_before = len(records_with_tag(tape_dir, "ltfsindex"))
 
-    proc = mount_tape_foreground(tape_dir, mnt)
+    proc = mount_tape_foreground(tape_dir, mnt, sync_type="close")
     try:
         assert (mnt / "keep.txt").read_text() == _KEEP_CONTENT
-        (mnt / "new.txt").write_text("written on the 2.4 volume\n")
+        (mnt / "new.txt").write_text("written on the 2.4 volume\n")   # sync on close
+        with pytest.raises(OSError):
+            incremental_sync(mnt, "must be refused on a 2.4 volume")
+        (mnt / "more.txt").write_text("a second change\n")
+        full_sync(mnt, "explicit full index is fine")
     finally:
         assert umount_tape_foreground(proc, mnt) == 0
 
     log = (mnt.parent / "altfs-foreground.log").read_text(errors="replace")
-    assert "ALX0074W" in log, "mount must announce the index version upgrade"
+    assert "ALB0287I" in log, "mount must announce that the volume keeps 2.4.0"
+    assert "ALB0288E" in log, "the refused incremental sync must be reported"
+    assert "ALX0074W" not in log, "2.4.0 is not older than what this software writes"
     assert "ALX0075W" not in log, \
         "a 2.4 index is not newer than what this software supports"
 
-    assert parse_latest_index(tape_dir).get("version") == "2.5.0"
+    assert not records_with_tag(tape_dir, "ltfsincrementalindex"), \
+        "no incremental index may be written to a 2.4 volume"
+    assert len(records_with_tag(tape_dir, "ltfsindex")) > full_before, \
+        "the sync on close and the unmount must have written full indexes"
+    for partition in (0, 1):
+        assert parse_latest_index(tape_dir, partition=partition).get("version") == "2.4.0"
+    assert b'<ltfslabel version="2.4.0"' in records_with_tag(tape_dir, "ltfslabel")[0].read_bytes()
+
+
+def test_22_stamped_volume_next_index_is_24(tmp_path_factory):
+    """A volume older than 2.4.0 cannot keep its version: the full index
+    this software writes conforms to 2.4.0, so that is what the next
+    index is stamped, announced by ALX0074W. Still no 2.5.0."""
+    tape_dir, mnt = _make_populated_tape(
+        tmp_path_factory, "spec22-stamp", serial="SPEC22", label="spec22")
+
+    assert _restamp(tape_dir, "ltfslabel", new="2.2.0") == 2
+    assert _restamp(tape_dir, "ltfsindex", new="2.2.0") > 0
+    assert parse_latest_index(tape_dir).get("version") == "2.2.0"
+
+    proc = mount_tape_foreground(tape_dir, mnt)
+    try:
+        assert (mnt / "keep.txt").read_text() == _KEEP_CONTENT
+        (mnt / "new.txt").write_text("written on the 2.2 volume\n")
+    finally:
+        assert umount_tape_foreground(proc, mnt) == 0
+
+    log = (mnt.parent / "altfs-foreground.log").read_text(errors="replace")
+    assert "ALX0074W" in log, "mount must announce the index version change"
+    assert "ALB0287I" in log
+    for partition in (0, 1):
+        assert parse_latest_index(tape_dir, partition=partition).get("version") == "2.4.0"
+    assert not records_with_tag(tape_dir, "ltfsincrementalindex")
+
+
+def test_altfsck_recovers_a_24_volume_at_24(tmp_path_factory):
+    """altfsck writes at the volume's version too: after a crash with
+    changes newer than the last index, the full index the recovery
+    writes to the 2.4 volume is stamped 2.4.0."""
+    tape_dir, mnt = _make_populated_tape(
+        tmp_path_factory, "spec24-fsck", serial="SPEC2F", label="spec24fsck")
+    assert _restamp(tape_dir, "ltfslabel") == 2
+    assert _restamp(tape_dir, "ltfsindex") > 0
+
+    proc = mount_tape_foreground(tape_dir, mnt)
+    try:
+        (mnt / "synced.txt").write_text("synced before the crash\n")
+        full_sync(mnt, "before the crash")
+        (mnt / "unsynced.txt").write_text("lost in the crash\n")
+    finally:
+        crash_altfs_daemon(mnt, proc)
+    full_before = len(records_with_tag(tape_dir, "ltfsindex"))
+
+    check = run_altfsck(tape_dir=tape_dir)
+    check_out = check.stdout + check.stderr
+    assert check.returncode == LTFSCK_CORRECTED, check_out
+    assert len(records_with_tag(tape_dir, "ltfsindex")) > full_before, \
+        "the recovery must have written a full index"
+    assert not records_with_tag(tape_dir, "ltfsincrementalindex")
+    for partition in (0, 1):
+        assert parse_latest_index(tape_dir, partition=partition).get("version") == "2.4.0"
+
+    mount_tape(tape_dir, mnt)
+    try:
+        assert (mnt / "synced.txt").read_text() == "synced before the crash\n"
+    finally:
+        umount_tape(mnt)
 
 
 @pytest.mark.parametrize("altfsck_args", [(), ("--deep-recovery",)],

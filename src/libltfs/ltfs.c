@@ -1912,6 +1912,11 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 
 	barcode = _get_barcode(vol);
 
+	if (! ltfs_incremental_index_allowed(vol)) {
+		char verstr[LTFS_VERSION_STR_LEN];
+		ltfsmsg(ALB0287I, ltfs_format_version_str(vol->index->write_version, verstr, sizeof(verstr)));
+	}
+
 	ltfsmsg(ALB0032I,
 			barcode,
 			(unsigned long long)vol->index->generation,
@@ -2012,7 +2017,7 @@ int ltfs_load_all_attributes(struct ltfs_volume *vol)
 
 /**
  * Set the dirty or atime_dirty bit in an index.
- * This also upgrades the index's version number to the latest version.
+ * This also sets the index's version number to the version the volume keeps (write_version).
  * @param locking True to take idx->dirty_lock, false if that lock is already held.
  * @param atime True to set the atime_dirty flag, false to set the dirty flag.
  * @param idx Index to modify.
@@ -2031,7 +2036,7 @@ void ltfs_set_index_dirty(bool locking, bool atime, struct ltfs_index *idx)
 			idx->inc_dirty = true;
 		}
 		if (! atime || (atime && idx->use_atime))
-			idx->version = LTFS_INDEX_VERSION;
+			idx->version = idx->write_version;
 		if (!was_dirty && idx->dirty && dcache_initialized(idx->root->vol))
 				dcache_set_dirty(true, idx->root->vol);
 		if (locking)
@@ -2044,9 +2049,10 @@ void ltfs_set_index_dirty(bool locking, bool atime, struct ltfs_index *idx)
 }
 
 /**
- * Unset the dirty flags for an index, optionally upgrading the index's version field.
- * @param update_version True to force the index's version number to the current version. This
- *                       flag should be used just after writing an index.
+ * Unset the dirty flags for an index, optionally setting the index's version field.
+ * @param update_version True to set the index's version number to the version the volume
+ *                       keeps (write_version). This flag should be used just after writing an
+ *                       index.
  * @param idx Index to modify.
  */
 void ltfs_unset_index_dirty(bool update_version, struct ltfs_index *idx)
@@ -2061,7 +2067,7 @@ void ltfs_unset_index_dirty(bool update_version, struct ltfs_index *idx)
 		if (was_dirty && dcache_initialized(idx->root->vol))
 				dcache_set_dirty(false, idx->root->vol);
 		if (update_version)
-			idx->version = LTFS_INDEX_VERSION;
+			idx->version = idx->write_version;
 		ltfs_mutex_unlock(&idx->dirty_lock);
 
 		if (was_dirty && !idx->dirty) {
@@ -2468,6 +2474,62 @@ size_t ltfs_max_cache_size(struct ltfs_volume *vol)
 }
 
 /**
+ * Format version at which the full indexes of a volume are written.
+ *
+ * A volume keeps the version it was written at: an index read at 2.4.0 is followed by
+ * indexes at 2.4.0, so the volume stays what it was for the implementation that formatted
+ * it. The label version is the floor the specification sets for every index of the volume,
+ * and 2.4.0 is the oldest version the full index this software writes conforms to. A volume
+ * already at 2.5.0 (formatted by this software, or upgraded by an earlier release) stays at
+ * 2.5.0 and may carry incremental indexes. 2.5.0 is also the ceiling: it is the newest
+ * version this software writes, so a volume labelled beyond it (announced by ALX0075W or
+ * ALX0089W when its index is read) still gets 2.5.0 indexes.
+ * @param label_version version of the volume label, 0 when unknown (index file)
+ * @param index_version version of the index read from the volume
+ * @return version to write the full indexes at
+ */
+int ltfs_index_write_version(int label_version, int index_version)
+{
+	int version;
+
+	if (index_version >= LTFS_INDEX_VERSION)
+		version = LTFS_INDEX_VERSION;
+	else
+		version = LTFS_INDEX_VERSION_WRITE_MIN;
+
+	if (label_version > version)
+		version = label_version;
+	if (version > LTFS_INDEX_VERSION)
+		version = LTFS_INDEX_VERSION;
+
+	return version;
+}
+
+/**
+ * Can an incremental index be written to the volume? Only at format version 2.5.0: an
+ * older volume keeps its version, and the incremental index is the one on-tape construct
+ * that version 2.5 added.
+ */
+bool ltfs_incremental_index_allowed(struct ltfs_volume *vol)
+{
+	return vol && vol->index && vol->index->write_version >= LTFS_INDEX_VERSION;
+}
+
+/**
+ * Format a MAKE_LTFS_VERSION value as "M.N.R".
+ * @param version the version
+ * @param buf buffer of at least LTFS_VERSION_STR_LEN bytes
+ * @param len size of buf
+ * @return buf
+ */
+const char *ltfs_format_version_str(int version, char *buf, size_t len)
+{
+	snprintf(buf, len, "%d.%d.%d", LTFS_FORMAT_MAJOR(version), LTFS_FORMAT_MINOR(version),
+			 LTFS_FORMAT_REVISION(version));
+	return buf;
+}
+
+/**
  * Is the full index of the LTFS_INDEX_AUTO policy due?
  * With full_index_interval < 0 it never is, with 0 it always is, with N > 0 it is once
  * N incremental indexes were written since the last full index.
@@ -2498,10 +2560,17 @@ static enum ltfs_index_type _ltfs_resolve_index_type(enum ltfs_index_type type, 
 													 const char **fallback)
 {
 	if (type == LTFS_INDEX_AUTO)
-		type = _ltfs_full_index_due(vol) ? LTFS_FULL_INDEX : LTFS_INCREMENTAL_INDEX;
+		type = (_ltfs_full_index_due(vol) || ! ltfs_incremental_index_allowed(vol))
+			? LTFS_FULL_INDEX : LTFS_INCREMENTAL_INDEX;
 
 	if (type == LTFS_INCREMENTAL_INDEX) {
-		if (vol->journal_err) {
+		if (! ltfs_incremental_index_allowed(vol)) {
+			/* Refused before it gets here when a user asks (ltfs.vendor.Aurora.IncrementalSync);
+			 * this keeps every other caller at the volume's version */
+			if (fallback)
+				*fallback = "the volume is below format version 2.5.0";
+			type = LTFS_FULL_INDEX;
+		} else if (vol->journal_err) {
 			if (fallback)
 				*fallback = "journal error";
 			type = LTFS_FULL_INDEX;

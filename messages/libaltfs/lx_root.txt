@@ -111,7 +111,7 @@ root:table {
 		ALX0071E:string { "Index writer: failed to write opaque tags (%s)" }
 		ALX0072E:string { "XML parser: failed to skip tag" }
 		ALX0073E:string { "XML parser: comment field is longer than 64 KiB" }
-		ALX0074W:string { "The index read from the tape uses an old version of the LTFS format. If this tape is modified, the index upgrades format version to %s from %d.%d.%d" }
+		ALX0074W:string { "The index read from the tape uses an old version of the LTFS format. If this tape is modified, the next index is written at format version %s (the oldest this software writes) instead of %d.%d.%d" }
 		ALX0075W:string { "The index read from the tape uses a newer version of the LTFS format than the one supported by this software. Some functionality might be unavailable. If this tape is modified, the index downgrades format version to %s from %d.%d.%d" }
 		ALX0076E:string { "XML parser: two extents overlap" }
 		ALX0077E:string { "XML parser: UID on the root directory must be 1" }

@@ -18,6 +18,19 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+def records_with_tag(tape_dir, tag, partition=None):
+    """Block files of a file-backend volume whose XML top-level element is
+    `tag` ("ltfsindex", "ltfsincrementalindex", "ltfslabel"), in block
+    order; `partition` (0 or 1) restricts them to one partition. The one
+    place that knows the backend stores block B of partition P as
+    ``<P>_<B>_R``."""
+    pattern = f"{partition}_*_R" if partition is not None else "*_R"
+    stamp = f"<{tag} ".encode()
+    return sorted((p for p in Path(tape_dir).glob(pattern)
+                   if stamp in p.read_bytes()[:512]),
+                  key=lambda p: (int(p.name.split("_")[0]), int(p.name.split("_")[1])))
+
+
 _RUN_TIMEOUT = 30
 
 

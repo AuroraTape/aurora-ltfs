@@ -324,5 +324,7 @@ root:table {
 		ALB0284E:string { "Incremental index recovery: cannot apply the incremental index at block %llu of the data partition (%d). Nothing is written, the volume keeps its last full index" }
 		ALB0285E:string { "Incremental index recovery: the recovered tree is not consistent (%s, UID %llu). Nothing is written, the volume keeps its last full index" }
 		ALB0286W:string { "An incremental index was requested but a full index is written instead (%s)" }
+		ALB0287I:string { "The volume is at LTFS format version %s and keeps it: its indexes are written at that version and no incremental index is written" }
+		ALB0288E:string { "Cannot write an incremental index: the volume is at LTFS format version %s and keeps it (incremental indexes need 2.5.0)" }
 	}
 }

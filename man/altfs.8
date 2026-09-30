@@ -97,6 +97,11 @@ counts as well.
 The sync extended attributes always write the type they name, whatever the value.
 An incremental index is replaced by a full index, with a warning, when the change
 cannot be described incrementally.
+.PP
+A volume keeps the format version it was written at. On a volume below format
+specification 2.5 (a tape formatted by another LTFS implementation at 2.4) the
+indexes are written at that version and no incremental index is ever written,
+whatever this option says; writing ltfs.vendor.Aurora.IncrementalSync fails there with EINVAL.
 .TP
 \fB-o force_mount_no_eod\fR
 Skip EOD existence check when mounting (read-only mount).
