@@ -162,7 +162,11 @@
                 </varlistentry>
                 <varlistentry><term>0</term>
                   <listitem>
-                    <para>Full indexes only, the behaviour of the LTFS reference implementation.</para>
+                    <para>
+                      Full indexes only, the behaviour of the LTFS reference implementation. Use it
+                      for a volume that other LTFS implementations will read after a failure: they
+                      recover such a volume to its last full index.
+                    </para>
                   </listitem>
                 </varlistentry>
                 <varlistentry><term>N</term>
