@@ -19,9 +19,8 @@
 # the cartridge while altfs is waiting. The cartridge must be LTFS formatted
 # with a block size this host can transfer; --format takes care of that.
 #
-#   A  no option, empty drive      -> fails fast (no endless loop), exit != 0;
-#                                     the drive dump taken on the failed LOAD
-#                                     can be read (#149)
+#   A  no option, empty drive      -> fails fast (no endless loop), exit != 0,
+#                                     no drive dump for the missing medium (#156)
 #   B  wait_medium=20, empty drive -> gives up after ~20 s, AFS0145E, exit 1
 #   C  wait_medium, then SIGTERM   -> AFS0144I, exit 0, drive released
 #   D1 wait_medium, push the cartridge fully in (the drive loads it itself)
@@ -146,17 +145,11 @@ finish 5; rc=$?
 info "exit $rc after $(( $(date +%s) - T0 )) s"
 [ "$rc" -ne 0 ] && [ "$rc" -ne 124 ] && pass "fails fast without the option (no endless loop)" || fail "exit $rc (124 = did not end within 120 s)"
 errors "$WORK/A.log"
-# #149: the drive dump taken on the failed LOAD is read in chunks the host
-# path can transfer
+# #156: "no medium" before a load is a drive state, not a fault: no dump
 if grep -q ATG0054I "$WORK/A.log"; then
-	if grep -q ATG0059W "$WORK/A.log"; then
-		fail "drive dump could not be read (ATG0059W)"
-	else
-		dump=$(grep -o 'ATG0054I Saving drive dump to [^ ]*' "$WORK/A.log" | tail -1 | awk '{print $NF}')
-		pass "drive dump taken: $dump ($(stat -c %s "$dump" 2>/dev/null || echo '?') bytes)"
-	fi
+	fail "a drive dump was taken for the empty drive: $(grep -o 'ATG0054I Saving drive dump to [^ ]*' "$WORK/A.log" | awk '{print $NF}' | tr '\n' ' ')"
 else
-	info "no drive dump was taken"
+	pass "no drive dump for the empty drive"
 fi
 
 # --- B -------------------------------------------------------------------
@@ -186,8 +179,7 @@ d_case() {  # d_case TAG "what to do with the cartridge"
 	local tag="$1" how="$2" log="$WORK/$1.log" i
 	say "=== $tag: -o wait_medium, $how"
 	start_altfs "$log" -o wait_medium
-	# altfs first tries the regular load (LOAD, drive dumps on a real drive),
-	# then announces the wait with AFS0141I
+	# altfs first tries the regular load, then announces the wait with AFS0141I
 	i=0
 	while [ "$i" -lt 180 ] && kill -0 "$PID" 2>/dev/null && ! grep -q AFS0141I "$log" && ! mountpoint -q "$MNT"; do
 		sleep 1; i=$((i+1))

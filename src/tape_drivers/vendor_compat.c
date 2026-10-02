@@ -480,3 +480,30 @@ int get_timeout(struct timeout_tape* table, int op_code)
 		return DEFAULT_TIMEOUT;
 	}
 }
+
+/**
+ * Tell whether an error only reports the state of the drive, so that a drive dump
+ * taken for it would contain nothing that helps.
+ * @param err positive internal error code (EDEV_*)
+ * @param loaded true while the backend holds a loaded cartridge
+ * @return true for a unit attention (except a power on reset while a cartridge is
+ *         loaded), and for no medium / becoming ready / initialize required /
+ *         cleaning in progress while no cartridge is loaded
+ */
+bool is_drive_state_notice(int err, bool loaded)
+{
+	/* A power on reset in the middle of I/O may be a drive that restarted itself */
+	if (IS_UNIT_ATTENTION(err))
+		return !(loaded && err == EDEV_POR_OR_BUS_RESET);
+
+	/* An empty drive, a cartridge being loaded, one waiting at the lock position or
+	 * a cleaning cartridge. The same states while a cartridge is loaded are abnormal
+	 * and keep the dump. */
+	if (!loaded && (err == EDEV_NO_MEDIUM
+					|| err == EDEV_BECOMING_READY
+					|| err == EDEV_NEED_INITIALIZE
+					|| err == EDEV_CLEANING_IN_PROGRESS))
+		return true;
+
+	return false;
+}

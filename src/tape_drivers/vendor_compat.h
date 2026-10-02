@@ -79,6 +79,8 @@ int  init_timeout_rsoc(struct timeout_tape **table, unsigned char *buf, uint32_t
 void destroy_timeout(struct timeout_tape **table);
 int  get_timeout(struct timeout_tape *table, int op_code);
 
+bool is_drive_state_notice(int err, bool loaded);
+
 #ifdef __cplusplus
 }
 #endif

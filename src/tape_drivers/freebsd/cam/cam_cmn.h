@@ -69,6 +69,7 @@
 #include "libltfs/ltfs_error.h"
 #include "libltfs/ltfs_endian.h"
 #include "tape_drivers/tape_drivers.h"
+#include "tape_drivers/vendor_compat.h"
 #undef MAXSENSE
 #include "IBM_tape.h"
 #include "libltfs/ltfstrace.h"
@@ -584,7 +585,8 @@ static inline bool is_dump_required_error(struct camtape_data *softc, int ret, b
 
 		ans = (rc == DEVICE_GOOD);
 	}
-	else if (err >= EDEV_NOT_READY && err < EDEV_INTERNAL_ERROR) {
+	else if (err >= EDEV_NOT_READY && err < EDEV_INTERNAL_ERROR
+			 && !is_drive_state_notice(err, softc->loaded)) {
 		ans = TRUE;
 	}
 

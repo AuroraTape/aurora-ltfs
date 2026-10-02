@@ -48,7 +48,7 @@ def test_wait_medium_check_dry_run(tmp_path):
                         "--device", str(drive), "--mnt", str(mnt)],
                        env=env, capture_output=True, text=True, timeout=600)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "Summary: 20 passed, 0 failed" in r.stdout, r.stdout
+    assert "Summary: 21 passed, 0 failed" in r.stdout, r.stdout
     assert not os.path.ismount(mnt)
 
 

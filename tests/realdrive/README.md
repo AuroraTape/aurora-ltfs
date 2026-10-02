@@ -83,16 +83,15 @@ sudo ./wait-medium-check.sh --device <serial> [--prefix DIR] --format
 
 | Step | Drive | Expected |
 |:--|:--|:--|
-| A | empty, no option | fails at once, exit status 1; the drive dump taken on the failed LOAD is readable |
+| A | empty, no option | fails at once (about 2 s), exit status 1, no drive dump (#156) |
 | B | empty, `wait_medium=20` | `AFS0142I`, gives up with `AFS0145E`, exit 1 |
 | C | empty, `wait_medium`, SIGTERM | `AFS0144I`, exit 0, drive released |
 | D1 | cartridge **pushed fully in** while waiting | the drive loads it by itself ("becoming ready"), `AFS0143I`, mount, write, clean unmount and remount |
 | D2 | cartridge stopped at the **lock position** while waiting | altfs issues the LOAD, same checks as D1 |
 
 **Insert the cartridge only when the script tells you to.** Before that,
-`altfs` is still in its initial load attempt (a real drive takes 10-15 s,
-including a drive dump), and the cartridge would be loaded through the regular
-path instead of the wait.
+`altfs` is still in its initial load attempt (a few seconds on a real drive),
+and the cartridge would be loaded through the regular path instead of the wait.
 
 ## Safety rules the scripts follow
 
