@@ -265,7 +265,8 @@ static bool is_dump_required(struct sg_data *priv, int ret, bool *capture_unforc
 	bool ans = false;
 	int err = -ret;
 
-	if (err >= EDEV_NOT_READY && err < EDEV_INTERNAL_ERROR) {
+	if (err >= EDEV_NOT_READY && err < EDEV_INTERNAL_ERROR
+		&& !is_drive_state_notice(err, priv->loaded)) {
 		ans = true;
 	}
 
