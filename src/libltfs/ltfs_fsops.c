@@ -1056,11 +1056,8 @@ int ltfs_fsops_setxattr(const char *path, const char *name, const char *value, s
 	if (size > LTFS_MAX_XATTR_SIZE)
 		return -LTFS_LARGE_XATTR; /* this is the error returned by ext3 when the xattr is too large */
 
-	/* The lock state may be changed on a write-protected medium, but not through a
-	 * read-only mount */
 	ret = ltfs_get_volume_readonly(vol);
-	if (ret == -LTFS_RDONLY_VOLUME ||
-		(ret < 0 && ret != -LTFS_LESS_SPACE && strcmp(name, "user.ltfs.volumeLockState")))
+	if (ret < 0 && ret != -LTFS_LESS_SPACE && strcmp(name, "user.ltfs.volumeLockState"))
 		return ret;
 
 	ret = ltfs_test_unit_ready(vol);
