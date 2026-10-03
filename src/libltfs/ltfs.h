@@ -439,6 +439,7 @@ struct ltfs_volume {
 	bool ip_index_file_end;            /**< Does the index partition end in an index file? */
 	bool dp_index_file_end;            /**< Does the data partition end in an index file? */
 	enum volume_mount_type mount_type; /**< Mount type defined by enum */
+	bool readonly_mount;               /**< Mounted read-only on request, whatever the medium allows */
 	int  traverse_mode;                /**< Traverse strategy (rollback, list index, rollback mount) */
 	bool skip_eod_check;               /**< Skip EOD existance check? */
 	bool ignore_wrong_version;         /**< Ignore wrong index version while seeking index? */
@@ -648,6 +649,8 @@ void ltfs_device_close_skip_append_only_mode(struct ltfs_volume *vol);
 int ltfs_setup_device(struct ltfs_volume *vol);
 int ltfs_test_unit_ready(struct ltfs_volume *vol);
 int ltfs_get_tape_readonly(struct ltfs_volume *vol);
+int ltfs_get_volume_readonly(struct ltfs_volume *vol);
+void ltfs_set_readonly_mount(bool readonly, struct ltfs_volume *vol);
 int ltfs_get_partition_readonly(char partition, struct ltfs_volume *vol);
 int ltfs_get_cartridge_health(cartridge_health_info *h, struct ltfs_volume *vol);
 int ltfs_get_tape_alert(uint64_t *tape_alert, struct ltfs_volume *vol);
