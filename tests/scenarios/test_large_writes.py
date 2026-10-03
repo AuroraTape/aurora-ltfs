@@ -67,7 +67,8 @@ def test_write_requests_larger_than_a_block_keep_every_byte(small_block_tape):
 def test_large_writes_into_queued_data_keep_every_byte(small_block_tape):
     """Large writes that land on, between and across data still queued in
     the scheduler: the overwrite, insert-before and overlap paths rather
-    than a plain append."""
+    than a plain append. If the background writer flushes a full block
+    first, a write takes a different path; the byte check still holds."""
     tape_dir, mnt = small_block_tape
     b = _BLOCKSIZE
     writes = [
