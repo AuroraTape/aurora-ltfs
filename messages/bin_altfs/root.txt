@@ -238,5 +238,6 @@ root:table {
 		AFS0139E:string { "Cannot set the LANG environment variable" }
 		AFS0150E:string { "Cannot reopen the tape device (%d). Aborting the mount" }
 		AFS0151I:string { "Closing the tape device until the process serving the file system requests starts" }
+		AFS0152I:string { "Read-only mount is specified. Mounting as read-only" }
 	}
 }

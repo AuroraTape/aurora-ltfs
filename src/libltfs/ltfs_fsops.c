@@ -84,7 +84,7 @@ int ltfs_fsops_open(const char *path, bool open_write, bool use_iosched, struct 
 	}
 
 	if (open_write) {
-		ret = ltfs_get_tape_readonly(vol);
+		ret = ltfs_get_volume_readonly(vol);
 		if (ret < 0 && ret != -LTFS_LESS_SPACE)
 			return ret;
 	}
@@ -133,7 +133,7 @@ int ltfs_fsops_open_combo(const char *path, bool open_write, bool use_iosched,
 	}
 
 	if (open_write) {
-		ret = ltfs_get_tape_readonly(vol);
+		ret = ltfs_get_volume_readonly(vol);
 		if (ret < 0 && ret != -LTFS_LESS_SPACE)
 			return ret;
 	}
@@ -259,7 +259,7 @@ int ltfs_fsops_create(const char *path, bool isdir, bool readonly, bool overwrit
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -436,7 +436,7 @@ int ltfs_fsops_unlink(const char *path, ltfs_file_id *id, struct ltfs_volume *vo
 	id->ino = 0;
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -595,7 +595,7 @@ int ltfs_fsops_rename(const char *from, const char *to, ltfs_file_id *id, struct
 	id->ino = 0;
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -1054,7 +1054,7 @@ int ltfs_fsops_setxattr(const char *path, const char *name, const char *value, s
 	if (size > LTFS_MAX_XATTR_SIZE)
 		return -LTFS_LARGE_XATTR; /* this is the error returned by ext3 when the xattr is too large */
 
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE && strcmp(name, "user.ltfs.volumeLockState"))
 		return ret;
 
@@ -1324,7 +1324,7 @@ int ltfs_fsops_removexattr(const char *path, const char *name, ltfs_file_id *id,
 	CHECK_ARG_NULL(name, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -1584,7 +1584,7 @@ int ltfs_fsops_utimens(struct dentry *d, const struct ltfs_timespec ts[2], struc
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -1660,7 +1660,7 @@ int ltfs_fsops_utimens_all(struct dentry *d, const struct ltfs_timespec ts[4], s
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -1733,7 +1733,7 @@ int ltfs_fsops_set_readonly(struct dentry *d, bool readonly, struct ltfs_volume 
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
 
 	/* Make sure the device is online and writable */
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0 && ret != -LTFS_LESS_SPACE)
 		return ret;
 	ret = ltfs_test_unit_ready(vol);
@@ -1868,7 +1868,7 @@ int ltfs_fsops_truncate(struct dentry *d, off_t length, struct ltfs_volume *vol)
 	} else if (d->isdir)
 		return -LTFS_ISDIRECTORY;
 
-	ret = ltfs_get_tape_readonly(vol);
+	ret = ltfs_get_volume_readonly(vol);
 	if (ret < 0)
 		return ret;
 

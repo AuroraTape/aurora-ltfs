@@ -713,7 +713,7 @@ write_start:
 
 	/* Disallow writes if the medium is read-only */
 	if (! checked_readonly) {
-		ret = ltfs_get_tape_readonly(priv->vol);
+		ret = ltfs_get_volume_readonly(priv->vol);
 		if (ret < 0) {
 			ltfs_mutex_unlock(&d->iosched_lock);
 			releaseread_mrsw(&priv->lock);
@@ -938,7 +938,7 @@ int unified_truncate(struct dentry *d, off_t length, void *iosched_handle)
 	ltfs_profiler_add_entry(priv->profiler, &priv->proflock, IOSCHED_REQ_ENTER(REQ_IOS_TRUNCATE));
 
 	/* Disallow truncate if the medium is read-only */
-	ret = ltfs_get_tape_readonly(priv->vol);
+	ret = ltfs_get_volume_readonly(priv->vol);
 	if (ret < 0) {
 		ltfs_profiler_add_entry(priv->profiler, &priv->proflock, IOSCHED_REQ_EXIT(REQ_IOS_TRUNCATE));
 		return ret;
