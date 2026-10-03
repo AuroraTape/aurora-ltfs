@@ -104,7 +104,7 @@
               when one fails. Otherwise creates <replaceable>MOUNTPOINT</replaceable> (an
               absolute path; an existing directory has to be empty and belong to the user
               <literal>altfs</literal> already), gives it to that user and writes the settings of the instance. The instance
-              waits for a cartridge when the drive is empty (<option>-o wait_medium</option>
+              waits for the drive and for a cartridge when they are not ready (<option>-o wait_medium</option>
               of <command>altfs</command>) unless <option>--no-wait-medium</option> is given.
             </para>
           </listitem>
@@ -174,7 +174,7 @@
         <varlistentry>
           <term><option>--no-wait-medium</option></term>
           <listitem>
-            <para>The instance fails when the drive is empty instead of waiting for a cartridge.</para>
+            <para>The instance fails when the drive cannot be opened or is empty instead of waiting.</para>
           </listitem>
         </varlistentry>
         <varlistentry>

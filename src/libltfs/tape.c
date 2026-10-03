@@ -236,8 +236,10 @@ int tape_device_open(struct device_data *device, const char *devname, struct tap
 
 out_free:
 	if (ret) {
-		if (device->serial_number)
+		if (device->serial_number) {
 			free(device->serial_number);
+			device->serial_number = NULL;
+		}
 		device->backend_data = NULL;
 		device->backend = NULL;
 	}
@@ -291,8 +293,10 @@ void _tape_device_close(struct device_data *device, void * const kmi_handle,
 	if (device->backend && device->backend_data)
 		device->backend->close(device->backend_data);
 
-	if (device->serial_number)
+	if (device->serial_number) {
 		free(device->serial_number);
+		device->serial_number = NULL;
+	}
 	device->backend_data = NULL;
 	device->backend = NULL;
 

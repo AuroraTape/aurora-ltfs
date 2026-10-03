@@ -186,7 +186,7 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 
 ## Mounting as a service (Linux)
 
-A mount started from a login shell is part of the login session, and systemd stops sessions with a short timeout at shutdown (5 s for a desktop terminal on Ubuntu), which can kill `altfs` before the index is on the tape. For a drive that should be mounted all the time, or at boot, run the mount as a service instead: `altfs@<serial>.service` runs `altfs` as the unprivileged user `altfs` (created by the packages, ID 5432 when free) with its own stop timeout, and waits for a cartridge when the drive is empty. `altfsctl` sets it up:
+A mount started from a login shell is part of the login session, and systemd stops sessions with a short timeout at shutdown (5 s for a desktop terminal on Ubuntu), which can kill `altfs` before the index is on the tape. For a drive that should be mounted all the time, or at boot, run the mount as a service instead: `altfs@<serial>.service` runs `altfs` as the unprivileged user `altfs` (created by the packages, ID 5432 when free) with its own stop timeout, and waits for the drive and for a cartridge when they are not ready, for example at boot. `altfsctl` sets it up:
 
 ```
 # altfsctl check 9A700L0077

@@ -55,7 +55,7 @@ Runs the checks of \fBcheck\fR and stops without changing anything
 when one fails. Otherwise creates \fIMOUNTPOINT\fR (an
 absolute path; an existing directory has to be empty and belong to the user
 altfs already), gives it to that user and writes the settings of the instance. The instance
-waits for a cartridge when the drive is empty (\fB-o wait_medium\fR
+waits for the drive and for a cartridge when they are not ready (\fB-o wait_medium\fR
 of \fBaltfs\fR) unless \fB--no-wait-medium\fR is given.
 .TP
 \fBremove\fR \fISERIAL\fR
@@ -88,7 +88,7 @@ they are 0777, which lets every local user read and write the volume.
 tapeusers\&.
 .TP
 \fB--no-wait-medium\fR
-The instance fails when the drive is empty instead of waiting for a cartridge.
+The instance fails when the drive cannot be opened or is empty instead of waiting.
 .TP
 \fB-o, --option \fIOPTION\fB\fR
 A further option for \fBaltfs\fR, without \fB-o\fR, for

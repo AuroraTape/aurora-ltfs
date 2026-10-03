@@ -1371,6 +1371,9 @@ int sg_open(const char *devname, void **handle)
 			order = (struct open_order *)calloc(devs * 2, sizeof(struct open_order));
 			if ( (!buf) || (!order) ) {
 				ltfsmsg(ALC0002E, __FUNCTION__);
+				free(buf);
+				free(order);
+				free(priv);
 				return -LTFS_NO_MEMORY;
 			}
 			info_devs = sg_get_device_list(buf, devs * 2);
@@ -1383,12 +1386,15 @@ int sg_open(const char *devname, void **handle)
 			buf = NULL;
 		}
 
+		/* altfs -o wait_medium retries while the drive is not found: free priv here too */
 		if (count < 0) {
 			_order_free(&order, 0);
+			free(priv);
 			return count;
 		} else if (!count) {
 			/* Cannot find the target device */
 			_order_free(&order, 0);
+			free(priv);
 			return -EDEV_DEVICE_UNOPENABLE;
 		}
 	}

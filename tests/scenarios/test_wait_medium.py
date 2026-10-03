@@ -206,3 +206,88 @@ def test_unusable_medium_is_not_waited_for(station, tmp_path):
     assert _finish(proc, timeout=30) == 1
     assert "AFS0141I" not in log_path.read_text(errors="replace")
     assert not os.path.ismount(mnt)
+
+
+# A drive that cannot be opened yet (#105): at boot the device node may
+# not be usable for a moment, and a drive powered on with the host shows
+# up late. The file backend stands for that with a drive file that does
+# not exist yet.
+
+def test_missing_drive_is_waited_for(station):
+    drive, mnt, log_path = station
+    drive.unlink()
+
+    proc = _start(drive, mnt, log_path, "wait_medium")
+    try:
+        assert _wait_for(
+            lambda: "AFS0153I" in log_path.read_text(errors="replace"), 10)
+        time.sleep(6)                   # at least one quiet retry
+        assert proc.poll() is None and not os.path.ismount(mnt)
+
+        _set_drive(drive, _CARTRIDGE)
+        assert _wait_for(lambda: os.path.ismount(mnt), 20), \
+            log_path.read_text(errors="replace")
+    except BaseException:
+        proc.kill()
+        _finish(proc)
+        raise
+
+    assert umount_tape_foreground(proc, mnt) == 0
+    log = log_path.read_text(errors="replace")
+    assert "AFS0155I" in log and "ALB0032I" in log
+    assert log.count("ATF0003E") == 1   # the retries are quiet
+    # but the open that succeeds logs the drive information
+    assert "ALB0240I" in log[log.index("AFS0153I"):]
+
+
+def test_missing_drive_then_empty_drive(station):
+    """The drive shows up empty: the wait goes on for a cartridge."""
+    drive, mnt, log_path = station
+    drive.unlink()
+
+    proc = _start(drive, mnt, log_path, "wait_medium")
+    assert _wait_for(
+        lambda: "AFS0153I" in log_path.read_text(errors="replace"), 10)
+    _set_drive(drive, "empty")
+    assert _wait_for(
+        lambda: "AFS0141I" in log_path.read_text(errors="replace"), 20)
+
+    proc.send_signal(signal.SIGTERM)
+    assert _finish(proc, timeout=10) == 0
+    assert "AFS0144I" in log_path.read_text(errors="replace")
+
+
+def test_missing_drive_time_limit(station):
+    drive, mnt, log_path = station
+    drive.unlink()
+
+    started = time.monotonic()
+    proc = _start(drive, mnt, log_path, "wait_medium=2")
+    assert _finish(proc, timeout=20) == 1
+    assert 2 <= time.monotonic() - started < 10
+
+    log = log_path.read_text(errors="replace")
+    assert "AFS0154I" in log and "AFS0157E" in log and "ALC0005E" in log
+
+
+def test_signal_ends_the_wait_for_the_drive(station):
+    drive, mnt, log_path = station
+    drive.unlink()
+
+    proc = _start(drive, mnt, log_path, "wait_medium")
+    assert _wait_for(
+        lambda: "AFS0153I" in log_path.read_text(errors="replace"), 10)
+
+    proc.send_signal(signal.SIGTERM)
+    assert _finish(proc, timeout=10) == 0
+    assert "AFS0156I" in log_path.read_text(errors="replace")
+
+
+def test_missing_drive_fails_at_once_without_the_option(station):
+    drive, mnt, log_path = station
+    drive.unlink()
+
+    proc = _start(drive, mnt, log_path)
+    assert _finish(proc, timeout=20) == 1
+    log = log_path.read_text(errors="replace")
+    assert "ALC0005E" in log and "AFS0153I" not in log

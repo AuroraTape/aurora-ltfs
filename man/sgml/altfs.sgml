@@ -237,7 +237,14 @@
               until a cartridge is loaded and the mount is set up, or until the wait ends.
             </para>
             <para>
-              Only an empty drive is waited for. Any other error, and a cartridge that cannot be mounted
+              A drive that cannot be opened yet is waited for the same way, before the cartridge:
+              at boot the device node may not be usable for a moment, a drive powered on together
+              with the host shows up late, and another process may have the drive open. A device
+              name or serial number that matches no drive looks the same and is waited for too;
+              give a time limit to fail on it. The time limit covers both waits.
+            </para>
+            <para>
+              Only an empty drive, or one that cannot be opened, is waited for. Any other error, and a cartridge that cannot be mounted
               (unformatted, inconsistent, medium error), ends altfs as without this option.
               The drive stays reserved while altfs is waiting, so other commands cannot use it until
               the waiting altfs is stopped. SIGTERM or SIGINT ends the wait; altfs releases the drive

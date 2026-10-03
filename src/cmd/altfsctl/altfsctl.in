@@ -463,7 +463,7 @@ def main(argv=None):
     p.add_argument("--gid", help="group that owns the files on the volume (name or number)")
     p.add_argument("--umask", help="permission bits removed from files and directories, octal")
     p.add_argument("--no-wait-medium", action="store_true",
-                   help="fail when the drive is empty instead of waiting for a cartridge")
+                   help="fail when the drive cannot be opened or is empty instead of waiting")
     p.add_argument("-o", "--option", action="append", metavar="OPTION",
                    help="further altfs option, without the -o (repeatable)")
     p.add_argument("--fix-fuse-conf", action="store_true",

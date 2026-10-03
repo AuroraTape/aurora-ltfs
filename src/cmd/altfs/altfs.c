@@ -567,6 +567,83 @@ int validate_sync_option(struct ltfs_fuse_data *priv)
 	return 0;
 }
 
+/* Open the device without logging anything */
+static int open_device_quietly(struct ltfs_fuse_data *priv)
+{
+	int ret, log_level = ltfs_log_level, syslog_level = ltfs_syslog_level;
+
+	ltfs_log_level = ltfs_syslog_level = LTFS_NONE;
+	ret = ltfs_device_open(priv->devname, priv->tape_plugin.ops, priv->data);
+	ltfs_log_level = log_level;
+	ltfs_syslog_level = syslog_level;
+	return ret;
+}
+
+/* ltfs_device_open() can fail after the backend has opened the device */
+static void close_device_if_open(struct ltfs_fuse_data *priv)
+{
+	if (priv->data->device->backend_data)
+		ltfs_device_close(priv->data);
+}
+
+/*
+ * -o wait_medium: wait for a drive that cannot be opened yet. At boot udev sets the
+ * permissions of a device node a moment after the node appears, and a drive powered on
+ * together with the host shows up only after its own start-up. A drive another process
+ * has open, and a device name or serial number that matches no drive, look the same and
+ * are waited for too.
+ * The retries are quiet, each would log the same errors. Once one gets further, the
+ * device is opened again with its messages: the drive information on success, the
+ * errors otherwise. The last attempt before the time limit logs its errors as well.
+ * @param waited receives the seconds spent waiting
+ * @return 0 when the device is open, -LTFS_INTERRUPTED when interrupted by a signal, or
+ *         the error of the last attempt
+ */
+static int wait_device(struct ltfs_fuse_data *priv, unsigned long *waited)
+{
+	unsigned long elapsed = 0;
+	bool last;
+	int ret;
+
+	if (priv->wait_medium_sec)
+		ltfsmsg(AFS0154I, priv->devname, priv->wait_medium_sec);
+	else
+		ltfsmsg(AFS0153I, priv->devname);
+
+	while (true) {
+		if (ltfs_is_interrupted()) {
+			ret = -LTFS_INTERRUPTED;
+			break;
+		}
+
+		sleep(1);
+		++elapsed;
+		last = priv->wait_medium_sec && elapsed >= priv->wait_medium_sec;
+		if (! last && elapsed % LTFS_WAIT_MEDIUM_INTERVAL)
+			continue;
+
+		if (! last) {
+			ret = open_device_quietly(priv);
+			if (ret == -EDEV_DEVICE_UNOPENABLE)
+				continue;
+			close_device_if_open(priv);
+		}
+
+		ret = ltfs_device_open(priv->devname, priv->tape_plugin.ops, priv->data);
+		if (ret < 0) {
+			close_device_if_open(priv);
+			if (last)
+				ltfsmsg(AFS0157E, priv->devname, priv->wait_medium_sec);
+			else if (ret == -EDEV_DEVICE_UNOPENABLE)
+				continue;   /* gone again in the meantime */
+		}
+		break;
+	}
+
+	*waited = elapsed;
+	return ret;
+}
+
 static int show_device_list(struct ltfs_fuse_data *priv)
 {
 	int ret;
@@ -1090,7 +1167,19 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	ltfs_set_work_dir(priv->work_directory, priv->data);
 
 	if (priv->devname) {
-		if (ltfs_device_open(priv->devname, priv->tape_plugin.ops, priv->data) < 0) {
+		unsigned long device_waited = 0;
+
+		ret = ltfs_device_open(priv->devname, priv->tape_plugin.ops, priv->data);
+		if (ret == -EDEV_DEVICE_UNOPENABLE && priv->wait_medium && ! priv->release_device) {
+			ret = wait_device(priv, &device_waited);
+			if (ret == -LTFS_INTERRUPTED) {
+				ltfs_volume_free(&priv->data);
+				ltfsmsg(AFS0156I);
+				return 0;
+			} else if (ret == 0)
+				ltfsmsg(AFS0155I);
+		}
+		if (ret < 0) {
 			/* Could not open device */
 			ltfsmsg(ALC0005E, priv->devname);
 			ltfs_volume_free(&priv->data);
@@ -1141,12 +1230,16 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 			 * The drive is already reserved by ltfs_device_open(); ltfs_volume_free()
 			 * closes the device and releases it on every exit from here.
 			 */
-			if (priv->wait_medium_sec)
-				ltfsmsg(AFS0142I, priv->wait_medium_sec);
+			/* One time limit for the drive and the cartridge; 0 would mean no limit */
+			unsigned long remaining = priv->wait_medium_sec == 0 ? 0 :
+				priv->wait_medium_sec > device_waited ? priv->wait_medium_sec - device_waited : 1;
+
+			if (remaining)
+				ltfsmsg(AFS0142I, remaining);
 			else
 				ltfsmsg(AFS0141I);
 
-			ret = ltfs_wait_medium(priv->wait_medium_sec, priv->data);
+			ret = ltfs_wait_medium(remaining, priv->data);
 			if (ret == -LTFS_INTERRUPTED) {
 				/* Asked to stop before there was anything to mount: not a failure */
 				ltfs_volume_free(&priv->data);
