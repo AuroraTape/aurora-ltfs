@@ -61,10 +61,51 @@ def test_write_requests_larger_than_a_block_keep_every_byte(small_block_tape):
         data = (mnt / "data.bin").read_bytes()
     finally:
         umount_tape(mnt)
-    assert len(data) == len(first) + len(second)
+    _assert_same(data, first + second)
+
+
+def test_large_writes_into_queued_data_keep_every_byte(small_block_tape):
+    """Large writes that land on, between and across data still queued in
+    the scheduler: the overwrite, insert-before and overlap paths rather
+    than a plain append."""
+    tape_dir, mnt = small_block_tape
+    b = _BLOCKSIZE
+    writes = [
+        (0, 6 * b + 100),            # plain append
+        (10 * b + 7, 3 * b),         # leaves a hole after the first write
+        (b // 2, 2 * b + 333),       # overwrites queued data, unaligned
+        (5 * b, 6 * b),              # fills the hole, overlapping both sides
+        (9 * b - 11, 5 * b + 1),     # straddles the end of the file
+    ]
+    expected = bytearray()
+
+    mount_tape(tape_dir, mnt)
+    try:
+        fd = os.open(mnt / "data.bin", os.O_WRONLY | os.O_CREAT, 0o644)
+        try:
+            for offset, size in writes:
+                chunk = os.urandom(size)
+                assert os.pwrite(fd, chunk, offset) == size
+                if len(expected) < offset + size:
+                    expected.extend(bytes(offset + size - len(expected)))
+                expected[offset:offset + size] = chunk
+        finally:
+            os.close(fd)
+    finally:
+        umount_tape(mnt)
+
+    mount_tape(tape_dir, mnt)
+    try:
+        data = (mnt / "data.bin").read_bytes()
+    finally:
+        umount_tape(mnt)
+    _assert_same(data, bytes(expected))
+
+
+def _assert_same(data, expected):
+    assert len(data) == len(expected)
     # Compare block by block so a failure names the first bad block
     # instead of dumping megabytes.
-    expected = first + second
     bad = [n for n in range(0, len(data), _BLOCKSIZE)
            if data[n:n + _BLOCKSIZE] != expected[n:n + _BLOCKSIZE]]
     assert not bad, f"{len(bad)} blocks differ, first at offset {bad[0]}"
