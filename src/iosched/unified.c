@@ -772,9 +772,14 @@ do_append:
 	/* Not a simple append; need to traverse the request list */
 	prev_req = NULL;
 	TAILQ_FOREACH_SAFE(req, &dpr->requests, list, aux) {
-		/* Skip this request the new write belongs farther down the queue */
-		if ((uint64_t)offset > req->offset + req->count)
+		/* Skip this request if the new write belongs farther down the queue. A write that
+		 * covers several separated requests moves offset past all of them in one step,
+		 * so a request skipped here may still lie under the new bytes in prev_req:
+		 * remove it, or its old bytes would be flushed after the new ones. */
+		if ((uint64_t)offset > req->offset + req->count) {
+			_unified_merge_requests(prev_req, req, &spare_cache, dpr, priv);
 			continue;
+		}
 
 		/* Insert request(s) before the current one */
 do_insert_before:
@@ -1790,7 +1795,7 @@ ssize_t _unified_insert_new_request(const char *buf, off_t offset, size_t count,
 	if (new_req->offset + new_req->count > dpr->file_size)
 		dpr->file_size = new_req->offset + new_req->count;
 
-	return (ssize_t)count;
+	return (ssize_t)copy_count;
 }
 
 /**
