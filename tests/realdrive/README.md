@@ -67,9 +67,9 @@ package mode, a plain unmount in `--prefix` mode), clean remount, `altfsck`.
 `altfsck` returns 1 (`LTFSCK_CORRECTED`) with `ACK0019I Volume is consistent`
 for a consistent volume: it always runs a full check and updates the MAM.
 
-Not covered: a reboot with a volume mounted. Do that by hand from a root
-console or ssh session (a mount started from a desktop terminal lives under
-`user@UID.service`, which is stopped after 5 s on Ubuntu, see #105).
+Not covered: a reboot with a volume mounted; `service-check.sh --reboot` does
+that for the mount service. A mount started by hand from a desktop terminal
+lives under `user@UID.service`, which is stopped after 5 s on Ubuntu (#105).
 
 ## `wait-medium-check.sh`
 
@@ -93,6 +93,37 @@ sudo ./wait-medium-check.sh --device <serial> [--prefix DIR] --format
 `altfs` is still in its initial load attempt (a few seconds on a real drive),
 and the cartridge would be loaded through the regular path instead of the wait.
 
+## `service-check.sh`
+
+Checks the mount service of #105 (`altfs@<serial>.service`, set up by
+`altfsctl`, running `altfs` as the `altfs` user) on a systemd host. Uses the
+installed packages, or installs them with `--deb-dir`. The cartridge must be in
+the drive at the start, LTFS formatted with a block size the host can transfer;
+the script writes a directory `service-check-<time>` to it and changes nothing
+else on the volume.
+
+```bash
+sudo ./service-check.sh --device <serial> [--deb-dir DIR] [--fix-fuse-conf] [--reboot]
+# after the reboot that --reboot asks for:
+sudo ./service-check.sh --device <serial> --after-reboot
+```
+
+| Step | Expected |
+|:--|:--|
+| S1 | `altfsctl check` / `add` (group of `--user`, default the sudo user; umask 007). `user_allow_other` missing in `/etc/fuse.conf` fails the step unless `--fix-fuse-conf` |
+| S2 | `systemctl start` returns at once; mounted; `altfs` runs as `altfs` with `CAP_SYS_RAWIO` in the ambient set; `allow_other` |
+| S3 | `--user` creates, writes and reads 20 MB through the group; `nobody` cannot list the volume |
+| S4 | `AFS0025I` once in the unit's journal (no stderr duplicate), and in `/var/log/altfs.log` |
+| S5 | `systemctl stop`: `ALB0035I`, unmounted, `Result=success`; restart: data there, no `ALB0028I` |
+| S6 | eject when asked: the instance waits (`AFS0141I`), stops cleanly while waiting (`AFS0144I`); started again, push the cartridge in when asked: mounted, data there |
+| S7 | `--reboot`: the instance is enabled and left mounted with a marker file; reboot; `--after-reboot`: `ALB0035I` in the previous boot's log, mounted again at boot without `ALB0028I`, data and marker there |
+
+At the end (or after `--after-reboot`) the instance is stopped and removed;
+`--keep` leaves it set up. The mount point is left in place. The reboot state
+is kept in `/var/lib/altfs-service-check/` (root only). Checking the shutdown
+after the reboot needs a persistent journal (`/var/log/journal`). Run the
+script from a terminal: S6 waits for you to eject and insert the cartridge.
+
 ## Safety rules the scripts follow
 
 - A mounted or mounting `altfs` is never killed with SIGKILL except as a last
@@ -102,7 +133,9 @@ and the cartridge would be loaded through the regular path instead of the wait.
 - The mount point has to be empty; a failed mount must not make later steps
   write to the local disk.
 - Logs and a report are kept in `/var/tmp/altfs-host-check.*` /
-  `/var/tmp/wait-medium-check.*` when a check fails.
+  `/var/tmp/wait-medium-check.*` / `/var/tmp/service-check.*` (for
+  `service-check.sh`: the report always, the logs and test data when a check
+  fails).
 
 ## Reporting
 
