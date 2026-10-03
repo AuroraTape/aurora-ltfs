@@ -161,6 +161,42 @@ def test_rollback_mount_by_generation(tmp_path_factory):
         umount_tape(mnt)
 
 
+def test_read_only_mount_refuses_changes(tmp_path_factory):
+    """`-o ro` must reject every mutation with EROFS and leave the
+    medium as it was. altfs enforces this itself, not only through the
+    FUSE layer: macFUSE's FSKit backend ignores -o ro."""
+    tape_dir, mnt = _make_history_tape(
+        tmp_path_factory, "read-only", serial="RDONLY", label="rdonly")
+
+    def medium():
+        # The MAM attribute files are no part of the medium contents.
+        return {p.name: p.read_bytes() for p in tape_dir.iterdir()
+                if not p.name.startswith("attr_")}
+
+    before = medium()
+    mount_tape(tape_dir, mnt, extra_opts=["ro"])
+    try:
+        _assert_latest_view(mnt)
+        for mutate in (
+                lambda: (mnt / "new.txt").write_text("read-only mount"),
+                lambda: os.unlink(mnt / "first.txt"),
+                lambda: os.mkdir(mnt / "dir"),
+                lambda: os.rename(mnt / "first.txt", mnt / "renamed.txt"),
+                lambda: set_xattr(mnt / "first.txt", "test.attr", "x")):
+            with pytest.raises(OSError) as exc:
+                mutate()
+            assert exc.value.errno == errno.EROFS
+    finally:
+        umount_tape(mnt)
+    assert medium() == before
+
+    mount_tape(tape_dir, mnt)
+    try:
+        _assert_latest_view(mnt)
+    finally:
+        umount_tape(mnt)
+
+
 def test_rollback_mount_by_index_file(tmp_path_factory):
     """`-o rollback_mount=<captured index file>` (with a device
     attached) must mount the generation stored in that file,

@@ -2302,6 +2302,39 @@ int ltfs_get_tape_readonly(struct ltfs_volume *vol)
 }
 
 /**
+ * Check whether the file system may change the volume. A rollback mount and a mount
+ * made read-only on request (ltfs_set_readonly_mount) refuse every change here, in
+ * libltfs, rather than relying on the FUSE layer to enforce a read-only mount: macFUSE's
+ * FSKit backend, for one, ignores -o ro and passes writes through. Otherwise this is
+ * ltfs_get_tape_readonly().
+ * @param vol LTFS volume
+ * @return -LTFS_RDONLY_VOLUME for a read-only mount, else what ltfs_get_tape_readonly()
+ *         returns.
+ */
+int ltfs_get_volume_readonly(struct ltfs_volume *vol)
+{
+	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
+
+	if (vol->readonly_mount || vol->mount_type == MOUNT_ROLLBACK ||
+		vol->mount_type == MOUNT_ROLLBACK_META)
+		return -LTFS_RDONLY_VOLUME;
+
+	return ltfs_get_tape_readonly(vol);
+}
+
+/**
+ * Make the mount read-only whatever the medium allows (e.g. -o ro): every change
+ * through the file system operations then fails with -LTFS_RDONLY_VOLUME.
+ * @param readonly true for a read-only mount
+ * @param vol LTFS volume. This function has no effect if @vol is NULL.
+ */
+void ltfs_set_readonly_mount(bool readonly, struct ltfs_volume *vol)
+{
+	if (vol)
+		vol->readonly_mount = readonly;
+}
+
+/**
  * Check whether the specified partition has additional space to write. Also check whether
  * the tape is write-protected or not, just as ltfs_get_tape_read_only() does.
  * @param partition Partition to be checked
