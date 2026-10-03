@@ -110,7 +110,7 @@ sudo ./service-check.sh --device <serial> --after-reboot
 
 | Step | Expected |
 |:--|:--|
-| S1 | `altfsctl check` / `add` (group of `--user`, default the sudo user; umask 007). `user_allow_other` missing in `/etc/fuse.conf` fails the step unless `--fix-fuse-conf` |
+| S1 | `altfsctl add` (group of `--user`, default the sudo user; umask 007), then `altfsctl check`. `user_allow_other` missing in `/etc/fuse.conf` fails the step unless `--fix-fuse-conf` |
 | S2 | `systemctl start` returns at once; mounted; `altfs` runs as `altfs` with `CAP_SYS_RAWIO` in the ambient set; `allow_other` |
 | S3 | `--user` creates, writes and reads 20 MB through the group; `nobody` cannot list the volume |
 | S4 | `AFS0025I` once in the unit's journal (no stderr duplicate), and in `/var/log/altfs.log` |

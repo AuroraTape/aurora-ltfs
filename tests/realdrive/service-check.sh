@@ -29,7 +29,7 @@
 # directory service-check-<time> to it; nothing else on the volume is touched.
 # Run it from a terminal: it asks you to eject and insert the cartridge.
 #
-#   S1  altfsctl check / add
+#   S1  altfsctl add / check
 #   S2  start with the cartridge in the drive: mounted, altfs runs as the
 #       altfs user with CAP_SYS_RAWIO, the start does not wait for the mount
 #   S3  access through the group by --user; a user outside it is refused
@@ -191,9 +191,7 @@ trap cleanup EXIT
 say "=== service check of $DEV ($(altfs -V 2>&1 | grep -o 'version [^ ]*' | head -1))"
 info "altfs user: $(getent passwd altfs || echo none)"
 
-say "=== S1: altfsctl check / add"
-altfsctl check "$DEV" > "$WORK/check.log" 2>&1
-sed 's/^/        /' "$WORK/check.log" | tee -a "$WORK/report.txt"
+say "=== S1: altfsctl add / check"
 opts=(--gid "$GROUP" --umask 007)
 [ "$FIX_FUSE" -eq 1 ] && opts+=(--fix-fuse-conf)
 if altfsctl add "${opts[@]}" "$DEV" "$MNT" > "$WORK/add.log" 2>&1; then
@@ -202,6 +200,9 @@ else
 	fail "altfsctl add"; sed 's/^/        /' "$WORK/add.log" | tail -8 | tee -a "$WORK/report.txt"
 	trap - EXIT; summary; exit
 fi
+# after add, which may have fixed fuse.conf: every item is OK now
+if altfsctl check "$DEV" > "$WORK/check.log" 2>&1; then pass "altfsctl check"; else fail "altfsctl check"; fi
+sed 's/^/        /' "$WORK/check.log" | tee -a "$WORK/report.txt"
 
 # --- S2 ----------------------------------------------------------------------
 say "=== S2: start with the cartridge in the drive"
@@ -214,8 +215,9 @@ check "[ '$took' -le 5 ]" "systemctl start returned after $took s (Type=exec doe
 if wait_mounted 600; then
 	pass "mounted $(( $(date +%s) - t0 )) s after the start"
 else
-	fail "not mounted within 10 minutes ($(show ActiveState))"
-	log_inv | grep -E '[0-9A-Z]{4}[EW] ' | head -5 | sed 's/^/        /' | tee -a "$WORK/report.txt"
+	fail "not mounted after $(( $(date +%s) - t0 )) s (ActiveState=$(show ActiveState))"
+	# errors reach the journal twice, through syslog and through stderr
+	log_inv | grep -E '[0-9A-Z]{4}[EW] ' | awk '!seen[$0]++' | head -5 | sed 's/^/        /' | tee -a "$WORK/report.txt"
 	summary; exit
 fi
 PID="$(show MainPID)"
