@@ -132,6 +132,7 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("wait_medium=%s",         wait_medium_str, 0),
 	LTFS_OPT("allow_other",            allow_other, 1),
 	LTFS_OPT("noallow_other",          allow_other, 0),
+	LTFS_OPT("ro",                     read_only, 1),
 	LTFS_OPT("capture_index=%s",       capture_dir, 0),
 	LTFS_OPT("symlink_type=%s",        symlink_str, 0),
 	LTFS_OPT("scsi_append_only_mode=%s", str_append_only_mode, 0),
@@ -1328,15 +1329,24 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 				}
 				break;
 		}
+	}
 
-		if (is_ro) {
-			ret = fuse_opt_add_arg(args, "-oro");
-			if (ret < 0) {
-				/* Could not set FUSE option */
-				ltfsmsg(AFS0002E, "ro", ret);
-				ltfs_volume_free(&priv->data);
-				return 1;
-			}
+	if (priv->read_only) {
+		/* Read-only mount is specified */
+		ltfsmsg(AFS0152I);
+		/* Enforced by libltfs too: a FUSE implementation may not honor -o ro
+		 * (macFUSE's FSKit backend passes writes through) */
+		ltfs_set_readonly_mount(true, priv->data);
+		is_ro = true;
+	}
+
+	if (is_ro) {
+		ret = fuse_opt_add_arg(args, "-oro");
+		if (ret < 0) {
+			/* Could not set FUSE option */
+			ltfsmsg(AFS0002E, "ro", ret);
+			ltfs_volume_free(&priv->data);
+			return 1;
 		}
 	}
 
