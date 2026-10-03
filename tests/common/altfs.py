@@ -4,6 +4,10 @@ Used by the module-scoped mounted_tape fixture in tests/conftest.py
 and by tests that need to cycle through multiple mounts (e.g. the
 index round-trip test). LTFS tape serial is fixed-width: exactly 6
 characters.
+
+ALTFS_TEST_MOUNT_OPTS, when set, is passed as one more `-o` to every
+mount made through these helpers, e.g. ALTFS_TEST_MOUNT_OPTS=backend=fskit
+to run the suite over macFUSE's FSKit backend instead of its kext.
 """
 
 import os
@@ -67,10 +71,16 @@ def format_tape(tape_dir, serial="TEST00", label="test"):
     )
 
 
+def env_mount_opts():
+    """The `-o` arguments requested through ALTFS_TEST_MOUNT_OPTS."""
+    opts = os.environ.get("ALTFS_TEST_MOUNT_OPTS")
+    return ["-o", opts] if opts else []
+
+
 def _mount_args(tape_dir, mnt, sync_type, extra_opts):
     cmd = ["-o", "tape_backend=file",
            "-o", f"devname={tape_dir}",
-           "-o", f"sync_type={sync_type}"]
+           "-o", f"sync_type={sync_type}"] + env_mount_opts()
     for opt in extra_opts:
         cmd += ["-o", opt]
     cmd.append(str(mnt))

@@ -20,7 +20,7 @@ import time
 
 import pytest
 
-from common.altfs import format_tape, umount_tape_foreground
+from common.altfs import env_mount_opts, format_tape, umount_tape_foreground
 
 pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
@@ -66,7 +66,7 @@ _started = []
 def _start(drive, mnt, log_path, *options):
     log = open(log_path, "ab")
     cmd = ["altfs", "-f", "-o", "tape_backend=file", "-o", f"devname={drive}",
-           "-o", "sync_type=unmount"]
+           "-o", "sync_type=unmount"] + env_mount_opts()
     for option in options:
         cmd += ["-o", option]
     proc = subprocess.Popen(cmd + [str(mnt)], stdout=log, stderr=log)
