@@ -322,6 +322,19 @@ static int _xml_parse_version(const char *version_str, int *version_int)
 }
 
 /**
+ * libxml2 error handler that says nothing: used for the reads that probe
+ * tape blocks for an index, where a block that is not XML is expected.
+ */
+static void _xml_reader_quiet(void *arg, const char *msg, xmlParserSeverities severity,
+							  xmlTextReaderLocatorPtr locator)
+{
+	(void) arg;
+	(void) msg;
+	(void) severity;
+	(void) locator;
+}
+
+/**
  * Start parsing an XML stream by checking the encoding and version.
  */
 static int _xml_parser_init(xmlTextReaderPtr reader, const char *top_name, int *idx_version,
@@ -1973,6 +1986,13 @@ int xml_schema_from_tape(uint64_t eod_pos, bool skip_dir, struct ltfs_volume *vo
 		return -LTFS_LIBXML2_FAILURE;
 	}
 #endif
+
+	/* The blocks read while searching for an index are not all XML (data
+	 * blocks sit between the indexes). XML_PARSE_NOERROR keeps libxml2
+	 * quiet about them up to 2.13; from 2.15 the reader reports through
+	 * its error handler regardless, so install a silent one. altfs logs
+	 * the failure itself (ALX0023E / ALB0084W). */
+	xmlTextReaderSetErrorHandler(reader, _xml_reader_quiet, NULL);
 
 	/* Workaround for old libxml2 version on OS X 10.5. See comment in xml_schema_from_file()
 	 * for details. */

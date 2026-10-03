@@ -768,6 +768,23 @@ int main(int argc, char **argv)
 	}
 #endif
 
+#if defined(__FreeBSD__)
+	/*
+	 * fusefs keeps atime in the kernel and pushes every update to the file
+	 * system as a SETATTR after a read. altfs takes that as utimens(): the
+	 * change time moves and the index becomes dirty, so reading a file
+	 * alone changes its ctime and costs an index write at unmount. Linux
+	 * and macFUSE send nothing; altfs keeps atime itself there (-o atime /
+	 * -o noatime), and does the same here.
+	 */
+	ret = fuse_opt_add_arg(&args, "-onoatime");
+	if (ret < 0) {
+		/* Could not enable FUSE option */
+		ltfsmsg(AFS0002E, "noatime", ret);
+		return 1;
+	}
+#endif
+
 #if FUSE_VERSION >= 28
 	/* For FUSE 2.8 or higher, automatically enable big_writes */
 	ret = fuse_opt_add_arg(&args, "-obig_writes");
