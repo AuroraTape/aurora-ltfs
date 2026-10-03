@@ -184,6 +184,22 @@ Messages of `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` go to syslog. Wit
 
 On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. When building from source with a prefix other than `/usr`, register the unit yourself: `systemctl enable --now <prefix>/lib/systemd/system/altfs.service`.
 
+## macOS: mounting without the kernel extension (FSKit, experimental)
+
+By default macFUSE mounts through its kernel extension, which on Apple silicon has to be enabled by booting into Recovery and lowering the startup security policy. macFUSE 5 (5.4 or later, macOS 15.4 or later) can mount through Apple's FSKit instead, with no kernel extension and no security change:
+
+```
+# altfs -o devname=0 -o backend=fskit /path/to/mountpoint
+```
+
+- Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
+- Use a build that includes the fix for [#180](https://github.com/AuroraTape/aurora-ltfs/issues/180). Earlier builds silently lose data written through FSKit.
+- Apple silicon only: on Intel Macs the FSKit backend crashes inside macFUSE before altfs starts. Use the kernel extension there; it needs no security change on Intel.
+- If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
+- The evaluation is tracked in [#142](https://github.com/AuroraTape/aurora-ltfs/issues/142).
+
+Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by running the session under `caffeinate -i` on AC power. Apple's FC driver for LSI HBAs (`AppleLSIFusionMPT`) has been seen to panic when tape I/O arrives while the system is asleep.
+
 ## The `altfs_ordered_copy` utility
 
 [`altfs_ordered_copy`](src/cmd/altfs_ordered_copy/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires Python 3 and a Python `xattr` module, either `pyxattr` or `xattr` (both work). The deb package depends on `python3-pyxattr | python3-xattr`. On RHEL-likes both providers live in repositories that are not enabled by default (`python3-pyxattr` in CRB, `python3-xattr` in EPEL), so the rpm only recommends them: enable one of those repositories, or `pip install pyxattr`.
