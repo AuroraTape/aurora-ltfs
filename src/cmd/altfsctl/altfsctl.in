@@ -1,0 +1,502 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+#  AA_Copyright_BEGIN
+#
+#
+#  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions
+#  are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#  documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the names of its
+#     contributors may be used to endorse or promote products derived from
+#     this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#
+#  AA_Copyright_END
+#
+"""Set up LTFS mounts as system services (altfs@<serial>.service).
+
+Each instance runs altfs as the "altfs" user. This command checks the
+environment that needs, keeps the per-instance settings in
+<sysconfdir>/altfs/<serial>.conf and enables / disables the instances.
+Starting and stopping stay with systemctl. See altfsctl(8).
+"""
+
+import argparse
+import glob
+import grp
+import os
+import pwd
+import re
+import stat
+import subprocess
+import sys
+import tempfile
+
+SYSCONFDIR = "@sysconfdir@"
+BINDIR = "@bindir@"
+
+# Hooks for the scenario tests, which run without root and without the
+# real system files. They take effect only with ALTFSCTL_TEST=1, so that an
+# environment kept by "sudo -E" cannot redirect a normal run.
+_TEST = os.environ if os.environ.get("ALTFSCTL_TEST") == "1" else {}
+CONFDIR = _TEST.get("ALTFSCTL_CONFDIR", os.path.join(SYSCONFDIR, "altfs"))
+FUSE_CONF = _TEST.get("ALTFSCTL_FUSE_CONF", "/etc/fuse.conf")
+SYSTEMCTL = _TEST.get("ALTFSCTL_SYSTEMCTL", "systemctl")
+SERVICE_USER = _TEST.get("ALTFSCTL_USER", "altfs")
+TAPE_GROUP = _TEST.get("ALTFSCTL_TAPE_GROUP", "tape")
+ALLOW_NONROOT = bool(_TEST)
+
+ALTFS = os.path.join(BINDIR, "altfs")
+SERIAL_RE = re.compile(r"[A-Za-z0-9_.-]+")
+DEVICE_LINE_RE = re.compile(
+    r"Device Name = (\S+)(?: \([0-9.]+\))?, Vendor ID = .*?, Product ID = .*?, "
+    r"Serial Number = (\S+),")
+
+
+class Failure(Exception):
+    """An error that ends the command with exit status 1."""
+
+
+def unit(serial):
+    return "altfs@%s.service" % serial
+
+
+def conf_path(serial):
+    return os.path.join(CONFDIR, serial + ".conf")
+
+
+def require_root():
+    if os.geteuid() != 0 and not ALLOW_NONROOT:
+        raise Failure("this command has to be run as root")
+
+
+def check_serial(serial):
+    if not SERIAL_RE.fullmatch(serial):
+        raise Failure("%r cannot be used as an instance name: use the drive serial "
+                      "(letters, digits, '_', '.', '-')" % serial)
+
+
+def systemctl(*args, check=True):
+    try:
+        r = subprocess.run([SYSTEMCTL] + list(args), stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, universal_newlines=True)
+    except OSError as e:
+        if check:
+            raise Failure("cannot run %s: %s" % (SYSTEMCTL, e))
+        return None
+    if check and r.returncode != 0:
+        raise Failure("systemctl %s failed: %s" % (" ".join(args), r.stderr.strip()))
+    return r
+
+
+def unit_state(serial, what):
+    """Output of "systemctl is-enabled / is-active", or "-" without systemd."""
+    r = systemctl(what, unit(serial), check=False)
+    if r is None:
+        return "-"
+    return r.stdout.strip() or "-"
+
+
+# --- configuration file -----------------------------------------------------
+
+def quote(value):
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def unquote(value):
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        double = value[0] == '"'
+        value = value[1:-1]
+        if double:
+            value = re.sub(r'\\(.)', r'\1', value)
+    return value
+
+
+def read_conf(serial):
+    values = {}
+    try:
+        with open(conf_path(serial)) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                values[key.strip()] = unquote(value)
+    except FileNotFoundError:
+        raise Failure("%s is not set up (%s does not exist)" % (serial, conf_path(serial)))
+    return values
+
+
+def replace_file(path, text):
+    """Write a file under a temporary name and rename it into place."""
+    directory = os.path.dirname(path)
+    fd, tmp = tempfile.mkstemp(dir=directory, prefix="." + os.path.basename(path))
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(text)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        os.unlink(tmp)
+        raise
+
+
+def write_conf(serial, mountpoint, options, device):
+    lines = ["# altfs@%s.service, written by altfsctl. See altfsctl(8)." % serial,
+             "MOUNTPOINT=" + quote(mountpoint),
+             "OPTIONS=" + quote(" ".join(options))]
+    if device:
+        lines.append("DEVICE=" + quote(device))
+    os.makedirs(CONFDIR, mode=0o755, exist_ok=True)
+    replace_file(conf_path(serial), "\n".join(lines) + "\n")
+
+
+# --- environment check ------------------------------------------------------
+
+class Report:
+    def __init__(self):
+        self.failed = 0
+
+    def ok(self, text):
+        print("OK    " + text)
+
+    def fail(self, text, *hints):
+        self.failed += 1
+        print("FAIL  " + text)
+        for hint in hints:
+            print("      " + hint)
+
+    def note(self, text):
+        print("NOTE  " + text)
+
+
+def fuse_conf_allows_other():
+    try:
+        with open(FUSE_CONF) as f:
+            return any(line.split("#", 1)[0].strip() == "user_allow_other" for line in f)
+    except FileNotFoundError:
+        return False
+
+
+def fix_fuse_conf():
+    """Enable user_allow_other: uncomment the line if there is one, else append it."""
+    try:
+        with open(FUSE_CONF) as f:
+            lines = f.read().splitlines()
+    except FileNotFoundError:
+        lines = []
+    for i, line in enumerate(lines):
+        if re.match(r"^\s*#\s*user_allow_other\s*$", line):
+            lines[i] = "user_allow_other"
+            break
+    else:
+        lines.append("user_allow_other")
+    replace_file(FUSE_CONF, "\n".join(lines) + "\n")
+    print("%s: user_allow_other enabled" % FUSE_CONF)
+
+
+def find_drive(serial):
+    """Device node of the drive with this serial, from "altfs -o device_list"."""
+    try:
+        r = subprocess.run([ALTFS, "-o", "device_list"], stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, universal_newlines=True)
+    except OSError:
+        return None
+    for line in r.stdout.splitlines():
+        m = DEVICE_LINE_RE.search(line)
+        if m and m.group(2) == serial:
+            return m.group(1)
+    return None
+
+
+def check_device(report, node, tape_gid):
+    try:
+        st = os.stat(node)
+    except OSError as e:
+        report.fail("%s: %s" % (node, e.strerror))
+        return
+    if not stat.S_ISCHR(st.st_mode):
+        report.note("%s is not a character device (fine for the file backend)" % node)
+        return
+    if tape_gid is not None and st.st_gid == tape_gid and st.st_mode & 0o060 == 0o060:
+        report.ok("%s belongs to the %s group (read / write)" % (node, TAPE_GROUP))
+    else:
+        report.fail("%s is not read / write for the %s group" % (node, TAPE_GROUP),
+                    "the service reaches the drive through that group; check the udev "
+                    "rules of the distribution")
+
+
+def run_checks(serial=None, device=None, fix_fuse=False):
+    report = Report()
+
+    if fuse_conf_allows_other():
+        report.ok("user_allow_other is set in " + FUSE_CONF)
+    elif fix_fuse:
+        report.note("user_allow_other is not set in %s: added when the other checks pass"
+                    % FUSE_CONF)
+    else:
+        report.fail("user_allow_other is not set in " + FUSE_CONF,
+                    "the service mounts with -o allow_other so that other users can see the",
+                    "volume; fusermount refuses that for a non-root user without this line:",
+                    "    user_allow_other",
+                    "It lets every local user create allow_other FUSE mounts. Add it by hand,",
+                    "or run again with --fix-fuse-conf")
+
+    try:
+        pw = pwd.getpwnam(SERVICE_USER)
+        report.ok("user %s exists (uid %d)" % (SERVICE_USER, pw.pw_uid))
+    except KeyError:
+        report.fail("user %s does not exist" % SERVICE_USER,
+                    "the package creates it; on a source install run",
+                    "    systemd-sysusers <prefix>/lib/sysusers.d/altfs.conf")
+
+    tape_gid = None
+    try:
+        tape_gid = grp.getgrnam(TAPE_GROUP).gr_gid
+        report.ok("group %s exists" % TAPE_GROUP)
+    except KeyError:
+        report.fail("group %s does not exist" % TAPE_GROUP)
+
+    if os.access(ALTFS, os.X_OK):
+        report.ok("%s is installed" % ALTFS)
+    else:
+        report.fail("%s is not installed" % ALTFS)
+
+    if device:
+        check_device(report, device, tape_gid)
+    elif serial:
+        node = find_drive(serial)
+        if node:
+            report.ok("drive %s is %s" % (serial, node))
+            check_device(report, node, tape_gid)
+        else:
+            report.fail("drive %s is not listed by \"altfs -o device_list\"" % serial,
+                        "is it connected and switched on? (run the check as root)")
+
+    if not os.path.isdir("/run/systemd/system"):
+        report.note("systemd is not running on this system: the instances cannot start")
+
+    return report
+
+
+# --- commands ---------------------------------------------------------------
+
+def cmd_check(args):
+    if args.serial:
+        check_serial(args.serial)
+    fix = args.fix_fuse_conf and not fuse_conf_allows_other()
+    if fix:
+        require_root()
+    report = run_checks(args.serial, args.device, fix_fuse=fix)
+    if report.failed:
+        return 1
+    if fix:
+        fix_fuse_conf()
+    return 0
+
+
+def parse_gid(value):
+    if value.isdigit():
+        return int(value)
+    try:
+        return grp.getgrnam(value).gr_gid
+    except KeyError:
+        raise Failure("group %s does not exist" % value)
+
+
+def cmd_add(args):
+    require_root()
+    check_serial(args.serial)
+    mountpoint = os.path.normpath(args.mountpoint)
+    if not os.path.isabs(mountpoint):
+        raise Failure("the mount point has to be an absolute path")
+    if any(ord(c) < 0x20 or c == "\x7f" for c in mountpoint):
+        raise Failure("the mount point must not contain control characters")
+    if os.path.exists(conf_path(args.serial)) and not args.force:
+        raise Failure("%s is already set up (%s); use --force to replace the settings"
+                      % (args.serial, conf_path(args.serial)))
+
+    options = []
+    if not args.no_wait_medium:
+        options += ["-o", "wait_medium"]
+    if args.gid is not None:
+        options += ["-o", "gid=%d" % parse_gid(args.gid)]
+    if args.umask is not None:
+        if not re.fullmatch(r"[0-7]{1,4}", args.umask):
+            raise Failure("--umask takes an octal mode such as 007")
+        options += ["-o", "umask=" + args.umask]
+    for opt in args.option or []:
+        if any(c.isspace() for c in opt):
+            raise Failure("an option must not contain white space: %r" % opt)
+        options += ["-o", opt]
+
+    fix = args.fix_fuse_conf and not fuse_conf_allows_other()
+    report = run_checks(args.serial, args.device, fix_fuse=fix)
+    if report.failed:
+        raise Failure("nothing was changed: fix the items above and run again")
+
+    pw = pwd.getpwnam(SERVICE_USER)
+    # An existing directory is used only when it already belongs to the
+    # service user: altfsctl does not take over a directory such as /mnt.
+    if os.path.islink(mountpoint):
+        raise Failure("%s is a symbolic link: give the real path" % mountpoint)
+    if os.path.exists(mountpoint):
+        if not os.path.isdir(mountpoint):
+            raise Failure("%s exists and is not a directory" % mountpoint)
+        if os.path.ismount(mountpoint):
+            raise Failure("%s is mounted" % mountpoint)
+        if os.listdir(mountpoint):
+            raise Failure("%s is not empty" % mountpoint)
+        if os.stat(mountpoint).st_uid != pw.pw_uid:
+            raise Failure("%s exists and does not belong to %s: give a new path, or "
+                          "\"chown %s:%s %s\" first" % (mountpoint, SERVICE_USER, SERVICE_USER,
+                                                         SERVICE_USER, mountpoint))
+    else:
+        os.makedirs(mountpoint, mode=0o755)
+        os.chown(mountpoint, pw.pw_uid, pw.pw_gid)
+
+    if fix:
+        fix_fuse_conf()
+
+    write_conf(args.serial, mountpoint, options, args.device)
+    print("%s: written" % conf_path(args.serial))
+    if args.enable:
+        systemctl("enable", unit(args.serial))
+        print("%s: enabled (starts at boot)" % unit(args.serial))
+    print("Start it with: systemctl start %s" % unit(args.serial))
+    return 0
+
+
+def cmd_remove(args):
+    require_root()
+    check_serial(args.serial)
+    values = read_conf(args.serial)
+    if unit_state(args.serial, "is-active") in ("active", "activating", "deactivating", "reloading"):
+        raise Failure("%s is running: stop it first with \"systemctl stop %s\""
+                      % (unit(args.serial), unit(args.serial)))
+    if unit_state(args.serial, "is-enabled") == "enabled":
+        systemctl("disable", unit(args.serial))
+    os.unlink(conf_path(args.serial))
+    print("%s: removed" % conf_path(args.serial))
+    if values.get("MOUNTPOINT"):
+        print("The mount point %s is left in place" % values["MOUNTPOINT"])
+    return 0
+
+
+def cmd_enable(args):
+    require_root()
+    check_serial(args.serial)
+    read_conf(args.serial)
+    systemctl("enable", unit(args.serial))
+    print("%s: enabled (starts at boot)" % unit(args.serial))
+    return 0
+
+
+def cmd_disable(args):
+    require_root()
+    check_serial(args.serial)
+    systemctl("disable", unit(args.serial))
+    print("%s: disabled (does not start at boot; a running instance keeps running)"
+          % unit(args.serial))
+    return 0
+
+
+def cmd_list(args):
+    rows = []
+    for path in sorted(glob.glob(os.path.join(CONFDIR, "*.conf"))):
+        serial = os.path.basename(path)[:-len(".conf")]
+        if not SERIAL_RE.fullmatch(serial):
+            continue
+        mountpoint = read_conf(serial).get("MOUNTPOINT", "")
+        rows.append((serial, unit_state(serial, "is-enabled"),
+                     unit_state(serial, "is-active"), mountpoint))
+    if not rows:
+        print("No instances are set up (%s)" % CONFDIR)
+        return 0
+    header = ("SERIAL", "ENABLED", "ACTIVE", "MOUNTPOINT")
+    widths = [max(len(r[i]) for r in rows + [header]) for i in range(3)]
+    for r in [header] + rows:
+        print("  ".join(r[i].ljust(widths[i]) for i in range(3)) + "  " + r[3])
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="altfsctl",
+        description="Set up LTFS mounts as system services (altfs@<serial>.service). "
+                    "Start and stop them with systemctl.")
+    sub = parser.add_subparsers(dest="command", metavar="command")
+    sub.required = True
+
+    p = sub.add_parser("check", help="check the environment the service needs")
+    p.add_argument("serial", nargs="?", help="also check this drive")
+    p.add_argument("--device", help="check this device node instead of looking the serial up")
+    p.add_argument("--fix-fuse-conf", action="store_true",
+                   help="add user_allow_other to /etc/fuse.conf if it is missing")
+    p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("add", help="set up the mount of a drive")
+    p.add_argument("serial", help="drive serial (altfs -o device_list); the instance name")
+    p.add_argument("mountpoint", help="absolute path; created and given to the altfs user")
+    p.add_argument("--device", help="device to open instead of the serial")
+    p.add_argument("--gid", help="group that owns the files on the volume (name or number)")
+    p.add_argument("--umask", help="permission bits removed from files and directories, octal")
+    p.add_argument("--no-wait-medium", action="store_true",
+                   help="fail when the drive is empty instead of waiting for a cartridge")
+    p.add_argument("-o", "--option", action="append", metavar="OPTION",
+                   help="further altfs option, without the -o (repeatable)")
+    p.add_argument("--fix-fuse-conf", action="store_true",
+                   help="add user_allow_other to /etc/fuse.conf if it is missing")
+    p.add_argument("--enable", action="store_true", help="also start it at boot")
+    p.add_argument("--force", action="store_true", help="replace existing settings")
+    p.set_defaults(func=cmd_add)
+
+    p = sub.add_parser("remove", help="remove the settings of a stopped instance")
+    p.add_argument("serial")
+    p.set_defaults(func=cmd_remove)
+
+    p = sub.add_parser("enable", help="start the instance at boot")
+    p.add_argument("serial")
+    p.set_defaults(func=cmd_enable)
+
+    p = sub.add_parser("disable", help="do not start the instance at boot")
+    p.add_argument("serial")
+    p.set_defaults(func=cmd_disable)
+
+    p = sub.add_parser("list", help="list the instances")
+    p.set_defaults(func=cmd_list)
+
+    args = parser.parse_args(argv)
+    try:
+        return args.func(args)
+    except Failure as e:
+        print("altfsctl: %s" % e, file=sys.stderr)
+        return 1
+    except OSError as e:
+        print("altfsctl: %s" % e, file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

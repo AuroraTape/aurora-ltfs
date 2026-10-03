@@ -123,6 +123,15 @@ AC_ARG_WITH([systemdsystemunitdir],
 AC_MSG_RESULT([$systemdsystemunitdir])
 AC_SUBST([systemdsystemunitdir])
 
+AC_MSG_CHECKING([where to install the sysusers.d file])
+AC_ARG_WITH([sysusersdir],
+    [AS_HELP_STRING([--with-sysusersdir=DIR],[directory for the sysusers.d file of the altfs user (default: PREFIX/lib/sysusers.d)])],
+    [sysusersdir=$withval],
+    [sysusersdir='${prefix}/lib/sysusers.d']
+)
+AC_MSG_RESULT([$sysusersdir])
+AC_SUBST([sysusersdir])
+
 dnl
 dnl Handle --enable-fast (default:no)
 dnl
@@ -601,6 +610,7 @@ AC_CONFIG_FILES([
     src/cmd/altfsck/Makefile
     src/cmd/altfsindextool/Makefile
     src/cmd/altfs_ordered_copy/Makefile
+    src/cmd/altfsctl/Makefile
     altfs.pc:altfs.pc.in
 ])
 

@@ -3,6 +3,13 @@ set -e
 
 #DEBHELPER#
 
+# The "altfs" user of altfs@.service (#105): uid / gid 5432 when free.
+# systemd-sysusers leaves an existing user alone. A system without systemd
+# (e.g. a container) has no use for the service and gets no user.
+if [ "$1" = "configure" ] && command -v systemd-sysusers >/dev/null 2>&1; then
+	systemd-sysusers altfs.conf || echo "altfs: could not create the altfs user (altfs@.service)" >&2
+fi
+
 # Make a running rsyslog pick up /etc/rsyslog.d/30-altfs.conf (rsyslog has no
 # reload, a config change needs a restart). Only when the rule is new: on a
 # fresh install, or when upgrading from 1.0.0, which did not ship it.

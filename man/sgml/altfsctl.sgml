@@ -1,0 +1,300 @@
+<!doctype reference PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+          <!ENTITY dhcommand "altfsctl">
+          ]>
+
+<reference>
+  <title>LTFS Command Reference</title>
+
+  <refentry>
+    <refmeta>
+      <refentrytitle><command>&dhcommand;</command></refentrytitle>
+      <manvolnum>8</manvolnum>
+      <refmiscinfo>LTFS</refmiscinfo>
+    </refmeta>
+
+    <refnamediv>
+      <refname>&dhcommand;</refname>
+      <refpurpose>Set up LTFS mounts as system services</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <arg choice="plain">check</arg>
+        <arg><option>--device <replaceable>DEVICE</replaceable></option></arg>
+        <arg><option>--fix-fuse-conf</option></arg>
+        <arg choice="opt"><replaceable>SERIAL</replaceable></arg>
+      </cmdsynopsis>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <arg choice="plain">add</arg>
+        <arg><option>--device <replaceable>DEVICE</replaceable></option></arg>
+        <arg><option>--gid <replaceable>GROUP</replaceable></option></arg>
+        <arg><option>--umask <replaceable>MASK</replaceable></option></arg>
+        <arg><option>--no-wait-medium</option></arg>
+        <arg rep="repeat"><option>-o <replaceable>OPTION</replaceable></option></arg>
+        <arg><option>--fix-fuse-conf</option></arg>
+        <arg><option>--enable</option></arg>
+        <arg><option>--force</option></arg>
+        <arg choice="plain"><replaceable>SERIAL</replaceable></arg>
+        <arg choice="plain"><replaceable>MOUNTPOINT</replaceable></arg>
+      </cmdsynopsis>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <group choice="req">
+          <arg choice="plain">remove</arg>
+          <arg choice="plain">enable</arg>
+          <arg choice="plain">disable</arg>
+        </group>
+        <arg choice="plain"><replaceable>SERIAL</replaceable></arg>
+      </cmdsynopsis>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <arg choice="plain">list</arg>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+        <command>&dhcommand;</command> sets up the mount of a tape drive as a system
+        service: an instance <filename>altfs@<replaceable>SERIAL</replaceable>.service</filename>
+        of the unit template <filename>altfs@.service</filename>, named after the serial
+        number of the drive (see <command>altfs -o device_list</command>), which does not
+        change across reboots unlike <filename>/dev/sg<replaceable>N</replaceable></filename>.
+      </para>
+      <para>
+        A mount started from a login shell belongs to the login session, and systemd stops
+        a session with a short timeout at shutdown, which can kill <command>altfs</command>
+        before the index has reached the tape. A service instance has its own stop timeout
+        that leaves time for the index write. It also runs <command>altfs</command> as the
+        unprivileged user <literal>altfs</literal> instead of root.
+      </para>
+      <para>
+        <command>&dhcommand;</command> checks the environment the service needs, writes the
+        settings of each instance and enables or disables it. Starting and stopping an
+        instance stay with <command>systemctl</command>. Linux with systemd only. Except
+        for <command>check</command> and <command>list</command>, run it as root.
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>COMMANDS</title>
+      <variablelist>
+        <varlistentry>
+          <term><option>check</option> [<replaceable>SERIAL</replaceable>]</term>
+          <listitem>
+            <para>
+              Checks that <literal>user_allow_other</literal> is set in
+              <filename>/etc/fuse.conf</filename>, that the user <literal>altfs</literal> and
+              the group <literal>tape</literal> exist and that <command>altfs</command> is
+              installed. With <replaceable>SERIAL</replaceable>, also that the drive is listed
+              by <command>altfs -o device_list</command> and that its device node is readable
+              and writable by the group <literal>tape</literal>. Each item is reported as
+              <literal>OK</literal> or <literal>FAIL</literal> with what to do; the exit
+              status is 1 when an item fails. Run it as root to find the drive.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>add</option> <replaceable>SERIAL</replaceable> <replaceable>MOUNTPOINT</replaceable></term>
+          <listitem>
+            <para>
+              Runs the checks of <command>check</command> and stops without changing anything
+              when one fails. Otherwise creates <replaceable>MOUNTPOINT</replaceable> (an
+              absolute path; an existing directory has to be empty and belong to the user
+              <literal>altfs</literal> already), gives it to that user and writes the settings of the instance. The instance
+              waits for a cartridge when the drive is empty (<option>-o wait_medium</option>
+              of <command>altfs</command>) unless <option>--no-wait-medium</option> is given.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>remove</option> <replaceable>SERIAL</replaceable></term>
+          <listitem>
+            <para>
+              Disables the instance and removes its settings. A running instance is refused:
+              stop it with <command>systemctl stop</command> first. The mount point is left
+              in place.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>enable</option> <replaceable>SERIAL</replaceable>, <option>disable</option> <replaceable>SERIAL</replaceable></term>
+          <listitem>
+            <para>
+              Starts the instance at boot, or no longer does. A running instance keeps
+              running.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>list</option></term>
+          <listitem>
+            <para>Lists the instances that are set up, whether they are enabled and active, and their mount points.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>OPTIONS</title>
+      <variablelist>
+        <varlistentry>
+          <term><option>--device <replaceable>DEVICE</replaceable></option></term>
+          <listitem>
+            <para>
+              The device the instance opens (<option>-o devname=</option> of
+              <command>altfs</command>), instead of looking the drive up by
+              <replaceable>SERIAL</replaceable>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--gid <replaceable>GROUP</replaceable></option></term>
+          <listitem>
+            <para>
+              Group, by name or number, shown as the owner of the files and directories on
+              the volume. LTFS does not record owners or permissions; without this option they
+              belong to the user and group <literal>altfs</literal>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--umask <replaceable>MASK</replaceable></option></term>
+          <listitem>
+            <para>
+              Permission bits, in octal, removed from all files and directories. Without it
+              they are 0777, which lets every local user read and write the volume.
+              <option>--gid tapeusers --umask 007</option> limits access to the members of
+              <literal>tapeusers</literal>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--no-wait-medium</option></term>
+          <listitem>
+            <para>The instance fails when the drive is empty instead of waiting for a cartridge.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-o, --option <replaceable>OPTION</replaceable></option></term>
+          <listitem>
+            <para>
+              A further option for <command>altfs</command>, without <option>-o</option>, for
+              example <option>-o sync_type=time@10</option> or <option>-o eject</option>.
+              Repeatable.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--fix-fuse-conf</option></term>
+          <listitem>
+            <para>
+              Adds <literal>user_allow_other</literal> to <filename>/etc/fuse.conf</filename>
+              when it is missing, once all other checks have passed. The instance mounts with <option>-o allow_other</option> so
+              that users other than <literal>altfs</literal> can see the volume, and
+              <command>fusermount</command> refuses that option for users other than root
+              unless this line is present. The line lets every local user create FUSE mounts
+              with <option>allow_other</option>, which is why <command>&dhcommand;</command>
+              does not add it unless asked.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--enable</option></term>
+          <listitem>
+            <para>Also starts the instance at boot.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--force</option></term>
+          <listitem>
+            <para>Replaces the settings of an instance that is already set up.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>THE SERVICE</title>
+      <para>
+        An instance runs <command>altfs -f</command> as the user <literal>altfs</literal>
+        with the supplementary group <literal>tape</literal> and the capability
+        <literal>CAP_SYS_RAWIO</literal>; without that capability the Linux sg driver
+        rejects most tape commands even for members of the group. Its work directory is
+        <filename>/var/lib/altfs/<replaceable>SERIAL</replaceable></filename>.
+      </para>
+      <para>
+        It counts as started as soon as <command>altfs</command> runs, so an empty drive
+        does not hold up the boot; whether the volume is mounted shows in
+        <command>systemctl status</command> and in the log. <command>systemctl stop</command>
+        sends SIGTERM, on which <command>altfs</command> writes the index and unmounts, or
+        stops waiting for a cartridge; the instance gets up to 11 minutes for that. At
+        shutdown the instances stop before <filename>altfs.service</filename>, which
+        unmounts the volumes mounted in other ways.
+      </para>
+      <para>
+        The messages of <command>altfs</command> go to syslog: to the journal, and to
+        <filename>/var/log/altfs.log</filename> where the rsyslog rule of the package is in
+        place. The standard error output, which also lands in the journal, gets the errors
+        only (<option>-o verbose=200</option>); add <option>-o verbose=300</option> to the
+        options of an instance for debug messages.
+      </para>
+      <para>
+        To start an instance again after it ends, for example to wait for the next
+        cartridge after the volume has been unmounted, add <literal>Restart=always</literal>
+        with <command>systemctl edit altfs@<replaceable>SERIAL</replaceable>.service</command>.
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>FILES</title>
+      <variablelist>
+        <varlistentry>
+          <term><filename>/etc/altfs/<replaceable>SERIAL</replaceable>.conf</filename></term>
+          <listitem>
+            <para>
+              Settings of an instance, read by the unit:
+              <literal>MOUNTPOINT=</literal>, <literal>OPTIONS=</literal> (further
+              <command>altfs</command> options) and, with <option>--device</option>,
+              <literal>DEVICE=</literal>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><filename>/usr/lib/systemd/system/altfs@.service</filename></term>
+          <listitem>
+            <para>The unit template.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><filename>/usr/lib/sysusers.d/altfs.conf</filename></term>
+          <listitem>
+            <para>
+              Creates the user and group <literal>altfs</literal> when the package is
+              installed: ID 5432 when it is free, otherwise a free system ID.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>COMMAND EXAMPLES</title>
+      <para>Check the environment and the drive 10WT019481:</para>
+      <blockquote><para># altfsctl check 10WT019481</para></blockquote>
+      <para>Mount it on /mnt/ltfs at boot, readable and writable for the group tapeusers only, and start it now:</para>
+      <blockquote><para># altfsctl add --gid tapeusers --umask 007 --enable 10WT019481 /mnt/ltfs</para></blockquote>
+      <blockquote><para># systemctl start altfs@10WT019481.service</para></blockquote>
+      <para>Unmount and stop, then remove the setup:</para>
+      <blockquote><para># systemctl stop altfs@10WT019481.service</para></blockquote>
+      <blockquote><para># altfsctl remove 10WT019481</para></blockquote>
+    </refsect1>
+
+    <refsect1>
+      <title>SEE ALSO</title>
+      <para>altfs(8), systemctl(1), sysusers.d(5)</para>
+    </refsect1>
+  </refentry>
+</reference>

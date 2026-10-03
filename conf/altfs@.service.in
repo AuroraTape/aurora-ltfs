@@ -1,0 +1,45 @@
+# Mounts one LTFS volume as a system service, as the "altfs" user (#105).
+#
+# The instance name is the serial number of the drive (altfs@<serial>),
+# which stays the same across reboots unlike /dev/sgN. "altfsctl add"
+# writes the instance's settings to @sysconfdir@/altfs/<serial>.conf:
+#   MOUNTPOINT=  where the volume is mounted
+#   OPTIONS=     further altfs options (-o wait_medium, -o gid=, -o umask=)
+#   DEVICE=      optional, the device to open; defaults to the serial
+# See altfsctl(8).
+[Unit]
+Description=Aurora LTFS mount of drive %i
+Documentation=man:altfsctl(8) man:altfs(8)
+# Units are stopped in the reverse of their start order: being started
+# after altfs.service means this instance unmounts on its own before the
+# shutdown helper of altfs.service runs, and while file systems and the
+# network (iSCSI / FC-over-IP attached drives) are still up.
+After=local-fs.target remote-fs.target network.target altfs.service
+
+[Service]
+# Started as soon as altfs runs: with -o wait_medium an empty drive would
+# otherwise hold up the boot until a cartridge is inserted.
+Type=exec
+User=altfs
+Group=altfs
+SupplementaryGroups=tape
+# Without CAP_SYS_RAWIO the sg driver rejects most tape commands (REWIND,
+# LOCATE, READ POSITION, ...) even for members of the tape group.
+AmbientCapabilities=CAP_SYS_RAWIO
+# No NoNewPrivileges= and no namespace sandboxing (ProtectSystem=,
+# PrivateTmp=, ...): the setuid fusermount has to mount in the host's
+# mount namespace, or nobody but this service would see the volume.
+Environment=DEVICE=%i
+EnvironmentFile=@sysconfdir@/altfs/%i.conf
+StateDirectory=altfs/%i
+# verbose=200: messages go to syslog (journal, and /var/log/altfs.log with
+# the rsyslog rule); stderr, which also lands in the journal, gets errors
+# only. -o verbose= in OPTIONS overrides it.
+ExecStart=@bindir@/altfs -f -o devname=${DEVICE} -o allow_other -o work_directory=/var/lib/altfs/%i -o verbose=200 $OPTIONS ${MOUNTPOINT}
+# altfs writes the index and unmounts on SIGTERM (also while it waits for
+# a cartridge); give it the time the shutdown helper of altfs.service gets.
+KillMode=mixed
+TimeoutStopSec=660
+
+[Install]
+WantedBy=multi-user.target

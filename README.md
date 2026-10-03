@@ -184,6 +184,18 @@ Messages of `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` go to syslog. Wit
 
 On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. When building from source with a prefix other than `/usr`, register the unit yourself: `systemctl enable --now <prefix>/lib/systemd/system/altfs.service`.
 
+## Mounting as a service (Linux)
+
+A mount started from a login shell is part of the login session, and systemd stops sessions with a short timeout at shutdown (5 s for a desktop terminal on Ubuntu), which can kill `altfs` before the index is on the tape. For a drive that should be mounted all the time, or at boot, run the mount as a service instead: `altfs@<serial>.service` runs `altfs` as the unprivileged user `altfs` (created by the packages, ID 5432 when free) with its own stop timeout, and waits for a cartridge when the drive is empty. `altfsctl` sets it up:
+
+```
+# altfsctl check 9A700L0077
+# altfsctl add --gid tapeusers --umask 007 --enable 9A700L0077 /mnt/ltfs
+# systemctl start altfs@9A700L0077.service
+```
+
+`altfsctl check` tells you what is missing. Other users can only see the volume when `/etc/fuse.conf` contains `user_allow_other`, which lets every local user make such mounts; `altfsctl` adds it only with `--fix-fuse-conf`. LTFS stores no owners or permissions: without `--gid` / `--umask` every local user can read and write the volume. Stop the service with `systemctl stop`, which writes the index and unmounts. See `altfsctl(8)`.
+
 ## macOS: mounting without the kernel extension (FSKit, experimental)
 
 By default macFUSE mounts through its kernel extension, which on Apple silicon has to be enabled by booting into Recovery and lowering the startup security policy. macFUSE 5 (5.4 or later, macOS 15.4 or later) can mount through Apple's FSKit instead, with no kernel extension and no security change:

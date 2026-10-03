@@ -1,0 +1,4 @@
+# Aurora LTFS service user, used by altfs@.service (see altfsctl(8)).
+# ID 5432 when it is free; if it is taken, systemd-sysusers picks a free
+# system ID instead. An existing "altfs" user or group is left as it is.
+u altfs 5432 "Aurora LTFS" /var/lib/altfs

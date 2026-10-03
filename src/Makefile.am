@@ -59,7 +59,7 @@ GEN_DRV += tape_drivers/generic/itdtimg
 SUB += kmi
 endif
 
-CMD = cmd/mkaltfs cmd/altfsck cmd/altfsindextool cmd/altfs_ordered_copy
+CMD = cmd/mkaltfs cmd/altfsck cmd/altfsindextool cmd/altfs_ordered_copy cmd/altfsctl
 
 if OSS
 CMD += cmd/altfs
