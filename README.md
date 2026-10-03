@@ -194,7 +194,7 @@ By default macFUSE mounts through its kernel extension, which on Apple silicon h
 
 - Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
 - Use a build that includes the fix for [#180](https://github.com/AuroraTape/aurora-ltfs/issues/180). Earlier builds silently lose data written through FSKit.
-- Apple silicon only: on Intel Macs the FSKit backend crashes inside macFUSE before altfs starts. Use the kernel extension there; it needs no security change on Intel.
+- Intel Macs: with macFUSE 5.4.0 the FSKit backend does not mount there. It crashes inside macFUSE when the file system binary is unsigned ([macfuse/macfuse#1205](https://github.com/macfuse/macfuse/issues/1205), fixed for macFUSE 5.5.0), and even with an ad-hoc signed binary the volume did not come up in our tests. Use the kernel extension there; on Intel it needs no security change.
 - If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
 - The evaluation is tracked in [#142](https://github.com/AuroraTape/aurora-ltfs/issues/142).
 
