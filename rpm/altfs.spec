@@ -61,7 +61,7 @@ libaltfs.
 %build
 # The source tarball is produced by `make dist`, so it already contains a
 # generated configure script. No need to bootstrap again here.
-%configure --disable-static --with-systemdsystemunitdir=%{_unitdir}
+%configure --disable-static --with-systemdsystemunitdir=%{_unitdir} --with-sysusersdir=%{_sysusersdir}
 %make_build
 
 %install
@@ -81,10 +81,13 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %{_bindir}/altfsck
 %{_bindir}/altfsindextool
 %{_bindir}/altfs_ordered_copy
+%{_bindir}/altfsctl
 %dir %{_libdir}/altfs
 %{_libdir}/altfs/*.so
 %{_datadir}/altfs/
 %{_unitdir}/altfs.service
+%{_unitdir}/altfs@.service
+%{_sysusersdir}/altfs.conf
 %{_presetdir}/90-altfs.preset
 %config(noreplace) %{_sysconfdir}/rsyslog.d/30-altfs.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/altfs
@@ -93,6 +96,7 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %{_mandir}/man8/mkaltfs.8*
 %{_mandir}/man8/altfsck.8*
 %{_mandir}/man8/altfsindextool.8*
+%{_mandir}/man8/altfsctl.8*
 %config(noreplace) %{_sysconfdir}/altfs.conf
 %config(noreplace) %{_sysconfdir}/altfs.conf.local
 
@@ -115,6 +119,10 @@ if [ $1 -eq 1 ] && [ -d /run/systemd/system ]; then
     # reload, a config change needs a restart).
     systemctl try-restart rsyslog.service >/dev/null 2>&1 || :
 fi
+# The "altfs" user of altfs@.service (#105): uid / gid 5432 when free;
+# systemd-sysusers leaves an existing user alone. No file of the package is
+# owned by it, so creating it after the files are in place is enough.
+systemd-sysusers %{_sysusersdir}/altfs.conf >/dev/null 2>&1 || :
 
 %triggerun -- %{name} < 1.0.1
 # Upgrade from a release that did not ship altfs.service (1.0.0): the

@@ -39,13 +39,20 @@ altfs.conf: altfs.conf.in Makefile
 
 # systemd unit that unmounts all volumes cleanly at shutdown. It calls the
 # helper script installed from init.d/ into $(datadir)/altfs.
+# altfs@.service mounts one volume as the altfs user (set up by altfsctl);
+# altfs.sysusers creates that user.
 if PLATFORM_LINUX
-systemdsystemunit_DATA = altfs.service
+systemdsystemunit_DATA = altfs.service altfs@.service
 endif
 
 altfs.service: altfs.service.in Makefile
 	${SED} -e 's!@datadir[@]!$(datadir)!g' $(srcdir)/altfs.service.in >altfs.service.tmp
 	mv altfs.service.tmp altfs.service
+
+altfs@.service: altfs@.service.in Makefile
+	${SED} -e 's!@sysconfdir[@]!$(sysconfdir)!g' -e 's!@bindir[@]!$(bindir)!g' \
+		$(srcdir)/altfs@.service.in >altfs@.service.tmp
+	mv altfs@.service.tmp altfs@.service
 
 # rsyslog rule and logrotate config for /var/log/altfs.log. They take
 # effect when sysconfdir is /etc, as in the deb / rpm packages. The 30-
@@ -63,15 +70,18 @@ install-data-local:
 if PLATFORM_LINUX
 	mkdir -p "$(DESTDIR)$(sysconfdir)/logrotate.d"
 	$(INSTALL_DATA) $(srcdir)/altfs.logrotate "$(DESTDIR)$(sysconfdir)/logrotate.d/altfs"
+	mkdir -p "$(DESTDIR)$(sysusersdir)"
+	$(INSTALL_DATA) $(srcdir)/altfs.sysusers "$(DESTDIR)$(sysusersdir)/altfs.conf"
 endif
 
 uninstall-local:
 if PLATFORM_LINUX
 	rm -f "$(DESTDIR)$(sysconfdir)/logrotate.d/altfs"
+	rm -f "$(DESTDIR)$(sysusersdir)/altfs.conf"
 endif
 
 clean-local:
-	rm -f altfs.conf altfs.service altfs.service.tmp
+	rm -f altfs.conf altfs.service altfs.service.tmp altfs@.service altfs@.service.tmp
 
 # Source / config files needed at build or install time. altfs.conf
 # itself is generated from altfs.conf.in by the rule above, so the
@@ -80,6 +90,8 @@ EXTRA_DIST = \
 	altfs.conf.in \
 	altfs.conf.local \
 	altfs.service.in \
+	altfs@.service.in \
+	altfs.sysusers \
 	30-altfs.conf \
 	altfs.logrotate \
 	README.md

@@ -460,10 +460,13 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 	vsyslog(level, output_buf, argp);
 	va_end(argp);
 #else
-	va_start(argp, _id);
-	vfprintf(stderr, output_buf, argp);
-	va_end(argp);
-	fprintf(stderr, "\n");
+	/* ltfsresult (no ID) always goes to stderr */
+	if (! print_id || level <= ltfs_log_level) {
+		va_start(argp, _id);
+		vfprintf(stderr, output_buf, argp);
+		va_end(argp);
+		fprintf(stderr, "\n");
+	}
 
 	if (level <= ltfs_syslog_level && ltfs_use_syslog) {
 		va_start(argp, _id);
@@ -490,12 +493,14 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 	return 0;
 
 internal_error:
-	if (ltfs_print_thread_id)
-		fprintf(stderr, MSG_PREFIX_TID MSG_FALLBACK "\n", (unsigned long)ltfs_get_thread_id(), id);
-	else
-		fprintf(stderr, MSG_PREFIX MSG_FALLBACK "\n", id);
+	if (! print_id || level <= ltfs_log_level) {
+		if (ltfs_print_thread_id)
+			fprintf(stderr, MSG_PREFIX_TID MSG_FALLBACK "\n", (unsigned long)ltfs_get_thread_id(), id);
+		else
+			fprintf(stderr, MSG_PREFIX MSG_FALLBACK "\n", id);
+	}
 
-	if (level < LTFS_DEBUG && ltfs_use_syslog) {
+	if (level <= ltfs_syslog_level && ltfs_use_syslog) {
 		if (ltfs_print_thread_id) {
 			if (level <= LTFS_ERR)
 				syslog(syslog_levels[LTFS_ERR], MSG_PREFIX_TID MSG_FALLBACK, (unsigned long)ltfs_get_thread_id(), id);

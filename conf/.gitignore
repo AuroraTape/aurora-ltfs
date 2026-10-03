@@ -1,2 +1,3 @@
 altfs.conf
 altfs.service
+altfs@.service

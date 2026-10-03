@@ -442,8 +442,11 @@ int filedebug_open(const char *name, void **handle)
 		ltfsmsg(ATF0002I, devname);
 		state->fd = open(devname, O_RDWR | O_BINARY);
 		if (state->fd < 0) {
+			/* Like a device node that is missing or cannot be opened */
 			ltfsmsg(ATF0003E, devname);
-			return -EDEV_INTERNAL_ERROR;
+			free(devname);
+			free(state);
+			return -EDEV_DEVICE_UNOPENABLE;
 		}
 
 		/* Parse pid and serial from filename */
