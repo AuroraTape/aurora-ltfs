@@ -77,7 +77,7 @@ static inline int ltfsmsg_level(const char *id)
 }
 
 /* Wrapper for ltfsmsg_internal. It only invokes the message print function if the requested
- * log level is not too verbose. */
+ * log level is not too verbose for stderr or for syslog; ltfsmsg_internal picks the outputs. */
 #ifdef MSG_CHECK
 #include "ltfsmsg.h"
 #define ltfsmsg(id, ...)					\
@@ -87,18 +87,18 @@ static inline int ltfsmsg_level(const char *id)
 #else
 #define ltfsmsg(id, ...) \
 	do { \
-		if (ltfsmsg_level(#id) <= ltfs_log_level) \
+		if (ltfsmsg_level(#id) <= ltfs_log_level || ltfsmsg_level(#id) <= ltfs_syslog_level) \
 			ltfsmsg_internal(true, ltfsmsg_level(#id), NULL, #id, ##__VA_ARGS__);	\
 	} while (0)
 #endif
 
 /* CAUTION: ltfsmsg_buffer takes message ID as a text literal */
 /* Wrapper for ltfsmsg_internal. It only invokes the message print function if the requested
- * log level is not too verbose. */
+ * log level is not too verbose for stderr or for syslog; ltfsmsg_internal picks the outputs. */
 #define ltfsmsg_buffer(id, buffer, ...)	\
 	do { \
 		*buffer = NULL; \
-		if (ltfsmsg_level(id) <= ltfs_log_level) \
+		if (ltfsmsg_level(id) <= ltfs_log_level || ltfsmsg_level(id) <= ltfs_syslog_level) \
 			ltfsmsg_internal(true, ltfsmsg_level(id), buffer, id, ##__VA_ARGS__);	\
 	} while (0)
 

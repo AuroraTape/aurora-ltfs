@@ -212,7 +212,7 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 	struct libltfs_plugin pl = {0};
 	char **backends;
 	int ret, i;
-	int saved_log_level;
+	int saved_log_level, saved_syslog_level;
 
 	backends = config_file_get_plugins(type, config);
 	if (! backends) {
@@ -223,8 +223,11 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 
 	/* Suppress plugin-load info chatter while printing help. */
 	saved_log_level = ltfs_log_level;
+	saved_syslog_level = ltfs_syslog_level;
 	if (ltfs_log_level > LTFS_WARN)
 		ltfs_log_level = LTFS_WARN;
+	if (ltfs_syslog_level > LTFS_WARN)
+		ltfs_syslog_level = LTFS_WARN;
 
 	for (i = 0; backends[i] != NULL; ++i) {
 		ret = plugin_load(&pl, type, backends[i], config);
@@ -235,6 +238,7 @@ void plugin_usage(const char* progname, const char *type, struct config_file *co
 	}
 
 	ltfs_log_level = saved_log_level;
+	ltfs_syslog_level = saved_syslog_level;
 
 	for (i = 0; backends[i] != NULL; ++i)
 		free(backends[i]);

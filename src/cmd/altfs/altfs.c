@@ -706,9 +706,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	/* Set the logging level */
-	if (priv->verbose > 100)
+	/* Set the logging level: verbose=<syslog level> * 100 + <stderr level>. Without a
+	 * syslog level, syslog gets what stderr gets, up to informational messages */
+	if (priv->verbose >= 100)
 		ltfs_set_syslog_level(priv->verbose / 100);
+	else
+		ltfs_set_syslog_level(priv->verbose < LTFS_INFO ? priv->verbose : LTFS_INFO);
 	ltfs_set_log_level(priv->verbose % 100);
 
 	/* LTFS starting */

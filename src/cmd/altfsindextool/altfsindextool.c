@@ -495,10 +495,12 @@ static void show_usage(char *appname, struct config_file *config)
 	struct libltfs_plugin backend;
 	const char *default_backend;
 	char *devname = NULL;
-	int saved_log_level = ltfs_log_level;
+	int saved_log_level = ltfs_log_level, saved_syslog_level = ltfs_syslog_level;
 
 	if (ltfs_log_level > LTFS_WARN)
 		ltfs_log_level = LTFS_WARN;
+	if (ltfs_syslog_level > LTFS_WARN)
+		ltfs_syslog_level = LTFS_WARN;
 
 	default_backend = config_file_get_default_plugin("tape", config);
 	if (default_backend && plugin_load(&backend, "tape", default_backend, config) == 0) {
@@ -509,6 +511,7 @@ static void show_usage(char *appname, struct config_file *config)
 	}
 
 	ltfs_log_level = saved_log_level;
+	ltfs_syslog_level = saved_syslog_level;
 
 	if (! devname)
 		devname = strdup("<devname>");
