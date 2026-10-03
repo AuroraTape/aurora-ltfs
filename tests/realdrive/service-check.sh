@@ -171,7 +171,8 @@ fi
 # --- set up ----------------------------------------------------------------
 if [ -n "$DEB_DIR" ]; then
 	say "=== Installing the packages from $DEB_DIR"
-	if apt-get install -y "$DEB_DIR"/libaltfs0_*.deb "$DEB_DIR"/altfs_*.deb > "$WORK/install.log" 2>&1; then
+	# --reinstall: test packages rebuilt under the same version are installed too
+	if apt-get install -y --reinstall "$DEB_DIR"/libaltfs0_*.deb "$DEB_DIR"/altfs_*.deb > "$WORK/install.log" 2>&1; then
 		pass "packages installed"
 	else
 		fail "package installation"; tail -5 "$WORK/install.log"; summary; exit
