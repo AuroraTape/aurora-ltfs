@@ -4595,7 +4595,7 @@ static int _ltfs_write_rao_file(char *file_path_org, unsigned char *buf, size_t 
 		goto out;
 	} else if (size != (ssize_t)len) {
 		ltfsmsg(ALB0266I, path, size, (ssize_t)len);
-		ret = LTFS_FILE_ERR;
+		ret = -LTFS_FILE_ERR;
 		goto out;
 	} else {
 		ret = 0;
@@ -4644,9 +4644,9 @@ static int _ltfs_read_rao_file(char *file_path, unsigned char *buf,
 		ltfsmsg(ALB0269I, path, errno);
 		ret = -errno;
 		goto out;
-	} if (size != (ssize_t)sbuf.st_size) {
+	} else if (size != (ssize_t)sbuf.st_size) {
 		ltfsmsg(ALB0270I, path, size, (ssize_t)sbuf.st_size);
-		ret = LTFS_FILE_ERR;
+		ret = -LTFS_FILE_ERR;
 		goto out;
 	} else {
 		ret = 0;
@@ -4676,15 +4676,15 @@ int ltfs_get_rao_list(char *path, struct ltfs_volume *vol)
 	memset(&rao, 0, sizeof(struct rao_mod));
 	rao.in_buf = calloc(1, RAO_MAX_RET_SIZE);
 	if (!rao.in_buf) {
-		ltfsmsg(ALC0002E, "ltfs_get_rao_list: out_buf");
-		return -ENOMEM;
+		ltfsmsg(ALC0002E, "ltfs_get_rao_list: in_buf");
+		return -LTFS_NO_MEMORY;
 	}
 
 	rao.out_buf = calloc(1, RAO_MAX_RET_SIZE);
 	if (!rao.out_buf) {
 		ltfsmsg(ALC0002E, "ltfs_get_rao_list: out_buf");
 		free(rao.in_buf);
-		return -ENOMEM;
+		return -LTFS_NO_MEMORY;
 	}
 
 	rao.buf_size = RAO_MAX_RET_SIZE;
@@ -4692,7 +4692,7 @@ int ltfs_get_rao_list(char *path, struct ltfs_volume *vol)
 	ret = tape_device_lock(vol->device);
 	if (ret < 0) {
 		ltfsmsg(ALB0190E, __FUNCTION__);
-		return ret;
+		goto out_free;
 	}
 
 	/* get rao */
@@ -4712,6 +4712,9 @@ int ltfs_get_rao_list(char *path, struct ltfs_volume *vol)
 
 out:
 	tape_device_unlock(vol->device);
+out_free:
+	free(rao.out_buf);
+	free(rao.in_buf);
 	return ret;
 }
 
