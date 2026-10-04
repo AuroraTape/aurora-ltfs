@@ -218,6 +218,34 @@ def test_rollback_mount_by_index_file(tmp_path_factory):
         umount_tape(mnt)
 
 
+def test_rollback_mount_by_index_file_without_device(tmp_path_factory):
+    """`-o rollback_mount=<captured index file>` without `devname`
+    mounts the tree from the file alone (metadata only), read-only.
+    altfs runs as a daemon here: the forked daemon used to try to
+    reopen the device it never had and abort the mount (#203)."""
+    tape_dir, mnt = _make_history_tape(
+        tmp_path_factory, "rollback-meta", serial="ROLLBM", label="rollbm")
+    gen = _generation_of(tape_dir, "point-one")
+
+    dest = tape_dir.parent / "captured"
+    dest.mkdir()
+    index_file = _capture_index_file(tape_dir, dest, gen)
+
+    mount_tape(None, mnt, extra_opts=[f"rollback_mount={index_file}"])
+    try:
+        # Metadata only: the tree is there, the file contents are not
+        assert sorted(os.listdir(mnt)) == ["first.txt"]
+        assert (mnt / "first.txt").stat().st_size == len(_FIRST_CONTENT)
+        for mutate in (
+                lambda: (mnt / "new.txt").write_text("rollback mounts must be read-only"),
+                lambda: os.unlink(mnt / "first.txt")):
+            with pytest.raises(OSError) as exc:
+                mutate()
+            assert exc.value.errno == errno.EROFS
+    finally:
+        umount_tape(mnt)
+
+
 def test_rollback_mount_foreign_index_file_rejected(tmp_path_factory):
     """An index file captured from a *different* volume must be
     rejected at mount time: ltfs_mount_indexfile() compares the

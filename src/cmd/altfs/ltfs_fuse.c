@@ -1210,7 +1210,7 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_MOUNT), 0, 0);
 
-	if (priv->device_closed || priv->pid_orig != getpid()) {
+	if (priv->devname && (priv->device_closed || priv->pid_orig != getpid())) {
 		/*
 		 * Reopen device when it was closed before fuse_main() (macOS
 		 * backgrounding, see #157) or when LTFS was forked in fuse_main().
@@ -1218,6 +1218,7 @@ void * ltfs_fuse_mount(struct fuse_conn_info *conn)
 		 * For example, iokit backend must handle reopen. But sg backend
 		 * doesn't need handle reopen because file descriptor is took over to a child
 		 * process.
+		 * A metadata-only mount from an index file has no device to reopen.
 		 */
 		ret = ltfs_device_reopen(priv->devname, priv->data);
 		if (ret < 0) {
