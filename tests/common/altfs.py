@@ -78,9 +78,11 @@ def env_mount_opts():
 
 
 def _mount_args(tape_dir, mnt, sync_type, extra_opts):
-    cmd = ["-o", "tape_backend=file",
-           "-o", f"devname={tape_dir}",
-           "-o", f"sync_type={sync_type}"] + env_mount_opts()
+    # No tape_dir: no device, e.g. a metadata-only mount from an index file
+    cmd = ["-o", "tape_backend=file"]
+    if tape_dir is not None:
+        cmd += ["-o", f"devname={tape_dir}"]
+    cmd += ["-o", f"sync_type={sync_type}"] + env_mount_opts()
     for opt in extra_opts:
         cmd += ["-o", opt]
     cmd.append(str(mnt))
