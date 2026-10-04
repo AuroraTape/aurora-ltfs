@@ -262,6 +262,7 @@
 #define LTFS_NO_TRAIL_FM          1203  /* There is no trailing FM after an index */
 #define LTFS_SAFENAME_FAIL        1204  /* Failed to update safename */
 #define LTFS_SYNC_FAIL_ON_DP      1205  /* Unwritten file contents exists in sync */
+#define LTFS_INDEX_ONLY           1206  /* Only the index is mounted: the operation needs the tape */
 
 /*
  * Error codes for the XML parser

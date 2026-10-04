@@ -128,6 +128,8 @@ struct ltfs_fuse_data {
 	int skip_eod_check;            /**< Skip EOD check? */
 	int device_list;               /**< List available tape devices */
 	char *rollback_str;            /**< Target generation to roll back mount (string) */
+	char *index_file;              /**< Index file to mount without a tape (-o index_file) */
+	bool index_only;               /**< Mounting an index file without a tape? */
 	unsigned int rollback_gen;     /**< Target generation to roll back mount */
 	int release_device;            /**< Release device? */
 	int wait_medium;               /**< Wait for a medium when the drive is empty at startup? */

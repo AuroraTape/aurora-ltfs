@@ -251,6 +251,7 @@ root:table {
 		AEI1203E:string { "There is no trailing FM after an index" }
 		AEI1204E:string { "Failed to update safename" }
 		AEI1205E:string { "Unwritten file contents exists in sync" }
+		AEI1206E:string { "Only the index is mounted: the operation needs the tape" }
 
 		// XML parser error codes (LTFS_XML_* constants, 5000-)
 		AEI5000E:string { "Error happens in reading XML node" }

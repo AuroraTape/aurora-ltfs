@@ -127,6 +127,7 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("force_mount_no_eod",     skip_eod_check, 1),
 	LTFS_OPT("device_list",            device_list, 1),
 	LTFS_OPT("rollback_mount=%s",      rollback_str, 0),
+	LTFS_OPT("index_file=%s",          index_file, 0),
 	LTFS_OPT("release_device",         release_device, 1),
 	LTFS_OPT("wait_medium",            wait_medium, 1),
 	LTFS_OPT("wait_medium=%s",         wait_medium_str, 0),
@@ -176,6 +177,7 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0124I);                              /* -o force_mount_no_eod */
 	ltfsresult(AFS0119I);                              /* -o device_list */
 	ltfsresult(AFS0120I);                              /* -o rollback_mount */
+	ltfsresult(AFS0158I);                              /* -o index_file */
 	ltfsresult(AFS0125I);                              /* -o release_device */
 	ltfsresult(AFS0140I);                              /* -o wait_medium[=<sec>] */
 	ltfsresult(AFS0128I);                              /* -o symlink_type=type */
@@ -953,8 +955,26 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/*
+	 * A mount from an index file needs no tape: -o index_file, or (as before that option)
+	 * -o rollback_mount=<index file> without a device
+	 */
+	if (priv->index_file) {
+		if (priv->devname || priv->rollback_str) {
+			ltfsmsg(AFS0159E);
+			return 1;
+		}
+		if (access(priv->index_file, R_OK)) {
+			ltfsmsg(AFS0160E, priv->index_file, errno);
+			return 1;
+		}
+		priv->rollback_str = priv->index_file;
+		priv->index_only = true;
+	} else if (! priv->devname && priv->rollback_str && ! access(priv->rollback_str, R_OK))
+		priv->index_only = true;
+
 	/* Bring in some configuration defaults if needed */
-	if (priv->tape_backend_name == NULL) {
+	if (priv->tape_backend_name == NULL && ! priv->index_only) {
 		priv->tape_backend_name = config_file_get_default_plugin("tape", priv->config);
 		if (priv->tape_backend_name == NULL) {
 			/* No driver plugin configured and no default found */
@@ -1003,10 +1023,12 @@ int main(int argc, char **argv)
 		return 1;
 
 	/* Load plugins */
-	ret = plugin_load(&priv->tape_plugin, "tape", priv->tape_backend_name, priv->config);
-	if (ret < 0) {
-		ltfsmsg(AFS0050E, ret);
-		return 1;
+	if (! priv->index_only) {
+		ret = plugin_load(&priv->tape_plugin, "tape", priv->tape_backend_name, priv->config);
+		if (ret < 0) {
+			ltfsmsg(AFS0050E, ret);
+			return 1;
+		}
 	}
 	ret = plugin_load(&priv->iosched_plugin, "iosched", priv->iosched_backend_name, priv->config);
 	if (ret < 0) {
@@ -1023,15 +1045,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Make sure we have a device name */
-	if (! priv->devname) {
-		/* Accept no devname when accessible index file is specified by '-o rollback_mount' */
-		if ( !priv->rollback_str || access(priv->rollback_str, R_OK) ) {
-			priv->devname = ltfs_default_device_name(priv->tape_plugin.ops);
-			if (! priv->devname) {
-				/* The backend \'%s\' does not have a default device */
-				ltfsmsg(AFS0010E, priv->tape_backend_name);
-				return 1;
-			}
+	if (! priv->devname && ! priv->index_only) {
+		priv->devname = ltfs_default_device_name(priv->tape_plugin.ops);
+		if (! priv->devname) {
+			/* The backend \'%s\' does not have a default device */
+			ltfsmsg(AFS0010E, priv->tape_backend_name);
+			return 1;
 		}
 	}
 

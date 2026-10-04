@@ -254,5 +254,8 @@ root:table {
 		AFS0155I:string { "The drive is available. Continuing with the mount" }
 		AFS0156I:string { "Interrupted while waiting for the drive" }
 		AFS0157E:string { "The drive %s did not become available within %lu seconds" }
+		AFS0158I:string { "    -o index_file=<file>      Mount the directory tree of an index file read-only, without a tape. File contents cannot be read" }
+		AFS0159E:string { "The index_file option cannot be used with the devname or rollback_mount option" }
+		AFS0160E:string { "Cannot read the index file %s (%d)" }
 	}
 }
