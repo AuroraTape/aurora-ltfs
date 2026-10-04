@@ -196,6 +196,23 @@ A mount started from a login shell is part of the login session, and systemd sto
 
 `altfsctl check` tells you what is missing. Other users can only see the volume when `/etc/fuse.conf` contains `user_allow_other`, which lets every local user make such mounts; `altfsctl` adds it only with `--fix-fuse-conf`. LTFS stores no owners or permissions: without `--gid` / `--umask` every local user can read and write the volume. Stop the service with `systemctl stop`, which writes the index and unmounts. See `altfsctl(8)`.
 
+## Browsing a tape without the tape
+
+The directory tree of a cartridge can be mounted from an index file, with no drive and no cartridge: names, sizes, timestamps and extended attributes are there, file contents are not. Capture the index while the tape is available, either all the indexes on a partition with `altfsindextool`, or the latest one at every mount with `-o capture_index=<dir>`:
+
+```
+# altfsindextool -d 9A700L0077 --partition=1 --output-dir=/srv/catalog/9A700L0077
+# altfs -o devname=9A700L0077 -o capture_index=/srv/catalog /altfs
+```
+
+Then mount the captured file:
+
+```
+# altfs -o index_file=/srv/catalog/9A700L0077.schema /mnt/9A700L0077
+```
+
+The mount is read-only. Reading a file fails with `ENODATA`; `ltfs.*` attributes that come from the index (`ltfs.volumeUUID`, `ltfs.indexGeneration`, `ltfs.startblock`, ...) are available, those that need the cartridge or the drive fail with `ENODATA`. The file must hold a full index; an incremental index alone does not describe the tree and is rejected. With `-o devname` as well, the tape is mounted read-only with that index and file contents can be read. See `-o index_file` in `altfs(8)`.
+
 ## macOS: mounting without the kernel extension (FSKit, experimental)
 
 By default macFUSE mounts through its kernel extension, which on Apple silicon has to be enabled by booting into Recovery and lowering the startup security policy. macFUSE 5 (5.4 or later, macOS 15.4 or later) can mount through Apple's FSKit instead, with no kernel extension and no security change:

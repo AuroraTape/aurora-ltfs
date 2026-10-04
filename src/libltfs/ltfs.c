@@ -663,7 +663,8 @@ start:
 		return ret;
 
 	if (vol->mount_type == MOUNT_ROLLBACK_META) {
-		/* Return good when volume is meta-data mount mode */
+		/* No tape to ask, and only the index is parsed: no capacity to report */
+		memset(cap, 0, sizeof(*cap));
 		releaseread_mrsw(&vol->lock);
 		return 0;
 	}
@@ -1966,7 +1967,10 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 		ltfsmsg(ALB0015D); /* partition labels are valid */
 		vol->mount_type = MOUNT_ROLLBACK;
 	} else {
-		/* Assume 512KB block*/
+		/* The block size is in the label, which is on the tape. Assume 512KB, the default
+		 * everywhere but NetBSD. It sizes the index reader's buffers and its block counts,
+		 * and is the I/O size hint (f_bsize, st_blksize); no count of blocks is reported
+		 * in this mount */
 		vol->label->blocksize = 512 * KB;
 		vol->mount_type = MOUNT_ROLLBACK_META;
 	}
@@ -1976,7 +1980,12 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 
 	ret = ltfs_read_indexfile(filename, false, vol);
 
-	if (label_check) {
+	if (ret == 0 && ! label_check) {
+		/* The volume UUID is also in the index; the rest of the label is not */
+		memcpy(vol->label->vol_uuid, vol->index->vol_uuid, sizeof(vol->label->vol_uuid));
+	}
+
+	if (ret == 0 && label_check) {
 		if (strcmp(vol->index->vol_uuid, vol->label->vol_uuid)) {
 			/*
 			 * Volume UUID in label and it on index is not matched.

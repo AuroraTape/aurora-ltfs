@@ -3,9 +3,11 @@
 Covers the high-risk index-management paths the harness did not
 exercise before:
 
-- **Rollback mount**: ``altfs -o rollback_mount=<gen|index_file>``
-  presents an older index generation read-only, without touching
-  the tape. The generation-number form regressed once (altfs
+- **Rollback mount**: ``altfs -o rollback_mount=<gen>`` and
+  ``altfs -o index_file=<file>`` present an older index generation
+  read-only, without writing to the tape. With ``devname`` the tape
+  is mounted with that index; without it only the tree of the index
+  is mounted. The generation-number form regressed once (altfs
   routed every rollback string through the index-file loader), so
   both forms are pinned here.
 
@@ -200,9 +202,8 @@ def test_read_only_mount_refuses_changes(tmp_path_factory):
 
 
 def test_rollback_mount_by_index_file(tmp_path_factory):
-    """`-o rollback_mount=<captured index file>` (with a device
-    attached) must mount the generation stored in that file,
-    read-only."""
+    """`-o index_file=<captured index file>` with a device attached
+    must mount the generation stored in that file, read-only."""
     tape_dir, mnt = _make_history_tape(
         tmp_path_factory, "rollback-file", serial="ROLLBF", label="rollbf")
     gen = _generation_of(tape_dir, "point-one")
@@ -211,7 +212,7 @@ def test_rollback_mount_by_index_file(tmp_path_factory):
     dest.mkdir()
     index_file = _capture_index_file(tape_dir, dest, gen)
 
-    mount_tape(tape_dir, mnt, extra_opts=[f"rollback_mount={index_file}"])
+    mount_tape(tape_dir, mnt, extra_opts=[f"index_file={index_file}"])
     try:
         _assert_point_one_view_read_only(mnt)
     finally:
@@ -219,7 +220,7 @@ def test_rollback_mount_by_index_file(tmp_path_factory):
 
 
 def test_rollback_mount_by_index_file_without_device(tmp_path_factory):
-    """`-o rollback_mount=<captured index file>` without `devname`
+    """`-o index_file=<captured index file>` without `devname`
     mounts the tree from the file alone (metadata only), read-only.
     altfs runs as a daemon here: the forked daemon used to try to
     reopen the device it never had and abort the mount (#203)."""
@@ -231,7 +232,7 @@ def test_rollback_mount_by_index_file_without_device(tmp_path_factory):
     dest.mkdir()
     index_file = _capture_index_file(tape_dir, dest, gen)
 
-    mount_tape(None, mnt, extra_opts=[f"rollback_mount={index_file}"])
+    mount_tape(None, mnt, extra_opts=[f"index_file={index_file}"])
     try:
         # Metadata only: the tree is there, the file contents are not
         assert sorted(os.listdir(mnt)) == ["first.txt"]
@@ -266,7 +267,7 @@ def test_rollback_mount_foreign_index_file_rejected(tmp_path_factory):
     foreign_index = _capture_index_file(foreign_tape, dest, 1)
 
     denied = try_mount_tape(
-        tape_dir, mnt, extra_opts=[f"rollback_mount={foreign_index}"])
+        tape_dir, mnt, extra_opts=[f"index_file={foreign_index}"])
     assert denied.returncode != 0, \
         "mount must reject an index file from a different volume"
     assert not os.path.ismount(mnt)
@@ -279,6 +280,25 @@ def test_rollback_mount_foreign_index_file_rejected(tmp_path_factory):
         _assert_latest_view(mnt)
     finally:
         umount_tape(mnt)
+
+
+def test_rollback_mount_takes_no_index_file(tmp_path_factory):
+    """`-o rollback_mount` takes a generation only: an index file
+    there is an invalid generation (AFS0076E), not a mount from the
+    file. Index files go to `-o index_file`."""
+    tape_dir, mnt = _make_history_tape(
+        tmp_path_factory, "rollback-no-file", serial="ROLLBN", label="rollbn")
+    gen = _generation_of(tape_dir, "point-one")
+
+    dest = tape_dir.parent / "captured"
+    dest.mkdir()
+    index_file = _capture_index_file(tape_dir, dest, gen)
+
+    for tape in (tape_dir, None):
+        denied = try_mount_tape(tape, mnt, extra_opts=[f"rollback_mount={index_file}"])
+        assert denied.returncode != 0
+        assert not os.path.ismount(mnt)
+        assert "AFS0076E" in denied.stdout + denied.stderr
 
 
 def test_rollback_mount_nonexistent_generation_rejected(tmp_path_factory):

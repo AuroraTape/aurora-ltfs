@@ -1542,6 +1542,59 @@ out_unlock:
 }
 
 /**
+ * Check whether a virtual extended attribute can be answered from the index alone, without
+ * the tape. This is what a mount from an index file (MOUNT_ROLLBACK_META) serves.
+ * @param name Xattr name
+ * @return true if the value comes from the index or from altfs itself, false if it needs
+ *         the label, the cartridge memory or the drive.
+ */
+static bool _xattr_from_index(const char *name)
+{
+	static const char *names[] = {
+		/* All dentries */
+		"ltfs.createTime",
+		"ltfs.modifyTime",
+		"ltfs.accessTime",
+		"ltfs.changeTime",
+		"ltfs.backupTime",
+		"ltfs.fileUID",
+		"ltfs.volumeUUID",
+		"ltfs.volumeName",
+		"ltfs.softwareVersion",
+		"ltfs.softwareFormatSpec",
+		"ltfs.softwareVendor",
+		"ltfs.softwareProduct",
+		/* Files */
+		"ltfs.partition",
+		"ltfs.startblock",
+		/* Root */
+		"ltfs.commitMessage",
+		"ltfs.indexVersion",
+		"ltfs.indexGeneration",
+		"ltfs.indexTime",
+		"ltfs.indexLocation",
+		"ltfs.indexPrevious",
+		"ltfs.indexCreator",
+		"ltfs.policyExists",
+		"ltfs.policyAllowUpdate",
+		"ltfs.policyMaxFileSize",
+		"ltfs.vendor." LTFS_VENDOR_NAME ".cartridgeMountNode",
+		"ltfs.vendor." LTFS_VENDOR_NAME ".logLevel",
+		"ltfs.vendor." LTFS_VENDOR_NAME ".syslogLevel",
+		"ltfs.vendor." LTFS_VENDOR_NAME ".trace",
+		"ltfs.vendor." LTFS_VENDOR_NAME ".profiler",
+		NULL
+	};
+	int i;
+
+	for (i = 0; names[i]; ++i) {
+		if (! strcmp(name, names[i]))
+			return true;
+	}
+	return false;
+}
+
+/**
  * Get an extended attribute. Returns an error if the provided buffer is not large enough
  * to contain the attribute value.
  * @param d File/directory to check
@@ -1574,9 +1627,9 @@ int xattr_get(struct dentry *d, const char *name, char *value, size_t size,
 	/* Try to get a virtual xattr first. */
 	if (_xattr_is_virtual(d, name, vol)) {
 
-		if (vol->mount_type == MOUNT_ROLLBACK_META) {
+		if (vol->mount_type == MOUNT_ROLLBACK_META && ! _xattr_from_index(name)) {
 			_xattr_unlock_dentry(name, false, d, vol);
-			return -LTFS_DEVICE_UNREADY;
+			return -LTFS_INDEX_ONLY;
 		}
 
 		ret = _xattr_get_virtual(d, value, size, name, vol);

@@ -127,6 +127,7 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("force_mount_no_eod",     skip_eod_check, 1),
 	LTFS_OPT("device_list",            device_list, 1),
 	LTFS_OPT("rollback_mount=%s",      rollback_str, 0),
+	LTFS_OPT("index_file=%s",          index_file, 0),
 	LTFS_OPT("release_device",         release_device, 1),
 	LTFS_OPT("wait_medium",            wait_medium, 1),
 	LTFS_OPT("wait_medium=%s",         wait_medium_str, 0),
@@ -176,6 +177,7 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0124I);                              /* -o force_mount_no_eod */
 	ltfsresult(AFS0119I);                              /* -o device_list */
 	ltfsresult(AFS0120I);                              /* -o rollback_mount */
+	ltfsresult(AFS0158I);                              /* -o index_file */
 	ltfsresult(AFS0125I);                              /* -o release_device */
 	ltfsresult(AFS0140I);                              /* -o wait_medium[=<sec>] */
 	ltfsresult(AFS0128I);                              /* -o symlink_type=type */
@@ -953,8 +955,21 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/* -o index_file mounts an index file: on the tape in devname, or without a tape */
+	if (priv->index_file) {
+		if (priv->rollback_str) {
+			ltfsmsg(AFS0159E);
+			return 1;
+		}
+		if (access(priv->index_file, R_OK)) {
+			ltfsmsg(AFS0160E, priv->index_file, errno);
+			return 1;
+		}
+		priv->index_only = ! priv->devname;
+	}
+
 	/* Bring in some configuration defaults if needed */
-	if (priv->tape_backend_name == NULL) {
+	if (priv->tape_backend_name == NULL && ! priv->index_only) {
 		priv->tape_backend_name = config_file_get_default_plugin("tape", priv->config);
 		if (priv->tape_backend_name == NULL) {
 			/* No driver plugin configured and no default found */
@@ -1003,10 +1018,12 @@ int main(int argc, char **argv)
 		return 1;
 
 	/* Load plugins */
-	ret = plugin_load(&priv->tape_plugin, "tape", priv->tape_backend_name, priv->config);
-	if (ret < 0) {
-		ltfsmsg(AFS0050E, ret);
-		return 1;
+	if (! priv->index_only) {
+		ret = plugin_load(&priv->tape_plugin, "tape", priv->tape_backend_name, priv->config);
+		if (ret < 0) {
+			ltfsmsg(AFS0050E, ret);
+			return 1;
+		}
 	}
 	ret = plugin_load(&priv->iosched_plugin, "iosched", priv->iosched_backend_name, priv->config);
 	if (ret < 0) {
@@ -1023,15 +1040,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Make sure we have a device name */
-	if (! priv->devname) {
-		/* Accept no devname when accessible index file is specified by '-o rollback_mount' */
-		if ( !priv->rollback_str || access(priv->rollback_str, R_OK) ) {
-			priv->devname = ltfs_default_device_name(priv->tape_plugin.ops);
-			if (! priv->devname) {
-				/* The backend \'%s\' does not have a default device */
-				ltfsmsg(AFS0010E, priv->tape_backend_name);
-				return 1;
-			}
+	if (! priv->devname && ! priv->index_only) {
+		priv->devname = ltfs_default_device_name(priv->tape_plugin.ops);
+		if (! priv->devname) {
+			/* The backend \'%s\' does not have a default device */
+			ltfsmsg(AFS0010E, priv->tape_backend_name);
+			return 1;
 		}
 	}
 
@@ -1083,8 +1097,8 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 
 	if (priv->devname) {
 		fsname = calloc(1, strlen(fsname_base) + strlen(priv->devname) + 1);
-	} else if (priv->rollback_str) {
-		fsname = calloc(1, strlen(fsname_base) + strlen(priv->rollback_str) + 1);
+	} else if (priv->index_file) {
+		fsname = calloc(1, strlen(fsname_base) + strlen(priv->index_file) + 1);
 	} else {
 		fsname = calloc(1, strlen(fsname_base) + 1);
 	}
@@ -1102,13 +1116,11 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 
 	/* Validate rollback_mount option */
 	if (priv->rollback_str) {
-		if (access(priv->rollback_str, R_OK)) {
-			errno = 0;
-			priv->rollback_gen = strtoul(priv->rollback_str, &invalid_start, 0);
-			if( (*invalid_start != '\0') || priv->rollback_gen == 0 ) {
-				ltfsmsg(AFS0076E, priv->rollback_str);
-				return 1;
-			}
+		errno = 0;
+		priv->rollback_gen = strtoul(priv->rollback_str, &invalid_start, 0);
+		if( (*invalid_start != '\0') || priv->rollback_gen == 0 ) {
+			ltfsmsg(AFS0076E, priv->rollback_str);
+			return 1;
 		}
 	}
 
@@ -1147,8 +1159,8 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	strcpy(fsname, fsname_base);
 	if (priv->devname) {
 		strcat(fsname, priv->devname);
-	} else if (priv->rollback_str) {
-		strcat(fsname, priv->rollback_str);
+	} else if (priv->index_file) {
+		strcat(fsname, priv->index_file);
 	}
 	ret = fuse_opt_add_arg(args, fsname);
 	if (ret < 0) {
@@ -1296,8 +1308,8 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 
 		/* Mount the volume */
 		ltfs_set_traverse_mode(TRAVERSE_BACKWARD, priv->data);
-		if (priv->rollback_str && !priv->rollback_gen) {
-			if (ltfs_mount_indexfile(priv->rollback_str, true, priv->data) < 0) {
+		if (priv->index_file) {
+			if (ltfs_mount_indexfile(priv->index_file, true, priv->data) < 0) {
 				ltfsmsg(AFS0013E, "index file");
 				ltfs_volume_free(&priv->data);
 				return 1;
@@ -1363,7 +1375,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 		}
 	} else {
 		/* try to mount from index file (meta-only mount) */
-		if (ltfs_mount_indexfile(priv->rollback_str, false, priv->data) < 0) {
+		if (ltfs_mount_indexfile(priv->index_file, false, priv->data) < 0) {
 			ltfsmsg(AFS0013E, "index file");
 			ltfs_volume_free(&priv->data);
 			return 1;
@@ -1371,7 +1383,7 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 		ret = 0;
 	}
 
-	if (ret < 0 || priv->rollback_gen || priv->rollback_str) {
+	if (ret < 0 || priv->rollback_gen || priv->index_file) {
 		switch (ret) {
 			case -LTFS_WRITE_PROTECT:
 			case -LTFS_WRITE_ERROR:
@@ -1408,13 +1420,13 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 					/* Rollback mount is specified */
 					ltfsmsg(AFS0065I, priv->rollback_gen);
 					is_ro = true;
-				} else if (!ret && priv->rollback_str) {
+				} else if (!ret && priv->index_file) {
 					if (priv->devname) {
-						/* Rollback mount (index mount) is specified */
-						ltfsmsg(AFS0094I, priv->rollback_str);
+						/* The tape is mounted with an index file */
+						ltfsmsg(AFS0094I, priv->index_file);
 					} else {
-						/* Rollback mount (meta-only mount) is specified */
-						ltfsmsg(AFS0092I, priv->rollback_str);
+						/* The index file is mounted without a tape */
+						ltfsmsg(AFS0092I, priv->index_file);
 					}
 					is_ro = true;
 				} else {

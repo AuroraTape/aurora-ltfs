@@ -1845,7 +1845,11 @@ ssize_t ltfs_fsops_read(struct dentry *d, char *buf, size_t count, off_t offset,
 	}
 
 	if (vol->mount_type == MOUNT_ROLLBACK_META) {
-		return -LTFS_DEVICE_UNREADY;
+		/* File contents are on the tape, which is not there. The end of the file is known
+		 * without it, and the index cannot change in this mount. */
+		if ((uint64_t)offset >= d->size)
+			return 0;
+		return -LTFS_INDEX_ONLY;
 	}
 
 	ret = iosched_read(d, buf, count, offset, vol);
