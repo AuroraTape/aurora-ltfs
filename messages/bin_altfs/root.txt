@@ -130,9 +130,9 @@ root:table {
 		AFS0089E:string { "Cannot initialize the open file table" }
 		AFS0090E:string { "Invalid scsi_append_only_mode option: %s" }
 		AFS0091E:string { "This medium is not supported (%d)" }
-		AFS0092I:string { "Metadata only rollback mount is specified. Mounting as meta read-only from %s" }
+		AFS0092I:string { "Mounting the index file %s read-only without a tape" }
 		AFS0093E:string { "Unexpected option is specified for read only mount (%d)" }
-		AFS0094I:string { "Rollback mount from index file is specified. Mounting as read-only from %s" }
+		AFS0094I:string { "Mounting the tape read-only with the index file %s" }
 		AFS0095W:string { "Cannot access directory %s, disabled index capture mode (%d)" }
 		AFS0096I:string { "Index will be captured at %s at update" }
 		AFS0097I:string { "Index will not be captured" }
@@ -186,7 +186,7 @@ root:table {
 		// Reserved 14434E
 		// Reserved 14435I
 		AFS0119I:string { "    -o device_list            Show available tape devices" }
-		AFS0120I:string { "    -o rollback_mount=<gen|index_file>  Attempt to mount on previous index generation on tape or specified index file (read-only mount)" }
+		AFS0120I:string { "    -o rollback_mount=<gen>   Attempt to mount on previous index generation on tape (read-only mount)" }
 		// Reserved 14438I
 		AFS0121I:string { "    -o noeject                Do not eject the cartridge after unmount (default)" }
 		AFS0122I:string { "    -o noatime                Do not update index if only access times have changed (default)" }
@@ -254,8 +254,8 @@ root:table {
 		AFS0155I:string { "The drive is available. Continuing with the mount" }
 		AFS0156I:string { "Interrupted while waiting for the drive" }
 		AFS0157E:string { "The drive %s did not become available within %lu seconds" }
-		AFS0158I:string { "    -o index_file=<file>      Mount the directory tree of an index file read-only, without a tape. File contents cannot be read" }
-		AFS0159E:string { "The index_file option cannot be used with the devname or rollback_mount option" }
+		AFS0158I:string { "    -o index_file=<file>      Mount the tape read-only with an index file, or without devname the directory tree of the index file alone" }
+		AFS0159E:string { "The index_file option cannot be used with the rollback_mount option" }
 		AFS0160E:string { "Cannot read the index file %s (%d)" }
 	}
 }

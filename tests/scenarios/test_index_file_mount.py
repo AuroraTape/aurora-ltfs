@@ -202,9 +202,8 @@ def _refused(captured, opts):
     return out.stdout + out.stderr
 
 
-def test_device_and_index_file_together_are_refused(captured):
-    log = _refused(captured, ["-o", "tape_backend=file",
-                              "-o", f"devname={captured['tape_dir']}",
+def test_rollback_mount_and_index_file_together_are_refused(captured):
+    log = _refused(captured, ["-o", "rollback_mount=1",
                               "-o", f"index_file={captured['index_file']}"])
     assert "AFS0159E" in log
 
@@ -237,8 +236,12 @@ def test_incremental_index_is_refused(tmp_path):
     inc = tmp_path / "incremental.schema"
     shutil.copyfile(record, inc)
 
-    out = try_mount_tape(None, mnt, extra_opts=[f"index_file={inc}"])
-    assert out.returncode != 0
-    assert not os.path.ismount(mnt)
-    # LTFS_XML_INC_INDEX
-    assert "(-5052)" in out.stdout + out.stderr
+    # Without the tape, and with it
+    for tape in (None, tape_dir):
+        out = try_mount_tape(tape, mnt, extra_opts=[f"index_file={inc}"])
+        assert out.returncode != 0
+        assert not os.path.ismount(mnt)
+        # LTFS_XML_INC_INDEX, not a label mismatch
+        log = out.stdout + out.stderr
+        assert "(-5052)" in log
+        assert "ALB0280E" not in log

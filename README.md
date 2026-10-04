@@ -211,7 +211,7 @@ Then mount the captured file:
 # altfs -o index_file=/srv/catalog/9A700L0077.schema /mnt/9A700L0077
 ```
 
-The mount is read-only. Reading a file fails with `ENODATA`; `ltfs.*` attributes that come from the index (`ltfs.volumeUUID`, `ltfs.indexGeneration`, `ltfs.startblock`, ...) are available, those that need the cartridge or the drive fail with `ENODATA`. The file must hold a full index; an incremental index alone does not describe the tree and is rejected. See `-o index_file` in `altfs(8)`.
+The mount is read-only. Reading a file fails with `ENODATA`; `ltfs.*` attributes that come from the index (`ltfs.volumeUUID`, `ltfs.indexGeneration`, `ltfs.startblock`, ...) are available, those that need the cartridge or the drive fail with `ENODATA`. The file must hold a full index; an incremental index alone does not describe the tree and is rejected. With `-o devname` as well, the tape is mounted read-only with that index and file contents can be read. See `-o index_file` in `altfs(8)`.
 
 ## macOS: mounting without the kernel extension (FSKit, experimental)
 

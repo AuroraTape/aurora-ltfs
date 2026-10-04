@@ -209,27 +209,30 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>-o rollback_mount=<replaceable>gen|index_file</replaceable></option></term>
+          <term><option>-o rollback_mount=<replaceable>gen</replaceable></option></term>
           <listitem>
-            <para>Attempt to mount on previous index generation on tape or specified index file by read-only mode</para>
-            <para>
-              When both index_file and device name is specified on -o devname option, normal read-only mount is attempted.
-              When index_file is only specified, the mount is the same as -o index_file.
-            </para>
+            <para>Attempt to mount on previous index generation on tape by read-only mode.
+              To mount with an index file, use -o index_file.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term><option>-o index_file=<replaceable>file</replaceable></option></term>
           <listitem>
             <para>
-              Mount the directory tree recorded in an index file read-only, without a tape.
+              Mount with the index recorded in an index file, read-only, instead of the latest
+              index on the tape.
+              The file must hold a full index; an incremental index is rejected.
+              Cannot be used with -o rollback_mount.
+            </para>
+            <para>
+              With -o devname, the tape is mounted with that index and file contents can be read.
+              The index must belong to the volume: its volume UUID must match the label.
+            </para>
+            <para>
+              Without -o devname, only the directory tree of the index is mounted, without a tape.
               No tape device is opened and no tape backend is loaded.
               Use it to browse the contents of a cartridge that is not in a drive, from an index
               captured by altfsindextool or by -o capture_index.
-              The file must hold a full index; an incremental index is rejected.
-              Cannot be used with -o devname or -o rollback_mount.
-            </para>
-            <para>
               Names, sizes, timestamps and extended attributes are available.
               Reading file contents fails with ENODATA; an empty file reads as empty.
               Virtual extended attributes that come from the index (e.g. ltfs.volumeUUID,

@@ -1985,7 +1985,7 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 		memcpy(vol->label->vol_uuid, vol->index->vol_uuid, sizeof(vol->label->vol_uuid));
 	}
 
-	if (label_check) {
+	if (ret == 0 && label_check) {
 		if (strcmp(vol->index->vol_uuid, vol->label->vol_uuid)) {
 			/*
 			 * Volume UUID in label and it on index is not matched.
