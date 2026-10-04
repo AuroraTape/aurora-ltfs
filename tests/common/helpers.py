@@ -12,8 +12,12 @@ _RECORD_RE = re.compile(r"^(\d+)_(\d+)_R$")
 _LINUX_NS = "user."
 
 
+def get_xattr_bytes(path, name):
+    return os.getxattr(os.fspath(path), _LINUX_NS + name)
+
+
 def get_xattr(path, name):
-    return os.getxattr(os.fspath(path), _LINUX_NS + name).decode("utf-8")
+    return get_xattr_bytes(path, name).decode("utf-8")
 
 
 def get_xattr_int(path, name):

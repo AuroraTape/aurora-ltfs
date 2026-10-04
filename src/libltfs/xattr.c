@@ -830,11 +830,18 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 			uint8_t subpage = 0xFF;
 
 			char *endptr = NULL;
+			/* "XX.XX" after the prefix, whose length depends on LTFS_VENDOR_NAME */
+			const char *arg = name + strlen("ltfs.vendor." LTFS_VENDOR_NAME ".logPage.");
 
-			page_str[0]    = name[24];
-			page_str[1]    = name[25];
-			subpage_str[0] = name[27];
-			subpage_str[1] = name[28];
+			/* strtoul() alone would accept a sign or white space */
+			if (! isxdigit((unsigned char)arg[0]) || ! isxdigit((unsigned char)arg[1]) || arg[2] != '.'
+				|| ! isxdigit((unsigned char)arg[3]) || ! isxdigit((unsigned char)arg[4]))
+				return -LTFS_NO_XATTR;
+
+			page_str[0]    = arg[0];
+			page_str[1]    = arg[1];
+			subpage_str[0] = arg[3];
+			subpage_str[1] = arg[4];
 
 			page = (uint8_t)(strtoul(page_str, &endptr, 16));
 			if (*endptr) return -LTFS_NO_XATTR;
@@ -850,15 +857,19 @@ static int _xattr_get_virtual(struct dentry *d, char *buf, size_t buf_size, cons
 			tape_partition_t part = 0;
 
 			char *endptr = NULL;
+			/* "XX" after the prefix, whose length depends on LTFS_VENDOR_NAME */
+			const char *arg = name + strlen("ltfs.vendor." LTFS_VENDOR_NAME ".mediaMAM.");
 
-			part_str[0] = name[25];
-			part_str[1] = name[26];
+			part_str[0] = arg[0];
+			part_str[1] = arg[1];
 
 			if (!strncmp(part_str, "IP", sizeof(part_str))) {
 				part = ltfs_part_id2num(vol->label->partid_ip, vol);
 			} else if (!strncmp(part_str, "DP", sizeof(part_str))) {
 				part = ltfs_part_id2num(vol->label->partid_dp, vol);;
 			} else {
+				if (! isxdigit((unsigned char)arg[0]) || ! isxdigit((unsigned char)arg[1]))
+					return -LTFS_NO_XATTR;
 				part = (uint8_t)(strtoul(part_str, &endptr, 16));
 				if (*endptr) return -LTFS_NO_XATTR;
 			}
