@@ -28,7 +28,7 @@ from common.index import records_with_tag
 pytestmark = pytest.mark.mount  # every test here goes through a FUSE mount
 
 _SERIAL = "IDXF01"
-# LTFS_DEFAULT_BLOCKSIZE in src/libltfs/ltfs.h, which an index file mount assumes
+# A file over several blocks of LTFS_DEFAULT_BLOCKSIZE (src/libltfs/ltfs.h)
 _BLOCK = 512 * 1024
 _FILES = {
     "small.txt": b"small file\n",
@@ -41,8 +41,7 @@ _USER_XATTR = ("dir/big.bin", "test.color", "blue")
 _ROOT_FROM_INDEX = ["ltfs.volumeUUID", "ltfs.volumeName", "ltfs.indexGeneration",
                     "ltfs.indexTime", "ltfs.indexLocation", "ltfs.indexPrevious",
                     "ltfs.indexCreator", "ltfs.indexVersion", "ltfs.commitMessage",
-                    "ltfs.policyExists", "ltfs.policyAllowUpdate", "ltfs.softwareVendor",
-                    "ltfs.vendor.Aurora.referencedBlocks"]
+                    "ltfs.policyExists", "ltfs.policyAllowUpdate", "ltfs.softwareVendor"]
 _FILE_FROM_INDEX = ["ltfs.createTime", "ltfs.modifyTime", "ltfs.accessTime",
                     "ltfs.changeTime", "ltfs.backupTime", "ltfs.fileUID",
                     "ltfs.partition", "ltfs.startblock"]
@@ -51,7 +50,9 @@ _ROOT_FROM_TAPE = ["ltfs.volumeSerial", "ltfs.volumeFormatTime", "ltfs.volumeBlo
                    "ltfs.labelVersion", "ltfs.partitionMap", "ltfs.mamBarcode",
                    "ltfs.mediaStorageAlert", "ltfs.mediaLoads",
                    "ltfs.mediaDataPartitionTotalCapacity", "ltfs.volumeLockState",
-                   "ltfs.vendor.Aurora.totalBlocks"]
+                   "ltfs.vendor.Aurora.totalBlocks",
+                   # Counted in blocks of the size in the label
+                   "ltfs.vendor.Aurora.referencedBlocks"]
 
 
 @pytest.fixture(scope="module")
@@ -182,12 +183,9 @@ def test_changes_are_refused(index_mnt):
         assert _errno(mutate) == errno.EROFS
 
 
-def test_statfs_reports_the_referenced_blocks(index_mnt):
-    mnt = index_mnt
-    st = os.statvfs(mnt)
-    # small.txt and dir/big.bin; an empty file takes no block
-    assert st.f_blocks * st.f_frsize == 4 * _BLOCK
-    assert st.f_bfree == 0 and st.f_bavail == 0
+def test_statfs_reports_no_capacity(index_mnt):
+    st = os.statvfs(index_mnt)
+    assert st.f_blocks == 0 and st.f_bfree == 0 and st.f_bavail == 0
 
 
 def _refused(captured, opts):

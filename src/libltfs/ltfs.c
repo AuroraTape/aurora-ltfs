@@ -663,10 +663,8 @@ start:
 		return ret;
 
 	if (vol->mount_type == MOUNT_ROLLBACK_META) {
-		/* No tape to ask: the data partition holds what the index references, and nothing
-		 * can be added */
+		/* No tape to ask, and only the index is parsed: no capacity to report */
 		memset(cap, 0, sizeof(*cap));
-		cap->total_dp = ltfs_get_valid_block_count_unlocked(vol);
 		releaseread_mrsw(&vol->lock);
 		return 0;
 	}
@@ -1969,8 +1967,10 @@ int ltfs_mount_indexfile(char* filename, bool label_check, struct ltfs_volume *v
 		ltfsmsg(ALB0015D); /* partition labels are valid */
 		vol->mount_type = MOUNT_ROLLBACK;
 	} else {
-		/* The block size is in the label, which is on the tape: assume 512KB, the default
-		 * everywhere but NetBSD */
+		/* The block size is in the label, which is on the tape. Assume 512KB, the default
+		 * everywhere but NetBSD. It sizes the index reader's buffers and its block counts,
+		 * and is the I/O size hint (f_bsize, st_blksize); no count of blocks is reported
+		 * in this mount */
 		vol->label->blocksize = 512 * KB;
 		vol->mount_type = MOUNT_ROLLBACK_META;
 	}

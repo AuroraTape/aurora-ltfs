@@ -1578,7 +1578,6 @@ static bool _xattr_from_index(const char *name)
 		"ltfs.policyExists",
 		"ltfs.policyAllowUpdate",
 		"ltfs.policyMaxFileSize",
-		"ltfs.vendor." LTFS_VENDOR_NAME ".referencedBlocks",
 		"ltfs.vendor." LTFS_VENDOR_NAME ".cartridgeMountNode",
 		"ltfs.vendor." LTFS_VENDOR_NAME ".logLevel",
 		"ltfs.vendor." LTFS_VENDOR_NAME ".syslogLevel",

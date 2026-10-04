@@ -129,9 +129,8 @@ Reading file contents fails with ENODATA; an empty file reads as empty.
 Virtual extended attributes that come from the index (e.g. ltfs.volumeUUID,
 ltfs.indexGeneration, ltfs.indexLocation, ltfs.startblock) are available;
 those that need the tape (e.g. ltfs.volumeSerial, ltfs.mediaStorageAlert,
-ltfs.mam*) fail with ENODATA.
-statfs reports the blocks referenced by the index as the size of the volume, with
-no free space, counted in 512KB blocks: the block size is in the label on the tape.
+ltfs.mam*, ltfs.vendor.Aurora.referencedBlocks) fail with ENODATA.
+statfs reports no capacity: the size and the free space are 0.
 .TP
 \fB-o release_device\fR
 Clear device reservation (should be specified with -o devname
