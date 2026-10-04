@@ -133,6 +133,30 @@ Aurora LTFS reads volumes of any format version from 1.0 to 2.x and writes label
 
 Interoperability: the LTFS reference implementation and the products built on it (IBM, HPE, Quantum, the macOS LTFS applications) accept labels and indexes of any 2.x version, so a cleanly unmounted volume written by Aurora LTFS mounts there, with a warning that the index is newer than the software. That is what the specification intends: version 2.5.1 asks implementations to read volumes with a higher minor version than their own (section 2.2) and states that a consistent volume containing incremental indexes poses no problem for earlier implementations (Annex H.2). What they cannot use is an incremental index: a volume that a failure left with incremental indexes after its last full index is recovered by them to that last full index, and the changes recorded only incrementally are lost until `altfsck` has replayed them. For a tape that other implementations will read after a failure, mount with `-o full_index_interval=0`. Independent implementations that are not derived from the reference code may check the version string strictly; none has been verified. When a volume written at an older version is modified, its next index is written at 2.5.0 (announced by `ALX0074W` at mount).
 
+# Installing packages
+
+Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms. The repository metadata is signed with the project key, fingerprint `TO-BE-ADDED-WHEN-THE-KEY-IS-CREATED`. Release candidates are not published there, only as assets of their GitHub Release. The package is `altfs` on Ubuntu and `aurora-ltfs` on Rocky Linux / RHEL.
+
+Ubuntu 24.04 (check that `gpg --show-keys` prints the fingerprint above before installing the key):
+
+```
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.gpg -o /tmp/aurora-ltfs.gpg
+# gpg --show-keys /tmp/aurora-ltfs.gpg
+# install -D -m 0644 /tmp/aurora-ltfs.gpg /etc/apt/keyrings/aurora-ltfs.gpg
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.sources -o /etc/apt/sources.list.d/aurora-ltfs.sources
+# apt update
+# apt install altfs
+```
+
+Rocky Linux 9 / RHEL 9 (dnf shows the fingerprint when it imports the key; compare it before answering yes):
+
+```
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.repo -o /etc/yum.repos.d/aurora-ltfs.repo
+# dnf install aurora-ltfs
+```
+
+Updates then come with `apt upgrade` / `dnf upgrade`. On RHEL-likes the Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)). When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself. The packages are also attached to every [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), and a container image is described under [Running with Docker](#running-with-docker).
+
 # Quick Start
 
 This section is for users who already have Aurora LTFS installed.
