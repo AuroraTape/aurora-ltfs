@@ -135,7 +135,7 @@ Interoperability: the LTFS reference implementation and the products built on it
 
 # Installing packages
 
-Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms. The repository metadata is signed with the project key, fingerprint `TO-BE-ADDED-WHEN-THE-KEY-IS-CREATED`. Release candidates are not published there, only as assets of their GitHub Release. The package is `altfs` on Ubuntu and `aurora-ltfs` on Rocky Linux / RHEL.
+Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their GitHub Release. The package is `altfs` on Ubuntu and `aurora-ltfs` on Rocky Linux / RHEL.
 
 Ubuntu 24.04 (check that `gpg --show-keys` prints the fingerprint above before installing the key):
 
