@@ -253,7 +253,10 @@ for the highest final release:
   the release as `aurora-ltfs-X.Y.Z.tar.gz` (for releases that lack it, it
   is taken out of the src.rpm). It is never replaced once attached.
 - A bottle for Apple silicon is built on `macos-15` (`arm64_sequoia`, used
-  on later macOS too) and attached to the same release. Homebrew supports
+  on later macOS too) and attached to the same release. It is not
+  relocatable (the binaries carry the path of `altfs.conf`): it is poured in
+  the default prefix `/opt/homebrew` only, elsewhere the formula builds from
+  source. Homebrew supports
   Intel Macs at Tier 3 only, without bottles for the dependencies either, so
   Intel Macs and older macOS build from source.
 - The workflow pushes the formula to the tap with a deploy key, then
