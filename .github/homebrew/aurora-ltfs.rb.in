@@ -74,8 +74,8 @@ class AuroraLtfs < Formula
     assert_match version.to_s, shell_output("#{bin}/altfs -V 2>&1")
     (testpath/"tape").mkpath
     system bin/"mkaltfs", "-e", "file", "-d", testpath/"tape", "-s", "TEST00", "-f", "-q"
-    # The first check of a new volume updates the MAM coherency data and exits
-    # with 1 ("corrected"): look for the verdict instead of the status
-    assert_match "ACK0019I", shell_output("#{bin}/altfsck -e file #{testpath}/tape 2>&1", nil)
+    # The first check of a new volume updates the MAM coherency data: it exits
+    # with 1, "corrected", and finds the volume consistent
+    assert_match "ACK0019I", shell_output("#{bin}/altfsck -e file #{testpath}/tape 2>&1", 1)
   end
 end
