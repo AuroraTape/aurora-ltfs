@@ -70,7 +70,9 @@ jobs:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           name="aurora-ltfs-$VERSION.tar.gz"
-          mkdir src && cd src
+          # Not src/ of the checkout
+          mkdir "$RUNNER_TEMP/tarball"
+          cd "$RUNNER_TEMP/tarball"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' \
               | grep -qxF "$name"; then
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$name"
@@ -133,7 +135,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tarball
-          path: src/
+          path: ${{ runner.temp }}/tarball/
+          if-no-files-found: error
 
   bottle:
     name: Bottle (macOS 15, Apple silicon)
@@ -152,7 +155,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tarball
-          path: ${{ runner.temp }}/src
+          path: ${{ runner.temp }}/tarball
 
       - name: Install macFUSE
         run: brew install --cask macfuse
@@ -170,7 +173,7 @@ jobs:
               "$URL" "$SHA256" > "$formula"
           # The downloaded tarball into the download cache: on a pull request it is
           # not attached to the release yet (brew still verifies the checksum)
-          cp "$RUNNER_TEMP/src/$TARBALL" "$(brew --cache --build-from-source "$FORMULA")"
+          cp "$RUNNER_TEMP/tarball/$TARBALL" "$(brew --cache --build-from-source "$FORMULA")"
 
       - name: Build
         run: brew install --verbose --build-bottle "$FORMULA"
@@ -190,6 +193,7 @@ jobs:
         with:
           name: bottle
           path: bottle/
+          if-no-files-found: error
 
   publish:
     name: Publish
