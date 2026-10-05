@@ -57,10 +57,11 @@ elif [ "$REBUILD" -gt 0 ]; then
 	bottle=$(printf '\n  bottle do\n    root_url "%s"\n    rebuild %d\n  end' "$ROOT_URL" "$REBUILD")
 fi
 
-# awk, not sed: the bottle block spans lines and the URL holds slashes
-awk -v url="$URL" -v sha="$SHA256" -v bottle="$bottle" '
-	{ gsub(/@URL@/, url); gsub(/@SHA256@/, sha) }
+# awk, not sed: the bottle block spans lines and the URL holds slashes. The values go
+# through the environment: the BSD awk of macOS takes no newline in a -v assignment.
+URL=$URL SHA256=$SHA256 BOTTLE=$bottle awk '
+	{ gsub(/@URL@/, ENVIRON["URL"]); gsub(/@SHA256@/, ENVIRON["SHA256"]) }
 	# A blank line, or the bottle block between blank lines
-	/^@BOTTLE@$/ { print bottle; if (bottle != "") print ""; next }
+	/^@BOTTLE@$/ { print ENVIRON["BOTTLE"]; if (ENVIRON["BOTTLE"] != "") print ""; next }
 	{ print }
 ' "$TEMPLATE"
