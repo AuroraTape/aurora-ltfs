@@ -138,8 +138,9 @@ tracking issue as they land, so the notes are not written from memory.
       9) jobs, the container image (GHCR, `X.Y.Z` / `X.Y` / `X`, no
       `latest`) with its smoke test, and the GitHub Release with the
       packages attached. For a final release it then starts
-      `packages.yml` on `main`: approve its run (environment `packages`)
-      and watch the install from the repositories in clean containers.
+      `packages.yml` and `homebrew.yml` on `main`: approve the run of
+      `packages.yml` (environment `packages`) and watch the installs from
+      the repositories in clean containers and from the tap on macOS.
 
 ### After the workflow
 
@@ -151,6 +152,9 @@ tracking issue as they land, so the notes are not written from memory.
       and `altfsck` a `file` backend volume. `altfs -V` must print the tag
       version.
 - [ ] `docker run --rm ghcr.io/auroratape/aurora-ltfs:X.Y.Z altfs -V`.
+- [ ] `brew install auroratape/tap/aurora-ltfs` on a Mac when one is
+      available (`homebrew.yml` installs it on a hosted runner, which cannot
+      mount).
 - [ ] On a real drive when one is available: format, mount, write, unmount,
       remount, `altfsck`, and the service stop with a mounted tape. Record
       the drive, firmware and host in the testing-status note.
@@ -238,6 +242,47 @@ repository metadata.
   key: publish the revocation certificate, create a new key, and announce
   the new fingerprint on every channel the project uses.
 
+## Homebrew tap
+
+macOS is served by the tap `AuroraTape/homebrew-tap` (#131), a formula
+that homebrew-core would not take because it needs macFUSE, which is closed
+source. `homebrew.yml` renders it from `.github/homebrew/aurora-ltfs.rb.in`
+for the highest final release:
+
+- The source is the `make dist` tarball the rpm is built from, attached to
+  the release as `aurora-ltfs-X.Y.Z.tar.gz` (for releases that lack it, it
+  is taken out of the src.rpm). It is never replaced once attached.
+- A bottle for Apple silicon is built on `macos-15` (`arm64_sequoia`, used
+  on later macOS too) and attached to the same release. Homebrew supports
+  Intel Macs at Tier 3 only, without bottles for the dependencies either, so
+  Intel Macs and older macOS build from source.
+- The workflow pushes the formula to the tap with a deploy key, then
+  installs it from the tap on a clean runner and checks that the bottle was
+  poured. A pull request that changes the template or the workflow builds
+  and tests the bottle without publishing.
+- `release.yml` starts the workflow on `main` after a final release. It
+  publishes only when the rendered formula differs from the one in the tap,
+  so a patch release of an older line leaves the tap as it is. Run it by
+  hand after changing the template: the same version gets a new bottle with
+  the next `rebuild` number (a new asset name, so the published formula
+  never points to a replaced file), which `brew upgrade` installs.
+- The ICU dependency is versioned (`icu4c@78`): the bottle links that
+  version. When homebrew-core moves to a new ICU, change the template and
+  run the workflow.
+
+Setup:
+
+- The tap repository `AuroraTape/homebrew-tap`, public, created with a
+  README so that `main` exists. If its `main` is protected, deploy keys
+  must be allowed to bypass the rules: the workflow pushes directly.
+- A deploy key with write access on the tap, created without a passphrase:
+  `ssh-keygen -t ed25519 -N "" -C "aurora-ltfs homebrew.yml" -f homebrew-tap`.
+  `homebrew-tap.pub` goes to the tap (Settings, Deploy keys, allow write
+  access), `homebrew-tap` into the secret `HOMEBREW_TAP_DEPLOY_KEY` of the
+  environment `homebrew` of this repository (deployment branches `main`
+  only); then delete both files. The key can write to the tap only;
+  replace it by creating a new one the same way.
+
 ## Branch protection
 
 Three repository rulesets enforce the branch rules (Settings, Rules):
@@ -261,7 +306,6 @@ and `release/*` are refused for everyone. The review requirement on
 - Multi-architecture container images (arm64) and a `latest` tag: the tag is
   deliberately not published (a tape-touching tool must not change behind
   the user's back); arm64 images wait for a user.
-- A Homebrew tap: #131, after the apt / dnf repositories.
 - Signing of tags, of the rpm packages themselves and of the container
   images: the repository signing key exists now; whether it, or a separate
   key, signs those is still open.

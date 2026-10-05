@@ -155,7 +155,16 @@ Rocky Linux 9 / RHEL 9 (dnf shows the fingerprint when it imports the key; compa
 # dnf install aurora-ltfs
 ```
 
-Updates then come with `apt upgrade` / `dnf upgrade`. On RHEL-likes the Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)). When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself. The packages are also attached to every [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), and a container image is described under [Running with Docker](#running-with-docker).
+macOS, through the Homebrew tap [AuroraTape/homebrew-tap](https://github.com/AuroraTape/homebrew-tap); macFUSE comes first, as a cask:
+
+```
+$ brew install --cask macfuse
+$ brew install auroratape/tap/aurora-ltfs
+```
+
+Apple silicon gets a pre-built bottle; Intel Macs build from source. macOS is a Tier 2 platform: the formula is built and tested on CI without mounting, and mounting needs macFUSE set up as described [below](#macos-mounting-without-the-kernel-extension-fskit-experimental) or with its kernel extension allowed.
+
+Updates then come with `apt upgrade` / `dnf upgrade` / `brew upgrade`. On RHEL-likes the Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)). When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself. The packages are also attached to every [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), and a container image is described under [Running with Docker](#running-with-docker).
 
 # Quick Start
 
