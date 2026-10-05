@@ -144,6 +144,7 @@ jobs:
       TAG: ${{ needs.source.outputs.tag }}
       TARBALL: ${{ needs.source.outputs.tarball }}
       SHA256: ${{ needs.source.outputs.sha256 }}
+      URL: ${{ needs.source.outputs.url }}
       REBUILD: ${{ needs.source.outputs.rebuild }}
     steps:
       - uses: actions/checkout@v4
@@ -156,19 +157,20 @@ jobs:
       - name: Install macFUSE
         run: brew install --cask macfuse
 
-      # From the downloaded tarball: on a pull request it is not attached to the
-      # release yet. The published formula points to the release asset.
       - name: Put the formula into a local tap
         run: |
           brew tap-new --no-git "$TAP"
           formula="$(brew --repository "$TAP")/Formula/aurora-ltfs.rb"
-          .github/scripts/render-homebrew-formula.sh "file://$RUNNER_TEMP/src/$TARBALL" "$SHA256" > "$formula"
+          .github/scripts/render-homebrew-formula.sh "$URL" "$SHA256" > "$formula"
           brew style "$FORMULA"
           brew audit --strict "$FORMULA"
           # The rebuild number for "brew bottle --keep-old"
           .github/scripts/render-homebrew-formula.sh \
               --rebuild "$REBUILD" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG" \
-              "file://$RUNNER_TEMP/src/$TARBALL" "$SHA256" > "$formula"
+              "$URL" "$SHA256" > "$formula"
+          # The downloaded tarball into the download cache: on a pull request it is
+          # not attached to the release yet (brew still verifies the checksum)
+          cp "$RUNNER_TEMP/src/$TARBALL" "$(brew --cache --build-from-source "$FORMULA")"
 
       - name: Build
         run: brew install --verbose --build-bottle "$FORMULA"
