@@ -137,12 +137,16 @@ tracking issue as they land, so the notes are not written from memory.
 - [ ] Watch `release.yml`: the `.deb` (Ubuntu 24.04) and `.rpm` (Rocky Linux
       9) jobs, the container image (GHCR, `X.Y.Z` / `X.Y` / `X`, no
       `latest`) with its smoke test, and the GitHub Release with the
-      packages attached.
+      packages attached. For a final release it then starts
+      `packages.yml` on `main`: approve its run (environment `packages`)
+      and watch the install from the repositories in clean containers.
 
 ### After the workflow
 
 - [ ] Install the packages in clean containers (`ubuntu:24.04`,
-      `rockylinux:9`): clean install and upgrade from the previous release;
+      `rockylinux:9`) from the apt / dnf repositories (for a candidate,
+      from the Release assets): clean install and upgrade from the previous
+      release;
       run `altfs -V`, `altfs -o device_list`, and format, mount, write, unmount
       and `altfsck` a `file` backend volume. `altfs -V` must print the tag
       version.
@@ -155,6 +159,84 @@ tracking issue as they land, so the notes are not written from memory.
 - [ ] Close the milestone, create the next one, and remove `!!Backport!!`
       from everything the release shipped.
 - [ ] Announce where the project announces (GitHub Release, discussions).
+
+## Package repositories
+
+The final releases are served as apt and dnf repositories on the GitHub
+Pages site of this repository (#131):
+
+- `apt/`: suite `noble`, component `main`, signed `InRelease` and
+  `Release.gpg`; `aurora-ltfs.sources` is the deb822 entry, `aurora-ltfs.gpg`
+  the key for its `Signed-By`.
+- `rpm/el9/x86_64/`: `createrepo_c` metadata with a signed `repomd.xml`;
+  `aurora-ltfs.repo` sets `repo_gpgcheck=1`, and `aurora-ltfs.asc` is the key.
+  The packages themselves are not signed: the signed metadata carries the
+  checksum of every package.
+
+`packages.yml` builds both from scratch on every run from the `.deb` and
+`.rpm` assets of all final Releases
+(`.github/scripts/build-package-repos.sh`), so the repositories serve exactly
+the files attached to the Releases. Pre-releases are never published there,
+and every final 1.x release stays. `release.yml` starts the workflow on
+`main` after a final release; run it by hand after deleting a release or
+rotating the key. Its last job installs from the published repositories in
+clean `ubuntu:24.04` and `rockylinux:9` containers.
+
+### Signing key
+
+The primary key never leaves the maintainer's offline storage: it only
+certifies. A signing subkey, the only secret GitHub holds, signs the
+repository metadata.
+
+- GitHub Pages (Settings, Pages): source "GitHub Actions". The
+  `github-pages` environment it creates deploys from `main` only, which is
+  why `release.yml` starts `packages.yml` on `main` instead of running it
+  from the tag.
+- Environment `packages` (Settings, Environments): required reviewer the
+  maintainer, deployment branches `main` only. Secret
+  `PACKAGES_SIGNING_KEY` holds the armored secret subkey, variable
+  `PACKAGES_SIGNING_KEY_FINGERPRINT` the fingerprint of the primary key.
+  The workflow refuses a secret that contains the primary key.
+- Creating the key, on an offline machine or at least a clean `GNUPGHOME`:
+
+  ```
+  export GNUPGHOME=/path/to/offline/gnupg
+  gpg --quick-gen-key "Aurora LTFS packages <...>" rsa4096 cert 5y
+  FPR=<fingerprint printed above>
+  gpg --quick-add-key "$FPR" rsa4096 sign 5y
+  gpg --output aurora-ltfs-revoke.asc --gen-revoke "$FPR"
+  SUB=<fingerprint of the [S] subkey, from gpg -K --with-subkey-fingerprints>
+
+  # The CI cannot type a passphrase: export the subkey without one,
+  # through a throwaway keyring, so the offline one keeps its passphrase
+  TMP=$(mktemp -d)
+  gpg --armor --export-secret-subkeys "$SUB!" | GNUPGHOME=$TMP gpg --import
+  # Old passphrase, then an empty one; "No secret key" is for the primary
+  # key, which is not in this keyring
+  GNUPGHOME=$TMP gpg --passwd "$FPR"
+  GNUPGHOME=$TMP gpg --armor --export-secret-subkeys "$SUB!" > subkey.asc
+  rm -rf "$TMP"
+  ```
+
+  Keep `GNUPGHOME` and the revocation certificate offline, put
+  `subkey.asc` into the secret and delete it, and publish the fingerprint
+  in the README. The workflow checks before signing that the secret holds
+  the key of the variable, a signing subkey usable without a passphrase,
+  and no primary key.
+- Every change of the published key (a new subkey, a new expiry) has to
+  reach the users: apt verifies against the copy in
+  `/etc/apt/keyrings` and stops updating (`NO_PUBKEY`, or `EXPKEYSIG`
+  once the old expiry passes) until the key is fetched again; dnf imports
+  it again from the `gpgkey` URL by itself. Hence the long validity, and
+  rotations announced in the release notes of the release before.
+- Rotation, before the subkey expires: add a new signing subkey with the
+  primary key, replace the secret with the export of the new subkey only
+  (as above, through a throwaway keyring), run `packages.yml`. Extending an expiry instead: `gpg --quick-set-expire`,
+  export, replace the secret, run the workflow.
+- Compromise of the subkey: revoke it with the primary key, rotate as
+  above, and tell users to fetch the key again. Compromise of the primary
+  key: publish the revocation certificate, create a new key, and announce
+  the new fingerprint on every channel the project uses.
 
 ## Branch protection
 
@@ -179,6 +261,7 @@ and `release/*` are refused for everyone. The review requirement on
 - Multi-architecture container images (arm64) and a `latest` tag: the tag is
   deliberately not published (a tape-touching tool must not change behind
   the user's back); arm64 images wait for a user.
-- apt / dnf repositories and a Homebrew tap: #131.
-- Signing of tags, packages and images: with #131, since the repositories
-  need a signing key anyway.
+- A Homebrew tap: #131, after the apt / dnf repositories.
+- Signing of tags, of the rpm packages themselves and of the container
+  images: the repository signing key exists now; whether it, or a separate
+  key, signs those is still open.

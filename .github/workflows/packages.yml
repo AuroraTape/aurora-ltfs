@@ -1,0 +1,168 @@
+name: Package repositories
+
+# The apt and dnf repositories on GitHub Pages (#131), built from the packages
+# attached to the final GitHub Releases (pre-releases are left out) and signed
+# with the repository signing key (docs/RELEASE.md, "Package repositories").
+#
+# release.yml starts this workflow on main after a final release; run it by
+# hand to rebuild the repositories, e.g. after a release was deleted or the
+# key was rotated.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build and sign the repositories
+    runs-on: ubuntu-24.04
+    # Holds the signing subkey; a maintainer approves every run
+    environment: packages
+    outputs:
+      version: ${{ steps.download.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install repository tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apt-utils createrepo-c gnupg
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Download the packages of the final releases
+        id: download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir assets
+          gh release list --repo "$GITHUB_REPOSITORY" --exclude-pre-releases --exclude-drafts \
+              --limit 1000 --json tagName --jq '.[].tagName' > tags
+          while read -r tag; do
+            echo "== $tag"
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir assets \
+                --pattern '*.deb' --pattern '*.rpm'
+          done < tags
+          ls -l assets
+          # The highest version, which a fresh install gets (not the newest release:
+          # a patch of an older line can come after it)
+          echo "version=$(sed 's/^v//' tags | sort -V | tail -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Import the signing subkey
+        env:
+          SIGNING_KEY: ${{ secrets.PACKAGES_SIGNING_KEY }}
+          SIGNING_KEY_FINGERPRINT: ${{ vars.PACKAGES_SIGNING_KEY_FINGERPRINT }}
+        run: |
+          if [ -z "$SIGNING_KEY" ] || [ -z "$SIGNING_KEY_FINGERPRINT" ]; then
+            echo "::error::PACKAGES_SIGNING_KEY (secret) and PACKAGES_SIGNING_KEY_FINGERPRINT (variable) must be set in the packages environment"
+            exit 1
+          fi
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+          install -d -m 700 "$GNUPGHOME"
+          printf '%s\n' "$SIGNING_KEY" | gpg --batch --import
+          if ! gpg --batch --with-colons --list-secret-keys "$SIGNING_KEY_FINGERPRINT" > keys; then
+            echo "::error::The secret does not hold the key PACKAGES_SIGNING_KEY_FINGERPRINT names"
+            exit 1
+          fi
+          # The primary key stays offline: only a signing subkey may be here
+          if awk -F: '$1 == "sec" && $15 != "#" { found = 1 } END { exit !found }' keys; then
+            echo "::error::The secret holds the primary key; it must hold the signing subkey only"
+            exit 1
+          fi
+          if ! awk -F: '$1 == "ssb" && $15 != "#" && $12 ~ /s/ { found = 1 } END { exit !found }' keys; then
+            echo "::error::The secret holds no usable signing subkey"
+            exit 1
+          fi
+          # Fails here, not halfway through, on a subkey still protected by a passphrase
+          if ! echo test | gpg --batch --pinentry-mode error --local-user "$SIGNING_KEY_FINGERPRINT" \
+              --clearsign > /dev/null; then
+            echo "::error::The signing subkey cannot sign; it must be exported without a passphrase"
+            exit 1
+          fi
+
+      - name: Build the repositories
+        run: |
+          .github/scripts/build-package-repos.sh assets site \
+              "${{ steps.pages.outputs.base_url }}" "${{ vars.PACKAGES_SIGNING_KEY_FINGERPRINT }}"
+
+      - name: Remove the signing key
+        if: always()
+        run: |
+          gpgconf --kill gpg-agent || true
+          rm -rf "$RUNNER_TEMP/gnupg"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Publish on GitHub Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify:
+    name: Install from the repository (${{ matrix.image }})
+    needs: [build, deploy]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:24.04', 'rockylinux:9']
+    container: ${{ matrix.image }}
+    env:
+      SITE: ${{ needs.deploy.outputs.url }}
+      VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - name: Add the repository and install
+        run: |
+          SITE="${SITE%/}"
+          echo "Expecting $VERSION"
+          # The CDN can serve the previous metadata for a few minutes after the deployment:
+          # retry until the highest released version is installed
+          for _ in $(seq 1 40); do
+            if command -v apt-get > /dev/null; then
+              apt-get update -qq && apt-get install -y -qq curl ca-certificates > /dev/null &&
+              install -d -m 0755 /etc/apt/keyrings &&
+              curl -fsSL "$SITE/aurora-ltfs.gpg" -o /etc/apt/keyrings/aurora-ltfs.gpg &&
+              curl -fsSL "$SITE/aurora-ltfs.sources" -o /etc/apt/sources.list.d/aurora-ltfs.sources &&
+              apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y altfs &&
+              dpkg-query -W -f '${Version}\n' altfs | grep -qx "$VERSION" && break
+            else
+              curl -fsSL "$SITE/aurora-ltfs.repo" -o /etc/yum.repos.d/aurora-ltfs.repo &&
+              dnf clean metadata && dnf -y install aurora-ltfs && dnf -y upgrade aurora-ltfs &&
+              rpm -q --qf '%{VERSION}\n' aurora-ltfs | grep -qx "$VERSION" && break
+            fi
+            sleep 15
+          done
+          altfs -V 2>&1 | grep -F "version $VERSION"
+
+      - name: Run the commands
+        run: |
+          altfs -V
+          mkaltfs --help > /dev/null
+          altfsck --help > /dev/null
+          altfsindextool --help > /dev/null
+          mkdir -p /tmp/tape && mkaltfs -e file -d /tmp/tape -s SMOKE0 -f -q
