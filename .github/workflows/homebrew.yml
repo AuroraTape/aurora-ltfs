@@ -1,0 +1,297 @@
+name: Homebrew tap
+
+# The formula of the Homebrew tap AuroraTape/homebrew-tap (#131), for the
+# highest final release, with a bottle for Apple silicon (docs/RELEASE.md,
+# "Homebrew tap"). The source tarball and the bottle are assets of that
+# release; the formula is rendered from .github/homebrew/aurora-ltfs.rb.in.
+#
+# release.yml starts this workflow on main after a final release; run it by
+# hand to publish the formula again, e.g. after a change of the template.
+# Nothing is published when the formula in the tap is already the one the
+# template renders. A pull request that changes the formula builds and tests
+# the bottle without publishing anything.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/homebrew/**
+      - .github/scripts/render-homebrew-formula.sh
+      - .github/workflows/homebrew.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homebrew-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TAP: auroratape/tap
+  FORMULA: auroratape/tap/aurora-ltfs
+
+jobs:
+  source:
+    name: Source tarball
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      tarball: ${{ steps.tarball.outputs.name }}
+      sha256: ${{ steps.tarball.outputs.sha256 }}
+      url: ${{ steps.tarball.outputs.url }}
+      changed: ${{ steps.tap.outputs.changed }}
+      rebuild: ${{ steps.tap.outputs.rebuild }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find the highest final release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-pre-releases --exclude-drafts \
+              --limit 1000 --json tagName --jq '.[].tagName' | sort -V | tail -n1)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "Release $tag"
+
+      # The "make dist" tarball the rpm is built from. Releases up to 1.0.1 carry
+      # it inside the src.rpm only; the publish job attaches it to the release.
+      - name: Get the tarball
+        id: tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          name="aurora-ltfs-$VERSION.tar.gz"
+          # Not src/ of the checkout
+          mkdir "$RUNNER_TEMP/tarball"
+          cd "$RUNNER_TEMP/tarball"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' \
+              | grep -qxF "$name"; then
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$name"
+          else
+            sudo apt-get install -y -qq rpm2cpio > /dev/null
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.src.rpm'
+            rpm2cpio ./*.src.rpm | cpio -idm --quiet "$name"
+            rm ./*.src.rpm
+          fi
+          tar -tzf "$name" "aurora-ltfs-$VERSION/configure" > /dev/null
+          {
+            echo "name=$name"
+            echo "sha256=$(sha256sum "$name" | cut -d' ' -f1)"
+            echo "url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG/$name"
+          } >> "$GITHUB_OUTPUT"
+
+      # A bottle is built again only when the formula changes, and then with the
+      # next rebuild number: a new file name, never a replaced asset that the
+      # published formula still has the checksum of
+      - name: Compare with the formula in the tap
+        id: tap
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.tarball.outputs.url }}
+          SHA256: ${{ steps.tarball.outputs.sha256 }}
+        run: |
+          # The API, not raw.githubusercontent.com: no cache in front
+          if gh api "repos/$GITHUB_REPOSITORY_OWNER/homebrew-tap/contents/Formula/aurora-ltfs.rb" \
+              --jq .content > content 2> /dev/null; then
+            base64 -d content > current.rb
+          else
+            echo "No formula in the tap yet"
+            : > current.rb
+          fi
+          .github/scripts/render-homebrew-formula.sh "$URL" "$SHA256" > new.rb
+          # The published formula without its bottle block and the blank line after it
+          awk '/^  bottle do$/ { skip = 1; next }
+               skip == 1 { if (/^  end$/) skip = 2; next }
+               skip == 2 { skip = 0; if (/^$/) next }
+               { print }' current.rb > current-source.rb
+          if cmp -s current-source.rb new.rb; then
+            changed=false
+          else
+            changed=true
+            diff -u current-source.rb new.rb || true
+          fi
+          rebuild=0
+          if grep -qF "url \"$URL\"" current.rb; then
+            current=$(sed -n 's/^    rebuild \([0-9][0-9]*\)$/\1/p' current.rb)
+            rebuild=$(( ${current:-0} + 1 ))
+          fi
+          # A pull request exercises the rebuild path (brew bottle --keep-old)
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$rebuild" -eq 0 ]; then
+            rebuild=1
+          fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "rebuild=$rebuild" >> "$GITHUB_OUTPUT"
+          echo "Changed: $changed, rebuild: $rebuild"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tarball
+          path: ${{ runner.temp }}/tarball/
+          if-no-files-found: error
+
+  bottle:
+    name: Bottle (macOS 15, Apple silicon)
+    needs: source
+    if: github.event_name == 'pull_request' || needs.source.outputs.changed == 'true'
+    runs-on: macos-15
+    env:
+      TAG: ${{ needs.source.outputs.tag }}
+      TARBALL: ${{ needs.source.outputs.tarball }}
+      SHA256: ${{ needs.source.outputs.sha256 }}
+      URL: ${{ needs.source.outputs.url }}
+      REBUILD: ${{ needs.source.outputs.rebuild }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball
+          path: ${{ runner.temp }}/tarball
+
+      - name: Install macFUSE
+        run: brew install --cask macfuse
+
+      - name: Put the formula into a local tap
+        run: |
+          brew tap-new --no-git "$TAP"
+          formula="$(brew --repository "$TAP")/Formula/aurora-ltfs.rb"
+          .github/scripts/render-homebrew-formula.sh "$URL" "$SHA256" > "$formula"
+          brew style "$FORMULA"
+          brew audit --strict "$FORMULA"
+          # The rebuild number for "brew bottle --keep-old"
+          .github/scripts/render-homebrew-formula.sh \
+              --rebuild "$REBUILD" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG" \
+              "$URL" "$SHA256" > "$formula"
+          # The downloaded tarball into the download cache: on a pull request it is
+          # not attached to the release yet (brew still verifies the checksum)
+          cp "$RUNNER_TEMP/tarball/$TARBALL" "$(brew --cache --build-from-source "$FORMULA")"
+
+      - name: Build
+        run: brew install --verbose --build-bottle "$FORMULA"
+
+      - name: Test
+        run: brew test --verbose "$FORMULA"
+
+      - name: Bottle
+        run: |
+          mkdir bottle && cd bottle
+          brew bottle --json --keep-old \
+              --root-url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG" "$FORMULA"
+          ls -l
+          jq . ./*.bottle.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottle
+          path: bottle/
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    if: github.event_name == 'workflow_dispatch' && needs.source.outputs.changed == 'true'
+    needs: [source, bottle]
+    runs-on: ubuntu-24.04
+    # Holds the deploy key of the tap
+    environment: homebrew
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.source.outputs.tag }}
+      VERSION: ${{ needs.source.outputs.version }}
+      TARBALL: ${{ needs.source.outputs.tarball }}
+      SHA256: ${{ needs.source.outputs.sha256 }}
+      URL: ${{ needs.source.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Attach the tarball and the bottle to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+          # Never replaced: a published formula may carry its checksum
+          if ! grep -qxF "$TARBALL" <<< "$assets"; then
+            gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" "artifacts/tarball/$TARBALL"
+          fi
+          # "brew bottle" names the file it writes differently from the file the
+          # formula downloads (local_filename / filename). The name carries the
+          # rebuild number, which the published formula does not have yet: a file
+          # of that name is left over from a run that failed before the push.
+          for json in artifacts/bottle/*.bottle.json; do
+            jq -r '.[].bottle.tags[] | "\(.local_filename)\t\(.filename)"' "$json" |
+            while IFS=$'\t' read -r local name; do
+              mv "artifacts/bottle/$local" "artifacts/bottle/$name"
+              gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "artifacts/bottle/$name"
+            done
+          done
+
+      - name: Push the formula to the tap
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "::error::HOMEBREW_TAP_DEPLOY_KEY (secret) must be set in the homebrew environment"
+            exit 1
+          fi
+          key="$RUNNER_TEMP/deploy_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$DEPLOY_KEY" > "$key"
+          # github.com's host keys from the API, not from the network on first use
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i '$key' -o IdentitiesOnly=yes -o UserKnownHostsFile='$RUNNER_TEMP/known_hosts'"
+
+          git clone --depth 1 "git@github.com:${GITHUB_REPOSITORY_OWNER}/homebrew-tap.git" tap
+          mkdir -p tap/Formula
+          .github/scripts/render-homebrew-formula.sh "$URL" "$SHA256" artifacts/bottle/*.bottle.json \
+              > tap/Formula/aurora-ltfs.rb
+          cd tap
+          git add Formula/aurora-ltfs.rb
+          if git diff --cached --quiet; then
+            echo "The formula is unchanged"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "aurora-ltfs $VERSION" \
+              -m "Generated by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git push origin HEAD
+
+      - name: Remove the deploy key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key"
+
+  verify:
+    name: Install from the tap
+    needs: [source, publish]
+    runs-on: macos-15
+    env:
+      VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - name: Install macFUSE
+        run: brew install --cask macfuse
+
+      - name: Install
+        run: |
+          brew install "$FORMULA"
+          brew info --json=v2 --installed "$FORMULA" |
+              jq -e '.formulae[0].installed[0].poured_from_bottle' > /dev/null ||
+              { echo "::error::Built from source, not poured from the bottle"; exit 1; }
+          altfs -V 2>&1 | tee version.txt
+          grep -qE "version ${VERSION//./\\.}([^0-9.]|$)" version.txt
+
+      - name: Test
+        run: brew test --verbose "$FORMULA"
