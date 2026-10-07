@@ -117,9 +117,9 @@ tracking issue as they land, so the notes are not written from memory.
 - [ ] The README says what the release does: platform support, drive
       table, format version and interoperability, container tag examples
       (`X.Y` of the line, never a patch version that will go stale).
-- [ ] Man pages regenerated if their SGML sources changed
-      (`make man-rebuild` in `man/`, needs docbook2man).
-- [ ] For a minor release: `AGENTS.md` and the build instructions still
+- [ ] Man pages regenerated if their SGML sources changed (`make` in
+      `man/` with docbook2man installed, see `man/README.md`).
+- [ ] For a minor release: `AGENTS.md` and `docs/BUILDING.md` still
       match the tree.
 - [ ] For a patch release: every `!!Backport!!` item intended for it is
       merged and the label removed.
