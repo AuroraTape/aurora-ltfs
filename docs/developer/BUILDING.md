@@ -1,7 +1,7 @@
 # Building from source
 
 Most users install the packages instead: see "Installing packages" in the
-[README](../README.md#installing-packages). Build from source to work on Aurora
+[README](../../README.md#installing-packages). Build from source to work on Aurora
 LTFS, to run it on a platform without packages (FreeBSD, NetBSD, Linux
 distributions other than the Tier 1 ones), or to try a change before it is
 released.
@@ -30,8 +30,8 @@ catalogs with the distribution's compiler flags):
 ```
 
 Dev Container definitions with the full development environment (debugger,
-valgrind, docbook tools) are in [.devcontainer/](../.devcontainer/), for
-[Ubuntu 24.04](../.devcontainer/ubuntu2404/) and [Rocky Linux 9](../.devcontainer/rocky9/).
+valgrind, docbook tools) are in [.devcontainer/](../../.devcontainer/), for
+[Ubuntu 24.04](../../.devcontainer/ubuntu2404/) and [Rocky Linux 9](../../.devcontainer/rocky9/).
 Use them with VS Code Dev Containers or as the reference list of packages.
 
 ### macOS
@@ -134,10 +134,10 @@ Notes:
 - On Linux `make install` also installs `altfs.service`, which unmounts every
   LTFS volume cleanly at shutdown. With a prefix other than `/usr`, register
   it yourself: `systemctl enable --now <prefix>/lib/systemd/system/altfs.service`.
-  The syslog and logrotate files are described in [conf/README.md](../conf/README.md).
+  The syslog and logrotate files are described in [conf/README.md](../../conf/README.md).
 - The man pages are generated from the DocBook sources in `man/sgml` when
   `docbook2man` is installed; otherwise the pages in `man/` are installed as
-  they are. See [man/README.md](../man/README.md).
+  they are. See [man/README.md](../../man/README.md).
 
 ## Running the tests
 
@@ -172,12 +172,12 @@ $ ALTFS_PREFIX=$PWD/_install bash tests/fsapi/run.sh -v
   `ALTFS_IMAGE_DIR`, the output of `tests/xplat/make_images.py` (see
   `tests/xplat/test_images.py`).
 - `tests/realdrive`: checks on a real tape drive, run by hand; see
-  [tests/realdrive/README.md](../tests/realdrive/README.md).
+  [tests/realdrive/README.md](../../tests/realdrive/README.md).
 
 ## Building the packages
 
 The deb and rpm packages are built by the release workflow
-([`.github/workflows/release.yml`](../.github/workflows/release.yml)); its
+([`.github/workflows/release.yml`](../../.github/workflows/release.yml)); its
 `deb` and `rpm` jobs are the reference. In short, in a clean Ubuntu 24.04 or
 Rocky Linux 9 container:
 

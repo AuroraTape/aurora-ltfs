@@ -2,7 +2,7 @@
 
 How Aurora LTFS is versioned, branched, tagged and released. It records the
 practice of the 1.0.0 and 1.0.1 releases and the rules the message ID
-scheme ([`messages/README`](../messages/README)) already assumes.
+scheme ([`messages/README`](../../messages/README)) already assumes.
 
 ## Versioning
 
@@ -119,7 +119,7 @@ tracking issue as they land, so the notes are not written from memory.
       (`X.Y` of the line, never a patch version that will go stale).
 - [ ] Man pages regenerated if their SGML sources changed (`make` in
       `man/` with docbook2man installed, see `man/README.md`).
-- [ ] For a minor release: `AGENTS.md` and `docs/BUILDING.md` still
+- [ ] For a minor release: `AGENTS.md` and `docs/developer/BUILDING.md` still
       match the tree.
 - [ ] For a patch release: every `!!Backport!!` item intended for it is
       merged and the label removed.

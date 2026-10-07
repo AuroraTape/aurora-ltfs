@@ -1,7 +1,7 @@
 name: Homebrew tap
 
 # The formula of the Homebrew tap AuroraTape/homebrew-tap (#131), for the
-# highest final release, with a bottle for Apple silicon (docs/RELEASE.md,
+# highest final release, with a bottle for Apple silicon (docs/project/RELEASE.md,
 # "Homebrew tap"). The source tarball and the bottle are assets of that
 # release; the formula is rendered from .github/homebrew/aurora-ltfs.rb.in.
 #

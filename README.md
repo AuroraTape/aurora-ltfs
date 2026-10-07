@@ -65,7 +65,7 @@ CI verifies that all Tier 2 platforms (Ubuntu 26.04, Rocky Linux 10, macOS, Debi
 
 Tier 2 and Tier 3 platforms may be promoted or added based on community demand and contributor availability.
 
-**Support window:** a minor release line (`X.Y`) receives fixes on its `release/X.Y` branch until six months after the next minor release. How releases are made is described in [docs/RELEASE.md](docs/RELEASE.md).
+**Support window:** a minor release line (`X.Y`) receives fixes on its `release/X.Y` branch until six months after the next minor release. How releases are made is described in [docs/project/RELEASE.md](docs/project/RELEASE.md).
 
 ## Supported Tape Drives
 
@@ -135,7 +135,7 @@ Interoperability: the LTFS reference implementation and the products built on it
 
 # Installing packages
 
-Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms, and from a Homebrew tap for macOS. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), which also carries the packages of every release. To build from source instead, see [docs/BUILDING.md](docs/BUILDING.md).
+Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms, and from a Homebrew tap for macOS. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), which also carries the packages of every release. To build from source instead, see [docs/developer/BUILDING.md](docs/developer/BUILDING.md).
 
 ## Ubuntu 24.04
 
@@ -295,7 +295,7 @@ The unmount command triggers the altfs process to write metadata and close the t
 
 Messages of `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` go to syslog. With the deb / rpm packages and rsyslog they are written to `/var/log/altfs.log` (RFC 3339 timestamps, rotated by logrotate) instead of the system log; see [conf/README.md](conf/README.md), which also has a syslog-ng example.
 
-On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. A build from source installs it too; see [docs/BUILDING.md](docs/BUILDING.md) for registering it.
+On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. A build from source installs it too; see [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for registering it.
 
 ## Mounting as a service (Linux)
 
@@ -348,15 +348,15 @@ Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by r
 
 # Building from source
 
-See [docs/BUILDING.md](docs/BUILDING.md) for the build dependencies, the build on Linux, macOS, FreeBSD and NetBSD, the test suites, and building the packages.
+See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build dependencies, the build on Linux, macOS, FreeBSD and NetBSD, the test suites, and building the packages.
 
 # Documentation
 
-- [docs/BUILDING.md](docs/BUILDING.md): building from source, running the tests
-- [docs/README.md](docs/README.md): index of the project documentation (contributing, coding style, release process, governance)
-- Man pages: `altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` (Linux only), `altfs_ordered_copy(1)`, installed with the commands; sources in [man/sgml](man/sgml)
-- [conf/README.md](conf/README.md): the syslog, logrotate and systemd files
-- [tests/realdrive/README.md](tests/realdrive/README.md): checking a real tape drive, and reporting one
+[docs/README.md](docs/README.md) is the index, grouped by reader:
+
+- User: the man pages (`altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` on Linux, `altfs_ordered_copy(1)`), configuration, troubleshooting
+- Developer: [building from source](docs/developer/BUILDING.md), coding style, message IDs, tests, design documents
+- Project: governance, the [release process](docs/project/RELEASE.md)
 
 ## Contributing
 

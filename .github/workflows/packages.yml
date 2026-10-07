@@ -2,7 +2,7 @@ name: Package repositories
 
 # The apt and dnf repositories on GitHub Pages (#131), built from the packages
 # attached to the final GitHub Releases (pre-releases are left out) and signed
-# with the repository signing key (docs/RELEASE.md, "Package repositories").
+# with the repository signing key (docs/project/RELEASE.md, "Package repositories").
 #
 # release.yml starts this workflow on main after a final release; run it by
 # hand to rebuild the repositories, e.g. after a release was deleted or the
