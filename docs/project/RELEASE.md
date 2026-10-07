@@ -167,7 +167,7 @@ tracking issue as they land, so the notes are not written from memory.
 ## Package repositories
 
 The final releases are served as apt and dnf repositories on the GitHub
-Pages site of this repository (#131):
+Pages site of this repository:
 
 - `apt/`: suite `noble`, component `main`, signed `InRelease` and
   `Release.gpg`; `aurora-ltfs.sources` is the deb822 entry, `aurora-ltfs.gpg`
@@ -244,7 +244,7 @@ repository metadata.
 
 ## Homebrew tap
 
-macOS is served by the tap `AuroraTape/homebrew-tap` (#131), a formula
+macOS is served by the tap `AuroraTape/homebrew-tap`, a formula
 that homebrew-core would not take because it needs macFUSE, which is closed
 source. `homebrew.yml` renders it from `.github/homebrew/aurora-ltfs.rb.in`
 for the highest final release:

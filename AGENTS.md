@@ -119,7 +119,7 @@ make distclean
 # Project Structure
 - `contrib`:               Contribution code that is not a part of the project but is variable for this project
 - `conf`:                  System configuration files (rsyslog, syslog-ng, systemd)
-- `docs`:                  Documentation by reader: `docs/developer` (building, coding style, AI policy, design documents), `docs/project` (governance, release process); index in `docs/README.md`
+- `docs`:                  Documentation by reader: `docs/developer` (building, coding style, AI policy), `docs/project` (governance, release process); index in `docs/README.md`
 - `examples`:              Example and sample configuration files
 - `init.d`:                Service script for init
 - `man`:                   man pages for the commands provided by the project

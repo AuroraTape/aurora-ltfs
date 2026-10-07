@@ -2,21 +2,16 @@
 
 The [README](../README.md) covers what Aurora LTFS is, the supported platforms
 and drives, installing the packages and a quick start. The documents here are
-grouped by reader; an entry with an issue number is planned and not written
-yet.
+grouped by reader.
 
 ## User
 
 - Command reference: the man pages, installed with the commands (sources in
   [man/sgml](../man/sgml)): `altfs(8)`, `mkaltfs(8)`, `altfsck(8)`,
-  `altfsindextool(8)`, `altfsctl(8)` (Linux only), `altfs_ordered_copy(1)`.
-  HTML pages come with the documentation site (#91).
+  `altfsindextool(8)`, `altfsctl(8)` (Linux only), `altfs_ordered_copy(1)`
 - Configuration
-  - Configuration guide: `altfs.conf`, plugins, keys, logging (#211)
-  - Running a drive as a service: `altfs@.service` and `altfsctl` (#189)
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
-- Troubleshooting, including how to use `altfsck` (#212)
 - [tests/realdrive/README.md](../tests/realdrive/README.md): checking a real
   tape drive, and what to send when reporting one
 
@@ -31,14 +26,6 @@ yet.
 - [Message IDs](../messages/README): the message catalogs and how IDs are
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
-- Writing tests, and using the `file` tape backend (#213)
-
-### Design documents
-
-- Components and layers (#214)
-- Backend interfaces: tape, I/O scheduler, dcache, KMI (#215)
-- Path failover and revalidation (#216)
-- Error handling (#217)
 
 ## Project
 

@@ -95,7 +95,7 @@ Status:
 
 - **Maintained** - the maintainers develop and test with this drive. Today that is the IBM LTO5 only.
 - **Inherited** - listed as supported, with this minimum firmware level, by the reference implementation Aurora LTFS is based on, and handled by the same code. Not re-verified with Aurora LTFS, because the maintainers do not have the drive.
-- **Community verified (version)** - a community member verified the drive on real hardware with that Aurora LTFS version. HP LTO6 was verified through [#49](https://github.com/AuroraTape/aurora-ltfs/pull/49) and [#50](https://github.com/AuroraTape/aurora-ltfs/pull/50). The firmware level of the reporting drive is not a tested minimum, so the column stays "Not determined".
+- **Community verified (version)** - a community member verified the drive on real hardware with that Aurora LTFS version. HP LTO6 was verified this way. The firmware level of the reporting drive is not a tested minimum, so the column stays "Not determined".
 - **Untested** - the drive is recognized and its code path exists, but no minimum firmware level was ever established and nobody has reported a result with Aurora LTFS. It may work, work with limitations, or fail.
 
 ### Drive testing policy
@@ -335,10 +335,9 @@ By default macFUSE mounts through its kernel extension, which on Apple silicon h
 ```
 
 - Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
-- Use a build that includes the fix for [#180](https://github.com/AuroraTape/aurora-ltfs/issues/180). Earlier builds silently lose data written through FSKit.
+- Use version 1.0.2 or later. Earlier versions silently lose data written through FSKit: a write request larger than a tape block lost its tail.
 - Intel Macs: with macFUSE 5.4.0 the FSKit backend does not mount there. It crashes inside macFUSE when the file system binary is unsigned ([macfuse/macfuse#1205](https://github.com/macfuse/macfuse/issues/1205), fixed for macFUSE 5.5.0), and even with an ad-hoc signed binary the volume did not come up in our tests. Use the kernel extension there; on Intel it needs no security change.
 - If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
-- The evaluation is tracked in [#142](https://github.com/AuroraTape/aurora-ltfs/issues/142).
 
 Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by running the session under `caffeinate -i` on AC power. Apple's FC driver for LSI HBAs (`AppleLSIFusionMPT`) has been seen to panic when tape I/O arrives while the system is asleep.
 
@@ -354,8 +353,8 @@ See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build depen
 
 [docs/README.md](docs/README.md) is the index, grouped by reader:
 
-- User: the man pages (`altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` on Linux, `altfs_ordered_copy(1)`), configuration, troubleshooting
-- Developer: [building from source](docs/developer/BUILDING.md), coding style, message IDs, tests, design documents
+- User: the man pages (`altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` on Linux, `altfs_ordered_copy(1)`), configuration, checking a real drive
+- Developer: [building from source](docs/developer/BUILDING.md), coding style, AI policy, message IDs, man pages
 - Project: governance, the [release process](docs/project/RELEASE.md)
 
 ## Contributing

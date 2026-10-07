@@ -23,9 +23,9 @@ against the `file` backend, so that CI notices when they stop working.
   other LTFS volumes are mounted.
 - **Host transfer limit.** A tape block is transferred with one command, so the
   host path limits the usable block size. An HBA behind a Thunderbolt or USB4
-  port, for example, is limited to 256 KiB (see #148). The sg backend reports
-  the limit at open (`ATG0107I`, `ATG0108W` below 512 KiB); since #149
-  `mkaltfs` picks a block size within it. With older builds, format with
+  port, for example, is limited to 256 KiB. The sg backend reports
+  the limit at open (`ATG0107I`, `ATG0108W` below 512 KiB), and `mkaltfs`
+  picks a block size within it (since 1.0.2). With older versions, format with
   `-b 262144` on such a host.
 
 Which build is tested:
@@ -69,11 +69,11 @@ for a consistent volume: it always runs a full check and updates the MAM.
 
 Not covered: a reboot with a volume mounted; `service-check.sh --reboot` does
 that for the mount service. A mount started by hand from a desktop terminal
-lives under `user@UID.service`, which is stopped after 5 s on Ubuntu (#105).
+lives under `user@UID.service`, which is stopped after 5 s on Ubuntu.
 
 ## `wait-medium-check.sh`
 
-Checks `altfs -o wait_medium` (#104) on a real drive. The drive must be
+Checks `altfs -o wait_medium` on a real drive. The drive must be
 **empty** at the start (`--format` formats the cartridge that is in the drive
 first and then asks you to eject it).
 
@@ -83,7 +83,7 @@ sudo ./wait-medium-check.sh --device <serial> [--prefix DIR] --format
 
 | Step | Drive | Expected |
 |:--|:--|:--|
-| A | empty, no option | fails at once (about 2 s), exit status 1, no drive dump (#156) |
+| A | empty, no option | fails at once (about 2 s), exit status 1, no drive dump |
 | B | empty, `wait_medium=20` | `AFS0142I`, gives up with `AFS0145E`, exit 1 |
 | C | empty, `wait_medium`, SIGTERM | `AFS0144I`, exit 0, drive released |
 | D1 | cartridge **pushed fully in** while waiting | the drive loads it by itself ("becoming ready"), `AFS0143I`, mount, write, clean unmount and remount |
@@ -95,7 +95,7 @@ and the cartridge would be loaded through the regular path instead of the wait.
 
 ## `service-check.sh`
 
-Checks the mount service of #105 (`altfs@<serial>.service`, set up by
+Checks the mount service (`altfs@<serial>.service`, set up by
 `altfsctl`, running `altfs` as the `altfs` user) on a systemd host. Uses the
 installed packages, or installs them with `--deb-dir`. The cartridge must be in
 the drive at the start, LTFS formatted with a block size the host can transfer;
