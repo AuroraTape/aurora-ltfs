@@ -35,7 +35,9 @@ Runs the checks of **check** and stops without changing anything when one fails.
 **remove** *SERIAL*  
 Disables the instance and removes its settings. A running instance is refused: stop it with **systemctl stop** first. The mount point is left in place.
 
-**enable** *SERIAL* **, disable** *SERIAL*  
+**enable** *SERIAL*  
+
+**disable** *SERIAL*  
 Starts the instance at boot, or no longer does. A running instance keeps running.
 
 **list**  

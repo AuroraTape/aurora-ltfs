@@ -120,7 +120,8 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>enable</option> <replaceable>SERIAL</replaceable>, <option>disable</option> <replaceable>SERIAL</replaceable></term>
+          <term><option>enable</option> <replaceable>SERIAL</replaceable></term>
+          <term><option>disable</option> <replaceable>SERIAL</replaceable></term>
           <listitem>
             <para>
               Starts the instance at boot, or no longer does. A running instance keeps

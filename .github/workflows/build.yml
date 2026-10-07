@@ -349,6 +349,8 @@ jobs:
       - name: Regenerate
         run: |
           cd man
+          # From scratch: a page whose SGML source is gone shows up as deleted
+          rm -f ./*.8 ./*.1
           for sgml in sgml/*.sgml; do
             docbook2man "$sgml" > /dev/null
           done

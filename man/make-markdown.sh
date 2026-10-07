@@ -17,14 +17,21 @@ MAN_DIR=$(cd "$(dirname "$0")" && pwd)
 OUT=${1:-$MAN_DIR/../docs/user/reference}
 
 mkdir -p "$OUT"
-rm -f "$OUT"/*.md
+# Only what this script wrote before: a page whose man page is gone goes too
+for md in "$OUT"/*.md; do
+	if [ -f "$md" ] && head -n1 "$md" | grep -q '^<!-- Generated .*by man/make-markdown.sh'; then
+		rm -f "$md"
+	fi
+done
 
-pages=()
+entries=()
 for page in "$MAN_DIR"/*.[18]; do
 	file=$(basename "$page")
 	name=${file%.*}
 	section=${file##*.}
-	pages+=("$name($section)")
+	# The NAME line of the page: "altfs \- File system based on ..."
+	desc=$(awk '/^\.SH NAME/ { getline; sub(/^[^ ]* \\- /, ""); print; exit }' "$page")
+	entries+=("- [$name($section)]($name.md): $desc")
 	{
 		echo "<!-- Generated from man/$file by man/make-markdown.sh: edit man/sgml/$name.sgml instead -->"
 		echo
@@ -48,10 +55,5 @@ done
 	echo "The man pages of the commands, as installed with them."
 	echo "\`altfsctl\` is installed on Linux only."
 	echo
-	for p in "${pages[@]}"; do
-		name=${p%(*}
-		# The NAME line of the page: "altfs \- File system based on ..."
-		desc=$(awk '/^\.SH NAME/ { getline; sub(/^[^ ]* \\- /, ""); print; exit }' "$MAN_DIR/$name".[18])
-		echo "- [$p]($name.md): $desc"
-	done
+	printf '%s\n' "${entries[@]}"
 } > "$OUT/README.md"
