@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS" "8" "23 September 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS" "8" "07 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs \- File system based on a linear tape drive
@@ -15,11 +15,6 @@ altfs \- File system based on a linear tape drive
 .PP
 \fBaltfs\fR is a file system for linear tape drive.
 .SH "GENERAL OPTIONS"
-.PP
-These programs follow the usual GNU command line syntax,
-with long options starting with two dashes ('-').  A summary of
-options is included below.  For a complete description, see the
-\fBInfo\fR files.
 .TP
 \fB-V, --version\fR
 Version information
@@ -30,11 +25,6 @@ Show help information
 \fB-a\fR
 Full help, including advanced options
 .SH "LTFS OPTIONS (MOUNT OPTIONS)"
-.PP
-These programs follow the usual GNU command line syntax,
-with long options starting with two dashes ('-').  A summary of
-options is included below.  For a complete description, see the
-\fBInfo\fR files.
 .TP
 \fB-o devname=\fIname\fB\fR
 Tape device name. On Linux, \fIname\fR is like
@@ -97,7 +87,7 @@ counts as well.
 The sync extended attributes always write the type they name, whatever the value.
 An incremental index is replaced by a full index, with a warning, when the change
 cannot be described incrementally.
-.PP
+
 A volume keeps the format version it was written at. On a volume below format
 specification 2.5 (a tape formatted by another LTFS implementation at 2.4) the
 indexes are written at that version and no incremental index is ever written,
@@ -173,11 +163,6 @@ LTFS behavior is same as standard symbolic link
 LTFS replaces mount point path by current mount point
 .RE
 .SH "FUSE OPTIONS (MOUNT OPTIONS)"
-.PP
-These programs follow the usual GNU command line syntax,
-with long options starting with two dashes ('-').  A summary of
-options is included below.  For a complete description, see the
-\fBInfo\fR files.
 .TP
 \fB-o umask=\fIM\fB\fR
 Set file permissions (octal)
@@ -190,11 +175,6 @@ Set file group
 .SH "ADVANCED LTFS OPTIONS (EXPERIMENTAL MOUNT OPTIONS)"
 .PP
 The options described here is experimental functions.
-.PP
-These programs follow the usual GNU command line syntax,
-with long options starting with two dashes ('-').  A summary of
-options is included below.  For a complete description, see the
-\fBInfo\fR files.
 .TP
 \fB-o config_file=\fIfile\fB\fR
 Configuration file (default: )

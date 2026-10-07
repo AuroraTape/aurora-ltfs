@@ -6,9 +6,9 @@ grouped by reader.
 
 ## User
 
-- Command reference: the man pages, installed with the commands (sources in
-  [man/sgml](../man/sgml)): `altfs(8)`, `mkaltfs(8)`, `altfsck(8)`,
-  `altfsindextool(8)`, `altfsctl(8)` (Linux only), `altfs_ordered_copy(1)`
+- [Command reference](user/reference/README.md): the man pages of
+  `altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)`
+  (Linux only) and `altfs_ordered_copy(1)`, also installed with the commands
 - Configuration
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
