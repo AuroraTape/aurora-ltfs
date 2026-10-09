@@ -14,6 +14,13 @@ forwarded to [ISO](https://www.iso.org/home.html) as ISO/IEC 20919.
 
 Aurora LTFS targets version 2.5.1.
 
+The version of the document and the version written to the tape differ in
+the last digit. A version number is M.N.R, and the specification defines R as
+a textual revision that changes neither the on-media format nor the
+semantics; the 2.5.1 document says of itself that it describes format version
+2.5.0, and the `version` attribute of its label and index examples is 2.5.0.
+That is what the labels and indexes carry.
+
 ## What Aurora LTFS reads and writes
 
 Aurora LTFS reads volumes of any format version from 1.0 to 2.x and writes
