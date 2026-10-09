@@ -110,7 +110,6 @@ cannot collide by construction.
     backport that is already defined on the trunk (--trunk, default
     origin/main). CI runs this check on pull requests into release branches.
 
-See GitHub issue #46 for the background discussion.
 
 
 Component codes

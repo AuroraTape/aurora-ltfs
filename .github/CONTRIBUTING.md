@@ -7,7 +7,7 @@ Before making a change, please discuss it through GitHub Issues:
 - For bug fixes, comment on the existing issue or create a new one describing the bug.
 - For new features or enhancements, open a new issue to discuss your proposal before starting work.
 
-Please note we have a [coding style guide](../docs/CODING_STYLE.md), please follow it in all your interactions with the project.
+Please note we have a [coding style guide](../docs/developer/CODING_STYLE.md), please follow it in all your interactions with the project.
 
 ## How to contribute
 
@@ -30,13 +30,13 @@ Please note we have a [coding style guide](../docs/CODING_STYLE.md), please foll
 
 ## AI Usage
 
-This project welcomes the use of AI tools. Please read our [AI Policy](../docs/AI_POLICY.md) before contributing. In short:
+This project welcomes the use of AI tools. Please read our [AI Policy](../docs/developer/AI_POLICY.md) before contributing. In short:
 
 - Disclose any AI tool usage in your pull request.
 - You must fully understand all code you submit — be prepared to explain it without AI assistance.
 
 ## Tips for a successful pull request
 
-* Follow our [coding style guide](../docs/CODING_STYLE.md).
+* Follow our [coding style guide](../docs/developer/CODING_STYLE.md).
 * Write a good commit message.
 * Reference the related issue in your pull request description.

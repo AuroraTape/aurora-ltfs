@@ -8,7 +8,7 @@ Aurora LTFS is a filesystem implementation that allows mounting LTFS-formatted t
 
 This project is based on the reference implementation of the LTFS format specifications from SNIA, targeting the [LTFS Format Specification 2.5.1](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf).
 
-See [AI_POLICY.md](docs/AI_POLICY.md) for the project's AI usage policy.
+See [AI_POLICY.md](docs/developer/AI_POLICY.md) for the project's AI usage policy.
 
 ## AI Agent Files
 
@@ -119,7 +119,7 @@ make distclean
 # Project Structure
 - `contrib`:               Contribution code that is not a part of the project but is variable for this project
 - `conf`:                  System configuration files (rsyslog, syslog-ng, systemd)
-- `docs`:                  Project documentation (coding style guide)
+- `docs`:                  Documentation by reader: `docs/developer` (building, coding style, AI policy), `docs/project` (governance, release process); index in `docs/README.md`
 - `examples`:              Example and sample configuration files
 - `init.d`:                Service script for init
 - `man`:                   man pages for the commands provided by the project

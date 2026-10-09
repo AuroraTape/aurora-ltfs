@@ -65,7 +65,7 @@ CI verifies that all Tier 2 platforms (Ubuntu 26.04, Rocky Linux 10, macOS, Debi
 
 Tier 2 and Tier 3 platforms may be promoted or added based on community demand and contributor availability.
 
-**Support window:** a minor release line (`X.Y`) receives fixes on its `release/X.Y` branch until six months after the next minor release. How releases are made is described in [docs/RELEASE.md](docs/RELEASE.md).
+**Support window:** a minor release line (`X.Y`) receives fixes on its `release/X.Y` branch until six months after the next minor release. How releases are made is described in [docs/project/RELEASE.md](docs/project/RELEASE.md).
 
 ## Supported Tape Drives
 
@@ -95,7 +95,7 @@ Status:
 
 - **Maintained** - the maintainers develop and test with this drive. Today that is the IBM LTO5 only.
 - **Inherited** - listed as supported, with this minimum firmware level, by the reference implementation Aurora LTFS is based on, and handled by the same code. Not re-verified with Aurora LTFS, because the maintainers do not have the drive.
-- **Community verified (version)** - a community member verified the drive on real hardware with that Aurora LTFS version. HP LTO6 was verified through [#49](https://github.com/AuroraTape/aurora-ltfs/pull/49) and [#50](https://github.com/AuroraTape/aurora-ltfs/pull/50). The firmware level of the reporting drive is not a tested minimum, so the column stays "Not determined".
+- **Community verified (version)** - a community member verified the drive on real hardware with that Aurora LTFS version. HP LTO6 was verified this way. The firmware level of the reporting drive is not a tested minimum, so the column stays "Not determined".
 - **Untested** - the drive is recognized and its code path exists, but no minimum firmware level was ever established and nobody has reported a result with Aurora LTFS. It may work, work with limitations, or fail.
 
 ### Drive testing policy
@@ -135,9 +135,11 @@ Interoperability: the LTFS reference implementation and the products built on it
 
 # Installing packages
 
-Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their GitHub Release. The package is `altfs` on Ubuntu and `aurora-ltfs` on Rocky Linux / RHEL.
+Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms, and from a Homebrew tap for macOS. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), which also carries the packages of every release. To build from source instead, see [docs/developer/BUILDING.md](docs/developer/BUILDING.md).
 
-Ubuntu 24.04 (check that `gpg --show-keys` prints the fingerprint above before installing the key):
+## Ubuntu 24.04
+
+Check that `gpg --show-keys` prints the fingerprint above before installing the key:
 
 ```
 # curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.gpg -o /tmp/aurora-ltfs.gpg
@@ -148,14 +150,20 @@ Ubuntu 24.04 (check that `gpg --show-keys` prints the fingerprint above before i
 # apt install altfs
 ```
 
-Rocky Linux 9 / RHEL 9 (dnf shows the fingerprint when it imports the key; compare it before answering yes):
+## Rocky Linux 9 / RHEL 9
+
+dnf shows the fingerprint when it imports the key; compare it before answering yes:
 
 ```
 # curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.repo -o /etc/yum.repos.d/aurora-ltfs.repo
 # dnf install aurora-ltfs
 ```
 
-macOS, through the Homebrew tap [AuroraTape/homebrew-tap](https://github.com/AuroraTape/homebrew-tap); macFUSE comes first, as a cask:
+The Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)).
+
+## macOS
+
+Through the Homebrew tap [AuroraTape/homebrew-tap](https://github.com/AuroraTape/homebrew-tap); macFUSE comes first, as a cask:
 
 ```
 $ brew install --cask macfuse
@@ -164,7 +172,79 @@ $ brew install auroratape/tap/aurora-ltfs
 
 Apple silicon gets a pre-built bottle (Homebrew in its default prefix, `/opt/homebrew`); Intel Macs build from source. macOS is a Tier 2 platform: the formula is built and tested on CI without mounting, and mounting needs macFUSE set up as described [below](#macos-mounting-without-the-kernel-extension-fskit-experimental) or with its kernel extension allowed.
 
-Updates then come with `apt upgrade` / `dnf upgrade` / `brew upgrade`. On RHEL-likes the Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)). When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself. The packages are also attached to every [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), and a container image is described under [Running with Docker](#running-with-docker).
+## Container image
+
+Release images are published to GHCR for x86_64. Images are tagged
+`X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
+version you run never changes behind your back. Pick one explicitly: `X.Y`
+follows the newest patch release of that line, `X.Y.Z` never moves.
+
+```
+# docker pull ghcr.io/auroratape/aurora-ltfs:1.0
+```
+
+The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
+`altfsck` and `altfsindextool`. Tape access needs the SCSI generic device
+passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
+
+```
+# List drives
+docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0 \
+  altfs -o device_list
+
+# Format a tape
+docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0 \
+  mkaltfs -d /dev/sg0
+
+# Mount a tape (foreground; Ctrl-C unmounts)
+docker run --rm -it \
+  --device /dev/fuse --device /dev/sg0 \
+  --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
+  ghcr.io/auroratape/aurora-ltfs:1.0 \
+  altfs -f -o devname=/dev/sg0 /ltfs
+```
+
+To make the mounted filesystem visible on the host instead of only inside
+the container, bind-mount a host directory with shared propagation and
+mount onto it: add `-v /mnt/ltfs:/ltfs:rshared` (the host path must be on a
+mount with shared propagation).
+
+## Updates
+
+Updates come with `apt upgrade` / `dnf upgrade` / `brew upgrade`. The apt and dnf repositories carry every release line, so an upgrade moves to the newest release, also to a new minor version. To stay on a line, e.g. 1.0.x:
+
+- apt: create `/etc/apt/preferences.d/aurora-ltfs` with
+
+  ```
+  Package: altfs libaltfs0 libaltfs-dev
+  Pin: version 1.0.*
+  Pin-Priority: 990
+  ```
+
+  New installs and upgrades then take the newest 1.0.x; a newer version that is already installed is not downgraded.
+- dnf: add `includepkgs=aurora-ltfs-1.0.* libaltfs-1.0.* libaltfs-devel-1.0.*` to `/etc/yum.repos.d/aurora-ltfs.repo`. The repository then offers 1.0.x only.
+- Homebrew: the tap carries only the newest release; `brew pin aurora-ltfs` keeps the installed version.
+
+When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself.
+
+## Uninstalling
+
+```
+# apt remove altfs libaltfs0
+# rm /etc/apt/sources.list.d/aurora-ltfs.sources /etc/apt/keyrings/aurora-ltfs.gpg
+```
+
+```
+# dnf remove aurora-ltfs libaltfs
+# rm /etc/yum.repos.d/aurora-ltfs.repo
+```
+
+```
+$ brew uninstall aurora-ltfs
+$ brew untap auroratape/tap
+```
+
+The `altfs` user that the deb / rpm packages create for the mount service stays.
 
 # Quick Start
 
@@ -215,7 +295,7 @@ The unmount command triggers the altfs process to write metadata and close the t
 
 Messages of `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` go to syslog. With the deb / rpm packages and rsyslog they are written to `/var/log/altfs.log` (RFC 3339 timestamps, rotated by logrotate) instead of the system log; see [conf/README.md](conf/README.md), which also has a syslog-ng example.
 
-On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. When building from source with a prefix other than `/usr`, register the unit yourself: `systemctl enable --now <prefix>/lib/systemd/system/altfs.service`.
+On Linux the deb / rpm packages install and enable `altfs.service`, which unmounts every mounted LTFS volume this way at shutdown or reboot and waits for the indexes to be written. It does nothing while the system is running, and a package upgrade never stops it. A build from source installs it too; see [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for registering it.
 
 ## Mounting as a service (Linux)
 
@@ -255,10 +335,9 @@ By default macFUSE mounts through its kernel extension, which on Apple silicon h
 ```
 
 - Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
-- Use a build that includes the fix for [#180](https://github.com/AuroraTape/aurora-ltfs/issues/180). Earlier builds silently lose data written through FSKit.
+- Use version 1.0.2 or later. Earlier versions silently lose data written through FSKit: a write request larger than a tape block lost its tail.
 - Intel Macs: with macFUSE 5.4.0 the FSKit backend does not mount there. It crashes inside macFUSE when the file system binary is unsigned ([macfuse/macfuse#1205](https://github.com/macfuse/macfuse/issues/1205), fixed for macFUSE 5.5.0), and even with an ad-hoc signed binary the volume did not come up in our tests. Use the kernel extension there; on Intel it needs no security change.
 - If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
-- The evaluation is tracked in [#142](https://github.com/AuroraTape/aurora-ltfs/issues/142).
 
 Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by running the session under `caffeinate -i` on AC power. Apple's FC driver for LSI HBAs (`AppleLSIFusionMPT`) has been seen to panic when tape I/O arrives while the system is asleep.
 
@@ -266,135 +345,17 @@ Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by r
 
 [`altfs_ordered_copy`](src/cmd/altfs_ordered_copy/altfs_ordered_copy) is a Python utility to copy files with LTFS order optimization. It requires Python 3 and a Python `xattr` module, either `pyxattr` or `xattr` (both work). The deb package depends on `python3-pyxattr | python3-xattr`. On RHEL-likes both providers live in repositories that are not enabled by default (`python3-pyxattr` in CRB, `python3-xattr` in EPEL), so the rpm only recommends them: enable one of those repositories, or `pip install pyxattr`.
 
-# Running with Docker
+# Building from source
 
-Release images are published to GHCR for x86_64. Images are tagged
-`X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
-version you run never changes behind your back. Pick one explicitly: `X.Y`
-follows the newest patch release of that line, `X.Y.Z` never moves.
+See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build dependencies, the build on Linux, macOS, FreeBSD and NetBSD, the test suites, and building the packages.
 
-```
-# docker pull ghcr.io/auroratape/aurora-ltfs:1.0
-```
+# Documentation
 
-The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
-`altfsck` and `altfsindextool`. Tape access needs the SCSI generic device
-passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
+[docs/README.md](docs/README.md) is the index, grouped by reader:
 
-```
-# List drives
-docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0 \
-  altfs -o device_list
-
-# Format a tape
-docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0 \
-  mkaltfs -d /dev/sg0
-
-# Mount a tape (foreground; Ctrl-C unmounts)
-docker run --rm -it \
-  --device /dev/fuse --device /dev/sg0 \
-  --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
-  ghcr.io/auroratape/aurora-ltfs:1.0 \
-  altfs -f -o devname=/dev/sg0 /ltfs
-```
-
-To make the mounted filesystem visible on the host instead of only inside
-the container, bind-mount a host directory with shared propagation and
-mount onto it: add `-v /mnt/ltfs:/ltfs:rshared` (the host path must be on a
-mount with shared propagation).
-
-# Building from Source
-
-## Prerequisites
-
-### Linux
-
-Dev Container definitions are available for quick setup:
-
-- [Rocky Linux 9](.devcontainer/rocky9/)
-- [Ubuntu 24.04](.devcontainer/ubuntu2404/)
-
-These Dockerfiles contain the full list of required packages. You can use them directly with VS Code Dev Containers or as a reference for setting up your local environment.
-
-### macOS (Homebrew)
-
-Install the following packages via Homebrew.
-
-```
-automake autoconf libtool pkg-config macfuse ossp-uuid libxml2 icu4c gnu-sed
-```
-
-The ICU tools (`genrb`/`pkgdata`) must be the Homebrew `icu4c` ones found
-via `PATH` at configure time. A legacy `/Library/Frameworks/ICU.framework`
-(e.g. ICU 4.8 from old LTFS SDE installs) is not supported and is ignored
-by the build.
-
-### FreeBSD
-
-Install the following packages. FreeBSD 10.2 or later is required for sa(4) driver support.
-
-```
-automake autoconf libtool pkgconf gmake fusefs-libs libuuid libxml2 icu
-```
-
-### NetBSD
-
-Install the following packages. NetBSD 7.0 or later is required for FUSE support.
-
-```
-automake autoconf libtool-base pkgconf gmake fuse libuuid libxml2 icu
-```
-
-## Linux
-
-```bash
-./autogen.sh
-./configure
-make
-make install
-```
-
-`./configure --help` shows various options for build and install.
-
-In some systems, you might need `sudo ldconfig -v` after `make install` to load the shared libraries correctly.
-
-## macOS
-
-Set up the environment:
-
-```bash
-export ICU_PATH="/usr/local/opt/icu4c/bin"
-export LIBXML2_PATH="/usr/local/opt/libxml2/bin"
-export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libxml2/lib/pkgconfig"
-export PATH="$PATH:$ICU_PATH:$LIBXML2_PATH"
-```
-
-Build:
-
-```bash
-./autogen.sh
-LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure
-make
-make install
-```
-
-## FreeBSD
-
-```bash
-./autogen.sh
-./configure --prefix=/usr/local --mandir=/usr/local/man
-make
-make install
-```
-
-## NetBSD
-
-```bash
-./autogen.sh
-./configure
-make
-make install
-```
+- User: the man pages (`altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` on Linux, `altfs_ordered_copy(1)`), configuration, checking a real drive
+- Developer: [building from source](docs/developer/BUILDING.md), coding style, AI policy, message IDs, man pages
+- Project: governance, the [release process](docs/project/RELEASE.md)
 
 ## Contributing
 

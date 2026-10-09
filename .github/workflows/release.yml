@@ -232,7 +232,7 @@ jobs:
 
       # The generated notes (merged PRs since the previous tag, compare link)
       # seed the release; the maintainer replaces them with the hand-written
-      # notes described in docs/RELEASE.md.
+      # notes described in docs/project/RELEASE.md.
       - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
         with:

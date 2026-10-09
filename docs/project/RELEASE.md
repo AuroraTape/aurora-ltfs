@@ -2,7 +2,7 @@
 
 How Aurora LTFS is versioned, branched, tagged and released. It records the
 practice of the 1.0.0 and 1.0.1 releases and the rules the message ID
-scheme ([`messages/README`](../messages/README)) already assumes.
+scheme ([`messages/README`](../../messages/README)) already assumes.
 
 ## Versioning
 
@@ -117,9 +117,9 @@ tracking issue as they land, so the notes are not written from memory.
 - [ ] The README says what the release does: platform support, drive
       table, format version and interoperability, container tag examples
       (`X.Y` of the line, never a patch version that will go stale).
-- [ ] Man pages regenerated if their SGML sources changed
-      (`make man-rebuild` in `man/`, needs docbook2man).
-- [ ] For a minor release: `AGENTS.md` and the build instructions still
+- [ ] Man pages regenerated if their SGML sources changed (`make` in
+      `man/` with docbook2man installed, see `man/README.md`).
+- [ ] For a minor release: `AGENTS.md` and `docs/developer/BUILDING.md` still
       match the tree.
 - [ ] For a patch release: every `!!Backport!!` item intended for it is
       merged and the label removed.
@@ -167,7 +167,7 @@ tracking issue as they land, so the notes are not written from memory.
 ## Package repositories
 
 The final releases are served as apt and dnf repositories on the GitHub
-Pages site of this repository (#131):
+Pages site of this repository:
 
 - `apt/`: suite `noble`, component `main`, signed `InRelease` and
   `Release.gpg`; `aurora-ltfs.sources` is the deb822 entry, `aurora-ltfs.gpg`
@@ -244,7 +244,7 @@ repository metadata.
 
 ## Homebrew tap
 
-macOS is served by the tap `AuroraTape/homebrew-tap` (#131), a formula
+macOS is served by the tap `AuroraTape/homebrew-tap`, a formula
 that homebrew-core would not take because it needs macFUSE, which is closed
 source. `homebrew.yml` renders it from `.github/homebrew/aurora-ltfs.rb.in`
 for the highest final release:
