@@ -14,11 +14,14 @@
 # Syntax: -plugin PLUGIN-TYPE PLUGIN-NAME
 ###-plugin tape itdtimg
 
-# A default set in altfs.conf can be unset here, and set again.
-# Syntax: -default PLUGIN-TYPE
-#         default PLUGIN-TYPE PLUGIN-NAME
-###-default kmi
+# A default set in altfs.conf can be replaced here: the last "default" line
+# of a type wins.
+# Syntax: default PLUGIN-TYPE PLUGIN-NAME
 ###default kmi flatfile
+
+# Or unset, so that the plugin has to be named on the command line.
+# Syntax: -default PLUGIN-TYPE
+###-default iosched
 
 ################################################################################
 # Default mount options of altfs

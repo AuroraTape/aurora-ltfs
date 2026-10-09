@@ -1,6 +1,7 @@
-# Example of altfs.conf as the build generates it for Linux, installed in
-# SYSCONFDIR (/etc with the packages). The paths are those of the rpm
-# package; the deb package has /usr/lib/x86_64-linux-gnu/altfs.
+# Example of altfs.conf, modelled on what the build generates for Linux and
+# installs in SYSCONFDIR (/etc with the packages). The paths are those of the
+# rpm package; the deb package has /usr/lib/<multiarch>/altfs, for example
+# /usr/lib/x86_64-linux-gnu/altfs.
 #
 # To make configuration changes that will persist across software
 # updates, edit altfs.conf.local instead of this file.
