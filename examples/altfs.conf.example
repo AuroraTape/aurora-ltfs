@@ -1,0 +1,39 @@
+# Example of altfs.conf as the build generates it for Linux, installed in
+# SYSCONFDIR (/etc with the packages). The paths are those of the rpm
+# package; the deb package has /usr/lib/x86_64-linux-gnu/altfs.
+#
+# To make configuration changes that will persist across software
+# updates, edit altfs.conf.local instead of this file.
+
+# Tape device plugins
+# Syntax: plugin tape PLUGIN-NAME PLUGIN-PATH
+# The PLUGIN-PATH may contain spaces.
+plugin tape sg /usr/lib64/altfs/libtape-sg.so
+plugin tape file /usr/lib64/altfs/libtape-file.so
+plugin tape itdtimg /usr/lib64/altfs/libtape-itdtimg.so
+
+# I/O scheduler plugins
+# Syntax: plugin iosched PLUGIN-NAME PLUGIN-PATH
+plugin iosched unified /usr/lib64/altfs/libiosched-unified.so
+plugin iosched fcfs /usr/lib64/altfs/libiosched-fcfs.so
+
+# Key Manager Interface plugins
+# Syntax: plugin kmi PLUGIN-NAME PLUGIN-PATH
+plugin kmi flatfile /usr/lib64/altfs/libkmi-flatfile.so
+plugin kmi simple /usr/lib64/altfs/libkmi-simple.so
+
+# Default plugins
+# Syntax: default PLUGIN-TYPE PLUGIN-NAME
+# The PLUGIN-NAME must be one of those defined using a "plugin" line.
+# For a PLUGIN-TYPE of iosched or kmi, the special "none" name may be used
+# to indicate that no plugin of that type should be used by default.
+default tape sg
+default iosched unified
+default kmi none
+
+# Default mount options
+# Syntax: option single-drive MOUNT-OPTION
+
+# Include the local settings file. That file is not overwritten when a newer
+# version of Aurora LTFS is installed.
+include /etc/altfs.conf.local

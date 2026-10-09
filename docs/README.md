@@ -12,7 +12,9 @@ grouped by reader.
 - [Running a drive as a service](user/SERVICE.md) (Linux): mounting with
   `altfs@<serial>.service`, set up by `altfsctl`; access, operation, logs,
   shutdown, troubleshooting
-- Configuration
+- [Configuration](user/CONFIGURATION.md): `altfs.conf` and
+  `altfs.conf.local`, plugins and defaults, encryption keys, the mount
+  options a site usually sets, logging
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
 - [Supported tape drives](user/DRIVES.md): the drive table with the minimum

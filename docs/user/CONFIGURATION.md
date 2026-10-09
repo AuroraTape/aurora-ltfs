@@ -1,0 +1,187 @@
+# Configuration
+
+Aurora LTFS is configured in three places: the configuration file
+`altfs.conf` with its local companion `altfs.conf.local`, which name the
+plugins and can hold default mount options; the mount options of `altfs`
+given on the command line; and, for the mount service, the settings file of
+each instance. This guide says which file to edit for what. The options
+themselves are described in [altfs(8)](reference/altfs.md),
+[mkaltfs(8)](reference/mkaltfs.md) and [altfsck(8)](reference/altfsck.md).
+
+## The configuration files
+
+| Installed from | `altfs.conf` and `altfs.conf.local` |
+|:---|:---|
+| deb and rpm packages | `/etc/` |
+| Homebrew | `$(brew --prefix)/etc/` |
+| a build from source | `<prefix>/etc/` (`--sysconfdir` of `configure`) |
+
+`altfs.conf` is generated for the installation: it lists the plugins with
+their paths and names the defaults. It ends with `include altfs.conf.local`,
+and that file is where local changes go: a package upgrade and `make install`
+replace `altfs.conf`, but `altfs.conf.local` is kept. The packages install it
+as a configuration file, so `dpkg` asks before replacing a changed
+`altfs.conf` and `rpm` leaves the changed file in place and puts the new one
+beside it as `altfs.conf.rpmnew`; `make install` does not touch an existing
+`altfs.conf.local`.
+
+Every command reads the same file: `altfs` with `-o config_file=<file>`,
+`mkaltfs`, `altfsck` and `altfsindextool` with `-i <file>` (`--config`), to
+use another one.
+
+### Syntax
+
+One directive per line; `#` starts a comment.
+
+```
+plugin   TYPE NAME PATH      # register a plugin of TYPE tape, iosched or kmi
+default  TYPE NAME           # the plugin used when no option names one
+-plugin  TYPE NAME           # forget a plugin registered earlier
+-default TYPE                # forget a default set earlier
+option   single-drive OPTION # a mount option for altfs, as written after -o
+include  FILE                # read FILE here; an error if it is missing
+include_noerror FILE         # the same, but a missing FILE is fine
+```
+
+`PATH` may contain spaces. `NAME` of a `default` line has to be registered by
+a `plugin` line first, and `default iosched none` or `default kmi none` turns
+that kind of plugin off. The `-plugin` and `-default` lines exist for
+`altfs.conf.local`, which is read after the `plugin` and `default` lines of
+`altfs.conf`: they let it drop a plugin or a default without editing the
+generated file.
+
+`option` lines are read by `altfs` only. They are placed before the options
+of the command line, so an option given in both places counts from the
+command line. `mkaltfs` and `altfsck` take no options from the file.
+
+## Plugins
+
+The plugins live in `<libdir>/altfs/`. Three kinds are loaded at start:
+
+**Tape backends** drive the hardware. `altfs.conf` registers the one of the
+platform (`sg` on Linux, `iokit` on macOS, `cam` on FreeBSD,
+`scsipi-ibmtape` on NetBSD) as the default, and two that need no drive:
+`file`, which keeps the tape in a directory and is what the test suites use,
+and `itdtimg`, which reads a tape image written by IBM's ITDT. Choose another
+one with `-o tape_backend=<name>` (`altfs`) or `-e <name>` (`mkaltfs`,
+`altfsck`). What `-o devname=` means depends on the backend: a device node
+(`/dev/sg3`) or the serial number of the drive for the hardware backends,
+the directory of the emulated tape for `file` (default `/tmp/ltfs/tape`).
+`altfs -o device_list` lists the drives the default backend sees.
+
+The hardware backends take a few options of their own: `-o autodump` /
+`-o noautodump` (a drive dump is saved when the drive reports an error; the
+default is on) and `-o scsi_lbprotect=on|off`
+(logical block protection, off by default). The `file` backend has
+`-o emulate_delays`, `-o file_readonly` and `-o file_p0_warning=<num>` /
+`-o file_p1_warning=<num>`, which move the early-warning position of a
+partition. `altfs -h` with `-o tape_backend=` set prints the options of that
+backend.
+
+**I/O schedulers** collect the writes of the applications into tape blocks.
+`unified` is the default and the one to use; `fcfs` is a first-come,
+first-served sample. `-o iosched_backend=none` writes without a scheduler.
+
+**Key managers** (KMI) hold the encryption keys, see the next section. The
+default is `none`.
+
+## Encryption keys
+
+A drive that encrypts needs a data key (DK) and a data key identifier (DKi).
+In the format Aurora LTFS uses, the DK is 32 bytes written in Base64 (44
+characters) and the DKi is 12 bytes written as 3 ASCII characters followed by
+the remaining 9 bytes in hexadecimal (21 characters). Two KMI plugins supply
+them:
+
+- `simple` takes the keys from the options: `-o kmi_dk=<DK>` and
+  `-o kmi_dki=<DKi>` for mounting, `-o kmi_dk_for_format=<DK>` and
+  `-o kmi_dki_for_format=<DKi>` for formatting, or several pairs as
+  `-o kmi_dk_list=<DK>:<DKi>/<DK>:<DKi>/...`. The keys appear in the
+  process list and in the shell history.
+- `flatfile` reads the pairs from a file given with `-o kmi_dk_list=<file>`,
+  two lines per pair:
+
+  ```
+  DK=<44 characters>
+  DKi=<21 characters>
+  ```
+
+  The file is plain text: keep it readable by root, or by the `altfs` user
+  for the mount service, and nobody else. `-o kmi_dki_for_format=<DKi>`
+  picks the pair that `mkaltfs` formats with.
+
+Select the plugin with `-o kmi_backend=simple|flatfile` (`altfs`) or
+`--kmi-backend=` (`mkaltfs`, `altfsck`), or make it the default with
+`default kmi flatfile` in `altfs.conf.local`. The KMI options go on the
+command line of each command, or in `option single-drive` lines for `altfs`.
+
+## Mount options to know about
+
+All options of `altfs` are in [altfs(8)](reference/altfs.md). These are the
+ones that a site usually sets, in `altfs.conf.local` for every mount:
+
+```
+option single-drive sync_type=time@5
+option single-drive eject
+```
+
+- `-o sync_type=time@<min>|close|unmount` (default `time@5`): when the
+  index is written during operation. `time@<min>` every `<min>` minutes,
+  `close` whenever a file is closed, `unmount` only at unmount. The index is
+  what survives a failure; a longer interval means more to lose.
+- `-o full_index_interval=<num>` (default `-1`): whether these syncs write
+  incremental or full indexes. `0` writes full indexes only, for a tape that
+  another LTFS implementation will read after a failure. See
+  [LTFS format versions](FORMAT.md).
+- `-o rules=size=<size>[/name=<pattern>[:<pattern>...]]`: small files to
+  keep on the index partition as well, where they can be read without
+  positioning the data partition. `mkaltfs -r` records a rule on the volume
+  at format time; the mount option replaces it for that mount, unless the
+  volume was formatted with `--no-override`.
+- `-o capture_index=<dir>`: a copy of every index written goes to that
+  directory, named after the barcode (or volume UUID), generation and
+  partition. It is what `-o index_file=` mounts without a tape.
+- `-o eject`: eject the cartridge after the unmount.
+- `-o uid=<n>`, `-o gid=<n>`, `-o umask=<mode>` (also `fmask` and `dmask`
+  for files and directories apart): the owner and permissions shown for
+  every file. LTFS records none, so without them everything belongs to the
+  mounting user and is `0777`.
+- `-o symlink_type=posix|live`: `live` rewrites the mount point prefix of a
+  symbolic link target to the current mount point.
+- `-o wait_medium[=<sec>]`: wait for the drive and for a cartridge instead
+  of failing; the mount service sets it.
+- `-o work_directory=<dir>` (default `/tmp/ltfs`): where drive dumps and
+  the profiler data go.
+- `-o min_pool_size=<n>`, `-o max_pool_size=<n>` (default 25 and 50, in 1 MB
+  objects): the write cache.
+
+`mkaltfs` sets what the volume is: `-b` block size, `-s` tape serial
+(barcode), `-n` volume name, `-r` rules, `-c` no compression. These are
+recorded on the tape and not configured anywhere.
+
+## Logging
+
+The commands log to syslog as `altfs`, `mkaltfs`, `altfsck` and
+`altfsindextool` with the facility `user`, and to their standard error.
+`-o verbose=<num>` sets the levels: 0 errors, 1 warnings, 2 informational
+(the default), 3 diagnostic, 4 full tracing. A number below 100 sets the
+level of the standard error and syslog gets the same messages up to the
+informational ones; `<syslog level> * 100 + <stderr level>` sets the two
+apart, as in `-o verbose=200` (informational to syslog, errors only to the
+terminal). The shorthands are `-o quiet` (1), `-o trace` (3),
+`-o syslogtrace` (303) and `-o fulltrace` (4); `mkaltfs` and `altfsck` have
+`-q`, `-t`, `--syslogtrace` and `-x` for the same.
+
+With the deb and rpm packages and rsyslog, the messages go to
+`/var/log/altfs.log` with RFC 3339 timestamps, rotated by logrotate, and are
+kept out of the system log; without rsyslog they are in the journal or the
+system log. The rule and the logrotate settings, and an example for
+syslog-ng, are in [conf/README.md](../../conf/README.md).
+
+## The mount service
+
+`altfs@<serial>.service` keeps its settings in `/etc/altfs/<serial>.conf`,
+written by `altfsctl`: the mount point and the options of that instance. It
+reads `altfs.conf` like any other mount, so `option` lines in
+`altfs.conf.local` apply to the instances too. See
+[Running a drive as a service](SERVICE.md).

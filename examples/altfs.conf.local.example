@@ -1,0 +1,45 @@
+#
+# Example of altfs.conf.local, the local configuration file of Aurora LTFS
+#
+# altfs.conf includes this file. Directives placed here are kept across
+# software updates.
+#
+# Lines that begin with "##" show default settings.
+# Lines that begin with "###" show example settings.
+
+################################################################################
+# Plugins
+
+# A plugin registered in altfs.conf can be forgotten here.
+# Syntax: -plugin PLUGIN-TYPE PLUGIN-NAME
+###-plugin tape itdtimg
+
+# A default set in altfs.conf can be unset here, and set again.
+# Syntax: -default PLUGIN-TYPE
+#         default PLUGIN-TYPE PLUGIN-NAME
+###-default kmi
+###default kmi flatfile
+
+################################################################################
+# Default mount options of altfs
+# Syntax: option single-drive MOUNT-OPTION
+
+# Sync the index of a mounted cartridge every 5 minutes. The interval of
+# this sync type is in minutes.
+##option single-drive sync_type=time@5
+
+# Sync the index of a cartridge when a file in the cartridge is closed
+###option single-drive sync_type=close
+
+# Sync the index of a cartridge only when the cartridge is unmounted
+###option single-drive sync_type=unmount
+
+# Write full indexes only, for tapes that other LTFS implementations will
+# read after a failure
+###option single-drive full_index_interval=0
+
+# Eject the cartridge after the unmount
+###option single-drive eject
+
+# Keep a copy of every index written
+###option single-drive capture_index=/srv/catalog
