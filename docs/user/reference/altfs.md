@@ -174,7 +174,7 @@ Disable informational messages (same as verbose=1)
 Enable diagnostic output to stderr and syslog(same as verbose=303)
 
 **-o fulltrace**  
-Enable full call tracing (same as verbose=4)
+Enable full call tracing (same as verbose=7)
 
 **-o verbose=** *num*  
 Override output verbosity directly (default: 2). A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: verbose=200 sends informational messages to syslog and errors only to the standard error output.

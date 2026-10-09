@@ -427,7 +427,7 @@
         <varlistentry>
           <term><option>-o fulltrace</option></term>
           <listitem>
-            <para>Enable full call tracing (same as verbose=4)</para>
+            <para>Enable full call tracing (same as verbose=7)</para>
           </listitem>
         </varlistentry>
         <varlistentry>
