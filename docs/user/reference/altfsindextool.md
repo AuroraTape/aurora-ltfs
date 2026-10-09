@@ -63,4 +63,4 @@ Show help information
 
 ## SEE ALSO
 
-altfs(8), mkaltfs(8), altfsck(8), tape-backend(4), kmi-backend(4), altfs.conf(5).
+altfs(8), mkaltfs(8), altfsck(8).

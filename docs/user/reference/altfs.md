@@ -190,4 +190,4 @@ Set the tape device append-only mode (default=on)
 
 ## SEE ALSO
 
-mkaltfs(8), altfsck(8), mount.fuse(8), fusermount(1), tape-backend(4), kmi-backend(4), altfs.conf(5).
+mkaltfs(8), altfsck(8), mount.fuse(8), fusermount(1).

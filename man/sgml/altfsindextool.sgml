@@ -145,7 +145,7 @@
 
     <refsect1>
       <title>SEE ALSO</title>
-      <para>altfs(8), mkaltfs(8), altfsck(8), tape-backend(4), kmi-backend(4), altfs.conf(5).</para>
+      <para>altfs(8), mkaltfs(8), altfsck(8).</para>
     </refsect1>
 
   </refentry>
