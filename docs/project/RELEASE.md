@@ -32,9 +32,9 @@ scheme ([`messages/README`](../../messages/README)) already assumes.
   commits (see [GOVERNANCE.md](GOVERNANCE.md)). Backports are the only
   changes they receive; a fix is never developed on a release branch first.
 - Support window: a minor line receives fixes until six months after the
-  next minor is released, the transition period the platform support policy
-  in the README also uses. After that, its release branch stays in the
-  repository and gets no further tags.
+  next minor is released, the transition period of the
+  [platform support policy](PLATFORM_SUPPORT.md). After that, its release
+  branch stays in the repository and gets no further tags.
 
 ## Backports
 
