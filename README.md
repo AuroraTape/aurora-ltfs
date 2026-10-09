@@ -299,7 +299,7 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 
 ## Mounting as a service (Linux)
 
-A mount started from a login shell is part of the login session, and systemd stops sessions with a short timeout at shutdown (5 s for a desktop terminal on Ubuntu), which can kill `altfs` before the index is on the tape. For a drive that should be mounted all the time, or at boot, run the mount as a service instead: `altfs@<serial>.service` runs `altfs` as the unprivileged user `altfs` (created by the packages, ID 5432 when free) with its own stop timeout, and waits for the drive and for a cartridge when they are not ready, for example at boot. `altfsctl` sets it up:
+A mount started from a login shell is stopped with the login session at shutdown, with a timeout too short for the index write. For a drive that should be mounted all the time, or at boot, run the mount as a service instead: `altfs@<serial>.service` runs `altfs` as the unprivileged user `altfs`, with its own stop timeout, and waits for the drive and for a cartridge when they are not ready. `altfsctl` sets it up:
 
 ```
 # altfsctl check 9A700L0077
@@ -307,7 +307,7 @@ A mount started from a login shell is part of the login session, and systemd sto
 # systemctl start altfs@9A700L0077.service
 ```
 
-`altfsctl check` tells you what is missing. Other users can only see the volume when `/etc/fuse.conf` contains `user_allow_other`, which lets every local user make such mounts; `altfsctl` adds it only with `--fix-fuse-conf`. LTFS stores no owners or permissions: without `--gid` / `--umask` every local user can read and write the volume. Stop the service with `systemctl stop`, which writes the index and unmounts. See `altfsctl(8)`.
+[docs/user/SERVICE.md](docs/user/SERVICE.md) walks through the setup, who can access the volume, day-to-day operation, the logs and troubleshooting.
 
 ## Browsing a tape without the tape
 
@@ -353,7 +353,7 @@ See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build depen
 
 [docs/README.md](docs/README.md) is the index, grouped by reader:
 
-- User: the [command reference](docs/user/reference/README.md) (the man pages), configuration, checking a real drive
+- User: the [command reference](docs/user/reference/README.md) (the man pages), [running a drive as a service](docs/user/SERVICE.md), configuration, checking a real drive
 - Developer: [building from source](docs/developer/BUILDING.md), coding style, AI policy, message IDs, man pages
 - Project: governance, the [release process](docs/project/RELEASE.md)
 

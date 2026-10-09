@@ -9,6 +9,9 @@ grouped by reader.
 - [Command reference](user/reference/README.md): the man pages of
   `altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)`
   (Linux only) and `altfs_ordered_copy(1)`, also installed with the commands
+- [Running a drive as a service](user/SERVICE.md) (Linux): mounting with
+  `altfs@<serial>.service`, set up by `altfsctl`; access, operation, logs,
+  shutdown, troubleshooting
 - Configuration
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
