@@ -15,8 +15,13 @@ grouped by reader.
 - Configuration
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
+- [Supported tape drives](user/DRIVES.md): the drive table with the minimum
+  firmware levels, the testing policy, how to report a drive
 - [tests/realdrive/README.md](../tests/realdrive/README.md): checking a real
   tape drive, and what to send when reporting one
+- [LTFS format versions](user/FORMAT.md): the specification versions, what
+  Aurora LTFS reads and writes, incremental indexes, interoperability with
+  other implementations
 
 ## Developer
 
@@ -33,6 +38,8 @@ grouped by reader.
 ## Project
 
 - [Governance](project/GOVERNANCE.md): roles and decisions
+- [Platform support](project/PLATFORM_SUPPORT.md): the tiers, what the CI
+  verifies on each platform, the Tier 1 selection policy, the support window
 - [Release process](project/RELEASE.md): versioning, branches, backports,
   the release checklist, the package repositories and the Homebrew tap,
   branch protection
