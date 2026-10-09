@@ -83,7 +83,8 @@ instance can start.
 - creates the mount point and gives it to the user `altfs`. The path has to be
   absolute. An existing directory is used only when it is empty, not mounted,
   and already belongs to `altfs`: `altfsctl` does not take over a directory
-  such as `/mnt`. To use one you made, `chown altfs:altfs` it first;
+  such as `/mnt`. To use one you made, `chown altfs:altfs` it first. A
+  symbolic link is refused: give the real path;
 - writes `/etc/altfs/9A700L0077.conf` with `MOUNTPOINT=` and `OPTIONS=`,
   the options the instance passes to `altfs`;
 - with `--enable`, enables the instance so that it starts at boot.
@@ -126,8 +127,10 @@ LTFS stores no owners and no permissions. The volume shows every file with the
 owner and the permissions `altfs` was told to use at mount time, for everybody,
 and three settings decide who gets in.
 
-**`user_allow_other` in `/etc/fuse.conf`.** Without it, only the user `altfs`
-can see the volume at all, which is useless; `altfsctl check` fails on it.
+**`user_allow_other` in `/etc/fuse.conf`.** The instance always mounts with
+`allow_other`, and `fusermount` refuses that option to the non-root user
+`altfs` unless the line is set: without it the volume cannot be mounted at
+all, and `altfsctl check` fails on it.
 The line applies to the whole host: it allows every local user to create FUSE
 mounts with `allow_other`, not just this service. That is why `altfsctl` does
 not add it by itself. Add it by hand, or let `altfsctl` do it with
@@ -221,14 +224,16 @@ The unit starts `altfs` with `-o verbose=200`: informational messages to
 syslog (level 2), errors only to standard error (level 0). For debugging,
 `-o verbose=300` sends the diagnostic messages to syslog as well, and
 `-o verbose=303` to both. The option goes in with the others of the
-instance, where it overrides the unit's:
+instance, where it overrides the unit's: either add it to `OPTIONS=` in
+`/etc/altfs/9A700L0077.conf` and restart the instance, or stop the instance
+and set it up again with `--force`, giving all its options again (`--force`
+replaces them all, and is refused while the volume is mounted):
 
 ```
-# altfsctl add --force -o verbose=300 ... 9A700L0077 /mnt/ltfs
-```
-
-or edit `OPTIONS=` in `/etc/altfs/9A700L0077.conf`, then restart the
-instance. How the syslog rule and logrotate are set up is in
+# systemctl stop altfs@9A700L0077.service
+# altfsctl add --force --gid tapeusers --umask 007 -o verbose=300 9A700L0077 /mnt/ltfs
+# systemctl start altfs@9A700L0077.service
+``` How the syslog rule and logrotate are set up is in
 [conf/README.md](../../conf/README.md), with an example for syslog-ng.
 
 ## Shutdown and reboot
@@ -245,13 +250,16 @@ without a full consistency check.
 
 ## Customising the instance
 
-- Mount options go through `altfsctl add -o` (or `--force` to change them),
+- Mount options go through `altfsctl add -o` (`--force` replaces the
+  settings of a stopped instance),
   or directly in `OPTIONS=` of `/etc/altfs/<serial>.conf`, as `-o name=value`
   pairs. The unit passes them to `altfs` after its own options, so `-o
   verbose=` and others override the defaults of the unit.
 - `DEVICE=` in the same file, written by `altfsctl add --device`, makes the
   instance open that device instead of looking the drive up by its serial,
-  for example a path of your own under `/dev/tape/by-id/`.
+  for example a symlink of your own to the drive's `/dev/sgN`, made with a
+  udev rule. The links udev makes under `/dev/tape/by-id/` point to the `st`
+  devices, which the instance cannot use.
 - Everything else about the unit (`Restart=`, the stop timeout, dependencies)
   is a drop-in made with `systemctl edit altfs@<serial>.service`, or
   `systemctl edit altfs@.service` for all instances. Do not edit the unit
@@ -277,16 +285,17 @@ user is not created. After a build from source, create it with
 `systemd-sysusers <prefix>/lib/sysusers.d/altfs.conf`.
 
 **The instance starts but nothing is mounted.** Look at the log. AFS0141I
-means it is waiting for a cartridge; an error shows which command failed. The
-tape commands need `CAP_SYS_RAWIO`, which the unit gives the instance; a copy
-of the unit without `AmbientCapabilities=` makes the kernel's sg command
-filter reject most of them (REWIND, LOCATE, READ POSITION, ...), even for a
-member of the group `tape`.
+means it is waiting for a cartridge; an error shows which command failed. An
+error from `fusermount` about `user_allow_other` means the line has gone from
+`/etc/fuse.conf` since the setup. The tape commands need `CAP_SYS_RAWIO`,
+which the unit gives the instance; a copy of the unit without
+`AmbientCapabilities=` makes the kernel's sg command filter reject most of
+them (REWIND, LOCATE, READ POSITION, ...), even for a member of the group
+`tape`.
 
-**Other users cannot see the volume.** `user_allow_other` is missing from
-`/etc/fuse.conf`, or they are not in the group given with `--gid` and the
-umask shuts them out. `ls -ld /mnt/ltfs` shows the owner, group and
-permissions the volume is mounted with.
+**Other users cannot see the volume.** They are not in the group given with
+`--gid`, and the umask shuts them out. `ls -ld /mnt/ltfs` shows the owner,
+group and permissions the volume is mounted with.
 
 **The instance will not start.** `systemctl status` shows the last lines of
 the log and the exit status. A mount point that has gone missing or is
