@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     uuid-dev \
     icu-devtools \
-    docbook-utils
+    docbook-utils \
+    pandoc
 
 # Install development and debugging tools
 RUN apt-get install -y \

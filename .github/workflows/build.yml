@@ -329,6 +329,44 @@ jobs:
             python3 validate_error_messages.py
           fi
 
+  # The man pages are generated from man/sgml and the Markdown command
+  # reference from the man pages; both are committed. Regenerate them and
+  # fail when the committed files differ (the date in .TH aside), so that a
+  # change to the SGML cannot leave either behind.
+  man-pages:
+    name: Man pages and command reference
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    steps:
+      - name: Install docbook2man and pandoc
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            docbook-utils pandoc git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - name: Regenerate
+        run: |
+          cd man
+          # From scratch: a page whose SGML source is gone shows up as deleted
+          rm -f ./*.8 ./*.1
+          for sgml in sgml/*.sgml; do
+            docbook2man "$sgml" > /dev/null
+          done
+          rm -f manpage.*
+          cd ..
+          man/make-markdown.sh
+
+      - name: Compare with the committed files
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git add -A man docs/user/reference
+          if ! git diff --cached --exit-code -I '^\.TH ' -- man docs/user/reference; then
+            echo "::error::Regenerate the man pages (docbook2man, see man/README.md) and the command reference (man/make-markdown.sh) and commit them"
+            exit 1
+          fi
+
   # Per-language LOC table in the job summary (issue #45). tokei.rs (the
   # badge service) is unreliable, so the README carries a code-size badge
   # instead and the detailed numbers live here.

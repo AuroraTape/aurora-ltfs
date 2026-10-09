@@ -353,7 +353,7 @@ See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build depen
 
 [docs/README.md](docs/README.md) is the index, grouped by reader:
 
-- User: the man pages (`altfs(8)`, `mkaltfs(8)`, `altfsck(8)`, `altfsindextool(8)`, `altfsctl(8)` on Linux, `altfs_ordered_copy(1)`), configuration, checking a real drive
+- User: the [command reference](docs/user/reference/README.md) (the man pages), configuration, checking a real drive
 - Developer: [building from source](docs/developer/BUILDING.md), coding style, AI policy, message IDs, man pages
 - Project: governance, the [release process](docs/project/RELEASE.md)
 
