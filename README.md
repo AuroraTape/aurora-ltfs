@@ -56,11 +56,11 @@ A minor release line (`X.Y`) receives fixes until six months after the next mino
 
 ## Supported Tape Drives
 
-The maintainers develop and test with an IBM LTO5. IBM LTO6 to LTO9 and TS1140 to TS1160 are handled by the same code and listed as supported by the reference implementation, but not re-verified with Aurora LTFS; HP and Quantum LTO5 to LTO9 drives are recognized but untested, except HP LTO6, verified by a community member. The drive table with the minimum firmware levels, the testing policy and how to report a drive: [docs/user/DRIVES.md](docs/user/DRIVES.md). Hardware donations are welcome.
+The maintainers develop and test with an IBM LTO5. IBM LTO6 to LTO9 and TS1140 to TS1160 are handled by the same code and listed as supported by the reference implementation, but not re-verified with Aurora LTFS; HP LTO5 to LTO9 and Quantum LTO5 to LTO9 (half height) drives are recognized but untested, except HP LTO6, verified by a community member. The drive table with the minimum firmware levels, the testing policy and how to report a drive: [docs/user/DRIVES.md](docs/user/DRIVES.md). Hardware donations are welcome.
 
 ## LTFS Format Specifications
 
-Aurora LTFS targets the [LTFS Format Specification 2.5.1](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf) (ISO/IEC 20919:2021). It reads volumes of any format version from 1.0 to 2.x and writes labels and indexes at version 2.5.0, which the other LTFS implementations mount. The specification versions, incremental indexes and interoperability with other implementations: [docs/user/FORMAT.md](docs/user/FORMAT.md).
+Aurora LTFS reads volumes of any format version from 1.0 to 2.x and writes labels and indexes at version 2.5.0. The reference implementation and the products built on it mount such a volume after a clean unmount, with a warning that the index is newer than the software; after a failure they cannot use its incremental indexes, which only `altfsck` replays. The specification versions, incremental indexes and interoperability with other implementations: [docs/user/FORMAT.md](docs/user/FORMAT.md).
 
 # Installing packages
 
