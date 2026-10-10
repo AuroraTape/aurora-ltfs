@@ -37,6 +37,13 @@ grouped by reader.
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
 
+### Design
+
+- [Backend interfaces](developer/design/BACKENDS.md): the four plugin
+  tables (tape backend, I/O scheduler, dentry cache, key manager), how a
+  plugin is loaded, what each operation must do, what the dispatch layers
+  in libaltfs add around them, the existing implementations
+
 ## Project
 
 - [Governance](project/GOVERNANCE.md): roles and decisions
