@@ -37,22 +37,22 @@ grouped by reader.
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
 - Design documents, in `developer/design/`: how libaltfs is built and why,
-  for a reader who is about to change it. The backend interfaces, error
-  handling, and:
+  for a reader who is about to change it:
   - [Components and layers](developer/design/COMPONENTS.md): how a file
     system call reaches the tape, the volume, index and dentry structures
     and their locks, where the index is read and written, the plugins
+  - [Backend interfaces](developer/design/BACKENDS.md): the four plugin
+    tables (tape backend, I/O scheduler, dentry cache, key manager), how a
+    plugin is loaded, what each operation must do, what the dispatch layers
+    in libaltfs add around them, the existing implementations
+  - [Error handling](developer/design/ERROR_HANDLING.md): the `LTFS_*` and
+    `EDEV_*` code spaces and their `AEI`/`AED` message IDs, who logs what,
+    retries and revalidation, the mapping to errno, the conditions that make
+    a volume read-only, adding a code
   - [Path failover and revalidation](developer/design/REVALIDATION.md): what
     happens when the path to the drive is lost or the drive reports that the
     cartridge may have changed; reservations and the medium lock; what the
     user sees and what is tested
-
-### Design
-
-- [Backend interfaces](developer/design/BACKENDS.md): the four plugin
-  tables (tape backend, I/O scheduler, dentry cache, key manager), how a
-  plugin is loaded, what each operation must do, what the dispatch layers
-  in libaltfs add around them, the existing implementations
 
 ## Project
 
