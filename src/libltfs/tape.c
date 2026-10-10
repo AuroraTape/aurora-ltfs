@@ -108,6 +108,24 @@ extern bool ltfs_is_interrupted(void);
 	}while (0)
 
 /**
+ * Note that a command that needs a ready medium has just succeeded. The medium is
+ * there, so tape_test_unit_ready() skips the TEST UNIT READY for the next second.
+ */
+static void _tape_medium_seen(struct device_data *dev)
+{
+	get_current_timespec(&dev->previous_exist);
+}
+
+/**
+ * Forget the cached remaining capacity: the next tape_get_capacity() asks the drive.
+ */
+static void _tape_capacity_forget(struct device_data *dev)
+{
+	dev->capacity_valid = false;
+	dev->capacity_written = 0;
+}
+
+/**
  * Allocate space for a tape device.
  * @param device on success, points to allocated device structure
  * @return 0 on success or a negative value on failure.
@@ -303,6 +321,7 @@ void _tape_device_close(struct device_data *device, void * const kmi_handle,
 	/* Invalidate previous drive presence */
 	device->previous_exist.tv_sec = 0;
 	device->previous_exist.tv_nsec = 0;
+	_tape_capacity_forget(device);
 }
 
 /**
@@ -325,6 +344,7 @@ void tape_device_close_raw(struct device_data *device)
 	/* Invalidate previous drive presence */
 	device->previous_exist.tv_sec = 0;
 	device->previous_exist.tv_nsec = 0;
+	_tape_capacity_forget(device);
 }
 
 /**
@@ -385,6 +405,7 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
 
 	memset(&param, 0, sizeof(param));
 	memset(&cap, 0, sizeof(cap));
+	_tape_capacity_forget(dev);
 
 	if (!force) {
 		ret = tape_is_cartridge_loadable(dev);
@@ -509,6 +530,7 @@ int tape_unload_tape(bool keep_on_drive, struct device_data *dev)
 	/* Invalidate previous drive presence */
 	dev->previous_exist.tv_sec = 0;
 	dev->previous_exist.tv_nsec = 0;
+	_tape_capacity_forget(dev);
 
 	tape_allow_medium_removal(dev, false);
 	do {
@@ -724,7 +746,8 @@ int tape_test_unit_ready(struct device_data *dev)
 	timer_sub(&ts_now, &dev->previous_exist, &ts_diff);
 
 	if (ts_diff.tv_sec == 0) {
-		/* skip the operation in case that previous TUR has been invoked within 1 sec */
+		/* A command that needs a ready medium (this one included) succeeded
+		 * within the last second: the medium is there, do not ask again */
 		return 0;
 	}
 
@@ -741,22 +764,51 @@ int tape_test_unit_ready(struct device_data *dev)
 
 /**
  * Get total and remaining capacity for each partition.
+ *
+ * The drive is asked (a LOG SENSE) only when the answer it gave last may be
+ * stale: when TAPE_CAPACITY_REFRESH_BYTES have been written since, or when
+ * something has been written since and the answer is TAPE_CAPACITY_REFRESH_SEC
+ * old. Otherwise the last answer is returned as it was: the remaining capacity
+ * only changes through writes, and nothing else than the operations that call
+ * _tape_capacity_forget() (load, unload, format, erase, set capacity, filemarks)
+ * changes it behind this cache. A file system layer that asks after every
+ * request (macFUSE's FSKit backend sends about two STATFS per WRITE) would
+ * otherwise keep the drive busy with LOG SENSE between the writes.
  * @param dev tape device handle
  * @param cap output buffer where capacity will be stored
- * @return true if unit is ready or false if not.
+ * @return 0 on success or a negative value on error
  */
 int tape_get_capacity(struct device_data *dev, struct tc_remaining_cap *cap)
 {
 	int ret;
+	struct ltfs_timespec now, age;
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(cap, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
 
+	get_current_timespec(&now);
+	if (dev->capacity_valid && dev->capacity_written < TAPE_CAPACITY_REFRESH_BYTES) {
+		timer_sub(&now, &dev->capacity_time, &age);
+		if (dev->capacity_written == 0 || age.tv_sec < TAPE_CAPACITY_REFRESH_SEC) {
+			*cap = dev->capacity;
+			return 0;
+		}
+	}
+
 	ret = dev->backend->remaining_capacity(dev->backend_data, cap);
-	if (ret < 0)
+	if (ret < 0) {
 		ltfsmsg(ALP0036E, ret);
-	return ret;
+		return ret;
+	}
+
+	dev->capacity = *cap;
+	dev->capacity_time = now;
+	dev->capacity_written = 0;
+	dev->capacity_valid = true;
+	_tape_medium_seen(dev);
+
+	return 0;
 }
 
 /**
@@ -1018,6 +1070,8 @@ int tape_rewind(struct device_data *dev)
 	ret = dev->backend->rewind(dev->backend_data, &dev->position);
 	if (ret < 0)
 		ltfsmsg(ALP0041E, ret);
+	else
+		_tape_medium_seen(dev);
 	return ret;
 }
 
@@ -1066,6 +1120,8 @@ int tape_seek(struct device_data *dev, struct tc_position *pos)
 		ltfsmsg(ALP0042E);
 		ret = -LTFS_BAD_LOCATE;
 	}
+	if (ret == 0)
+		_tape_medium_seen(dev);
 
 	return ret;
 }
@@ -1119,6 +1175,7 @@ int tape_seek_eod(struct device_data *dev, tape_partition_t partition)
 	ltfs_mutex_lock(&dev->append_pos_mutex);
 	dev->append_pos[partition] = dev->position.block;
 	ltfs_mutex_unlock(&dev->append_pos_mutex);
+	_tape_medium_seen(dev);
 
 	return 0;
 }
@@ -1205,6 +1262,8 @@ int tape_spacefm(struct device_data *dev, int count)
 
 	if (ret < 0)
 		ltfsmsg(ALP0047E, ret);
+	else
+		_tape_medium_seen(dev);
 	return ret;
 }
 
@@ -1260,16 +1319,24 @@ ssize_t tape_write(struct device_data *dev, const char *buf, size_t count, bool 
 			ltfs_mutex_unlock(&dev->read_only_flag_mutex);
 		}
 		return ret;
-	} else if (dev->position.early_warning) {
+	}
+
+	_tape_medium_seen(dev);
+	dev->capacity_written += count;
+
+	if (dev->position.early_warning) {
 		ltfs_mutex_lock(&dev->read_only_flag_mutex);
 		dev->partition_space[dev->position.partition] = PART_NO_SPACE;
 		ltfs_mutex_unlock(&dev->read_only_flag_mutex);
+		/* Near the end of the tape the exact figure matters: ask the drive next time */
+		_tape_capacity_forget(dev);
 		if (! ignore_nospc)
 			count = -LTFS_NO_SPACE;
 	} else if (dev->position.programmable_early_warning) {
 		ltfs_mutex_lock(&dev->read_only_flag_mutex);
 		dev->partition_space[dev->position.partition] = PART_LESS_SPACE;
 		ltfs_mutex_unlock(&dev->read_only_flag_mutex);
+		_tape_capacity_forget(dev);
 		if (! ignore_less)
 			count = -LTFS_LESS_SPACE;
 	}
@@ -1325,6 +1392,10 @@ int tape_write_filemark(struct device_data *dev, uint8_t count, bool ignore_less
 		}
 		return ret;
 	}
+
+	/* Filemarks take capacity too, and they come with a sync: ask the drive next time */
+	_tape_medium_seen(dev);
+	_tape_capacity_forget(dev);
 
 	/*
 	 *  This is the workaround for the drive that doesn't flush VCI with WRITE_FM command without immediate flag like HP LTO6.
@@ -1425,6 +1496,8 @@ ssize_t tape_read(struct device_data *dev, char *buf, size_t count, const bool u
 		ltfsmsg(ALP0109W);
 	if (ret < 0)
 		ltfsmsg(ALP0055E, (int)ret);
+	else
+		_tape_medium_seen(dev);
 	return ret;
 }
 
@@ -1440,9 +1513,12 @@ int tape_erase(struct device_data *dev, bool long_erase)
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 
+	_tape_capacity_forget(dev);
 	ret = dev->backend->erase(dev->backend_data, &dev->position, long_erase);
 	if (ret < 0)
 		ltfsmsg(ALP0086E, ret);
+	else
+		_tape_medium_seen(dev);
 
 	return ret;
 }
@@ -1462,6 +1538,8 @@ int tape_reset_capacity(struct device_data *dev)
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	_tape_capacity_forget(dev);
 
 	/*
 	 * Locate block 0 @ P0 using load command to avoid error when known upper generation
@@ -1540,6 +1618,8 @@ int tape_format(struct device_data *dev, tape_partition_t index_part, int densit
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	_tape_capacity_forget(dev);
 
 	/*
 	 * Locate block 0 @ P0 using load command to avoid error when known upper generation
@@ -1667,6 +1747,8 @@ int tape_unformat_hard(struct device_data *dev)
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
+
+	_tape_capacity_forget(dev);
 
 	/* Locate block 0 @ P0 */
 	ret = dev->backend->locate(dev->backend_data, bom, &dev->position);
