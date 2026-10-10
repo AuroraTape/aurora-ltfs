@@ -15,7 +15,12 @@ import pytest
 
 from common.altfs import format_tape
 
-pytestmark = pytest.mark.mount  # the scripts mount the file backend volume
+pytestmark = [
+    pytest.mark.mount,  # the scripts mount the file backend volume
+    # The scripts are written for the Linux hosts the drives are on: dpkg,
+    # journalctl, mountpoint, and a mount through the kernel module.
+    pytest.mark.skipif(sys.platform != "linux", reason="Linux-only scripts"),
+]
 
 _SCRIPTS = Path(__file__).resolve().parents[1] / "realdrive"
 _RECORD = 36    # file backend drive file: cartridge name or "empty", NUL padded

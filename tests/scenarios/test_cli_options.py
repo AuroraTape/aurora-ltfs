@@ -67,6 +67,9 @@ def test_altfs_help_falls_back_without_default_device():
     assert re.search(r"-o devname=<dev>\s+Tape device\s*$", combined, re.M)
 
 
+@pytest.mark.skipif(sys.platform != "linux",
+                    reason="the default backend has a default device off Linux: "
+                           "on macOS (iokit) altfs would open the drive")
 def test_altfs_no_args_reports_missing_device():
     r = _run("altfs")
     assert r.returncode != 0

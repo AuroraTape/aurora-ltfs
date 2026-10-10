@@ -8,12 +8,15 @@ characters.
 ALTFS_TEST_MOUNT_OPTS, when set, is passed as one more `-o` to every
 mount made through these helpers, e.g. ALTFS_TEST_MOUNT_OPTS=backend=fskit
 to run the suite over macFUSE's FSKit backend instead of its kext.
+
+Mounts are detached with fusermount -u on Linux and with umount on macOS.
 """
 
 import os
 import re
 import signal
 import subprocess
+import sys
 import time
 
 _READY_TIMEOUT = 5.0
@@ -40,8 +43,56 @@ def _wait_until(predicate, timeout=_READY_TIMEOUT, interval=_POLL_INTERVAL):
     return False
 
 
+# The process of macFUSE's FSKit module. There is one for all the FSKit
+# volumes of the user, so killing it takes every macFUSE FSKit mount down.
+_MACFUSE_FSKIT_MODULE = "io.macfuse.app.fsmodule.macfuse"
+
+
+def _unmount(mnt, timeout=_TEARDOWN_TIMEOUT):
+    """One attempt to detach a FUSE mount; returns the CompletedProcess.
+
+    Linux: fusermount -u. macOS: umount, which on macFUSE's FSKit backend
+    blocks for good when the altfs process serving the volume is gone
+    (macfuse/macfuse#1201) until the module process is killed. umount runs
+    in the background; when it has not returned after a moment the module
+    process is killed, which lets it finish. A live volume unmounts well
+    before that and nothing is killed.
+    """
+    if sys.platform != "darwin":
+        return subprocess.run(["fusermount", "-u", str(mnt)],
+                              capture_output=True, text=True, check=False)
+    umount = subprocess.Popen(["umount", str(mnt)],
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        out, err = umount.communicate(timeout=2.0)
+    except subprocess.TimeoutExpired:
+        subprocess.run(["pkill", "-KILL", "-f", _MACFUSE_FSKIT_MODULE], check=False)
+        try:
+            out, err = umount.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            umount.kill()
+            raise RuntimeError(f"umount did not return: {mnt}")
+    return subprocess.CompletedProcess(umount.args, umount.returncode, out, err)
+
+
+def _is_mounted(mnt):
+    """Whether mnt is mounted.
+
+    On macOS the mount table is read instead of stat'ing the mount point,
+    as os.path.ismount() does: on macFUSE's FSKit backend that stat blocks
+    for good once the altfs process serving the volume is gone. The table
+    lists the path as is, so a path with a space in it would not be found;
+    the test directories have none.
+    """
+    if sys.platform != "darwin":
+        return os.path.ismount(mnt)
+    table = subprocess.run(["mount"], capture_output=True, text=True).stdout
+    paths = {str(mnt), os.path.realpath(mnt)}
+    return any(f" on {p} " in table for p in paths)
+
+
 def _detach_mount(mnt, timeout=_TEARDOWN_TIMEOUT):
-    """Detach a FUSE mount, retrying fusermount -u until it takes.
+    """Detach a FUSE mount, retrying the unmount until it takes.
 
     fusermount -u can fail transiently (EBUSY) while the kernel still
     has an operation on the mount in flight. A silent single shot
@@ -52,11 +103,10 @@ def _detach_mount(mnt, timeout=_TEARDOWN_TIMEOUT):
 
     def _try_detach():
         nonlocal last
-        if not os.path.ismount(mnt):
+        if not _is_mounted(mnt):
             return True
-        last = subprocess.run(["fusermount", "-u", str(mnt)],
-                              capture_output=True, text=True, check=False)
-        return not os.path.ismount(mnt)
+        last = _unmount(mnt)
+        return not _is_mounted(mnt)
 
     if not _wait_until(_try_detach, timeout=timeout, interval=0.25):
         detail = last.stderr.strip() if last else "mount never detached"
@@ -196,11 +246,10 @@ def crash_altfs_daemon(mnt, proc=None):
         # the process to let go before anything touches the tape.
         deadline = time.monotonic() + 5.0
         while time.monotonic() < deadline:
-            subprocess.run(["fusermount", "-u", str(mnt)],
-                           capture_output=True, check=False)
+            _unmount(mnt)
             alive = subprocess.call(["pgrep", "-f", pattern],
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
-            if not os.path.ismount(mnt) and not alive:
+            if not _is_mounted(mnt) and not alive:
                 break
             time.sleep(0.1)
         else:
@@ -214,7 +263,7 @@ def crash_altfs_daemon(mnt, proc=None):
 def umount_tape(mnt):
     _detach_mount(mnt)
 
-    # fusermount returns as soon as the kernel detaches the mount,
+    # The unmount returns as soon as the kernel detaches the mount,
     # but the altfs daemon still has its final index flush to do
     # (sync_type=unmount writes the index on the way out). Tests
     # that read the tape directory after umount race against that

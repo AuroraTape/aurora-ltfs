@@ -159,9 +159,11 @@ def test_stop_closes_files(clean_profiler):
 
 def test_getxattr_returns_trace_offset(profiled_mount):
     mnt, _ = profiled_mount
-    # ltfs_trace_get_offset(): "<sec>.<nsec, 9 digits>" on Linux.
+    # ltfs_trace_get_offset(): "<sec>.<nsec, 9 digits>" on Linux, one
+    # integer on macOS where the offset is not a timespec.
     value = get_xattr(mnt, _PROFILER)
-    assert re.fullmatch(r"\d+\.\d{9}", value), value
+    pattern = r"\d+" if sys.platform == "darwin" else r"\d+\.\d{9}"
+    assert re.fullmatch(pattern, value), value
     # The offset is fixed when tracing starts; it does not move with use.
     set_xattr(mnt, _PROFILER, hex(PROF_REQ))
     set_xattr(mnt, _PROFILER, "0")
