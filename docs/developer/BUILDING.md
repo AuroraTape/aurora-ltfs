@@ -169,9 +169,9 @@ $ ALTFS_PREFIX=$PWD/_install bash tests/fsapi/run.sh -v
   `LD_LIBRARY_PATH` set to the prefix, as `run.sh` does.
 - `tests/fsapi`: file system API tests on a mounted `file` backend volume;
   they need FUSE.
-- On a Mac with macFUSE set up, both suites run with the kernel extension
-  as they are, and over the FSKit backend with
-  `ALTFS_TEST_MOUNT_OPTS=backend=fskit`. The tests of the real-drive
+- On a Mac with macFUSE's FSKit module enabled, both suites run over the
+  FSKit backend with `ALTFS_TEST_MOUNT_OPTS=backend=fskit`; the kernel
+  extension backend is not supported. The tests of the real-drive
   scripts and the no-argument `altfs` test are Linux-only and skip. The
   tests that simulate a crash of altfs kill macFUSE's FSKit module
   process to free the dead mount, which takes down every macFUSE FSKit
