@@ -190,7 +190,7 @@ root:table {
 		// Reserved 14438I
 		AFS0121I:string { "    -o noeject                Do not eject the cartridge after unmount (default)" }
 		AFS0122I:string { "    -o noatime                Do not update index if only access times have changed (default)" }
-		AFS0123I:string { "    -o verbose=<num>          Log level: 0 errors, 1 warnings, 2 informational, 3 debug (default: %d); <syslog level> * 100 + <stderr level> sets the two" }
+		AFS0123I:string { "    -o verbose=<num>          Log level: 0 errors, 1 warnings, 2 informational, 3-6 debug (default: %d); <syslog level> * 100 + <stderr level> sets the two" }
 		// Reserved 14442I
 		AFS0124I:string { "    -o force_mount_no_eod     Skip EOD existence check when mounting (read-only mount)\n"
                         "                              Only use for a CM corrupted medium" }

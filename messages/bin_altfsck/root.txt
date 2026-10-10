@@ -171,7 +171,7 @@ root:table {
 		// are loaded, so its text is duplicated in the source.
 		ACK0118W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfsck" }
 		ACK0119E:string { "Cannot set the LANG environment variable" }
-		ACK0120I:string { "      --verbose=<num>             Log level: 0 errors, 1 warnings, 2 informational (default), 3 debug; <syslog level> * 100 + <stderr level> logs to syslog too" }
+		ACK0120I:string { "      --verbose=<num>             Log level: 0 errors, 1 warnings, 2 informational (default), 3-6 debug; <syslog level> * 100 + <stderr level> sets the two" }
 		ACK0121E:string { "Invalid value for --verbose: \"%s\"" }
 	}
 }

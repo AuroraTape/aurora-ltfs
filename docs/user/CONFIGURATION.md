@@ -171,8 +171,9 @@ recorded on the tape and not configured anywhere.
 
 The commands write their messages to standard error and to syslog, as
 `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` with the facility `user`.
-The levels are 0 errors, 1 warnings, 2 informational (the default) and 3
-debug; every message has one of them, and there is nothing above 3.
+The levels are 0 errors, 1 warnings, 2 informational (the default) and 3 to
+6 debug, in increasing detail; the messages of this version are all at
+level 3.
 
 For `altfs`, `-o verbose=<level>` sets them. A number below 100 sets the
 level of the standard error, and syslog gets the same messages up to the
@@ -181,9 +182,9 @@ apart, as in `-o verbose=200` (informational to syslog, errors only to the
 terminal). `-o quiet` is the same as `-o verbose=1`.
 
 `mkaltfs`, `altfsck` and `altfsindextool` take `--verbose=<level>` with the
-same numbers, and `-q` / `--quiet` for level 1. They log to syslog only when
-a syslog level is given: `--verbose=303` sends the debug messages to both,
-`--verbose=3` to the terminal alone.
+same numbers and the same rule for syslog, and `-q` / `--quiet` for level 1:
+`--verbose=3` sends the debug messages to the terminal and the informational
+ones to syslog, `--verbose=303` the debug messages to both.
 
 With the deb and rpm packages and rsyslog, the messages go to
 `/var/log/altfs.log` with RFC 3339 timestamps, rotated by logrotate, and are

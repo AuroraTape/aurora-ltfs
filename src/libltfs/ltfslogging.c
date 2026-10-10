@@ -110,6 +110,9 @@ static int syslog_levels[] = {
 	LOG_WARNING,  /* LTFS_WARN   */
 	LOG_INFO,     /* LTFS_INFO   */
 	LOG_DEBUG,    /* LTFS_DEBUG  */
+	LOG_DEBUG,    /* LTFS_DEBUG1 */
+	LOG_DEBUG,    /* LTFS_DEBUG2 */
+	LOG_DEBUG,    /* LTFS_DEBUG3 */
 };
 
 U_CFUNC char lc_dat[]; /* U_CFUNC is an ICU synonym for extern. */
@@ -268,9 +271,9 @@ int ltfsprintf_set_log_level(int log_level)
 		fprintf(stderr, "ALG0025W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_ERR);
 		log_level = LTFS_ERR;
 	}
-	else if (log_level > LTFS_DEBUG) {
-		fprintf(stderr, "ALG0025W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_DEBUG);
-		log_level = LTFS_DEBUG;
+	else if (log_level > LTFS_DEBUG3) {
+		fprintf(stderr, "ALG0025W Unknown log level (%d), forced the level to (%d)\n", log_level, LTFS_DEBUG3);
+		log_level = LTFS_DEBUG3;
 	}
 	ltfs_log_level = log_level;
 	return 0;
@@ -466,8 +469,8 @@ int ltfsmsg_internal(bool print_id, int level, char **msg_out, const char *_id, 
 		va_start(argp, _id);
 		if (level <= LTFS_ERR)
 			vsyslog(syslog_levels[LTFS_ERR], output_buf, argp);
-		else if (level >= LTFS_DEBUG)
-			vsyslog(syslog_levels[LTFS_DEBUG], output_buf, argp);
+		else if (level >= LTFS_DEBUG3)
+			vsyslog(syslog_levels[LTFS_DEBUG3], output_buf, argp);
 		else
 			vsyslog(syslog_levels[level], output_buf, argp);
 		va_end(argp);
@@ -498,15 +501,15 @@ internal_error:
 		if (ltfs_print_thread_id) {
 			if (level <= LTFS_ERR)
 				syslog(syslog_levels[LTFS_ERR], MSG_PREFIX_TID MSG_FALLBACK, (unsigned long)ltfs_get_thread_id(), id);
-			else if (level >= LTFS_DEBUG)
-				syslog(syslog_levels[LTFS_DEBUG], MSG_PREFIX_TID MSG_FALLBACK, (unsigned long)ltfs_get_thread_id(), id);
+			else if (level >= LTFS_DEBUG3)
+				syslog(syslog_levels[LTFS_DEBUG3], MSG_PREFIX_TID MSG_FALLBACK, (unsigned long)ltfs_get_thread_id(), id);
 			else
 				syslog(syslog_levels[level], MSG_PREFIX_TID MSG_FALLBACK, (unsigned long)ltfs_get_thread_id(), id);
 		} else {
 			if (level <= LTFS_ERR)
 				syslog(syslog_levels[LTFS_ERR], MSG_PREFIX MSG_FALLBACK, id);
-			else if (level >= LTFS_DEBUG)
-				syslog(syslog_levels[LTFS_DEBUG], MSG_PREFIX MSG_FALLBACK, id);
+			else if (level >= LTFS_DEBUG3)
+				syslog(syslog_levels[LTFS_DEBUG3], MSG_PREFIX MSG_FALLBACK, id);
 			else
 				syslog(syslog_levels[level], MSG_PREFIX MSG_FALLBACK, id);
 		}

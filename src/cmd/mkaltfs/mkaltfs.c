@@ -406,24 +406,24 @@ int main(int argc, char **argv)
 	if (opt.kmi_backend_name && strcmp(opt.kmi_backend_name, "none") == 0)
 		opt.kmi_backend_name = NULL;
 
-	/* Set the logging level: --verbose=<syslog level> * 100 + <stderr level>; without a
-	 * syslog level nothing goes to syslog */
+	/* Set the logging level: --verbose=<syslog level> * 100 + <stderr level>. Without a
+	 * syslog level, syslog gets what stderr gets, up to informational messages */
 	if (opt.quiet && opt.verbose >= 0) {
 		ltfsmsg(AMK0081E);
 		show_usage(argv[0], opt.config);
 		return 1;
 	} else if (opt.quiet) {
 		log_level = LTFS_WARN;
-		syslog_level = LTFS_NONE;
+		syslog_level = LTFS_WARN;
 	} else if (opt.verbose >= 100) {
 		syslog_level = opt.verbose / 100;
 		log_level = opt.verbose % 100;
 	} else if (opt.verbose >= 0) {
 		log_level = opt.verbose;
-		syslog_level = LTFS_NONE;
+		syslog_level = opt.verbose < LTFS_INFO ? opt.verbose : LTFS_INFO;
 	} else {
 		log_level = LTFS_INFO;
-		syslog_level = LTFS_NONE;
+		syslog_level = LTFS_INFO;
 	}
 
 	ltfs_set_log_level(log_level);

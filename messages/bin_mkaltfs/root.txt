@@ -131,7 +131,7 @@ root:table {
 
 		// Block size chosen from the device limit (issue #148)
 		AMK0084I:string { "Block size lowered to %lu bytes: the drive or the host transfer path supports at most %u bytes per block" }
-		AMK0085I:string { "      --verbose=<num>       Log level: 0 errors, 1 warnings, 2 informational (default), 3 debug; <syslog level> * 100 + <stderr level> logs to syslog too" }
+		AMK0085I:string { "      --verbose=<num>       Log level: 0 errors, 1 warnings, 2 informational (default), 3-6 debug; <syslog level> * 100 + <stderr level> sets the two" }
 		AMK0086E:string { "Invalid value for --verbose: \"%s\"" }
 	}
 }

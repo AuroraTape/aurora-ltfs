@@ -117,7 +117,7 @@ root:table {
 		// Read size against the device limit (issue #148)
 		AIX0069I:string { "Reading with %lu byte blocks: the drive or the host transfer path supports at most %u bytes per block. Larger blocks cannot be read on this host" }
 		AIX0070E:string { "Cannot read with block size %lu: the drive or the host transfer path supports at most %u bytes per block" }
-		AIX0071I:string { "      --verbose=<num>            Log level: 0 errors, 1 warnings, 2 informational (default), 3 debug; <syslog level> * 100 + <stderr level> logs to syslog too" }
+		AIX0071I:string { "      --verbose=<num>            Log level: 0 errors, 1 warnings, 2 informational (default), 3-6 debug; <syslog level> * 100 + <stderr level> sets the two" }
 		AIX0072E:string { "Invalid value for --verbose: \"%s\"" }
 	}
 }

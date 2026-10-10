@@ -168,7 +168,7 @@ A file is written to the index partition if it is no larger than the given size 
 Disable informational messages (same as verbose=1)
 
 **-o verbose=** *num*  
-Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: verbose=200 sends informational messages to syslog and errors only to the standard error output.
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 to 6 debug. A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: verbose=200 sends informational messages to syslog and errors only to the standard error output.
 
 **-o noeject**  
 Do not eject the cartridge after unmount (default)

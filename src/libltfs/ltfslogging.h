@@ -49,7 +49,10 @@ enum ltfs_log_levels {
 	LTFS_ERR    = 0,  /* Fatal error or operation failed unexpectedly */
 	LTFS_WARN   = 1,  /* Unexpected condition, but the program can continue */
 	LTFS_INFO   = 2,  /* Helpful message */
-	LTFS_DEBUG  = 3,  /* Diagnostic messages; the highest level a message can have */
+	LTFS_DEBUG  = 3,  /* Diagnostic messages (Level 0: Base Level) */
+	LTFS_DEBUG1 = 4,  /* Diagnostic messages (Level 1) */
+	LTFS_DEBUG2 = 5,  /* Diagnostic messages (Level 2) */
+	LTFS_DEBUG3 = 6,  /* Diagnostic messages (Level 3), the highest level */
 };
 
 extern int ltfs_log_level;
@@ -108,7 +111,7 @@ static inline int ltfsmsg_level(const char *id)
 #else
 #define ltfsresult(id, ...)						\
 	do {																\
-		ltfsmsg_internal(false, LTFS_DEBUG + 1, NULL, #id, ##__VA_ARGS__); \
+		ltfsmsg_internal(false, LTFS_DEBUG3 + 1, NULL, #id, ##__VA_ARGS__); \
 	} while (0)
 #endif
 
@@ -125,7 +128,7 @@ static inline int ltfsmsg_level(const char *id)
 
 /**
  * Initialize the logging and error reporting functions.
- * @param log_level Logging level (generally one of LTFS_ERR...LTFS_DEBUG).
+ * @param log_level Logging level (generally one of LTFS_ERR...LTFS_DEBUG3).
  * @param use_syslog Send error/warning/info messages to syslog? This function does not call
  *                   openlog(); the calling application may do so if it wants to.
  * @param print_thread_id Print thread ID to the message.

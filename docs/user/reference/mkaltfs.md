@@ -49,7 +49,7 @@ Restore the LTFS medium to an unpartitioned medium (format to a legacy scratch m
 Suppress progress information and general messages
 
 **--verbose=** *num*  
-Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. *syslog level* \* 100 + *stderr level* also sends the messages up to the syslog level to syslog, which is otherwise off: --verbose=303 logs everything to both.
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 to 6 debug. A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: --verbose=303 sends the debug messages to both.
 
 **-V, --version**  
 Version information
