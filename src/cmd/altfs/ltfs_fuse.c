@@ -303,6 +303,7 @@ int ltfs_fuse_getattr(const char *path, struct stat *stbuf)
 }
 
 
+#ifdef __APPLE__
 /**
  * Refuse a write to a file whose LTFS read-only flag is set, when the FUSE
  * layer does not do it for us.
@@ -310,21 +311,24 @@ int ltfs_fuse_getattr(const char *path, struct stat *stbuf)
  * altfs mounts with default_permissions and leaves the mode checks to the
  * kernel. macFUSE's FSKit backend implements neither default_permissions
  * nor the caller's identity, so a file made read-only by chmod would still
- * open for writing there. With fskit set, the read-only flag (the
- * only permission LTFS stores, see ltfs_fuse_chmod()) is checked here, on
- * the operations the kernel would refuse on a file without write
- * permission: open for writing, truncate, setxattr and removexattr.
- * The volume-level read-only state is enforced by libltfs on every path.
+ * open for writing there. On macOS the read-only flag (the only permission
+ * LTFS stores, see ltfs_fuse_chmod()) is therefore checked here, on the
+ * operations the kernel would refuse on a file without write permission:
+ * open for writing, truncate, setxattr and removexattr. The backend is not
+ * told apart: with the macFUSE kernel extension the kernel has already
+ * refused for ordinary users, and the check costs one getattr per write
+ * open, truncate or xattr write there. FSKit does not deliver the caller's
+ * identity either, so the check applies to root as well, on both
+ * backends, where Linux lets root through. The volume-level read-only
+ * state is enforced by libltfs on every path.
  * @param path path of the file, for the message
  * @param attr attributes of the file
- * @param priv LTFS fuse data
  * @return 0 when the write may proceed, -LTFS_RDONLY_FILE when the file is
  *         read-only
  */
-static int _ltfs_fuse_check_writable(const char *path, const struct dentry_attr *attr,
-									 struct ltfs_fuse_data *priv)
+static int _ltfs_fuse_check_writable(const char *path, const struct dentry_attr *attr)
 {
-	if (! priv->fskit || attr->isdir || ! attr->readonly)
+	if (attr->isdir || ! attr->readonly)
 		return 0;
 
 	ltfsmsg(AFS0161D, path);
@@ -332,8 +336,7 @@ static int _ltfs_fuse_check_writable(const char *path, const struct dentry_attr 
 }
 
 /**
- * _ltfs_fuse_check_writable() for a path: the file is looked up only when
- * there is something to check.
+ * _ltfs_fuse_check_writable() for a path.
  * @param path path of the file
  * @param priv LTFS fuse data
  * @return 0 when the write may proceed, or a negative LTFS error:
@@ -346,15 +349,13 @@ static int _ltfs_fuse_check_writable_path(const char *path, struct ltfs_fuse_dat
 	ltfs_file_id id;
 	int ret;
 
-	if (! priv->fskit)
-		return 0;
-
 	ret = ltfs_fsops_getattr_path(path, &attr, &id, priv->data);
 	if (ret < 0)
 		return ret;
 
-	return _ltfs_fuse_check_writable(path, &attr, priv);
+	return _ltfs_fuse_check_writable(path, &attr);
 }
+#endif /* __APPLE__ */
 
 int ltfs_fuse_access(const char *path, int mode)
 {
@@ -435,14 +436,15 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 		return errormap_fuse_error(ret);
 	}
 
+#ifdef __APPLE__
 	/* Refuse to open a read-only file for writing when the FUSE layer
 	 * has not already done so */
-	if (open_write && priv->fskit) {
+	if (open_write) {
 		struct dentry_attr attr;
 
 		ret = ltfs_fsops_getattr(dentry_handle, &attr, priv->data);
 		if (ret == 0)
-			ret = _ltfs_fuse_check_writable(path, &attr, priv);
+			ret = _ltfs_fuse_check_writable(path, &attr);
 		if (ret < 0) {
 			ltfs_fsops_close(dentry_handle, false, open_write, true, priv->data);
 			ret = errormap_fuse_error(ret);
@@ -450,6 +452,7 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 			return ret;
 		}
 	}
+#endif
 
 	/* Get file information and create a file handle */
 	file_info = _file_open(path, dentry_handle, NULL, priv);
@@ -867,6 +870,7 @@ int ltfs_fuse_truncate(const char *path, off_t length)
 
 	ltfsmsg(AFS0038D, path, (long long)length);
 
+#ifdef __APPLE__
 	/* A truncate by path is a write without an open: check the read-only
 	 * flag when the FUSE layer does not. ftruncate goes through a handle
 	 * that was opened for writing, so it was checked at open time. */
@@ -876,6 +880,7 @@ int ltfs_fuse_truncate(const char *path, off_t length)
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_TRUNCATE), ret, 0);
 		return ret;
 	}
+#endif
 
 	ret = ltfs_fsops_truncate_path(path, length, &id, priv->data);
 
@@ -1194,6 +1199,7 @@ int ltfs_fuse_setxattr(const char *path, const char *name, const char *value, si
 	}
 #endif /* __APPLE__ */
 
+#ifdef __APPLE__
 	/* Writing an attribute needs write permission on the file, as the
 	 * kernel has it for every name space but security and system */
 	ret = _ltfs_fuse_check_writable_path(path, priv);
@@ -1202,6 +1208,7 @@ int ltfs_fuse_setxattr(const char *path, const char *name, const char *value, si
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_SETXATTR), ret, 0);
 		return ret;
 	}
+#endif
 
 	ret = ltfs_fsops_setxattr(path, name, value, size, flags, &id, priv->data);
 
@@ -1279,6 +1286,7 @@ int ltfs_fuse_removexattr(const char *path, const char *name)
 
 	ltfsmsg(AFS0049D, path, name);
 
+#ifdef __APPLE__
 	/* Removing an attribute needs write permission on the file, see
 	 * ltfs_fuse_setxattr() */
 	ret = _ltfs_fuse_check_writable_path(path, priv);
@@ -1287,6 +1295,7 @@ int ltfs_fuse_removexattr(const char *path, const char *name)
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_REMOVEXATTR), ret, 0);
 		return ret;
 	}
+#endif
 
 	ret = ltfs_fsops_removexattr(path, name, &id, priv->data);
 

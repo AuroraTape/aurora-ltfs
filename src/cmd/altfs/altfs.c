@@ -82,9 +82,6 @@ enum {
 	KEY_HELP,
 	KEY_VERSION,
 	KEY_VERBOSE,
-#ifdef __APPLE__
-	KEY_FUSE_BACKEND,              /* macFUSE's backend=<name> */
-#endif
 };
 
 #define LTFS_OPT(templ,offset,value) { templ, offsetof(struct ltfs_fuse_data, offset), value }
@@ -140,9 +137,6 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("capture_index=%s",       capture_dir, 0),
 	LTFS_OPT("symlink_type=%s",        symlink_str, 0),
 	LTFS_OPT("scsi_append_only_mode=%s", str_append_only_mode, 0),
-#ifdef __APPLE__
-	FUSE_OPT_KEY("backend=%s",         KEY_FUSE_BACKEND), /* macFUSE's, seen and passed on */
-#endif
 	FUSE_OPT_KEY("-h",                 KEY_HELP),
 	FUSE_OPT_KEY("--help",             KEY_HELP),
 	FUSE_OPT_KEY("-V",                 KEY_VERSION),
@@ -374,15 +368,6 @@ int ltfs_parse_options(void *priv_data, const char *arg, int key, struct fuse_ar
 			ltfsresult(AFS0054I, PACKAGE_NAME, PACKAGE_VERSION);
 			ltfsresult(AFS0054I, "LTFS Format Specification", LTFS_INDEX_VERSION_STR);
 			exit(0);
-#ifdef __APPLE__
-		case KEY_FUSE_BACKEND:
-			/* macFUSE's FSKit backend enforces neither default_permissions
-			 * nor the read-only mount flag, so altfs checks the file
-			 * read-only flag itself there. The option stays on the FUSE
-			 * command line. */
-			priv->fskit = (strcmp(arg, "backend=fskit") == 0);
-			break;
-#endif
 		case FUSE_OPT_KEY_OPT:
 		case FUSE_OPT_KEY_NONOPT:
 			for (i=0; arg && fuse_options[i]; ++i) {
