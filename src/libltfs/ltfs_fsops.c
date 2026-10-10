@@ -188,7 +188,7 @@ out_open_combo:
 
 int ltfs_fsops_close(struct dentry *d, bool dirty, bool open_write, bool use_iosched, struct ltfs_volume *vol)
 {
-	int ret, ret_u = 0;
+	int ret, ret_f = 0, ret_u = 0;
 
 	CHECK_ARG_NULL(d, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(vol, -LTFS_NULL_ARG);
@@ -205,6 +205,16 @@ int ltfs_fsops_close(struct dentry *d, bool dirty, bool open_write, bool use_ios
 		d->need_update_time = false;
 	}
 
+	/* The used blocks are counted from the extents, so the scheduler has to
+	 * have written the file first. A FUSE layer that releases a file without
+	 * flushing it (macFUSE's FSKit backend sends no FLUSH) reaches this point
+	 * with the tail of the file still in the scheduler, and nothing recounts
+	 * the blocks later. The flush takes the scheduler's write lock, as every
+	 * flush does; a layer that flushed before the release leaves nothing
+	 * dirty here and does not pay for it. */
+	if (open_write && use_iosched && dirty && ! d->isdir)
+		ret_f = iosched_flush(d, true, vol);
+
 	if (dirty && dcache_initialized(vol))
 		dcache_flush(d, FLUSH_ALL, vol);
 
@@ -216,7 +226,9 @@ int ltfs_fsops_close(struct dentry *d, bool dirty, bool open_write, bool use_ios
 	else
 		ret = ltfs_fsraw_close(d);
 
-	if ( !ret && ret_u)
+	if (! ret && ret_f)
+		ret = ret_f;
+	if (! ret && ret_u)
 		ret = ret_u;
 
 	if (ret == 0 && vol->file_open_count > 0)
