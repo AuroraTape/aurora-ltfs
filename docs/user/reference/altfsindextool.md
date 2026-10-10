@@ -8,7 +8,7 @@ altfsindextool - Low level index checking tool for LTFS
 
 ## SYNOPSIS
 
-**altfsindextool** \[ **-d** *name* \] \[ **-p** *part_num* \] \[ **-s** *block* \] \[ **-b** *num* \] \[ **-i** *file* \] \[ **-e** *name* \] \[ **-q** \] \[ **-t** \] \[ **-V** \] \[ **-h** \] \[ **-p** \] \[ *filename* \]
+**altfsindextool** \[ **-d** *name* \] \[ **-p** *part_num* \] \[ **-s** *block* \] \[ **-b** *num* \] \[ **-i** *file* \] \[ **-e** *name* \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] \[ **-p** \] \[ *filename* \]
 
 ## DESCRIPTION
 
@@ -45,8 +45,8 @@ Use the specified key manager interface backend (default: none)
 **-q, --quiet**  
 Suppress progress information and general messages
 
-**-t, --trace**  
-Enable function call tracing
+**--verbose=** *num*  
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. *syslog level* \* 100 + *stderr level* also sends the messages up to the syslog level to syslog, which is otherwise off: --verbose=303 logs everything to both.
 
 **-V, --version**  
 Version information

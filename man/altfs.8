@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS" "8" "09 October 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS" "8" "10 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs \- File system based on a linear tape drive
@@ -32,9 +32,6 @@ Tape device name. On Linux, \fIname\fR is like
 .TP
 \fB-o work_directory=\fIdir\fB\fR
 LTFS work directory (default: )
-.TP
-\fB-o trace\fR
-Enable diagnostic output (same as verbose=3)
 .TP
 \fB-o eject\fR
 Eject the cartridge after unmount
@@ -229,16 +226,10 @@ characters).
 \fB-o quiet\fR
 Disable informational messages (same as verbose=1)
 .TP
-\fB-o syslogtrace\fR
-Enable diagnostic output to stderr and syslog(same as verbose=303)
-.TP
-\fB-o fulltrace\fR
-Enable full call tracing (same as verbose=7)
-.TP
 \fB-o verbose=\fInum\fB\fR
-Override output verbosity directly (default: 2). A number below 100 sets the
-level of the standard error output; syslog gets the same messages, up to
-informational ones. \fIsyslog level\fR * 100 +
+Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+3 debug. A number below 100 sets the level of the standard error output;
+syslog gets the same messages, up to informational ones. \fIsyslog level\fR * 100 +
 \fIstderr level\fR sets the two separately: verbose=200
 sends informational messages to syslog and errors only to the standard error
 output.

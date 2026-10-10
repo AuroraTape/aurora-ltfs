@@ -8,7 +8,7 @@ altfsck - Recover and rollback utility for LTFS formatted tape
 
 ## SYNOPSIS
 
-**altfsck** \[ **-g** *generation* \] \[ **-r** \] \[ **-n** \] \[ **-f** \] \[ **-z** \] \[ **-l** \] \[ **-m** \] \[ **-v** *strategy* \] \[ **-j** \] \[ **-k** \] \[ **-q** \] \[ **-t** \] \[ **-V** \] \[ **-h** \] \[ **-p** \] *device_name*
+**altfsck** \[ **-g** *generation* \] \[ **-r** \] \[ **-n** \] \[ **-f** \] \[ **-z** \] \[ **-l** \] \[ **-m** \] \[ **-v** *strategy* \] \[ **-j** \] \[ **-k** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] \[ **-p** \] *device_name*
 
 On Linux, *device_name* is like '/dev/IBMtape0', on OSX, *device_name* is like '0'(default: )
 
@@ -51,11 +51,8 @@ Keep history at rollback (default)
 **-q, --quiet**  
 Suppress progress information and general messages
 
-**-t, --trace**  
-Enable function call tracing
-
-**--syslogtrace**  
-Enable diagnostic output to stderr and syslog
+**--verbose=** *num*  
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. *syslog level* \* 100 + *stderr level* also sends the messages up to the syslog level to syslog, which is otherwise off: --verbose=303 logs everything to both.
 
 **-V, --version**  
 Version information
@@ -78,9 +75,6 @@ Use the specified tape device backend (default: )
 
 **--kmi-backend=** *name*  
 Use the specified key manager interface backend (default: none)
-
-**-x, --fulltrace**  
-Enable full function call tracing (slow)
 
 **--capture-index=** *dir*  
 Capture indexes read successfully to the specified directory by dir. (-g is effective for this option) File name of each index is \[BARCODE\]-\[GEN\]-\[PARTITION\].xml if tape serial (barcode) is specified at format time. Otherwise it is \[VOL_UUID\]-\[GEN\]-\[PARTITION\].xml.

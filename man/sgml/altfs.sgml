@@ -81,12 +81,6 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>-o trace</option></term>
-          <listitem>
-            <para>Enable diagnostic output (same as verbose=3)</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
           <term><option>-o eject</option></term>
           <listitem>
             <para>Eject the cartridge after unmount</para>
@@ -419,24 +413,12 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>-o syslogtrace</option></term>
-          <listitem>
-            <para>Enable diagnostic output to stderr and syslog(same as verbose=303)</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>-o fulltrace</option></term>
-          <listitem>
-            <para>Enable full call tracing (same as verbose=7)</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
           <term><option>-o verbose=<replaceable>num</replaceable></option></term>
           <listitem>
             <para>
-              Override output verbosity directly (default: 2). A number below 100 sets the
-              level of the standard error output; syslog gets the same messages, up to
-              informational ones. <replaceable>syslog level</replaceable> * 100 +
+              Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+              3 debug. A number below 100 sets the level of the standard error output;
+              syslog gets the same messages, up to informational ones. <replaceable>syslog level</replaceable> * 100 +
               <replaceable>stderr level</replaceable> sets the two separately: verbose=200
               sends informational messages to syslog and errors only to the standard error
               output.

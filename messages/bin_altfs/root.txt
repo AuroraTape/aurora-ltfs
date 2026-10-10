@@ -144,7 +144,7 @@ root:table {
 		AFS0099I:string { "LTFS options:" }
 		AFS0100I:string { "    -o devname=<dev>          Tape device" }
 		AFS0101I:string { "    -o work_directory=<dir>   LTFS work directory (default: %s)" }
-		AFS0102I:string { "    -o trace                  Enable diagnostic output (same as verbose=3)" }
+		//unused AFS0102I:string { "    -o trace                  Enable diagnostic output (same as verbose=3)" }
 		AFS0103I:string { "    -V, --version             Output version information and exit" }
 		AFS0104I:string { "    -h, --help                Display this help and exit" }
 		AFS0105I:string { "    -o config_file=<file>     Configuration file (default: %s)" }
@@ -168,7 +168,7 @@ root:table {
 						"                              '?' (match any single character) and '*' (match zero or more\n"
 						"                              characters)" }
 		AFS0115I:string { "    -o quiet                  Disable informational messages (same as verbose=1)" }
-		AFS0116I:string { "    -o fulltrace              Enable full call tracing (same as verbose=7)" }
+		//unused AFS0116I:string { "    -o fulltrace              Enable full call tracing (same as verbose=7)" }
 		AFS0117I:string { "    -o eject                  Eject the cartridge after unmount" }
 		// Reserved 14426I
 		AFS0118I:string { "    -o sync_type=<type>       Specify sync type (default: time@5)\n                              <type> should be specified as follows:\n                              time@min:  LTFS attempts to write an index each 'min' minutes.\n                                         min should be a decimal number from 1 to %ld\n"
@@ -190,7 +190,7 @@ root:table {
 		// Reserved 14438I
 		AFS0121I:string { "    -o noeject                Do not eject the cartridge after unmount (default)" }
 		AFS0122I:string { "    -o noatime                Do not update index if only access times have changed (default)" }
-		AFS0123I:string { "    -o verbose=<num>          Override output verbosity directly (default: %d)" }
+		AFS0123I:string { "    -o verbose=<num>          Log level: 0 errors, 1 warnings, 2 informational, 3 debug (default: %d); <syslog level> * 100 + <stderr level> sets the two" }
 		// Reserved 14442I
 		AFS0124I:string { "    -o force_mount_no_eod     Skip EOD existence check when mounting (read-only mount)\n"
                         "                              Only use for a CM corrupted medium" }
@@ -218,7 +218,7 @@ root:table {
 		// Reserved 14464I
 		// Reserved 14465I
 		// Reserved 14466I
-		AFS0130I:string { "    -o syslogtrace            Enable diagnostic output to stderr and syslog(same as verbose=303)" }
+		//unused AFS0130I:string { "    -o syslogtrace            Enable diagnostic output to stderr and syslog(same as verbose=303)" }
 
 		// Messages relocated from libaltfs
 		AFS0131E:string { "Failed to parse command line options" }

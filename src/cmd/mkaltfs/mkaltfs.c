@@ -99,9 +99,7 @@ struct other_format_opts {
 	bool unformat;              /**< Unformat medium? */
 	bool force;                 /**< Force to format */
 	bool quiet;                 /**< Quiet mode indicator */
-	bool trace;                 /**< Debug mode indicator */
-	bool syslogtrace;           /**< Generate debug output to stderr and syslog*/
-	bool fulltrace;             /**< Full trace mode indicator */
+	int  verbose;               /**< --verbose=<level>, -1 when not given */
 	bool long_wipe;             /**< Clean up whole tape by long erase? */
 	bool destructive;           /**< Use destructive FORMAT_MEDIUM or not */
 };
@@ -113,7 +111,7 @@ int _mkltfs_validate_options(char *prg_name, struct ltfs_volume *vol,
 	struct other_format_opts *opt);
 
 /* Command line options */
-static const char *short_options = "i:e:d:b:s:n:r:cokwfqtxhpV";
+static const char *short_options = "i:e:d:b:s:n:r:cokwfqhpV";
 static struct option long_options[] = {
 	{"config",          1, 0, 'i'},
 	{"backend",         1, 0, 'e'},
@@ -131,9 +129,7 @@ static struct option long_options[] = {
 	{"destructive",     0, 0, '&'},
 	{"force",           0, 0, 'f'},
 	{"quiet",           0, 0, 'q'},
-	{"trace",           0, 0, 't'},
-	{"syslogtrace",     0, 0, '!'},
-	{"fulltrace",       0, 0, 'x'},
+	{"verbose",         1, 0, '$'},
 	{"help",            0, 0, 'h'},
 	{"version",			0, 0, 'V'},
 	{0, 0, 0, 0}
@@ -177,8 +173,7 @@ void show_usage(char *appname, struct config_file *config)
 	ltfsresult(AMK0062I);           /*     --no-override */
 	ltfsresult(AMK0073I);           /* -w, --wipe */
 	ltfsresult(AMK0063I);           /* -q, --quiet */
-	ltfsresult(AMK0064I);           /* -t, --trace */
-	ltfsresult(AMK0077I);           /* --syslogtrace */
+	ltfsresult(AMK0085I);           /* --verbose=<num> */
 	ltfsresult(AMK0078I);           /* -V, --version */
 	ltfsresult(AMK0065I);           /* -h, --help */
 	ltfsresult(AMK0068I, LTFS_CONFIG_FILE);       /* -i, --config=<file> */
@@ -187,7 +182,6 @@ void show_usage(char *appname, struct config_file *config)
 	ltfsresult(AMK0070I, LTFS_DEFAULT_BLOCKSIZE); /* -b, --blocksize */
 	ltfsresult(AMK0071I);                         /* -c, --no-compression */
 	ltfsresult(AMK0074I);                         /* -k, --keep-capacity */
-	ltfsresult(AMK0072I);                         /* -x, --fulltrace */
 	ltfsresult(AMK0079I);                         /* --long-wipe */
 	ltfsresult(AMK0080I);                         /* --destructive */
 	fprintf(stderr, "\n");
@@ -211,6 +205,7 @@ int main(int argc, char **argv)
 	struct ltfs_volume *newvol;
 	struct other_format_opts opt;
 	int ret, log_level, syslog_level, i, cmd_args_len;
+	char *endptr;
 	char *lang, *cmd_args;
 	const char *lang_fallback = NULL;
 	const char *config_file = NULL;
@@ -272,6 +267,7 @@ int main(int argc, char **argv)
 
 	/* Set up empty format options and load the configuration file. */
 	memset(&opt, 0, sizeof(struct other_format_opts));
+	opt.verbose = -1;
 	opt.enable_compression = true;
 	opt.allow_update = true;
 	opt.unformat = false;
@@ -364,14 +360,13 @@ int main(int argc, char **argv)
 			case 'q':
 				opt.quiet = true;
 				break;
-			case 't':
-				opt.trace = true;
-				break;
-			case '!':
-				opt.syslogtrace = true;
-				break;
-			case 'x':
-				opt.fulltrace = true;
+			case '$':
+				opt.verbose = (int)strtol(optarg, &endptr, 10);
+				if (*optarg == '\0' || *endptr != '\0' || opt.verbose < 0) {
+					ltfsmsg(AMK0086E, optarg);
+					show_usage(argv[0], opt.config);
+					return 1;
+				}
 				break;
 			case 'h':
 				show_usage(argv[0], opt.config);
@@ -411,22 +406,21 @@ int main(int argc, char **argv)
 	if (opt.kmi_backend_name && strcmp(opt.kmi_backend_name, "none") == 0)
 		opt.kmi_backend_name = NULL;
 
-	/* Set the logging level */
-	if (opt.quiet && (opt.trace || opt.fulltrace)) {
+	/* Set the logging level: --verbose=<syslog level> * 100 + <stderr level>; without a
+	 * syslog level nothing goes to syslog */
+	if (opt.quiet && opt.verbose >= 0) {
 		ltfsmsg(AMK0081E);
 		show_usage(argv[0], opt.config);
 		return 1;
 	} else if (opt.quiet) {
 		log_level = LTFS_WARN;
 		syslog_level = LTFS_NONE;
-	} else if (opt.trace) {
-		log_level = LTFS_DEBUG;
+	} else if (opt.verbose >= 100) {
+		syslog_level = opt.verbose / 100;
+		log_level = opt.verbose % 100;
+	} else if (opt.verbose >= 0) {
+		log_level = opt.verbose;
 		syslog_level = LTFS_NONE;
-	} else if (opt.syslogtrace)
-		log_level = syslog_level = LTFS_DEBUG;
-	else if (opt.fulltrace) {
-		log_level = LTFS_TRACE;
-		syslog_level = LTFS_DEBUG;
 	} else {
 		log_level = LTFS_INFO;
 		syslog_level = LTFS_NONE;

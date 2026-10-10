@@ -33,9 +33,6 @@ Tape device name. On Linux, *name* is like '/dev/IBMtape0', on OSX, *name* is li
 **-o work_directory=** *dir*  
 LTFS work directory (default: )
 
-**-o trace**  
-Enable diagnostic output (same as verbose=3)
-
 **-o eject**  
 Eject the cartridge after unmount
 
@@ -170,14 +167,8 @@ A file is written to the index partition if it is no larger than the given size 
 **-o quiet**  
 Disable informational messages (same as verbose=1)
 
-**-o syslogtrace**  
-Enable diagnostic output to stderr and syslog(same as verbose=303)
-
-**-o fulltrace**  
-Enable full call tracing (same as verbose=7)
-
 **-o verbose=** *num*  
-Override output verbosity directly (default: 2). A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: verbose=200 sends informational messages to syslog and errors only to the standard error output.
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. A number below 100 sets the level of the standard error output; syslog gets the same messages, up to informational ones. *syslog level* \* 100 + *stderr level* sets the two separately: verbose=200 sends informational messages to syslog and errors only to the standard error output.
 
 **-o noeject**  
 Do not eject the cartridge after unmount (default)

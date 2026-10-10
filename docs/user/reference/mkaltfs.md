@@ -8,7 +8,7 @@ mkaltfs - Format a tape in the drive to LTFS format
 
 ## SYNOPSIS
 
-**mkaltfs** **-d** *name* \[ **-f** \] \[ **-s** *id* \] \[ **-n** *name* \] \[ **-r** *rules* \] \[ **-w** \] \[ **-q** \] \[ **-t** \] \[ **-V** \] \[ **-h** \] \[ **-p** \]
+**mkaltfs** **-d** *name* \[ **-f** \] \[ **-s** *id* \] \[ **-n** *name* \] \[ **-r** *rules* \] \[ **-w** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] \[ **-p** \]
 
 ## DESCRIPTION
 
@@ -48,11 +48,8 @@ Restore the LTFS medium to an unpartitioned medium (format to a legacy scratch m
 **-q, --quiet**  
 Suppress progress information and general messages
 
-**-t, --trace**  
-Enable function call tracing
-
-**--syslogtrace**  
-Enable diagnostic output to stderr and syslog
+**--verbose=** *num*  
+Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 debug. *syslog level* \* 100 + *stderr level* also sends the messages up to the syslog level to syslog, which is otherwise off: --verbose=303 logs everything to both.
 
 **-V, --version**  
 Version information
@@ -91,9 +88,6 @@ Disable compression on the volume
 
 **-k, --keep-capacity**  
 Keep the tape medium's total capacity proportion
-
-**-x, --fulltrace**  
-Enable full function call tracing (slow)
 
 **--long-wipe**  
 Unformat the medium and erase any data on the tape by overwriting special data pattern. This operation takes over 3 hours. Once you start, you cannot interrupt it.

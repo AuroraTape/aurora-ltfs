@@ -90,8 +90,7 @@ struct indextool_opts {
 	char *backend_path;         /**< Path to tape backend shared library */
 	char *kmi_backend_name;     /**< Name or path to the key manager interface backend library */
 	bool quiet;                 /**< Quiet mode indicator */
-	bool trace;                 /**< Debug mode indicator */
-	bool syslogtrace;           /**< Generate debug output to stderr and syslog*/
+	int  verbose;               /**< --verbose=<level>, -1 when not given */
 };
 
 /* Command line options */
@@ -100,7 +99,7 @@ struct indextool_opts {
 #define OUTPUT_DIR "."
 #define INDEX_KEY  "<ltfsindex"
 
-static const char *short_options = "i:e:d:p:s:o:b:qthV";
+static const char *short_options = "i:e:d:p:s:o:b:qhV";
 static struct option long_options[] = {
 	{"config",          1, 0, 'i'},
 	{"backend",         1, 0, 'e'},
@@ -111,8 +110,7 @@ static struct option long_options[] = {
 	{"blocksize",       1, 0, 'b'},
 	{"kmi-backend",     1, 0, '-'},
 	{"quiet",           0, 0, 'q'},
-	{"trace",           0, 0, 't'},
-	{"syslogtrace",     0, 0, '!'},
+	{"verbose",         1, 0, '$'},
 	{"help",            0, 0, 'h'},
 	{"version",			0, 0, 'V'},
 	{0, 0, 0, 0}
@@ -529,7 +527,7 @@ static void show_usage(char *appname, struct config_file *config)
 	ltfsresult(AIX0058I, default_backend);                               /* -e, --backend */
 	ltfsresult(AIX0059I, config_file_get_default_plugin("kmi", config)); /* --kmi-backend */
 	ltfsresult(AIX0060I);           /* -q, --quiet */
-	ltfsresult(AIX0061I);           /* -t, --trace */
+	ltfsresult(AIX0071I);           /* --verbose=<num> */
 	ltfsresult(AIX0062I);           /* -V, --version */
 	ltfsresult(AIX0063I);           /* -h, --help */
 	fprintf(stderr, "\n");
@@ -548,6 +546,7 @@ int main(int argc, char **argv)
 	struct ltfs_volume *vol;
 	struct indextool_opts opt;
 	int ret, log_level, syslog_level, i, cmd_args_len;
+	char *endptr;
 	char *lang, *cmd_args;
 	const char *lang_fallback = NULL;
 	const char *config_file = NULL;
@@ -609,6 +608,7 @@ int main(int argc, char **argv)
 
 	/* Set up empty options and load the configuration file. */
 	memset(&opt, 0, sizeof(struct indextool_opts));
+	opt.verbose = -1;
 	opt.blocksize = LTFS_DEFAULT_BLOCKSIZE;
 	opt.partition = PART_BOTH;
 	opt.start_pos = START_POS;
@@ -672,11 +672,13 @@ int main(int argc, char **argv)
 			case 'q':
 				opt.quiet = true;
 				break;
-			case 't':
-				opt.trace = true;
-				break;
-			case '!':
-				opt.syslogtrace = true;
+			case '$':
+				opt.verbose = (int)strtol(optarg, &endptr, 10);
+				if (*optarg == '\0' || *endptr != '\0' || opt.verbose < 0) {
+					ltfsmsg(AIX0072E, optarg);
+					show_usage(argv[0], opt.config);
+					return 1;
+				}
 				break;
 			case 'h':
 				show_usage(argv[0], opt.config);
@@ -718,20 +720,22 @@ int main(int argc, char **argv)
 	if (opt.kmi_backend_name && strcmp(opt.kmi_backend_name, "none") == 0)
 		opt.kmi_backend_name = NULL;
 
-	/* Set the logging level */
-	if (opt.quiet && opt.trace) {
+	/* Set the logging level: --verbose=<syslog level> * 100 + <stderr level>; without a
+	 * syslog level nothing goes to syslog */
+	if (opt.quiet && opt.verbose >= 0) {
 		ltfsmsg(AIX0066E);
 		show_usage(argv[0], opt.config);
 		return 1;
 	} else if (opt.quiet) {
 		log_level = LTFS_WARN;
 		syslog_level = LTFS_NONE;
-	} else if (opt.trace) {
-		log_level = LTFS_DEBUG;
+	} else if (opt.verbose >= 100) {
+		syslog_level = opt.verbose / 100;
+		log_level = opt.verbose % 100;
+	} else if (opt.verbose >= 0) {
+		log_level = opt.verbose;
 		syslog_level = LTFS_NONE;
-	} else if (opt.syslogtrace)
-		log_level = syslog_level = LTFS_DEBUG;
-	else {
+	} else {
 		log_level = LTFS_INFO;
 		syslog_level = LTFS_NONE;
 	}

@@ -32,7 +32,7 @@
         <arg><option>-j</option></arg>
         <arg><option>-k</option></arg>
         <arg><option>-q</option></arg>
-        <arg><option>-t</option></arg>
+        <arg><option>--verbose=<replaceable>num</replaceable></option></arg>
         <arg><option>-V</option></arg>
         <arg><option>-h</option></arg>
         <arg><option>-p</option></arg>
@@ -131,15 +131,15 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>-t, --trace</option></term>
+          <term><option>--verbose=<replaceable>num</replaceable></option></term>
           <listitem>
-            <para>Enable function call tracing</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>--syslogtrace</option></term>
-          <listitem>
-            <para>Enable diagnostic output to stderr and syslog</para>
+            <para>
+              Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+              3 debug. <replaceable>syslog level</replaceable> * 100 +
+              <replaceable>stderr level</replaceable> also sends the messages up to the
+              syslog level to syslog, which is otherwise off: --verbose=303 logs
+              everything to both.
+            </para>
           </listitem>
         </varlistentry>
         <varlistentry>
@@ -186,12 +186,6 @@
           <term><option>--kmi-backend=<replaceable>name</replaceable></option></term>
           <listitem>
             <para>Use the specified key manager interface backend (default: none)</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>-x, --fulltrace</option></term>
-          <listitem>
-            <para>Enable full function call tracing (slow)</para>
           </listitem>
         </varlistentry>
         <varlistentry>

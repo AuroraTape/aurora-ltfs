@@ -146,11 +146,11 @@ root:table {
 		ACK0101I:string { "  -j, --erase-history             Erase history at rollback" }
 		ACK0102I:string { "  -k, --keep-history              Keep history at rollback (default)" }
 		ACK0103I:string { "  -q, --quiet                     Suppress informational messages" }
-		ACK0104I:string { "  -t, --trace                     Enable diagnostic output" }
+		//unused ACK0104I:string { "  -t, --trace                     Enable diagnostic output" }
 		ACK0105I:string { "  -h, --help                      This help" }
 		ACK0106I:string { "  -i, --config=<file>             Use the specified configuration file (default: %s)" }
 		ACK0107I:string { "  -e, --backend=<name>            Override the default tape device backend" }
-		ACK0108I:string { "  -x, --fulltrace                 Enable full function call tracing (slow)" }
+		//unused ACK0108I:string { "  -x, --fulltrace                 Enable full function call tracing (slow)" }
 		//unused 16417I
 		ACK0109I:string { "  -v, --traverse=<strategy>       Set traverse mode for listing roll back points. Strategy should be forward or backward. (default: backward)" }
 		ACK0110I:string { "  -z, --deep-recovery             Recover EOD missing cartridge.\n"
@@ -160,16 +160,18 @@ root:table {
 		ACK0111I:string { "  -m, --full-index-info           Display full index information (Effective only for -l option)" }
 		ACK0112I:string { "      --kmi-backend=<name>        Override the default key manager interface backend" }
 		ACK0113I:string { "      --capture-index=<dir>       Capture indexes to the specified directory (-g is effective for this option)" }
-		ACK0114I:string { "      --syslogtrace               Enable diagnostic output to stderr and syslog" }
+		//unused ACK0114I:string { "      --syslogtrace               Enable diagnostic output to stderr and syslog" }
 		ACK0115I:string { "  -V, --version                   Version information" }
 		ACK0116I:string { "      --salvage-rollback-points   List the rollback points of the cartridge that has no EOD" }
 
 		// Messages relocated from libaltfs
-		ACK0117E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
+		ACK0117E:string { "Cannot specify \"--quiet\" with \"--verbose\"" }
 
 		// Locale fallback at startup. The E message is printed before the catalogs
 		// are loaded, so its text is duplicated in the source.
 		ACK0118W:string { "Setting the locale to \'%s\'. If this is wrong, please set the LANG environment variable before starting altfsck" }
 		ACK0119E:string { "Cannot set the LANG environment variable" }
+		ACK0120I:string { "      --verbose=<num>             Log level: 0 errors, 1 warnings, 2 informational (default), 3 debug; <syslog level> * 100 + <stderr level> logs to syslog too" }
+		ACK0121E:string { "Invalid value for --verbose: \"%s\"" }
 	}
 }

@@ -103,7 +103,7 @@ root:table {
 		AMK0061I:string { "  -r, --rules=<rules>       Rules for choosing files to write to the index partition.\n                            The syntax of the rule argument is:\n                                size=1M\n                                size=1M/name=pattern\n                                size=1M/name=pattern1:pattern2:pattern3\n                            A file is written to the index partition if it is no larger\n                            than the given size AND matches at least one of the name\n                            patterns (if specified). The size argument accepts K, M, and G\n                            suffixes. Name patterns might contain the special characters\n                            '?' (match any single character) and '*' (match zero or more\n                            characters)" }
 		AMK0062I:string { "      --no-override         Disallow mount-time data placement policy changes" }
 		AMK0063I:string { "  -q, --quiet               Suppress progress information and general messages" }
-		AMK0064I:string { "  -t, --trace               Enable function call tracing" }
+		//unused AMK0064I:string { "  -t, --trace               Enable function call tracing" }
 		AMK0065I:string { "  -h, --help                This help" }
 		AMK0066I:string { "Usage example:" }
 		AMK0067I:string { "  %s --device=%s --rules=\"%s\"" }
@@ -111,18 +111,18 @@ root:table {
 		AMK0069I:string { "  -e, --backend=<name>      Use the specified tape device backend (default: %s)" }
 		AMK0070I:string { "  -b, --blocksize=<num>     Set the LTFS record size (default: %d)" }
 		AMK0071I:string { "  -c, --no-compression      Disable compression on the volume" }
-		AMK0072I:string { "  -x, --fulltrace           Enable full function call tracing (slow)" }
+		//unused AMK0072I:string { "  -x, --fulltrace           Enable full function call tracing (slow)" }
 		AMK0073I:string { "  -w, --wipe                Restore the LTFS medium to an unpartitioned medium (format to a legacy scratch medium)" }
 		AMK0074I:string { "  -k, --keep-capacity       Keep the tape medium's total capacity proportion" }
 		AMK0075I:string { "  -f, --force               Force to format medium" }
 		AMK0076I:string { "      --kmi-backend=<name>  Use the specified key manager interface backend (default: %s)" }
-		AMK0077I:string { "      --syslogtrace         Enable diagnostic output to stderr and syslog" }
+		//unused AMK0077I:string { "      --syslogtrace         Enable diagnostic output to stderr and syslog" }
 		AMK0078I:string { "  -V, --version             Version information" }
 		AMK0079I:string { "      --long-wipe           Unformat the medium and erase any data on the tape by overwriting special data pattern.\n                            This operation takes over 3 hours. Once you start, you cannot interrupt it" }
 		AMK0080I:string { "      --destructive         Use destructive format/unformat. This operation takes longer time\n                            in the LTO9 drive or later because of the media optimization procedure" }
 
 		// Messages relocated from libaltfs
-		AMK0081E:string { "Cannot specify \"--quiet\" with \"--trace\" or \"--fulltrace\"" }
+		AMK0081E:string { "Cannot specify \"--quiet\" with \"--verbose\"" }
 
 		// Locale fallback at startup. The E message is printed before the catalogs
 		// are loaded, so its text is duplicated in the source.
@@ -131,5 +131,7 @@ root:table {
 
 		// Block size chosen from the device limit (issue #148)
 		AMK0084I:string { "Block size lowered to %lu bytes: the drive or the host transfer path supports at most %u bytes per block" }
+		AMK0085I:string { "      --verbose=<num>       Log level: 0 errors, 1 warnings, 2 informational (default), 3 debug; <syslog level> * 100 + <stderr level> logs to syslog too" }
+		AMK0086E:string { "Invalid value for --verbose: \"%s\"" }
 	}
 }
