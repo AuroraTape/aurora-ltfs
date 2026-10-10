@@ -265,6 +265,7 @@ By default macFUSE mounts through its kernel extension, which on Apple silicon h
 
 - Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
 - Use version 1.0.2 or later. Earlier versions silently lose data written through FSKit: a write request larger than a tape block lost its tail.
+- FSKit does not check permissions, so when `-o backend=fskit` is given altfs refuses itself to open, truncate or set an extended attribute on a read-only file (`chmod a-w`). Earlier versions let such writes through.
 - Intel Macs: with macFUSE 5.4.0 the FSKit backend does not mount there. It crashes inside macFUSE when the file system binary is unsigned ([macfuse/macfuse#1205](https://github.com/macfuse/macfuse/issues/1205), fixed for macFUSE 5.5.0), and even with an ad-hoc signed binary the volume did not come up in our tests. Use the kernel extension there; on Intel it needs no security change.
 - If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
 

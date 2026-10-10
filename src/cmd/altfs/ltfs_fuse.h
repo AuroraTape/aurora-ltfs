@@ -137,6 +137,7 @@ struct ltfs_fuse_data {
 	unsigned long wait_medium_sec; /**< Time limit of wait_medium in seconds, 0 for no limit */
 	int allow_other;               /**< Allow all users to access the volume? */
 	int read_only;                 /**< Mount read-only on request (-o ro)? */
+	bool check_perms;              /**< Check the file read-only flag in altfs, the FUSE layer does not (macFUSE FSKit backend) */
 	char *capture_dir;             /**< Directory to capture index information  */
 	char *symlink_str;             /**< Symbolic Link type fetched by option (live or posix)*/
 	char *str_append_only_mode;    /**< option sting of scsi_append_only_mode */
