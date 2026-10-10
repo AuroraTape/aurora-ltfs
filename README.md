@@ -99,7 +99,7 @@ $ brew install --cask macfuse
 $ brew install auroratape/tap/aurora-ltfs
 ```
 
-Apple silicon gets a pre-built bottle (Homebrew in its default prefix, `/opt/homebrew`); Intel Macs build from source. macOS is a Tier 2 platform: the formula is built and tested on CI without mounting, and mounting needs macFUSE set up as described [below](#macos-mounting-without-the-kernel-extension-fskit-experimental) or with its kernel extension allowed.
+Apple silicon gets a pre-built bottle (Homebrew in its default prefix, `/opt/homebrew`); Intel Macs build from source. macOS is a Tier 2 platform: the formula is built and tested on CI without mounting, and mounting goes through macFUSE's FSKit backend, set up as described [below](#macos-mounting-through-fskit).
 
 ## Container image
 
@@ -255,9 +255,9 @@ Then mount the captured file:
 
 The mount is read-only. Reading a file fails with `ENODATA`; `ltfs.*` attributes that come from the index (`ltfs.volumeUUID`, `ltfs.indexGeneration`, `ltfs.startblock`, ...) are available, those that need the cartridge or the drive fail with `ENODATA`. The file must hold a full index; an incremental index alone does not describe the tree and is rejected. With `-o devname` as well, the tape is mounted read-only with that index and file contents can be read. See `-o index_file` in `altfs(8)`.
 
-## macOS: mounting without the kernel extension (FSKit, experimental)
+## macOS: mounting through FSKit
 
-By default macFUSE mounts through its kernel extension, which on Apple silicon has to be enabled by booting into Recovery and lowering the startup security policy. macFUSE 5 (5.4 or later, macOS 15.4 or later) can mount through Apple's FSKit instead, with no kernel extension and no security change:
+On macOS, altfs mounts through macFUSE 5 (5.4 or later, macOS 15.4 or later) and its FSKit backend, Apple's framework for file systems in user space: no kernel extension, and on Apple silicon no change to the startup security policy. Select it with `-o backend=fskit`:
 
 ```
 # altfs -o devname=0 -o backend=fskit /path/to/mountpoint
@@ -266,10 +266,12 @@ By default macFUSE mounts through its kernel extension, which on Apple silicon h
 - Enable the FSKit module once: launch `/Library/Filesystems/macfuse.fs/Contents/Resources/macfuse.app`, then turn macFUSE on under System Settings > General > Login Items & Extensions > File System Extensions. Installing or upgrading the macfuse cask alone does not register it.
 - Use version 1.0.2 or later. Earlier versions silently lose data written through FSKit: a write request larger than a tape block lost its tail.
 - FSKit does not check permissions, so on macOS altfs refuses itself to open, truncate or set an extended attribute on a read-only file (`chmod a-w`), for root as well. Earlier versions let such writes through on FSKit.
-- Intel Macs: with macFUSE 5.4.0 the FSKit backend does not mount there. It crashes inside macFUSE when the file system binary is unsigned ([macfuse/macfuse#1205](https://github.com/macfuse/macfuse/issues/1205), fixed for macFUSE 5.5.0), and even with an ad-hoc signed binary the volume did not come up in our tests. Use the kernel extension there; on Intel it needs no security change.
+- Writing reaches the drive's rate (about 130 MB/s of incompressible data on LTO-5). Reading a file sequentially is slower than the drive, between 50 and 90 MB/s on LTO-5 depending on where the file is on the tape, because FSKit issues its reads concurrently and out of order and every reordering costs a tape locate.
+- Intel Macs: FSKit there needs macFUSE 5.5.0 or later (5.4.0 crashes when the file system binary is unsigned), and we have not been able to bring up an FSKit volume on an Intel Mac yet.
 - If the altfs process dies while mounted, unmounting that volume can hang and block Finder and anything else that lists mounts. Killing that volume's `io.macfuse.app.fsmodule.macfuse-local` process releases it.
+- The macFUSE kernel extension backend, which macFUSE uses when `-o backend=fskit` is not given, is not supported any more and not tested.
 
-Keep the Mac awake while a tape is mounted, whichever backend you use, e.g. by running the session under `caffeinate -i` on AC power. Apple's FC driver for LSI HBAs (`AppleLSIFusionMPT`) has been seen to panic when tape I/O arrives while the system is asleep.
+Keep the Mac awake while a tape is mounted, e.g. by running the session under `caffeinate -i` on AC power. Apple's FC driver for LSI HBAs (`AppleLSIFusionMPT`) has been seen to panic when tape I/O arrives while the system is asleep.
 
 ## The `altfs_ordered_copy` utility
 
