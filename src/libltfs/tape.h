@@ -94,6 +94,13 @@ struct rao_mod {
 	size_t        out_size; /**< Valid length of out_buf */
 };
 
+/* tape_get_capacity() asks the drive again when this much has been written since its
+ * last answer, or when something has been written and the answer is this old. The
+ * figure is the drive's own: it is never adjusted by the bytes written, the drive
+ * compresses and consumes less than that. */
+#define TAPE_CAPACITY_REFRESH_BYTES (1024ULL * 1024 * 1024)
+#define TAPE_CAPACITY_REFRESH_SEC   10
+
 struct device_data {
 	struct tc_position position;          /**< Current head position */
 	tape_block_t append_pos[2];           /**< Append positions, 0 means append at EOD */
@@ -110,7 +117,13 @@ struct device_data {
 	bool is_worm;                         /**< Is WORM tape? */
 	int  is_encrypted;                    /**< Is tape encrypted? 0: unknown, -1: not encrypted, 1: encrypted */
 	int  is_decrypting;                   /**< Is the drive decrypting? 0: unknown, -1: no, 1: yes */
-	struct ltfs_timespec previous_exist;  /**< Previous time to be confirm drive connection presence */
+	struct ltfs_timespec previous_exist;  /**< When a command that needs a ready medium last succeeded (TEST UNIT READY is skipped for a second after it) */
+
+	/* Cache of the remaining capacity, see tape_get_capacity(). Guarded by the device lock. */
+	struct tc_remaining_cap capacity;     /**< Capacity last read from the drive */
+	struct ltfs_timespec capacity_time;   /**< When capacity was read */
+	uint64_t capacity_written;            /**< Bytes written since capacity was read */
+	bool capacity_valid;                  /**< Was capacity read from the medium that is loaded now? */
 
 	struct tape_ops *backend;             /**< Backend functions */
 	void *backend_data;                   /**< Backend private data */
