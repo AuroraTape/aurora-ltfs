@@ -36,6 +36,10 @@ grouped by reader.
 - [Message IDs](../messages/README): the message catalogs and how IDs are
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
+- Design documents:
+  - [Components and layers](developer/design/COMPONENTS.md): how a file
+    system call reaches the tape, the volume, index and dentry structures
+    and their locks, where the index is read and written, the plugins
 
 ## Project
 
