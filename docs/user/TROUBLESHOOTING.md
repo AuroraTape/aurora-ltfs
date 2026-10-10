@@ -14,10 +14,9 @@ four digits, and a severity letter (`E` error, `W` warning, `I`
 informational, `D` debug). The messages go to standard error and to syslog;
 with the deb and rpm packages and rsyslog they are in `/var/log/altfs.log`,
 otherwise in the journal or the system log. `-o trace` makes `altfs` log
-its diagnostic messages as well (`-o verbose=3`; the levels above 3,
-including `-o fulltrace`, are accepted but no message uses them, so they
-print the same); `altfsck` and `mkaltfs` take `-t` and `--syslogtrace` for
-the same. See [Configuration](CONFIGURATION.md#logging).
+its diagnostic messages as well (`-o verbose=3`); `altfsck` and `mkaltfs`
+take `-t` and `--syslogtrace` for the same. See
+[Configuration](CONFIGURATION.md#logging).
 
 The first error in the log is the one that matters: what follows is usually
 the consequence. Two lines to have at hand for every problem:

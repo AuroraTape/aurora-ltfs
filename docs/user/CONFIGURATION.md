@@ -174,17 +174,15 @@ recorded on the tape and not configured anywhere.
 
 The commands write their messages to standard error and to syslog, as
 `altfs`, `mkaltfs`, `altfsck` and `altfsindextool` with the facility `user`.
-The levels are 0 errors, 1 warnings, 2 informational (the default) and 3
-diagnostic. Levels 4 to 7 are accepted for compatibility (they once selected
-more detailed diagnostics and a trace of every call) but no message uses
-them.
+The levels are 0 errors, 1 warnings, 2 informational (the default), 3 to 6
+diagnostic in increasing detail, 7 full call tracing.
 
 For `altfs`, `-o verbose=<num>` sets them. A number below 100 sets the level
 of the standard error, and syslog gets the same messages up to the
 informational ones; `<syslog level> * 100 + <stderr level>` sets the two
 apart, as in `-o verbose=200` (informational to syslog, errors only to the
 terminal). The shorthands are `-o quiet` (1), `-o trace` (3),
-`-o syslogtrace` (303) and `-o fulltrace` (7, prints the same as 3).
+`-o syslogtrace` (303) and `-o fulltrace` (7).
 
 `mkaltfs` and `altfsindextool` log to syslog only with `--syslogtrace`
 (diagnostic messages to both) or, for `mkaltfs`, `-x` (full tracing to the
