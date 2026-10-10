@@ -496,6 +496,30 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 	return 0;
 }
 
+static int _ltfs_fuse_do_flush(struct ltfs_file_handle *file, struct ltfs_fuse_data *priv,
+	const char *caller)
+{
+	bool dirty;
+	int ret = 0;
+
+	ltfs_mutex_lock(&file->lock);
+	dirty = file->dirty;
+	ltfs_mutex_unlock(&file->lock);
+
+	if (dirty) {
+		ret = ltfs_fsops_flush(file->file_info->dentry_handle, false, priv->data);
+		if (ret < 0)
+			ltfsmsg(AFS0019E, caller);
+		else {
+			ltfs_mutex_lock(&file->lock);
+			file->dirty = false;
+			ltfs_mutex_unlock(&file->lock);
+		}
+	}
+
+	return errormap_fuse_error(ret);
+}
+
 int ltfs_fuse_release(const char *path, struct fuse_file_info *fi)
 {
 	struct ltfs_fuse_data *priv = fuse_get_context()->private_data;
@@ -509,6 +533,21 @@ int ltfs_fuse_release(const char *path, struct fuse_file_info *fi)
 	ltfsmsg(AFS0031D, _dentry_name(path, file->file_info));
 
 	uid = ((struct dentry *)(file->file_info->dentry_handle))->uid;
+
+#ifdef __APPLE__
+	/* macFUSE's FSKit backend sends neither FLUSH nor FSYNC, so a file
+	 * written through it still has data in the I/O scheduler when it is
+	 * released, and ltfs_fsops_close() would count the file's blocks
+	 * before that data is written. Do here what the FLUSH that precedes
+	 * every RELEASE on the other backends does; with the macFUSE kernel
+	 * extension that FLUSH has already cleared the dirty flag and this
+	 * does nothing. When it fails the handle stays dirty and the close
+	 * below writes the data out as before (the failure is logged by
+	 * _ltfs_fuse_do_flush(), and the block count then misses what the
+	 * close wrote), so the result of the close is the result of the
+	 * release. */
+	_ltfs_fuse_do_flush(file, priv, __FUNCTION__);
+#endif
 
 	/* Should this file's buffers be flushed? */
 	ltfs_mutex_lock(&file->lock);
@@ -606,30 +645,6 @@ int ltfs_fuse_fsyncdir(const char *path, int flags, struct fuse_file_info *fi)
 	ltfs_request_trace(FUSE_REQ_ENTER(REQ_FSYNCDIR), 0, 0);
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_FSYNCDIR), 0, 0);
 	return 0;
-}
-
-static int _ltfs_fuse_do_flush(struct ltfs_file_handle *file, struct ltfs_fuse_data *priv,
-	const char *caller)
-{
-	bool dirty;
-	int ret = 0;
-
-	ltfs_mutex_lock(&file->lock);
-	dirty = file->dirty;
-	ltfs_mutex_unlock(&file->lock);
-
-	if (dirty) {
-		ret = ltfs_fsops_flush(file->file_info->dentry_handle, false, priv->data);
-		if (ret < 0)
-			ltfsmsg(AFS0019E, caller);
-		else {
-			ltfs_mutex_lock(&file->lock);
-			file->dirty = false;
-			ltfs_mutex_unlock(&file->lock);
-		}
-	}
-
-	return errormap_fuse_error(ret);
 }
 
 int ltfs_fuse_fsync(const char *path, int isdatasync, struct fuse_file_info *fi)
