@@ -30,6 +30,10 @@ grouped by reader.
 - [How to build](developer/BUILDING.md): build dependencies, building on
   Linux, macOS, FreeBSD and NetBSD, running the test suites, building the
   packages
+- [Writing tests](developer/TESTING.md): the suites and what belongs where,
+  the shared helpers and the `mount` marker, the `file` tape backend and how
+  to put a volume into a state that is hard to produce on a drive, what CI
+  runs on each platform
 - [Contributing](../.github/CONTRIBUTING.md): how to propose a change
 - [Coding style](developer/CODING_STYLE.md)
 - [AI policy](developer/AI_POLICY.md)
