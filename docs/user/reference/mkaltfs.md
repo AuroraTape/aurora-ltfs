@@ -103,4 +103,4 @@ Use destructive format/unformat. This operation takes longer time in the LTO9 dr
 
 ## SEE ALSO
 
-altfs(8), altfsck(8), tape-backend(4), kmi-backend(4), altfs.conf(5).
+altfs(8), altfsck(8).

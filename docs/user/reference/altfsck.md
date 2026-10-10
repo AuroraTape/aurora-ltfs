@@ -90,4 +90,4 @@ List the rollback points of the cartridge that has no EOD
 
 ## SEE ALSO
 
-altfs(8), mkaltfs(8), altfsindextool(8), tape-backend(4), kmi-backend(4), altfs.conf(5).
+altfs(8), mkaltfs(8), altfsindextool(8).

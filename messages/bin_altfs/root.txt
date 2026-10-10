@@ -168,7 +168,7 @@ root:table {
 						"                              '?' (match any single character) and '*' (match zero or more\n"
 						"                              characters)" }
 		AFS0115I:string { "    -o quiet                  Disable informational messages (same as verbose=1)" }
-		AFS0116I:string { "    -o fulltrace              Enable full call tracing (same as verbose=4)" }
+		AFS0116I:string { "    -o fulltrace              Enable full call tracing (same as verbose=7)" }
 		AFS0117I:string { "    -o eject                  Eject the cartridge after unmount" }
 		// Reserved 14426I
 		AFS0118I:string { "    -o sync_type=<type>       Specify sync type (default: time@5)\n                              <type> should be specified as follows:\n                              time@min:  LTFS attempts to write an index each 'min' minutes.\n                                         min should be a decimal number from 1 to %ld\n"

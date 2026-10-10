@@ -427,7 +427,7 @@
         <varlistentry>
           <term><option>-o fulltrace</option></term>
           <listitem>
-            <para>Enable full call tracing (same as verbose=4)</para>
+            <para>Enable full call tracing (same as verbose=7)</para>
           </listitem>
         </varlistentry>
         <varlistentry>
@@ -470,7 +470,7 @@
 
     <refsect1>
       <title>SEE ALSO</title>
-      <para>mkaltfs(8), altfsck(8), mount.fuse(8), fusermount(1), tape-backend(4), kmi-backend(4), altfs.conf(5).</para>
+      <para>mkaltfs(8), altfsck(8), mount.fuse(8), fusermount(1).</para>
     </refsect1>
 
   </refentry>
