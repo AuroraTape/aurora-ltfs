@@ -310,7 +310,7 @@ int ltfs_fuse_getattr(const char *path, struct stat *stbuf)
  * altfs mounts with default_permissions and leaves the mode checks to the
  * kernel. macFUSE's FSKit backend implements neither default_permissions
  * nor the caller's identity, so a file made read-only by chmod would still
- * open for writing there. With check_perms set, the read-only flag (the
+ * open for writing there. With fskit set, the read-only flag (the
  * only permission LTFS stores, see ltfs_fuse_chmod()) is checked here, on
  * the operations the kernel would refuse on a file without write
  * permission: open for writing, truncate, setxattr and removexattr.
@@ -318,16 +318,17 @@ int ltfs_fuse_getattr(const char *path, struct stat *stbuf)
  * @param path path of the file, for the message
  * @param attr attributes of the file
  * @param priv LTFS fuse data
- * @return 0 when the write may proceed, -EACCES when the file is read-only
+ * @return 0 when the write may proceed, -LTFS_RDONLY_FILE when the file is
+ *         read-only
  */
 static int _ltfs_fuse_check_writable(const char *path, const struct dentry_attr *attr,
 									 struct ltfs_fuse_data *priv)
 {
-	if (! priv->check_perms || attr->isdir || ! attr->readonly)
+	if (! priv->fskit || attr->isdir || ! attr->readonly)
 		return 0;
 
 	ltfsmsg(AFS0161D, path);
-	return -EACCES;
+	return -LTFS_RDONLY_FILE;
 }
 
 /**
@@ -335,8 +336,9 @@ static int _ltfs_fuse_check_writable(const char *path, const struct dentry_attr 
  * there is something to check.
  * @param path path of the file
  * @param priv LTFS fuse data
- * @return 0 when the write may proceed, or a negative FUSE error: -EACCES
- *         when the file is read-only, the lookup's error otherwise
+ * @return 0 when the write may proceed, or a negative LTFS error:
+ *         -LTFS_RDONLY_FILE when the file is read-only, the lookup's error
+ *         otherwise. The caller maps it with errormap_fuse_error().
  */
 static int _ltfs_fuse_check_writable_path(const char *path, struct ltfs_fuse_data *priv)
 {
@@ -344,12 +346,12 @@ static int _ltfs_fuse_check_writable_path(const char *path, struct ltfs_fuse_dat
 	ltfs_file_id id;
 	int ret;
 
-	if (! priv->check_perms)
+	if (! priv->fskit)
 		return 0;
 
 	ret = ltfs_fsops_getattr_path(path, &attr, &id, priv->data);
 	if (ret < 0)
-		return errormap_fuse_error(ret);
+		return ret;
 
 	return _ltfs_fuse_check_writable(path, &attr, priv);
 }
@@ -435,16 +437,15 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 
 	/* Refuse to open a read-only file for writing when the FUSE layer
 	 * has not already done so */
-	if (open_write && priv->check_perms) {
+	if (open_write && priv->fskit) {
 		struct dentry_attr attr;
 
 		ret = ltfs_fsops_getattr(dentry_handle, &attr, priv->data);
 		if (ret == 0)
 			ret = _ltfs_fuse_check_writable(path, &attr, priv);
-		else
-			ret = errormap_fuse_error(ret);
 		if (ret < 0) {
 			ltfs_fsops_close(dentry_handle, false, open_write, true, priv->data);
+			ret = errormap_fuse_error(ret);
 			ltfs_request_trace(FUSE_REQ_EXIT(REQ_OPEN), ret, 0);
 			return ret;
 		}
@@ -871,6 +872,7 @@ int ltfs_fuse_truncate(const char *path, off_t length)
 	 * that was opened for writing, so it was checked at open time. */
 	ret = _ltfs_fuse_check_writable_path(path, priv);
 	if (ret < 0) {
+		ret = errormap_fuse_error(ret);
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_TRUNCATE), ret, 0);
 		return ret;
 	}
@@ -1196,6 +1198,7 @@ int ltfs_fuse_setxattr(const char *path, const char *name, const char *value, si
 	 * kernel has it for every name space but security and system */
 	ret = _ltfs_fuse_check_writable_path(path, priv);
 	if (ret < 0) {
+		ret = errormap_fuse_error(ret);
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_SETXATTR), ret, 0);
 		return ret;
 	}
@@ -1280,6 +1283,7 @@ int ltfs_fuse_removexattr(const char *path, const char *name)
 	 * ltfs_fuse_setxattr() */
 	ret = _ltfs_fuse_check_writable_path(path, priv);
 	if (ret < 0) {
+		ret = errormap_fuse_error(ret);
 		ltfs_request_trace(FUSE_REQ_EXIT(REQ_REMOVEXATTR), ret, 0);
 		return ret;
 	}

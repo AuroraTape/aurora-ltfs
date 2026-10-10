@@ -375,7 +375,7 @@ int ltfs_parse_options(void *priv_data, const char *arg, int key, struct fuse_ar
 			 * nor the read-only mount flag, so altfs checks the file
 			 * read-only flag itself there. The option stays on the FUSE
 			 * command line. */
-			priv->check_perms = (strcmp(arg, "backend=fskit") == 0);
+			priv->fskit = (strcmp(arg, "backend=fskit") == 0);
 			break;
 		case FUSE_OPT_KEY_OPT:
 		case FUSE_OPT_KEY_NONOPT:
