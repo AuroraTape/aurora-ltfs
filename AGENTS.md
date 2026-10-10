@@ -159,7 +159,7 @@ altfsck -d <device_name>
 ### Debugging
 
 - Use `--enable-debug` configure option for debug builds
-- Set the log level with `-o verbose=<level>`: 0 errors, 1 warnings, 2 informational (default), 3 to 6 debug levels 0 to 3, 7 full call tracing; `-o trace` is 3, `-o fulltrace` is 7. `altfsck` and `mkaltfs` take `-t` (debug)
+- Set the log level with `-o verbose=<level>`: 0 errors, 1 warnings, 2 informational (default), 3 debug (`-o trace`). Levels 4 to 7 (`-o fulltrace`) exist but no message uses them. `altfsck` and `mkaltfs` take `-t`
 - Check syslog for LTFS messages
 
 ## Platform-Specific Notes

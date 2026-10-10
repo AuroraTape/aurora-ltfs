@@ -25,7 +25,7 @@ Put `OK`, `NG` or `-` (not tried).
 |         |       |             |            |         |         |         |
 
 **Log output**
-For a failure, attach the log around the first error, preferably taken with `-o verbose=4` (terminal output, `/var/log/altfs.log` or the journal).
+For a failure, attach the log around the first error, preferably taken with `-o trace` (terminal output, `/var/log/altfs.log` or the journal).
 
 **Additional context**
 Limitations you noticed, workarounds, anything else worth knowing about this drive.

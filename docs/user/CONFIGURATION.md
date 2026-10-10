@@ -182,7 +182,8 @@ of the standard error, and syslog gets the same messages up to the
 informational ones; `<syslog level> * 100 + <stderr level>` sets the two
 apart, as in `-o verbose=200` (informational to syslog, errors only to the
 terminal). The shorthands are `-o quiet` (1), `-o trace` (3),
-`-o syslogtrace` (303) and `-o fulltrace` (7).
+`-o syslogtrace` (303) and `-o fulltrace` (7). Messages exist at levels 0
+to 3 only; a level above 3 prints the same as 3.
 
 `mkaltfs` and `altfsindextool` log to syslog only with `--syslogtrace`
 (diagnostic messages to both) or, for `mkaltfs`, `-x` (full tracing to the
