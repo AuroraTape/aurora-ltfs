@@ -17,6 +17,9 @@ grouped by reader.
   options a site usually sets, logging
   - [conf/README.md](../conf/README.md): the syslog, logrotate and systemd
     files, and a syslog-ng example
+- [Troubleshooting](user/TROUBLESHOOTING.md): a volume that does not mount,
+  using `altfsck` (check, deep recovery, rollback points, rolling back), a
+  killed `altfs`, drive and host problems, what to send with a bug report
 - [Supported tape drives](user/DRIVES.md): the drive table with the minimum
   firmware levels, the testing policy, how to report a drive
 - [tests/realdrive/README.md](../tests/realdrive/README.md): checking a real
