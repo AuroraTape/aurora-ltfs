@@ -36,6 +36,11 @@ grouped by reader.
 - [Message IDs](../messages/README): the message catalogs and how IDs are
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
+- Design documents, in `developer/design/`:
+  - [Error handling](developer/design/ERROR_HANDLING.md): the `LTFS_*` and
+    `EDEV_*` code spaces and their `AEI`/`AED` message IDs, who logs what,
+    retries and revalidation, the mapping to errno, the conditions that make
+    a volume read-only, adding a code
 
 ## Project
 
