@@ -252,6 +252,7 @@ root:table {
 		AEI1204E:string { "Failed to update safename" }
 		AEI1205E:string { "Unwritten file contents exists in sync" }
 		AEI1206E:string { "Only the index is mounted: the operation needs the tape" }
+		AEI1207E:string { "The file is read-only" }
 
 		// XML parser error codes (LTFS_XML_* constants, 5000-)
 		AEI5000E:string { "Error happens in reading XML node" }

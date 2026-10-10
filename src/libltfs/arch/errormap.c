@@ -292,6 +292,7 @@ static struct error_map fuse_error_list[] = {
 	{ LTFS_SAFENAME_FAIL,            "AEI1204E", EINVAL},
 	{ LTFS_SYNC_FAIL_ON_DP,          "AEI1205E", EIO},
 	{ LTFS_INDEX_ONLY,               "AEI1206E", ENODATA},
+	{ LTFS_RDONLY_FILE,              "AEI1207E", EACCES},
 	{ LTFS_XML_READ_FAIL,            "AEI5000E", EINVAL},
 	{ LTFS_XML_CONST_FAIL,           "AEI5001E", EINVAL},
 	{ LTFS_XML_WRONG_NODE,           "AEI5002E", EINVAL},

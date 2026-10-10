@@ -257,5 +257,6 @@ root:table {
 		AFS0158I:string { "    -o index_file=<file>      Mount the tape read-only with an index file, or without devname the directory tree of the index file alone" }
 		AFS0159E:string { "The index_file option cannot be used with the rollback_mount option" }
 		AFS0160E:string { "Cannot read the index file %s (%d)" }
+		AFS0161D:string { "Refused to write \'%s\': the file is read-only" }
 	}
 }
