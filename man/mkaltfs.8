@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "MKALTFS" "8" "09 October 2026" "LTFS" "LTFS Command Reference"
+.TH "MKALTFS" "8" "10 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 mkaltfs \- Format a tape in the drive to LTFS format
 .SH SYNOPSIS
 
-\fBmkaltfs\fR \fB-d \fIname\fB\fR [ \fB-f\fR ] [ \fB-s \fIid\fB\fR ] [ \fB-n \fIname\fB\fR ] [ \fB-r \fIrules\fB\fR ] [ \fB-w\fR ] [ \fB-q\fR ] [ \fB-t\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ]
+\fBmkaltfs\fR \fB-d \fIname\fB\fR [ \fB-f\fR ] [ \fB-s \fIid\fB\fR ] [ \fB-n \fIname\fB\fR ] [ \fB-r \fIrules\fB\fR ] [ \fB-w\fR ] [ \fB-q\fR ] [ \fB--verbose=\fInum\fB\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -56,11 +56,13 @@ Restore the LTFS medium to an unpartitioned medium (format to a legacy scratch m
 \fB-q, --quiet\fR
 Suppress progress information and general messages
 .TP
-\fB-t, --trace\fR
-Enable function call tracing
-.TP
-\fB--syslogtrace\fR
-Enable diagnostic output to stderr and syslog
+\fB--verbose=\fInum\fB\fR
+Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+3 to 6 debug. A number below 100 sets the level of the standard error
+output; syslog gets the same messages, up to informational ones.
+\fIsyslog level\fR * 100 +
+\fIstderr level\fR sets the two separately:
+--verbose=303 sends the debug messages to both.
 .TP
 \fB-V, --version\fR
 Version information
@@ -103,9 +105,6 @@ Disable compression on the volume
 .TP
 \fB-k, --keep-capacity\fR
 Keep the tape medium's total capacity proportion
-.TP
-\fB-x, --fulltrace\fR
-Enable full function call tracing (slow)
 .TP
 \fB--long-wipe\fR
 Unformat the medium and erase any data on the tape by overwriting special data pattern.

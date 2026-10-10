@@ -169,6 +169,13 @@ int ltfs_fs_init(void)
  */
 void ltfs_set_log_level(int log_level)
 {
+	if (log_level > LTFS_DEBUG3) {
+		ltfsmsg(ALG0025W, log_level, LTFS_DEBUG3);
+		log_level = LTFS_DEBUG3;
+	} else if (log_level < LTFS_NONE) {
+		ltfsmsg(ALG0025W, log_level, LTFS_NONE);
+		log_level = LTFS_NONE;
+	}
 	ltfs_log_level = log_level;
 }
 
@@ -178,6 +185,13 @@ void ltfs_set_log_level(int log_level)
  */
 void ltfs_set_syslog_level(int syslog_level)
 {
+	if (syslog_level > LTFS_DEBUG3) {
+		ltfsmsg(ALG0025W, syslog_level, LTFS_DEBUG3);
+		syslog_level = LTFS_DEBUG3;
+	} else if (syslog_level < LTFS_NONE) {
+		ltfsmsg(ALG0025W, syslog_level, LTFS_NONE);
+		syslog_level = LTFS_NONE;
+	}
 	ltfs_syslog_level = syslog_level;
 }
 

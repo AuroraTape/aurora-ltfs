@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFSINDEXTOOL" "8" "09 October 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFSINDEXTOOL" "8" "10 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfsindextool \- Low level index checking tool for LTFS
 .SH SYNOPSIS
 
-\fBaltfsindextool\fR [ \fB-d \fIname\fB\fR ] [ \fB-p \fIpart_num\fB\fR ] [ \fB-s \fIblock\fB\fR ] [ \fB-b \fInum\fB\fR ] [ \fB-i \fIfile\fB\fR ] [ \fB-e \fIname\fB\fR ] [ \fB-q\fR ] [ \fB-t\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ] [ \fB\fIfilename\fB\fR ]
+\fBaltfsindextool\fR [ \fB-d \fIname\fB\fR ] [ \fB-p \fIpart_num\fB\fR ] [ \fB-s \fIblock\fB\fR ] [ \fB-b \fInum\fB\fR ] [ \fB-i \fIfile\fB\fR ] [ \fB-e \fIname\fB\fR ] [ \fB-q\fR ] [ \fB--verbose=\fInum\fB\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ] [ \fB\fIfilename\fB\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -52,8 +52,13 @@ Use the specified key manager interface backend (default: none)
 \fB-q, --quiet\fR
 Suppress progress information and general messages
 .TP
-\fB-t, --trace\fR
-Enable function call tracing
+\fB--verbose=\fInum\fB\fR
+Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+3 to 6 debug. A number below 100 sets the level of the standard error
+output; syslog gets the same messages, up to informational ones.
+\fIsyslog level\fR * 100 +
+\fIstderr level\fR sets the two separately:
+--verbose=303 sends the debug messages to both.
 .TP
 \fB-V, --version\fR
 Version information

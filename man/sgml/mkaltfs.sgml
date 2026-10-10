@@ -28,7 +28,7 @@
         <arg><option>-r <replaceable>rules</replaceable></option></arg>
         <arg><option>-w</option></arg>
         <arg><option>-q</option></arg>
-        <arg><option>-t</option></arg>
+        <arg><option>--verbose=<replaceable>num</replaceable></option></arg>
         <arg><option>-V</option></arg>
         <arg><option>-h</option></arg>
         <arg><option>-p</option></arg>
@@ -115,15 +115,16 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>-t, --trace</option></term>
+          <term><option>--verbose=<replaceable>num</replaceable></option></term>
           <listitem>
-            <para>Enable function call tracing</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>--syslogtrace</option></term>
-          <listitem>
-            <para>Enable diagnostic output to stderr and syslog</para>
+            <para>
+              Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+              3 to 6 debug. A number below 100 sets the level of the standard error
+              output; syslog gets the same messages, up to informational ones.
+              <replaceable>syslog level</replaceable> * 100 +
+              <replaceable>stderr level</replaceable> sets the two separately:
+              --verbose=303 sends the debug messages to both.
+            </para>
           </listitem>
         </varlistentry>
         <varlistentry>
@@ -201,12 +202,6 @@
           <term><option>-k, --keep-capacity</option></term>
           <listitem>
             <para>Keep the tape medium's total capacity proportion</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>-x, --fulltrace</option></term>
-          <listitem>
-            <para>Enable full function call tracing (slow)</para>
           </listitem>
         </varlistentry>
         <varlistentry>
