@@ -158,8 +158,11 @@ option single-drive eject
   symbolic link target to the current mount point.
 - `-o wait_medium[=<sec>]`: wait for the drive and for a cartridge instead
   of failing; the mount service sets it.
-- `-o work_directory=<dir>` (default `/tmp/ltfs`): where drive dumps and
-  the profiler data go.
+- `-o work_directory=<dir>` (default `/tmp/ltfs`): where the profiler data
+  and the dumps requested through the `ltfs.vendor.Aurora.dump` and
+  `ltfs.vendor.Aurora.dumpTrace` extended attributes go. Drive dumps are
+  written to `/tmp`, see
+  [Troubleshooting](TROUBLESHOOTING.md#drive-and-host-problems).
 - `-o min_pool_size=<n>`, `-o max_pool_size=<n>` (default 25 and 50, in 1 MB
   objects): the write cache.
 

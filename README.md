@@ -283,7 +283,7 @@ See [docs/developer/BUILDING.md](docs/developer/BUILDING.md) for the build depen
 
 [docs/README.md](docs/README.md) is the index, grouped by reader:
 
-- User: the [command reference](docs/user/reference/README.md) (the man pages), [running a drive as a service](docs/user/SERVICE.md), [supported tape drives](docs/user/DRIVES.md), the [LTFS format versions](docs/user/FORMAT.md), configuration, checking a real drive
+- User: the [command reference](docs/user/reference/README.md) (the man pages), [running a drive as a service](docs/user/SERVICE.md), [troubleshooting](docs/user/TROUBLESHOOTING.md) (including `altfsck`), [supported tape drives](docs/user/DRIVES.md), the [LTFS format versions](docs/user/FORMAT.md), configuration, checking a real drive
 - Developer: [building from source](docs/developer/BUILDING.md), coding style, AI policy, message IDs, man pages
 - Project: governance, [platform support](docs/project/PLATFORM_SUPPORT.md), the [release process](docs/project/RELEASE.md)
 
