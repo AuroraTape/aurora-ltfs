@@ -142,7 +142,8 @@ Notes:
 ## Running the tests
 
 The test suites run the installed commands with pytest. They need pytest
-and, for the tests that mount, the FUSE runtime (`fusermount`):
+and, for the tests that mount, the FUSE runtime (`fusermount` on Linux,
+macFUSE on macOS):
 
 - Ubuntu / Debian: `apt install python3-pytest fuse`; Rocky Linux / RHEL:
   `dnf install python3-pytest fuse`
@@ -168,6 +169,13 @@ $ ALTFS_PREFIX=$PWD/_install bash tests/fsapi/run.sh -v
   `LD_LIBRARY_PATH` set to the prefix, as `run.sh` does.
 - `tests/fsapi`: file system API tests on a mounted `file` backend volume;
   they need FUSE.
+- On a Mac with macFUSE set up, both suites run with the kernel extension
+  as they are, and over the FSKit backend with
+  `ALTFS_TEST_MOUNT_OPTS=backend=fskit`. The tests of the real-drive
+  scripts and the no-argument `altfs` test are Linux-only and skip. The
+  tests that simulate a crash of altfs kill macFUSE's FSKit module
+  process to free the dead mount, which takes down every macFUSE FSKit
+  volume of the user: do not run them while one is in use.
 - `tests/xplat`: reads volumes written on another platform; needs
   `ALTFS_IMAGE_DIR`, the output of `tests/xplat/make_images.py` (see
   `tests/xplat/test_images.py`).

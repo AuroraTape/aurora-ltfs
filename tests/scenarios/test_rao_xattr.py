@@ -50,7 +50,9 @@ def test_missing_list(mnt, tmp_path):
 def test_list_reaches_the_backend(mnt, tmp_path):
     rao_list = tmp_path / "rao-list"
     rao_list.write_bytes(bytes(64))
-    assert _errno(mnt, rao_list) == errno.ENOTSUP
+    # altfs answers EOPNOTSUPP: the same number as ENOTSUP on Linux, a
+    # different one on macOS
+    assert _errno(mnt, rao_list) in (errno.ENOTSUP, errno.EOPNOTSUPP)
     assert not (tmp_path / "rao-list.out").exists()
 
 
