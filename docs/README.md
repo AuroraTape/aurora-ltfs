@@ -36,6 +36,13 @@ grouped by reader.
 - [Message IDs](../messages/README): the message catalogs and how IDs are
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
+- Design documents, in `developer/design/`: how libaltfs is built and why,
+  for a reader who is about to change it. Components and layers, the
+  backend interfaces, error handling, and:
+  - [Path failover and revalidation](developer/design/REVALIDATION.md): what
+    happens when the path to the drive is lost or the drive reports that the
+    cartridge may have changed; reservations and the medium lock; what the
+    user sees and what is tested
 
 ## Project
 
