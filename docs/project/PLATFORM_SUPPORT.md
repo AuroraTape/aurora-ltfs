@@ -8,6 +8,10 @@ Aurora LTFS uses a tiered support model combined with OS lifecycle tracking.
 | Tier 2 | Best effort. Builds are verified in CI, but failures do not block releases. | Ubuntu 26.04, Rocky Linux 10, macOS, Debian, FreeBSD |
 | Tier 3 | Community-contributed. No guarantees from maintainers. | NetBSD, other platforms |
 
+On macOS, mounting is supported through the FSKit backend of macFUSE 5
+(macOS 15.4 or later, `-o backend=fskit`); the macFUSE kernel extension
+backend is not supported.
+
 ## What the CI verifies
 
 CI verifies that all Tier 2 platforms (Ubuntu 26.04, Rocky Linux 10, macOS,
