@@ -524,6 +524,7 @@ int filedebug_open(const char *name, void **handle)
 	state->conf.eot_to_bot_sec      = DEFAULT_EOT_TO_BOT;
 	state->conf.change_direction_us = DEFAULT_CHANGE_DIRECTION;
 	state->conf.change_track_us     = DEFAULT_CHANGE_TRACK;
+	state->conf.threading_sec       = DEFAULT_THREADING;
 	state->conf.max_transfer_bytes  = 0;
 
 	/* Set drive type if it is provided */
