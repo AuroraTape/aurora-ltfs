@@ -216,7 +216,16 @@ it with a regular expression on the element). The elements:
 | `max_transfer_bytes` | 0 (no limit) | The transfer limit of the host path: a block longer than this fails, as an HBA behind Thunderbolt would make it fail |
 | `cart_type`, `density_code` | LTO5 data cartridge | Which cartridge is loaded (the `TC_MP_*` codes of `tape_drivers.h`): a type the emulated drive can only read mounts read-only, the 3592 WORM types (JX, JY, JZ) behave as WORM, a type the drive generation does not know is rejected |
 | `dummy_io` | `false` | Writes to the data partition are not stored, to measure the layers above the backend |
-| `delay_mode`, `wraps`, `eot_to_bot_sec`, `change_direction_us`, `change_track_us`, `threading_sec` | `None` | Positioning and load times of a real drive: `Calculate` accounts them, `Emulate` sleeps them |
+| `delay_mode` | `None` | Positioning and load times of a real drive. `None`: nothing is accounted. `Calculate`: the time a drive would spend on each locate, rewind, load and unload is added to a counter, without waiting. `Emulate`: the backend also sleeps for that time. Any other text is `None`. The counter is read through the `ltfs.vendor.Aurora.seekLatency` attribute as `<sec>s<nsec>ns`, and writing `0` to it resets it |
+| `wraps` | 40 | Wraps on the tape. The model puts `capacity_mb / wraps * 2` blocks of 512 KiB on a wrap, the first two wraps hold the index partition, two guard wraps follow, the rest is the data partition |
+| `eot_to_bot_sec` | 12 | Seconds to run the tape from one end to the other: the cost of a locate is this time times the distance along the wrap |
+| `change_direction_us` | 2000000 | Added to a locate when the tape has to run the other way |
+| `change_track_us` | 10000 | Added to a locate when the target lies on another wrap |
+| `threading_sec` | none | Spent on a load and on an unload, on top of the seek to the beginning of the tape. The intended default of 12 is not applied: a new configuration file gets 0, and a 0 read back from the file becomes 10000 seconds, so set it explicitly when using delays |
+
+A `0` written for `wraps`, `eot_to_bot_sec`, `change_direction_us` or
+`change_track_us` selects the built-in default, so none of them can be
+turned off.
 
 The emulated drive is an `ULTRIUM-TD5` unless the device is named through
 a drive file (below), whose name carries the model.
