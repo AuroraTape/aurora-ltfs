@@ -44,6 +44,13 @@ grouped by reader.
     cartridge may have changed; reservations and the medium lock; what the
     user sees and what is tested
 
+### Design
+
+- [Backend interfaces](developer/design/BACKENDS.md): the four plugin
+  tables (tape backend, I/O scheduler, dentry cache, key manager), how a
+  plugin is loaded, what each operation must do, what the dispatch layers
+  in libaltfs add around them, the existing implementations
+
 ## Project
 
 - [Governance](project/GOVERNANCE.md): roles and decisions
