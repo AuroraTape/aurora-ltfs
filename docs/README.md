@@ -37,8 +37,11 @@ grouped by reader.
   allocated
 - [Man pages](../man/README.md): maintaining the DocBook sources
 - Design documents, in `developer/design/`: how libaltfs is built and why,
-  for a reader who is about to change it. Components and layers, the
-  backend interfaces, error handling, and:
+  for a reader who is about to change it. The backend interfaces, error
+  handling, and:
+  - [Components and layers](developer/design/COMPONENTS.md): how a file
+    system call reaches the tape, the volume, index and dentry structures
+    and their locks, where the index is read and written, the plugins
   - [Path failover and revalidation](developer/design/REVALIDATION.md): what
     happens when the path to the drive is lost or the drive reports that the
     cartridge may have changed; reservations and the medium lock; what the
