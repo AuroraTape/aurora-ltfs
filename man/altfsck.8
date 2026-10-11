@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFSCK" "8" "09 October 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFSCK" "8" "10 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfsck \- Recover and rollback utility for LTFS formatted tape
 .SH SYNOPSIS
 
-\fBaltfsck\fR [ \fB-g \fIgeneration\fB\fR ] [ \fB-r\fR ] [ \fB-n\fR ] [ \fB-f\fR ] [ \fB-z\fR ] [ \fB-l\fR ] [ \fB-m\fR ] [ \fB-v \fIstrategy\fB\fR ] [ \fB-j\fR ] [ \fB-k\fR ] [ \fB-q\fR ] [ \fB-t\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ] \fB\fIdevice_name\fB\fR
+\fBaltfsck\fR [ \fB-g \fIgeneration\fB\fR ] [ \fB-r\fR ] [ \fB-n\fR ] [ \fB-f\fR ] [ \fB-z\fR ] [ \fB-l\fR ] [ \fB-m\fR ] [ \fB-v \fIstrategy\fB\fR ] [ \fB-j\fR ] [ \fB-k\fR ] [ \fB-q\fR ] [ \fB--verbose=\fInum\fB\fR ] [ \fB-V\fR ] [ \fB-h\fR ] [ \fB-p\fR ] \fB\fIdevice_name\fB\fR
 
 .PP
 On Linux, \fIdevice_name\fR is like
@@ -56,11 +56,13 @@ Keep history at rollback (default)
 \fB-q, --quiet\fR
 Suppress progress information and general messages
 .TP
-\fB-t, --trace\fR
-Enable function call tracing
-.TP
-\fB--syslogtrace\fR
-Enable diagnostic output to stderr and syslog
+\fB--verbose=\fInum\fB\fR
+Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+3 to 6 debug. A number below 100 sets the level of the standard error
+output; syslog gets the same messages, up to informational ones.
+\fIsyslog level\fR * 100 +
+\fIstderr level\fR sets the two separately:
+--verbose=303 sends the debug messages to both.
 .TP
 \fB-V, --version\fR
 Version information
@@ -82,9 +84,6 @@ Use the specified tape device backend (default: )
 .TP
 \fB--kmi-backend=\fIname\fB\fR
 Use the specified key manager interface backend (default: none)
-.TP
-\fB-x, --fulltrace\fR
-Enable full function call tracing (slow)
 .TP
 \fB--capture-index=\fIdir\fB\fR
 Capture indexes read successfully to the specified directory by dir. (-g is effective for this option)

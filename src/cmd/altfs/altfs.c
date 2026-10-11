@@ -116,9 +116,6 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("max_pool_size=%s",       force_max_pool, 0),
 	LTFS_OPT("rules=%s",               index_rules, 0),
 	LTFS_OPT("quiet",                  verbose, LTFS_WARN),
-	LTFS_OPT("trace",                  verbose, LTFS_DEBUG),
-	LTFS_OPT("syslogtrace",            verbose, LTFS_DEBUG * 100 + LTFS_DEBUG),
-	LTFS_OPT("fulltrace",              verbose, LTFS_TRACE),
 	LTFS_OPT("verbose=%d",             verbose, 0),
 	LTFS_OPT("eject",                  eject, 1),
 	LTFS_OPT("noeject",                eject, 0),
@@ -166,9 +163,6 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0113I, LTFS_MAX_CACHE_SIZE_DEFAULT); /* -o max_pool_size=<num> */
 	ltfsresult(AFS0114I);                              /* -o rules=<rule[,rule]> */
 	ltfsresult(AFS0115I);                              /* -o quiet */
-	ltfsresult(AFS0102I);                              /* -o trace */
-	ltfsresult(AFS0130I);                              /* -o syslogtrace */
-	ltfsresult(AFS0116I);                              /* -o fulltrace */
 	ltfsresult(AFS0123I, LTFS_INFO);                   /* -o verbose=<num> */
 	ltfsresult(AFS0117I);                              /* -o eject */
 	ltfsresult(AFS0121I);                              /* -o noeject */

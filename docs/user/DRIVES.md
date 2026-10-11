@@ -68,7 +68,7 @@ works or not. Open an issue with the **Drive report** template and include:
 - What was tried: `mkaltfs`, mount, writing and reading files, unmount,
   remount, `altfsck`
 - For a failure: the log around the first error, preferably with
-  `-o loglevel=4` (from the terminal, or `/var/log/altfs.log` / the journal)
+  `-o verbose=3` (from the terminal, or `/var/log/altfs.log` / the journal)
 
 The scripts in [tests/realdrive](../../tests/realdrive/README.md) run a drive
 through these steps and write a report you can attach.

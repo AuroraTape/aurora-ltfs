@@ -106,9 +106,7 @@ struct other_check_opts {
 	int                verbosity;          /**< Print extra messages? */
 	char               *prg_name;         /**< Program name */
 	bool               quiet;             /**< Suppress information messages */
-	bool               trace;             /**< Generate debug output */
-	bool               syslogtrace;       /**< Generate debug output to stderr and syslog*/
-	bool               fulltrace;         /**< Trace function calls */
+	int                verbose;           /**< --verbose=<level>, -1 when not given */
 	int                traverse_mode;     /**< Traverse strategy for listing index */
 	bool               full_index_info;   /**< Print full index infomation in list mode */
 	char               *capture_dir;      /**< Capture index in list mode and it's directory */
@@ -156,7 +154,7 @@ int _ltfsck_validate_options(struct other_check_opts *opt);
 void print_criteria_info(struct ltfs_volume *vol);
 
 /* Command line options */
-static const char *short_options = "i:e:g:v:rnfzlmjkqtxhpoV";
+static const char *short_options = "i:e:g:v:rnfzlmjkqhpoV";
 static struct option long_options[] = {
 	{"config",               1, 0, 'i'},
 	{"backend",              1, 0, 'e'},
@@ -174,9 +172,7 @@ static struct option long_options[] = {
 	{"erase-history",        0, 0, 'j'},
 	{"keep-history",         0, 0, 'k'},
 	{"quiet",                0, 0, 'q'},
-	{"trace",                0, 0, 't'},
-	{"syslogtrace",          0, 0, '!'},
-	{"fulltrace",            0, 0, 'x'},
+	{"verbose",              1, 0, '$'},
 	{"help",                 0, 0, 'h'},
 	{"version",				 0, 0, 'V' },
 	{0, 0, 0, 0}
@@ -200,14 +196,12 @@ void show_usage(char *appname, struct config_file *config)
 	ltfsresult(ACK0101I); /* -j, --erase-history */
 	ltfsresult(ACK0102I); /* -k, --keep-history */
 	ltfsresult(ACK0103I); /* -q, --quiet */
-	ltfsresult(ACK0104I); /* -t, --trace */
-	ltfsresult(ACK0114I); /* --syslogtrace */
+	ltfsresult(ACK0120I); /* --verbose=<num> */
 	ltfsresult(ACK0115I); /* -V --version */
 	ltfsresult(ACK0105I); /* -h, --help */
 	ltfsresult(ACK0106I, LTFS_CONFIG_FILE); /* -i, --config=<file> */
 	ltfsresult(ACK0107I);                   /* -e, --backend=<name> */
 	ltfsresult(ACK0112I);                   /*     --kmi-backend=<name> */
-	ltfsresult(ACK0108I);                   /* -x, --fulltrace */
 	ltfsresult(ACK0113I);                   /*     --capture-index */
 	ltfsresult(ACK0116I);                   /*     --salvage-rollback-points */
 	fprintf(stderr, "\n");
@@ -222,6 +216,7 @@ int main(int argc, char **argv)
 	struct ltfs_volume *vol;
 	struct other_check_opts opt;
 	int ret, log_level, syslog_level, i, cmd_args_len;
+	char *endptr;
 	char *lang, *cmd_args;
 	const char *lang_fallback = NULL;
 	const char *config_file = NULL;
@@ -283,6 +278,7 @@ int main(int argc, char **argv)
 
 	/* Set up default format options and load the config file. */
 	memset(&opt, 0, sizeof(struct other_check_opts));
+	opt.verbose = -1;
 	opt.op_mode = MODE_CHECK;
 	opt.search_mode = SEARCH_NONE;
 	opt.erase_history = false;
@@ -378,14 +374,13 @@ int main(int argc, char **argv)
 			case 'q':
 				opt.quiet = true;
 				break;
-			case 't':
-				opt.trace = true;
-				break;
-			case '!':
-				opt.syslogtrace = true;
-				break;
-			case 'x':
-				opt.fulltrace = true;
+			case '$':
+				opt.verbose = (int)strtol(optarg, &endptr, 10);
+				if (*optarg == '\0' || *endptr != '\0' || opt.verbose < 0) {
+					ltfsmsg(ACK0121E, optarg);
+					show_usage(argv[0], opt.config);
+					return LTFSCK_USAGE_SYNTAX_ERROR;
+				}
 				break;
 			case 'h':
 				show_usage(argv[0], opt.config);
@@ -424,29 +419,28 @@ int main(int argc, char **argv)
 	if (opt.kmi_backend_name && strcmp(opt.kmi_backend_name, "none") == 0)
 		opt.kmi_backend_name = NULL;
 
-	/* Set the logging level */
-	if (opt.quiet && (opt.trace || opt.fulltrace)) {
+	/* Set the logging level: --verbose=<syslog level> * 100 + <stderr level>. Without a
+	 * syslog level, syslog gets what stderr gets, up to informational messages */
+	if (opt.quiet && opt.verbose >= 0) {
 		ltfsmsg(ACK0117E);
 		show_usage(argv[0], opt.config);
 		return LTFSCK_OPERATIONAL_ERROR;
 	} else if (opt.quiet) {
 		log_level = LTFS_WARN;
-		syslog_level = LTFS_NONE;
-	} else if (opt.trace) {
-		log_level = LTFS_DEBUG;
-		syslog_level = LTFS_NONE;
-	} else if (opt.syslogtrace)
-		log_level = syslog_level = LTFS_DEBUG;
-	else if (opt.fulltrace) {
-		log_level = LTFS_TRACE;
-		syslog_level = LTFS_DEBUG;
+		syslog_level = LTFS_WARN;
+	} else if (opt.verbose >= 100) {
+		syslog_level = opt.verbose / 100;
+		log_level = opt.verbose % 100;
+	} else if (opt.verbose >= 0) {
+		log_level = opt.verbose;
+		syslog_level = opt.verbose < LTFS_INFO ? opt.verbose : LTFS_INFO;
 	} else {
 		log_level = LTFS_INFO;
-		syslog_level = LTFS_NONE;
+		syslog_level = LTFS_INFO;
 	}
 
 	ltfs_set_log_level(log_level);
-	ltfs_set_syslog_level(log_level);
+	ltfs_set_syslog_level(syslog_level);
 
 	/* Starting ltfsck */
 	ltfsmsg(ACK0001I, PACKAGE_NAME, PACKAGE_VERSION, log_level);
