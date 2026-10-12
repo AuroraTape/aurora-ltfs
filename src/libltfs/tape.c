@@ -3643,7 +3643,7 @@ int update_tape_attribute(struct ltfs_volume *vol, const char *new_value, int ty
 		pre_attr = strdup(vol->t_attr->medium_label);
 		if (! pre_attr) {
 			ltfsmsg(ALC0002E, "update_tape_attribute: pre_attr");
-		    ret = -ENOMEM;
+		    ret = -LTFS_NO_MEMORY;
 		    return ret;
 		}
 		memset(vol->t_attr->medium_label, '\0', TC_MAM_USER_MEDIUM_LABEL_SIZE + 1);
@@ -3658,7 +3658,7 @@ int update_tape_attribute(struct ltfs_volume *vol, const char *new_value, int ty
 		pre_attr = strdup(vol->t_attr->barcode);
 		if (! pre_attr) {
 		    ltfsmsg(ALC0002E, "update_tape_attribute: pre_attr");
-		    ret = -ENOMEM;
+		    ret = -LTFS_NO_MEMORY;
 		    return ret;
 		}
 		memset(vol->t_attr->barcode, '\0', TC_MAM_BARCODE_SIZE + 1);

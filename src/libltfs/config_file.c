@@ -280,9 +280,8 @@ int _config_file_parse(const char *path, bool ignore_error, struct config_file *
 	conf_file = fopen(path, "rb");
 	if (! conf_file) {
 		if (!ignore_error) {
-			ret = -errno;
-			ltfsmsg(ALG0009E, path, ret);
-			return ret;
+			ltfsmsg(ALG0009E, path, errno);
+			return -LTFS_FILE_ERR;
 		} else
 			return 0;
 	}

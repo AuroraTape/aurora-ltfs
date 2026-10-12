@@ -1057,7 +1057,7 @@ int ltfs_set_vendorunique_xattr(const char *name, const char *value, size_t size
 			vol->reval = -LTFS_REVAL_FAILED;
 		tape_device_unlock(vol->device);
 	} else
-		ret = LTFS_NO_DEVICE;
+		ret = -LTFS_NO_DEVICE;
 
 	return ret;
 }
@@ -3018,7 +3018,7 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 
 	if (ret < 0) {
 		ltfsmsg(ALC0002E, "ltfs_save_index_to_disk: path");
-		return -ENOMEM;
+		return -LTFS_NO_MEMORY;
 	}
 
 	ltfsmsg(ALB0256I, _get_barcode(vol), id ? id : 'Z', "Volume Cache",
@@ -3034,7 +3034,7 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 
 	/* Change index file's mode */
 	if (chmod(path, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) {
-		ret = -errno;
+		ret = -LTFS_FILE_ERR;
 		ltfsmsg(ALB0249E, errno);
 	}
 
@@ -4834,14 +4834,14 @@ static int _ltfs_write_rao_file(char *file_path_org, unsigned char *buf, size_t 
 	if (fd < 0) {
 		ltfsmsg(ALB0264I, path, errno);
 		free(path);
-		ret = -errno;
+		ret = -LTFS_FILE_ERR;
 		return ret;
 	}
 
 	size = write(fd, buf, len);
 	if (size < 0) {
 		ltfsmsg(ALB0265I, path, errno);
-		ret = -errno;
+		ret = -LTFS_FILE_ERR;
 		goto out;
 	} else if (size != (ssize_t)len) {
 		ltfsmsg(ALB0266I, path, size, (ssize_t)len);
@@ -4878,13 +4878,14 @@ static int _ltfs_read_rao_file(char *file_path, unsigned char *buf,
 	if (fd < 0) {
 		ltfsmsg(ALB0267I, path, errno);
 		free(path);
-		ret = -errno;
+		/* The list is a path the user gave: a missing file is reported as such */
+		ret = (errno == ENOENT) ? -LTFS_INVALID_SRC_PATH : -LTFS_FILE_ERR;
 		return ret;
 	}
 
 	ret = fstat(fd, &sbuf);
 	if (ret < 0) {
-		ret = -errno;
+		ret = -LTFS_FILE_ERR;
 		ltfsmsg(ALB0268I, path, errno);
 		goto out;
 	}
@@ -4892,7 +4893,7 @@ static int _ltfs_read_rao_file(char *file_path, unsigned char *buf,
 	size = read(fd, buf, len);
 	if (size < 0) {
 		ltfsmsg(ALB0269I, path, errno);
-		ret = -errno;
+		ret = -LTFS_FILE_ERR;
 		goto out;
 	} else if (size != (ssize_t)sbuf.st_size) {
 		ltfsmsg(ALB0270I, path, size, (ssize_t)sbuf.st_size);

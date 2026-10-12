@@ -633,10 +633,9 @@ int ltfs_trace_dump(char *fname, const char *work_dir)
 
 	/* Open file */
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0666);
-	if(fd < 0)
-		return -errno;
-
 	free(path);
+	if(fd < 0)
+		return -LTFS_FILE_ERR;
 
 	if (req_trace)
 	{
