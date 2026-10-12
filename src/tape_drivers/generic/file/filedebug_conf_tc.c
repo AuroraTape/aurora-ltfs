@@ -304,7 +304,7 @@ static int _filedebug_tc_parse_schema(xmlTextReaderPtr reader, struct filedebug_
 			if (value_ll > 0)
 				conf->threading_sec = value_ll;
 			else
-				conf->threading_sec = DEFAULT_CHANGE_TRACK;
+				conf->threading_sec = DEFAULT_THREADING;
 
 		} else if (! strcmp(name, "max_transfer_bytes")) {
 			get_tag_text();
