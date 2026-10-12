@@ -894,7 +894,7 @@ int main(int argc, char **argv)
     /* in the commands used by LTFS. Actually the timeout value of locate/space is 2500 secs,        */
     /* we set the MacFUSE as the timeout value of locate/space + 10 mins. Because MacFUSE timeout    */
     /* should come after the drive command timeout.                                                  */
-	fuse_opt_add_arg(&args, "-odaemon_timeout=3100");
+	ret = fuse_opt_add_arg(&args, "-odaemon_timeout=3100");
 	if (ret < 0) {
 		/* Could not enable FUSE option */
 		ltfsmsg(AFS0002E, "daemon_timeout", ret);
@@ -905,7 +905,7 @@ int main(int argc, char **argv)
 	 *  LTFS will return the owner as accessed user, vnode cache will return previous user
 	 *  when the cache is hot.
 	 */
-	fuse_opt_add_arg(&args, "-onovncache");
+	ret = fuse_opt_add_arg(&args, "-onovncache");
 	if (ret < 0) {
 		/* Could not enable FUSE option */
 		ltfsmsg(AFS0002E, "novncache", ret);
@@ -1517,7 +1517,13 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 
 	/* Get and store mount point */
 	for ( i=0; i<args->argc; i++) {
-		fuse_opt_add_arg(&tmpa, args->argv[i]);
+		ret = fuse_opt_add_arg(&tmpa, args->argv[i]);
+		if (ret < 0) {
+			ltfsmsg(AFS0079E, ret);
+			fuse_opt_free_args(&tmpa);
+			ltfs_volume_free(&priv->data);
+			return 1;
+		}
 	}
 	ret = fuse_parse_cmdline( &tmpa, &mountpoint, NULL, &foreground);
 	fuse_opt_free_args(&tmpa);
