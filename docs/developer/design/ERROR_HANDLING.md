@@ -66,9 +66,9 @@ released ID.
 
 This registry is documentation and a consistency check, not log output. The
 IDs appear in the source only in the mapping table of `errormap.c`, which is
-what lets `validate_error_messages.py` treat them as used; the one function
-that returns them, `errormap_msg_id()`, has no caller, so the running code
-never prints an `AEI` or `AED` line. What the log shows is the message of the
+what lets `validate_error_messages.py` treat them as used; nothing reads that
+column at run time, so the running code never prints an `AEI` or `AED` line.
+What the log shows is the message of the
 layer that detected the problem, usually with the numeric code as an
 argument (`ALP0051E Cannot write block: backend call failed (-20309)`); the
 registry is where a reader turns that number into words.

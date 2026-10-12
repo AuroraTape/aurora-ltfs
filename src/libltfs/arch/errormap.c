@@ -70,7 +70,7 @@
 
 struct error_map {
 	int ltfs_error;
-	char *msd_id;
+	char *msd_id;       /**< AEI/AED message ID of the code: registers it for validate_error_messages.py, not read at run time */
 	int general_error;
 	UT_hash_handle hh;
 };
@@ -439,7 +439,6 @@ static struct error_map fuse_error_list[] = {
 	{ EDEV_KEY_REQUIRED,             "AED1603E", EIO},
 	{ EDEV_INTERNAL_ERROR,           "AED1700E", EIO},
 	{ EDEV_DRIVER_ERROR,             "AED1701E", EIO},
-	{ EDEV_DRIVER_ERROR,             "AED1701E", EIO},
 	{ EDEV_HOST_ERROR,               "AED1702E", EIO},
 	{ EDEV_TARGET_ERROR,             "AED1703E", EIO},
 	{ EDEV_NO_MEMORY,                "AED1704E", EIO},
@@ -504,17 +503,3 @@ int errormap_fuse_error(int val)
 	return -EIO;
 }
 
-char* errormap_msg_id(int val)
-{
-	struct error_map *out;
-
-	val = -val;
-	if (val < LTFS_ERR_MIN)
-		return NULL;
-
-	HASH_FIND_INT(fuse_errormap, &val, out);
-	if (out)
-		return out->msd_id;
-
-	return NULL;
-}

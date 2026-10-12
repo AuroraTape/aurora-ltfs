@@ -490,7 +490,7 @@ int main(int argc, char **argv)
 
 	ret = ltfs_fs_init();
 	if (ret)
-		return LTFSCK_OPERATIONAL_ERROR;;
+		return MKLTFS_OPERATIONAL_ERROR;
 
 	ltfsmsg(AMK0004I, opt.devname);
 	ltfsmsg(AMK0005I, opt.blocksize);
