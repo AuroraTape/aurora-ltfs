@@ -16,6 +16,8 @@ See [AI_POLICY.md](docs/developer/AI_POLICY.md) for the project's AI usage polic
 |:-----|:-------:|:--------|
 | `AGENTS.md` | Yes | Common instructions for all AI agents (project structure, build, rules) |
 | `CLAUDE.md` | Yes | Claude Code specific configuration (references `AGENTS.md`) |
+| `.agents/skills/` | Yes | Skills shared by all AI agents: step-by-step procedures for project tasks, with their helper scripts (Codex reads this directory; for Claude Code, link `.claude/skills/<name>` to `.agents/skills/<name>`) |
+| `.claude/`, `.codex/` | No | Tool-local settings and hooks of Claude Code and Codex |
 | `.agent-memory.md` | No | Agent's working memory within this repository, persists across sessions |
 | `PROMPT.md` | No | User-written instructions, context, and task descriptions for AI agents |
 
@@ -208,8 +210,8 @@ altfsck -d <device_name>
 - Exception: `AEI`/`AED` numbers are derived from the `LTFS_*`/`EDEV_*` constants in `src/libltfs/ltfs_error.h` (see `messages/README`), not allocated consecutively
 
 ### Workflow
-1. Add new messages using the next available consecutive number
-2. Run `make_message_src.sh` to regenerate message headers after changes
+1. Add new messages using the next available consecutive number (`python3 .agents/skills/add-message/next_id.py <PREFIX>` prints it, counting retired IDs; the full procedure is in `.agents/skills/add-message/SKILL.md`)
+2. Run `make -C messages` to regenerate the message bundles (it runs `make_message_src.sh` with the right environment; do not run the script by hand)
 3. Before committing, ensure no duplicate message numbers exist
 
 # Do Not Section
