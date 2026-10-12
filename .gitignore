@@ -27,8 +27,9 @@ messages/.lib
 .dirstamp
 # Local install prefix (also the prefix CI uses; see .github/workflows)
 _install/
-# local settings for claude code
+# local settings of AI coding tools (hooks, per-user configuration)
 .claude
+.codex
 # AI agent workspace files
 .agent-memory.md
 PROMPT.md
