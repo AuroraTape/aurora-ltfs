@@ -38,6 +38,62 @@ Status:
   minimum firmware level was ever established and nobody has reported a
   result with Aurora LTFS. It may work, work with limitations, or fail.
 
+## Vendor notes
+
+Drives are told apart by the vendor and product strings of INQUIRY. HP and
+HPE drives, and the Tandberg LTO5 and LTO6 half-height drives, take the HP
+code paths; Quantum has two product lines ("ULTRIUM-HHn", and "ULTRIUM n"
+for LTO5 and LTO6). What differs per vendor, and what users of those drives
+do not get:
+
+**HP LTO5 and LTO6.** These drives have neither the Read/Write Control mode
+page (0x25) nor the Device Configuration Extension sub-page (0x10, sub-page
+0x01). The `sg` backend answers requests for them as unsupported, and
+libltfs skips, silently, what depends on them:
+
+- the density code update when a cartridge is formatted (the cartridge
+  keeps the density the drive chooses);
+- the programmable early warning setting (the drive's own early warning is
+  still honoured);
+- append-only mode, which cannot be enabled or read.
+
+Encryption still works: the key is set without the mode page. These
+adaptations exist in the `sg` backend only: on macOS (`iokit`) and FreeBSD
+(`cam`) the mode page requests go to the drive as they are, and an HP LTO5 or
+LTO6 is expected to fail there.
+
+**HP LTO, all generations.** With the `sg` backend the `ltfs.mediaEncrypted`
+attribute is answered from the Next Block Encryption Status page (SECURITY
+PROTOCOL IN 0x21) and `ltfs.driveEncryptionState` from the Data Encryption
+Status page (0x20); the other vendors read the Read/Write Control mode page
+for both.
+
+**Volume Coherency Information.** Some drives do not flush the volume
+coherency information with a non-immediate WRITE FILEMARKS; HP LTO6 was
+observed doing this, and the next mount then ran a full consistency check.
+Aurora LTFS issues one more `WRITE FILEMARKS(0)` after every non-immediate
+file mark write, on every drive; on drives that flush as specified the extra
+command is short, since the data and the coherency information were already
+flushed.
+
+**Remaining capacity.** LTO5 drives of any vendor, HP LTO6 and the Quantum
+"ULTRIUM 5" and "ULTRIUM 6" read the remaining capacity from the Tape
+Capacity log page (0x31); the other drives from the Volume Statistics log
+page (0x17). The `sg`, `iokit` and `cam` backends all do this.
+
+**IBM only.** Logical block protection (the `scsi_lbprotect` option of the
+`sg` backend) is set up on IBM drives only; on HP and Quantum drives the
+option has no effect. Drive dumps on an error are taken from IBM drives only
+(see [Troubleshooting](TROUBLESHOOTING.md#drive-and-host-problems)). The
+minimum firmware level is checked for IBM drives only, which is why the
+other rows of the table say "Not determined".
+
+**Timeouts and sense codes.** Command timeouts come from the drive's own
+REPORT SUPPORTED OPERATION CODES when it answers; otherwise from a table per
+vendor (IBM, HP, Quantum), and failing that from the IBM table. Sense codes
+are translated with a standard table plus a vendor table for IBM, HP and
+Quantum.
+
 ## Drive testing policy
 
 The only tape drive available to the maintainers is an IBM LTO5. CI has no
