@@ -98,9 +98,8 @@ static int convert_option(const unsigned char * const path, unsigned char **dk_l
 
 	FILE *fp = fopen((const char *) path, "r");
 	if (! fp) {
-		ret = -errno;
-		ltfsmsg(AKF0004E, path, ret);
-		return ret;
+		ltfsmsg(AKF0004E, path, errno);
+		return -LTFS_FILE_ERR;
 	}
 
 	char buf[1024];

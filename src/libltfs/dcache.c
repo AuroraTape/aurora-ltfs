@@ -151,21 +151,21 @@ int dcache_parse_options(const char **options, struct dcache_options **out)
 	opt = calloc(1, sizeof(struct dcache_options));
 	if (! opt) {
 		ltfsmsg(ALC0002E, "dcache_parse_options: opt");
-		return -ENOMEM;
+		return -LTFS_NO_MEMORY;
 	}
 
 	for (i=0; options[i]; ++i) {
 		line = strdup(options[i]);
 		if (! line) {
 			ltfsmsg(ALC0002E, "dcache_parse_options: line");
-			ret = -ENOMEM;
+			ret = -LTFS_NO_MEMORY;
 			goto out_free;
 		}
 		option = strtok(line, " \t");
 		if (! option) {
 			/* Failed to parse LTFS dcache configuration rules: invalid option '%s' */
 			ltfsmsg(ALP0095E, options[i]);
-			ret = -EINVAL;
+			ret = -LTFS_BAD_ARG;
 			goto out_free;
 		}
 
@@ -185,7 +185,7 @@ int dcache_parse_options(const char **options, struct dcache_options **out)
 		if (! value) {
 			/* Failed to parse LTFS dcache configuration rules: invalid option '%s' */
 			ltfsmsg(ALP0095E, options[i]);
-			ret = -EINVAL;
+			ret = -LTFS_BAD_ARG;
 			goto out_free;
 		}
 
@@ -194,7 +194,7 @@ int dcache_parse_options(const char **options, struct dcache_options **out)
 			if (opt->minsize <= 0) {
 				/* Failed to parse LTFS dcache configuration rules: invalid value '%d' for option '%s' */
 				ltfsmsg(ALP0096E, opt->minsize, option);
-				ret = -EINVAL;
+				ret = -LTFS_BAD_ARG;
 				goto out_free;
 			}
 		} else if (! strcmp(option, "maxsize")) {
@@ -202,13 +202,13 @@ int dcache_parse_options(const char **options, struct dcache_options **out)
 			if (opt->maxsize <= 0) {
 				/* Failed to parse LTFS dcache configuration rules: invalid value '%d' for option '%s' */
 				ltfsmsg(ALP0096E, opt->maxsize, option);
-				ret = -EINVAL;
+				ret = -LTFS_BAD_ARG;
 				goto out_free;
 			}
 		} else {
 			/* Failed to parse LTFS dcache configuration rules: invalid option '%s' */
 			ltfsmsg(ALP0095E, options[i]);
-			ret = -EINVAL;
+			ret = -LTFS_BAD_ARG;
 			goto out_free;
 		}
 
