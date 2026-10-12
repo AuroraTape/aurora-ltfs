@@ -221,11 +221,11 @@ it with a regular expression on the element). The elements:
 | `eot_to_bot_sec` | 12 | Seconds to run the tape from one end to the other: the cost of a locate is this time times the distance along the wrap |
 | `change_direction_us` | 2000000 | Added to a locate when the tape has to run the other way |
 | `change_track_us` | 10000 | Added to a locate when the target lies on another wrap |
-| `threading_sec` | none | Spent on a load and on an unload, on top of the seek to the beginning of the tape. The intended default of 12 is not applied: a new configuration file gets 0, and a 0 read back from the file becomes 10000 seconds, so set it explicitly when using delays |
+| `threading_sec` | 12 | Spent on a load and on an unload, on top of the seek to the beginning of the tape |
 
-A `0` written for `wraps`, `eot_to_bot_sec`, `change_direction_us` or
-`change_track_us` selects the built-in default, so none of them can be
-turned off.
+A `0` written for `wraps`, `eot_to_bot_sec`, `change_direction_us`,
+`change_track_us` or `threading_sec` selects the built-in default, so none
+of them can be turned off.
 
 The emulated drive is an `ULTRIUM-TD5` unless the device is named through
 a drive file (below), whose name carries the model.
