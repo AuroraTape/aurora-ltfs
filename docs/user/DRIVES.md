@@ -107,10 +107,26 @@ tape hardware at all (it exercises the `file` backend), so:
   verified. It is not re-verified for later versions unless someone reports
   again.
 
-**Hardware donations are welcome.** A donated or loaned drive (a newer IBM
-LTO generation, an IBM enterprise drive, HP or Quantum) moves its row to
-"Maintained" and gets it tested for every release. Media are useful too. If
-you can help, please open an issue.
+**Hardware donations are welcome.** A donated or loaned drive moves its row
+to "Maintained" and gets it tested for every release. Wanted most:
+
+- IBM LTO8 and LTO9, the generations most sites run today
+- HP and Quantum drives of any generation, to verify the vendor-specific
+  paths described in "Vendor notes"
+- IBM enterprise drives (TS1140 to TS1160)
+
+The drive has to run on its own: an internal or an external (tabletop)
+drive with a SAS interface; for Fibre Channel, ask first. A drive taken out
+of a tape library, still in its library sled, usually cannot be powered or
+connected without the library and cannot be used. A time-limited loan, or
+remote access to a machine with the drive attached, helps as much as a
+donation. Media are useful too. Running the real-drive checks on your own
+drive and sending a report (see below) helps even without any hardware
+changing hands.
+
+Write to `auroratape@googlegroups.com`; only the maintainers can read the
+messages sent to this address. Please do not post shipping addresses or
+company details in an issue.
 
 ## Reporting a drive
 
