@@ -1193,10 +1193,11 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 		}
 
 		if (priv->release_device) {
-			ltfs_release_medium(priv->data);
+			/* The reservation is released by the close, also when the unload failed */
+			ret = ltfs_release_medium(priv->data);
 			ltfs_device_close(priv->data);
 			ltfs_volume_free(&priv->data);
-			return 0;
+			return (ret < 0) ? 1 : 0;
 		}
 
 		/* Parse backend options */

@@ -378,9 +378,6 @@ change in this area starts from them.
 
 - The `do { } while (NEED_REVAL(ret))` loops in `tape.c` have no bound. A
   backend that returned `EDEV_NEED_FAILOVER` on every call would spin.
-- `ltfs_release_medium()` ignores the result of `tape_unload_tape()` and
-  always returns 0, so `altfs -o release_device` reports success even when the
-  unload failed; the release itself is done by the device close that follows.
 - Only the `sg` and `scsipi-ibmtape` backends reconnect. On macOS and
   FreeBSD a lost path is a plain `EIO` and the volume is left as it is, with a
   reservation the drive may still hold.
