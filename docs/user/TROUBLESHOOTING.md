@@ -254,7 +254,8 @@ awake while a tape is mounted (below).
 process on this host, holds a reservation on the drive. `altfs` reserves the
 drive for the whole session with a key of its own host. A reservation left
 by a killed process on this host carries that key, and `-o release_device`
-clears it. A reservation of another host is skipped (`ATG0094I`): release it
+clears it. A reservation of another host is skipped (`ATG0094I`); when no
+other path to the drive can be used, the open fails with `ATG0109E`. Release it
 from that host, or reset or power cycle the drive.
 
 **The host transfer limit.** A tape block is transferred with one command,
