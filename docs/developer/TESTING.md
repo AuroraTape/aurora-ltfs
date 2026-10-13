@@ -246,11 +246,9 @@ mount point (`set_xattr(mnt, "ltfs.vendor.Aurora.forceErrorWrite", "5")`):
   has both.
 - `forceErrorRead = N`: reads 1 to N succeed and the next one fails. Nothing
   is dropped on the read side.
-- `forceErrorType = 1`: changes the error the failing command returns. The two
-  sides are wired the other way round in the backend: a failing write returns
-  a write permanent error by default and no sense with `forceErrorType = 1`,
-  a failing read returns no sense by default and a read permanent error with
-  `forceErrorType = 1`.
+- `forceErrorType = 1`: changes the error the failing command returns. A
+  failing write or read returns a write or read permanent error by default,
+  and no sense with `forceErrorType = 1`.
 
 ### A drive without a cartridge
 
