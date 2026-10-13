@@ -6,6 +6,7 @@ Before making a change, please discuss it through GitHub Issues:
 
 - For bug fixes, comment on the existing issue or create a new one describing the bug.
 - For new features or enhancements, open a new issue to discuss your proposal before starting work.
+- For a security vulnerability, do not open an issue: follow [SECURITY.md](../SECURITY.md).
 
 Please note we have a [coding style guide](../docs/developer/CODING_STYLE.md), please follow it in all your interactions with the project.
 

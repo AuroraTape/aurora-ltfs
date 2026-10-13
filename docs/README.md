@@ -70,3 +70,6 @@ grouped by reader.
 - [Release process](project/RELEASE.md): versioning, branches, backports,
   the release checklist, the package repositories and the Homebrew tap,
   branch protection
+- [Security policy](../SECURITY.md): the versions that receive security
+  fixes, how to report a vulnerability privately, what counts as one
+- [Code of conduct](../CODE_OF_CONDUCT.md), and how to report an incident
