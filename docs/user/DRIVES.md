@@ -115,14 +115,15 @@ to "Maintained" and gets it tested for every release. Wanted most:
   paths described in "Vendor notes"
 - IBM enterprise drives (TS1140 to TS1160)
 
-The drive has to run on its own: an internal or an external (tabletop)
-drive with a SAS interface; for Fibre Channel, ask first. A drive taken out
-of a tape library, still in its library sled, usually cannot be powered or
-connected without the library and cannot be used. A time-limited loan, or
-remote access to a machine with the drive attached, helps as much as a
-donation. Media are useful too. Running the real-drive checks on your own
-drive and sending a report (see below) helps even without any hardware
-changing hands.
+Tape libraries are welcome as well, for example an IBM TS2900 or TS4300.
+
+Any form factor and interface can be used: internal, external (tabletop) or
+library drives, including drives taken out of a library in their sleds,
+with SAS or Fibre Channel. A time-limited loan of a drive or a library, or
+remote access to a machine with one attached, helps as much as a donation.
+Media are useful too. Running the real-drive checks on your own drive and
+sending a report (see below) helps even without any hardware changing
+hands.
 
 Write to `auroratape@googlegroups.com`; only the maintainers can read the
 messages sent to this address. Please do not post shipping addresses or
