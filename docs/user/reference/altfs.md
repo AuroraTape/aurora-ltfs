@@ -83,7 +83,7 @@ With -o devname, the tape is mounted with that index and file contents can be re
 Without -o devname, only the directory tree of the index is mounted, without a tape. No tape device is opened and no tape backend is loaded. Use it to browse the contents of a cartridge that is not in a drive, from an index captured by altfsindextool or by -o capture_index. Names, sizes, timestamps and extended attributes are available. Reading file contents fails with ENODATA; an empty file reads as empty. Virtual extended attributes that come from the index (e.g. ltfs.volumeUUID, ltfs.indexGeneration, ltfs.indexLocation, ltfs.startblock) are available; those that need the tape (e.g. ltfs.volumeSerial, ltfs.mediaStorageAlert, ltfs.mam\*, ltfs.vendor.Aurora.referencedBlocks) fail with ENODATA. statfs reports no capacity: the size and the free space are 0.
 
 **-o release_device**  
-Clear device reservation (should be specified with -o devname
+Release the drive and exit without mounting: unload the cartridge if one is loaded, then release the reservation that altfs holds on the drive. Use it with -o devname, to free a drive that a killed altfs process on this host left reserved. When the cartridge cannot be unloaded, ALB0132E is logged and altfs exits with 1; the reservation is released all the same. A reservation held by another host is not touched.
 
 **-o wait_medium\[=** *sec* **\]**  
 Wait for a cartridge when the drive is empty at startup, instead of failing. The drive is polled until a cartridge is loaded, then the mount continues as usual. With *sec* (1 or more), give up after that many seconds; without it, wait without a limit. The drive is polled about every 5 seconds.

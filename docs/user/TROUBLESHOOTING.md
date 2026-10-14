@@ -225,9 +225,11 @@ consistency check, or release the drive without mounting:
 ```
 
 `-o release_device` releases the reservation `altfs` holds on the drive and
-unloads the cartridge. It is also the way to free a drive that another
-`altfs` process on the same host left reserved; a reservation held by
-another host is not touched (see below).
+unloads the cartridge. When the cartridge cannot be unloaded, it logs
+`ALB0132E` and exits 1; the reservation is released all the same. It is
+also the way to free a drive that another `altfs` process on the same host
+left reserved; a reservation held by another host is not touched (see
+below).
 
 **The tape.** The next mount runs the consistency check. If it reports
 `ALB0108E`, data was written after the newest index: run `altfsck`, and see

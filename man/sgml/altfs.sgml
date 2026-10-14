@@ -228,7 +228,7 @@
         <varlistentry>
           <term><option>-o release_device</option></term>
           <listitem>
-            <para>Clear device reservation (should be specified with -o devname</para>
+            <para>Release the drive and exit without mounting: unload the cartridge if one is loaded, then release the reservation that altfs holds on the drive. Use it with -o devname, to free a drive that a killed altfs process on this host left reserved. When the cartridge cannot be unloaded, ALB0132E is logged and altfs exits with 1; the reservation is released all the same. A reservation held by another host is not touched.</para>
           </listitem>
         </varlistentry>
         <varlistentry>

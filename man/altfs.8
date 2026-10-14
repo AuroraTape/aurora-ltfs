@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS" "8" "10 October 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS" "8" "13 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs \- File system based on a linear tape drive
@@ -123,7 +123,7 @@ ltfs.mam*, ltfs.vendor.Aurora.referencedBlocks) fail with ENODATA.
 statfs reports no capacity: the size and the free space are 0.
 .TP
 \fB-o release_device\fR
-Clear device reservation (should be specified with -o devname
+Release the drive and exit without mounting: unload the cartridge if one is loaded, then release the reservation that altfs holds on the drive. Use it with -o devname, to free a drive that a killed altfs process on this host left reserved. When the cartridge cannot be unloaded, ALB0132E is logged and altfs exits with 1; the reservation is released all the same. A reservation held by another host is not touched.
 .TP
 \fB-o wait_medium[=\fIsec\fB]\fR
 Wait for a cartridge when the drive is empty at startup, instead of failing.

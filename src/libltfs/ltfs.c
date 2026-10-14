@@ -4566,9 +4566,9 @@ int ltfs_recover_eod(struct ltfs_volume *vol)
 }
 
 /**
- * Allow prevent medium removal
+ * Unload the cartridge if one is loaded (altfs -o release_device)
  * @param vol LTFS volume
- * @return 0
+ * @return 0 on success or a negative value when the loaded cartridge could not be unloaded
  */
 int ltfs_release_medium(struct ltfs_volume *vol)
 {
@@ -4581,8 +4581,13 @@ int ltfs_release_medium(struct ltfs_volume *vol)
 	}
 	loaded = (ret == 0);
 
-	if(loaded)
-		tape_unload_tape(false, vol->device);
+	if (loaded) {
+		ret = tape_unload_tape(false, vol->device);
+		if (ret < 0) {
+			ltfsmsg(ALB0132E, __FUNCTION__); /* Failed to eject the cartridge */
+			return ret;
+		}
+	}
 
 	return 0;
 }

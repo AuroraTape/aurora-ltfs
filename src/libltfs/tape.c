@@ -520,7 +520,7 @@ int tape_load_tape(struct device_data *dev, void * const kmi_handle, bool force)
  */
 int tape_unload_tape(bool keep_on_drive, struct device_data *dev)
 {
-	int ret;
+	int ret, ret_move;
 
 	CHECK_ARG_NULL(dev, -LTFS_NULL_ARG);
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
@@ -534,22 +534,23 @@ int tape_unload_tape(bool keep_on_drive, struct device_data *dev)
 
 	tape_allow_medium_removal(dev, false);
 	do {
-		ret = tape_rewind(dev);
-	} while (NEED_REVAL(ret));
+		ret_move = tape_rewind(dev);
+	} while (NEED_REVAL(ret_move));
 
 	if (! keep_on_drive) {
 		do {
-			ret = dev->backend->unload(dev->backend_data, &dev->position);
-			if (ret == -EDEV_CLEANING_REQUIRED) {
+			ret_move = dev->backend->unload(dev->backend_data, &dev->position);
+			if (ret_move == -EDEV_CLEANING_REQUIRED) {
 				/* Ignore cleaning sense */
-				ret = 0;
+				ret_move = 0;
 			}
-		} while (NEED_REVAL(ret));
+		} while (NEED_REVAL(ret_move));
 	}
 
 	ret = tape_enable_append_only_mode(dev, false);
 
-	return ret;
+	/* A failed unload (or rewind, when the cartridge stays) is the result (#253) */
+	return (ret_move < 0) ? ret_move : ret;
 }
 
 /**
