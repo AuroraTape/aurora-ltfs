@@ -320,7 +320,9 @@ same serial number: a path whose drive is unreserved is taken; one reserved
 with this node's own key is tried, because a previous session on this node
 may have left it (`ATG0092I` when it succeeds, `ATG0093I` when another
 instance holds it); one reserved by another key is skipped with the holder
-in the log (`ATG0094I`). A serial number that no `sg` device carries gives
+in the log (`ATG0094I`). When no path could be used and another node holds
+the drive on at least one of them, the open fails with
+`EDEV_RESERVATION_CONFLICT` (`ATG0109E`). A serial number that no `sg` device carries gives
 `EDEV_DEVICE_UNOPENABLE`, on which `altfs -o wait_medium` waits for the
 drive to appear. `altfs -o release_device` clears a reservation left behind by a
 crashed session: it opens the device, unloads the cartridge if one is
@@ -376,13 +378,6 @@ change in this area starts from them.
 
 - The `do { } while (NEED_REVAL(ret))` loops in `tape.c` have no bound. A
   backend that returned `EDEV_NEED_FAILOVER` on every call would spin.
-- In `sg_open()`, when every path to the serial number is reserved by another
-  key, the search loop ends with `ret` at 0 (the last PERSISTENT RESERVE IN
-  succeeded) and no open descriptor. The open then fails on the
-  `SG_GET_RESERVED_SIZE` ioctl (`ATG0085I`) with the ioctl's -1 instead of a
-  device error code that says the drive is in use.
-- `ltfs_set_vendorunique_xattr()` returns `LTFS_NO_DEVICE` as a positive
-  value when the volume has no device, unlike every other error path.
 - `ltfs_release_medium()` ignores the result of `tape_unload_tape()` and
   always returns 0, so `altfs -o release_device` reports success even when the
   unload failed; the release itself is done by the device close that follows.

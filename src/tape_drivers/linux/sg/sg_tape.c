@@ -1405,6 +1405,7 @@ int sg_open(const char *devname, void **handle)
 
 	ibm_tape_genkey(priv->key);
 	struct reservation_info buf_key;
+	bool reserved_by_other = false;
 
 	if (count) {
 		qsort(order, count, sizeof(struct open_order), _order_cmp);
@@ -1460,6 +1461,7 @@ int sg_open(const char *devname, void **handle)
 				}
 			} else {
 				ltfsmsg(ATG0094I, priv->devname, buf_key.hint);
+				reserved_by_other = true;
 			}
 
 			close(priv->dev.fd);
@@ -1470,8 +1472,19 @@ int sg_open(const char *devname, void **handle)
 
 		_order_free(&order, count);
 
-		if (ret < 0)
+		if (!priv->devname) {
+			/*
+			 * No path could be used (#251). Another node holding the drive on
+			 * any of them is the reason to report; otherwise keep the error of
+			 * the last path tried.
+			 */
+			if (reserved_by_other) {
+				ltfsmsg(ATG0109E, devname);
+				ret = -EDEV_RESERVATION_CONFLICT;
+			} else if (ret >= 0)
+				ret = -EDEV_DEVICE_UNOPENABLE;
 			goto free;
+		}
 	} else {
 		ret = _raw_open(priv);
 		if (ret < 0)

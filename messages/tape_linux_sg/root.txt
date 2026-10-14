@@ -128,10 +128,10 @@ root:table {
 		ATG0088I:string { "Received an unknown sense code %06x" }
 		ATG0089I:string { "Opening a tape device for drive serial %s" }
 		ATG0090I:string { "Cannot fetch the reservation key (%s, %d)" }
-		ATG0091I:string { "Changer %s isn't reserved from any nodes" }
-		ATG0092I:string { "Changer %s was reserved from this node and can be reserved from the current path" }
-		ATG0093I:string { "Changer %s was reserved from this node but failed to reserve from the current path" }
-		ATG0094I:string { "Changer %s was reserved from another node (%s)" }
+		ATG0091I:string { "Drive %s isn't reserved from any nodes" }
+		ATG0092I:string { "Drive %s was reserved from this node and can be reserved from the current path" }
+		ATG0093I:string { "Drive %s was reserved from this node but failed to reserve from the current path" }
+		ATG0094I:string { "Drive %s was reserved from another node (%s)" }
 		ATG0095I:string { "Setting up timeout values from %s" }
 		ATG0096I:string { "Have unstable TUR response, start over (Cur = %d, Prev = %d)" }
 		ATG0097I:string { "Capturing a stable TUR at line %d" }
@@ -152,5 +152,8 @@ root:table {
 		// Host transfer limit (issue #148)
 		ATG0107I:string { "The maximum transfer length to %s is %d bytes" }
 		ATG0108W:string { "The host transfer path limits a single transfer to %s to %d bytes: volumes with a larger block size cannot be read or written through this path" }
+
+		// sg_open() with no usable path and the drive held by another node (issue #251)
+		ATG0109E:string { "Cannot open drive %s: it is reserved by another node" }
         }
 }
