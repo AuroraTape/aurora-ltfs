@@ -137,6 +137,82 @@ LTFS Format Specification defines data placement, index structure, and extended 
   | 2.4     | [Published](https://www.snia.org/sites/default/files/technical_work/LTFS/LTFS_Format_2.4.0_TechPosition.pdf)               | -                                                                    |
   | 2.5.1   | [Published](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf) | [Published as `20919:2021`](https://www.iso.org/standard/80598.html) |
 
+# Installing packages
+
+Packages of the final releases are served from apt and dnf repositories on GitHub Pages, built for the Tier 1 platforms, and from a Homebrew tap for macOS. The repository metadata is signed with the project key, fingerprint `0CDE88E44068BEE3E9E42A66077C8C2ED60935A6`. Release candidates are not published there, only as assets of their [GitHub Release](https://github.com/AuroraTape/aurora-ltfs/releases), which also carries the packages of every release. To build from source instead, see [Building from Source](#building-from-source).
+
+The repositories carry every final release and install the newest one; to stay on 1.0.x once a newer minor line is released, see [Updates](#updates).
+
+## Ubuntu 24.04
+
+Check that `gpg --show-keys` prints the fingerprint above before installing the key:
+
+```
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.gpg -o /tmp/aurora-ltfs.gpg
+# gpg --show-keys /tmp/aurora-ltfs.gpg
+# install -D -m 0644 /tmp/aurora-ltfs.gpg /etc/apt/keyrings/aurora-ltfs.gpg
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.sources -o /etc/apt/sources.list.d/aurora-ltfs.sources
+# apt update
+# apt install altfs
+```
+
+## Rocky Linux 9 / RHEL 9
+
+dnf shows the fingerprint when it imports the key; compare it before answering yes:
+
+```
+# curl -fsSL https://auroratape.github.io/aurora-ltfs/aurora-ltfs.repo -o /etc/yum.repos.d/aurora-ltfs.repo
+# dnf install aurora-ltfs
+```
+
+The Python `xattr` module that `altfs_ordered_copy` needs is in CRB or EPEL (see [below](#the-altfs_ordered_copy-utility)).
+
+## macOS
+
+Through the Homebrew tap [AuroraTape/homebrew-tap](https://github.com/AuroraTape/homebrew-tap); macFUSE comes first, as a cask:
+
+```
+$ brew install --cask macfuse
+$ brew install auroratape/tap/aurora-ltfs
+```
+
+Apple silicon gets a pre-built bottle (Homebrew in its default prefix, `/opt/homebrew`); Intel Macs build from source. The tap follows the newest final release, which is a 1.0.x release only until a newer minor line is released (see [Updates](#updates)). macOS is a Tier 2 platform: the formula is built and tested on CI without mounting.
+
+## Updates
+
+Updates come with `apt upgrade` / `dnf upgrade` / `brew upgrade`. The apt and dnf repositories carry every release line, so an upgrade moves to the newest release, also to a new minor version. To stay on a line, e.g. 1.0.x:
+
+- apt: create `/etc/apt/preferences.d/aurora-ltfs` with
+
+  ```
+  Package: altfs libaltfs0 libaltfs-dev
+  Pin: version 1.0.*
+  Pin-Priority: 990
+  ```
+
+  New installs and upgrades then take the newest 1.0.x; a newer version that is already installed is not downgraded.
+- dnf: add `includepkgs=aurora-ltfs-1.0.* libaltfs-1.0.* libaltfs-devel-1.0.*` to `/etc/yum.repos.d/aurora-ltfs.repo`. The repository then offers 1.0.x only.
+- Homebrew: the tap carries only the newest release; `brew pin aurora-ltfs` keeps the installed version.
+
+When the signing key is renewed (announced in the release notes beforehand), fetch `aurora-ltfs.gpg` again for apt; dnf imports the renewed key by itself.
+
+## Uninstalling
+
+```
+# apt remove altfs libaltfs0
+# rm /etc/apt/sources.list.d/aurora-ltfs.sources /etc/apt/keyrings/aurora-ltfs.gpg
+```
+
+```
+# dnf remove aurora-ltfs libaltfs
+# rm /etc/yum.repos.d/aurora-ltfs.repo
+```
+
+```
+$ brew uninstall aurora-ltfs
+$ brew untap auroratape/tap
+```
+
 # Quick Start
 
 This section is for users who already have Aurora LTFS installed.
@@ -196,10 +272,11 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 
 Release images are published to GHCR for x86_64. Images are tagged
 `X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
-version you run never changes behind your back. Pick one explicitly:
+version you run never changes behind your back. Pick one explicitly: `X.Y`
+follows the newest patch release of that line, `X.Y.Z` never moves.
 
 ```
-# docker pull ghcr.io/auroratape/aurora-ltfs:1.0.0
+# docker pull ghcr.io/auroratape/aurora-ltfs:1.0
 ```
 
 The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
@@ -208,18 +285,18 @@ passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
 
 ```
 # List drives
-docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0 \
   altfs -o device_list
 
 # Format a tape
-docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0 \
   mkaltfs -d /dev/sg0
 
 # Mount a tape (foreground; Ctrl-C unmounts)
 docker run --rm -it \
   --device /dev/fuse --device /dev/sg0 \
   --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
-  ghcr.io/auroratape/aurora-ltfs:1.0.0 \
+  ghcr.io/auroratape/aurora-ltfs:1.0 \
   altfs -f -o devname=/dev/sg0 /ltfs
 ```
 
