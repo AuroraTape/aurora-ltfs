@@ -271,8 +271,16 @@ transfers 512 KiB.
 read-only for the rest of the session (`ALP0051E`, `ALP0053E Dropping to
 read-only mode`), so that what is on the tape stays consistent; the error
 is recorded in the cartridge memory and the next mount is read-only too
-(`ALB0154I`). Unmount, copy the data to another cartridge, and have a look
-at the drive dump.
+(`ALB0154I`). Writes are buffered, so the application does not see the
+error on the `write()` whose data failed: the file whose data could not be
+written gets `EIO` once, on its next `write()`, `close()` or `fsync()`, and
+every write after the failure, to any file, gets `EROFS` ("Read-only file
+system"), as from a file system that turns itself read-only after an
+error. A copy can therefore stop on `EROFS` without any `EIO`, for example
+when the failed write was an index or another file's data. An `EROFS` on a
+volume that was mounted read-write means a failed write; look for
+`ALP0051E` or `ALP0053E` in the log. Unmount, copy the data to another
+cartridge, and have a look at the drive dump.
 
 **Drive dumps.** When an IBM drive reports an error, the `sg` and `iokit`
 backends save the drive's internal dump under `/tmp`: a forced dump
