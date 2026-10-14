@@ -21,6 +21,7 @@ import pytest
 
 from common.altfs import (
     LTFSCK_CORRECTED,
+    LTFSCK_NO_ERRORS,
     crash_altfs_daemon,
     format_tape,
     mount_tape,
@@ -44,11 +45,10 @@ def test_altfsck_modes_on_clean_tape(tmp_path_factory):
     tape_dir.mkdir()
     format_tape(tape_dir, serial="FSCKCL", label="fsck-clean")
 
-    # Default check: check_ltfs_volume() always exits with
-    # LTFSCK_CORRECTED (1) after processing a volume cleanly (it
-    # mounts and unmounts, which rewrites the index).
+    # Default check of a clean volume: nothing is written, so the exit
+    # status is LTFSCK_NO_ERRORS (0), not LTFSCK_CORRECTED (1).
     check = _altfsck(tape_dir=tape_dir)
-    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    assert check.returncode == LTFSCK_NO_ERRORS, check.stderr
     # "volume is consistent", not the bare word: "inconsistent"
     # would match "consistent" too.
     assert "volume is consistent" in (check.stdout + check.stderr).lower()

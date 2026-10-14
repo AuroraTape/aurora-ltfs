@@ -209,6 +209,42 @@
     </refsect1>
 
     <refsect1>
+      <title>EXIT STATUS</title>
+      <variablelist>
+        <varlistentry>
+          <term>0</term>
+          <listitem>
+            <para>No error, and no data, index or EOD was written to the cartridge (a check of a consistent volume, a verify, a listing); attributes in the cartridge memory may still be updated</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>1</term>
+          <listitem>
+            <para>The volume was recovered or rolled back, and the cartridge was modified (an index written, an EOD recovered)</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>4</term>
+          <listitem>
+            <para>The volume could not be recovered; the cartridge may have been modified</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>8</term>
+          <listitem>
+            <para>Operational error (device, memory or configuration); the cartridge may have been modified</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>16</term>
+          <listitem>
+            <para>Usage or syntax error</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
       <title>SEE ALSO</title>
       <para>altfs(8), mkaltfs(8), altfsindextool(8).</para>
     </refsect1>

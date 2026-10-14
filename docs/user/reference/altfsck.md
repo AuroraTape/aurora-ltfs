@@ -82,6 +82,23 @@ Capture indexes read successfully to the specified directory by dir. (-g is effe
 **--salvage-rollback-points**  
 List the rollback points of the cartridge that has no EOD
 
+## EXIT STATUS
+
+**0**  
+No error, and no data, index or EOD was written to the cartridge (a check of a consistent volume, a verify, a listing); attributes in the cartridge memory may still be updated
+
+**1**  
+The volume was recovered or rolled back, and the cartridge was modified (an index written, an EOD recovered)
+
+**4**  
+The volume could not be recovered; the cartridge may have been modified
+
+**8**  
+Operational error (device, memory or configuration); the cartridge may have been modified
+
+**16**  
+Usage or syntax error
+
 ## SEE ALSO
 
 altfs(8), mkaltfs(8), altfsindextool(8).

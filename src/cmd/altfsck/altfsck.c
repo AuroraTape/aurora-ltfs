@@ -704,7 +704,8 @@ int check_ltfs_volume(struct ltfs_volume *vol, struct other_check_opts *opt)
 		ltfs_set_commit_message_reason(SYNC_CHECK, vol);
 		ltfs_unmount(SYNC_CHECK, vol);
 		ltfsmsg(ACK0019I);
-		return LTFSCK_CORRECTED;
+		/* Corrected only when the check wrote to the medium (an index, a recovered EOD) */
+		return tape_medium_modified(vol->device) ? LTFSCK_CORRECTED : LTFSCK_NO_ERRORS;
 	}
 }
 

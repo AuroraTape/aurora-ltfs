@@ -64,8 +64,9 @@ and a large file (`--big-size`, default 2G), unmount, remount **without** a
 full consistency check (`ALB0028I` would mean the VCR / VCI were not in sync),
 checksums, stop with the tape mounted (`systemctl stop altfs.service` in
 package mode, a plain unmount in `--prefix` mode), clean remount, `altfsck`.
-`altfsck` returns 1 (`LTFSCK_CORRECTED`) with `ACK0019I Volume is consistent`
-for a consistent volume: it always runs a full check and updates the MAM.
+`altfsck` prints `ACK0019I Volume is consistent` and returns 0
+(`LTFSCK_NO_ERRORS`), or 1 (`LTFSCK_CORRECTED`) when it had to write to the
+cartridge (an index after a recovery); the script accepts both.
 
 Not covered: a reboot with a volume mounted; `service-check.sh --reboot` does
 that for the mount service. A mount started by hand from a desktop terminal
