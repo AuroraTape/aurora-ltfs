@@ -389,6 +389,7 @@ void init_error_table(int vendor,
 			*vendor_table = hp_tape_errors;
 			break;
 		case VENDOR_QUANTUM:
+		case VENDOR_QUANTUM_B:
 			*vendor_table = quantum_tape_errors;
 			break;
 	}
@@ -406,6 +407,7 @@ int init_timeout(int vendor, struct timeout_tape **table, int type)
 			ret = hp_tape_init_timeout(table, type);
 			break;
 		case VENDOR_QUANTUM:
+		case VENDOR_QUANTUM_B:
 			ret = quantum_tape_init_timeout(table, type);
 			break;
 	}

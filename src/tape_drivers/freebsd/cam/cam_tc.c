@@ -4183,6 +4183,12 @@ struct tape_ops camtape_drive_handler = {
 
 struct tape_ops *tape_dev_get_ops(void)
 {
+	/* Defaults until init_error_table() sets the drive's tables, as sg and iokit do (#262) */
+	if (!standard_table)
+		standard_table = standard_tape_errors;
+	if (!vendor_table)
+		vendor_table = ibm_tape_errors;
+
 	return &camtape_drive_handler;
 }
 
