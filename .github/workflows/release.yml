@@ -216,8 +216,12 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      # Only the packages: depending on when the container job finishes, the
+      # run may also hold the build record (*.dockerbuild) that
+      # docker/build-push-action uploads, which is not a release asset.
       - uses: actions/download-artifact@v4
         with:
+          pattern: '*-packages'
           path: artifacts/
 
       - name: Flatten artifacts
