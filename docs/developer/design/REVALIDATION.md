@@ -106,8 +106,9 @@ The command whose error started the reconnect is not re-issued by the
 backend, with one exception. WRITE and WRITE FILEMARKS (`sg_write()`,
 `sg_writefm()`) cannot be blindly repeated, a repeated write would duplicate
 a block, so on `EDEV_NEED_FAILOVER` they read the position back: if the
-drive sits exactly one block (or one filemark group) past where the command
-started, the command took effect and the function returns success; if not,
+drive sits exactly one block, or the number of file marks written (none for
+the buffer flush, a count of 0), past where the command started, the command
+took effect and the function returns success with that position; if not,
 it returns `EDEV_POR_OR_BUS_RESET`, and the revalidation that follows finds
 out where the drive really is. Every other command returns the failover code
 to the library, which revalidates and then repeats the whole operation from
@@ -373,9 +374,6 @@ operations (revalidation failure), and the eject button while mounted.
 These are observations from reading the code, recorded here so that the next
 change in this area starts from them.
 
-- `sg_writefm()` checks `pos->block + count == cur_pos.block` after a failover
-  but then advances `pos->block` by one, not by `count`. libaltfs writes one
-  filemark at a time, so the difference does not show today.
 - The `do { } while (NEED_REVAL(ret))` loops in `tape.c` have no bound. A
   backend that returned `EDEV_NEED_FAILOVER` on every call would spin.
 - In `sg_open()`, when every path to the serial number is reserved by another

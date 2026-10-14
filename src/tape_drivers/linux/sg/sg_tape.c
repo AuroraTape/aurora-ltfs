@@ -2291,9 +2291,9 @@ int sg_writefm(void *device, size_t count, struct tc_position *pos, bool immed)
 		if (!ret_fo) {
 			if (pos->partition == cur_pos.partition
 				&& pos->block + count == cur_pos.block) {
-				pos->block++;
-				pos->early_warning = cur_pos.early_warning;
-				pos->programmable_early_warning = cur_pos.programmable_early_warning;
+				/* The file marks reached the tape: take the position the
+				 * drive reports, as the path without failover does (#249) */
+				*pos = cur_pos;
 				ret = DEVICE_GOOD;
 			} else
 				ret = -EDEV_POR_OR_BUS_RESET;
