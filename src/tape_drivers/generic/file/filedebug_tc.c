@@ -663,9 +663,9 @@ int filedebug_read(void *device, char *buf, size_t count, struct tc_position *po
 		if (state->read_counter > state->force_readperm) {
 			ltfsmsg(ATF0008E, "read");
 			if (state->force_errortype)
-				return -EDEV_READ_PERM;
-			else
 				return -EDEV_NO_SENSE;
+			else
+				return -EDEV_READ_PERM;
 		}
 	}
 
