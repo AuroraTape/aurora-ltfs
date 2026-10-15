@@ -31,7 +31,6 @@
         <arg><option>--verbose=<replaceable>num</replaceable></option></arg>
         <arg><option>-V</option></arg>
         <arg><option>-h</option></arg>
-        <arg><option>-p</option></arg>
       </cmdsynopsis>
     </refsynopsisdiv>
 
@@ -137,12 +136,6 @@
           <term><option>-h, --help</option></term>
           <listitem>
             <para>Show help information</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>-p, --advanced-help</option></term>
-          <listitem>
-            <para>Full help, including advanced options</para>
           </listitem>
         </varlistentry>
       </variablelist>

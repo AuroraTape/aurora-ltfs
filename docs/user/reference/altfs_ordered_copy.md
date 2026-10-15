@@ -8,7 +8,7 @@ altfs_ordered_copy - Copy files from source to destination with LTFS order optim
 
 ## SYNOPSIS
 
-**altfs_ordered_copy** \[ **-p** \] \[ **-r** \] \[ **-t** *TARGET_DIRECTORY* \] \[ **--keep-tree** *CUTOFF_PREFIX* \] \[ **-a** \] \[ **-v** \] \[ **--verbose** *LOG_LEVEL* \] \[ **-q** \] \[ **-h** \] \[ **SOURCE** * ...* \] \[ **DESTINATION** \]
+**altfs_ordered_copy** \[ **-p** \] \[ **-r** \] \[ **-t** *TARGET_DIRECTORY* \] \[ **--keep-tree** *CUTOFF_PREFIX* \] \[ **--sort-files** \] \[ **-a** \] \[ **-v** \] \[ **--verbose** *LOG_LEVEL* \] \[ **-q** \] \[ **-h** \] \[ **SOURCE** * ...* \] \[ **DESTINATION** \]
 
 ## DESCRIPTION
 
@@ -25,8 +25,11 @@ copy directories recursively
 **-t, --target-directory=** *TARGET_DIRECTORY*  
 copy all SOURCE arguments into TARGET_DIRECTORY
 
-**--keep_tree=** *CUTOFF_PREFIX*  
+**--keep-tree=** *CUTOFF_PREFIX*  
 CUTOFF_PREFIX, effective only when file list is provided from stdin and keep-tree option is enabled. CUTOFF_PREFIX is removed from the file paths copied to the destination.
+
+**--sort-files**  
+Sort the file list before copying
 
 **-a, --all**  
 achieve files recursively and preserve attributes

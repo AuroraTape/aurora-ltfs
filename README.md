@@ -60,7 +60,7 @@ The maintainers develop and test with an IBM LTO5. IBM LTO6 to LTO9 and TS1140 t
 
 ## LTFS Format Specifications
 
-Aurora LTFS reads volumes of any format version from 1.0 to 2.x and writes labels and indexes at version 2.5.0. The reference implementation and the products built on it mount such a volume after a clean unmount, with a warning that the index is newer than the software; after a failure they cannot use its incremental indexes, which only `altfsck` replays. The specification versions, incremental indexes and interoperability with other implementations: [docs/user/FORMAT.md](docs/user/FORMAT.md).
+Aurora LTFS reads volumes of any format version from 1.0 to 2.x. A volume it formats is written at version 2.5.0; an existing volume keeps its format version within 2.4.0 to 2.5.0 (one older than 2.4 is written at 2.4.0, one newer than 2.5 at 2.5.0), and only a volume written at 2.5.0 receives incremental indexes. The reference implementation and the products built on it mount a 2.5 volume after a clean unmount, with a warning that the index is newer than the software; after a failure they cannot use its incremental indexes, which only `altfsck` replays. The specification versions, incremental indexes and interoperability with other implementations: [docs/user/FORMAT.md](docs/user/FORMAT.md).
 
 # Installing packages
 
@@ -111,7 +111,7 @@ that major version (a patch release of an older line does not move it),
 `X.Y.Z` never moves.
 
 ```
-# docker pull ghcr.io/auroratape/aurora-ltfs:1.0
+# docker pull ghcr.io/auroratape/aurora-ltfs:1.5
 ```
 
 The image has no entrypoint; it is a toolbox containing `altfs`, `mkaltfs`,
@@ -120,18 +120,18 @@ passed through, and mounting additionally needs FUSE and `SYS_ADMIN`:
 
 ```
 # List drives
-docker run --rm ghcr.io/auroratape/aurora-ltfs:1.0 \
+docker run --rm ghcr.io/auroratape/aurora-ltfs:1.5 \
   altfs -o device_list
 
 # Format a tape
-docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.0 \
+docker run --rm --device /dev/sg0 ghcr.io/auroratape/aurora-ltfs:1.5 \
   mkaltfs -d /dev/sg0
 
 # Mount a tape (foreground; Ctrl-C unmounts)
 docker run --rm -it \
   --device /dev/fuse --device /dev/sg0 \
   --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
-  ghcr.io/auroratape/aurora-ltfs:1.0 \
+  ghcr.io/auroratape/aurora-ltfs:1.5 \
   altfs -f -o devname=/dev/sg0 /ltfs
 ```
 

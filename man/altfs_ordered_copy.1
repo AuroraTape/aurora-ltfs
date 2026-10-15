@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFS_ORDERED_COPY" "1" "09 October 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFS_ORDERED_COPY" "1" "15 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfs_ordered_copy \- Copy files from source to destination with LTFS order optimization
 .SH SYNOPSIS
 
-\fBaltfs_ordered_copy\fR [ \fB-p\fR ] [ \fB-r\fR ] [ \fB-t \fITARGET_DIRECTORY\fB\fR ] [ \fB--keep-tree \fICUTOFF_PREFIX\fB\fR ] [ \fB-a\fR ] [ \fB-v\fR ] [ \fB--verbose \fILOG_LEVEL\fB\fR ] [ \fB-q\fR ] [ \fB-h\fR ] [ \fBSOURCE \fR\fI ...\fR ] [ \fBDESTINATION\fR ]
+\fBaltfs_ordered_copy\fR [ \fB-p\fR ] [ \fB-r\fR ] [ \fB-t \fITARGET_DIRECTORY\fB\fR ] [ \fB--keep-tree \fICUTOFF_PREFIX\fB\fR ] [ \fB--sort-files\fR ] [ \fB-a\fR ] [ \fB-v\fR ] [ \fB--verbose \fILOG_LEVEL\fB\fR ] [ \fB-q\fR ] [ \fB-h\fR ] [ \fBSOURCE \fR\fI ...\fR ] [ \fBDESTINATION\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -27,8 +27,11 @@ copy directories recursively
 \fB-t, --target-directory=\fITARGET_DIRECTORY\fB\fR
 copy all SOURCE arguments into TARGET_DIRECTORY
 .TP
-\fB--keep_tree=\fICUTOFF_PREFIX\fB\fR
+\fB--keep-tree=\fICUTOFF_PREFIX\fB\fR
 CUTOFF_PREFIX, effective only when file list is provided from stdin and keep-tree option is enabled. CUTOFF_PREFIX is removed from the file paths copied to the destination.
+.TP
+\fB--sort-files\fR
+Sort the file list before copying
 .TP
 \fB-a, --all\fR
 achieve files recursively and preserve attributes
