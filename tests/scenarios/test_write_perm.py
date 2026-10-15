@@ -31,7 +31,7 @@ import os
 import pytest
 
 from common.altfs import (
-    LTFSCK_CORRECTED,
+    LTFSCK_NO_ERRORS,
     format_tape,
     mount_tape,
     mount_tape_foreground,
@@ -147,8 +147,9 @@ def test_write_protected_tape_rejects_writes_and_stays_consistent(tmp_path_facto
     finally:
         umount_tape(mnt)
 
+    # Nothing can be written to a write-protected tape.
     check = run_altfsck(tape_dir=tape_dir)
-    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    assert check.returncode == LTFSCK_NO_ERRORS, check.stderr
     # "volume is consistent", not the bare word: "inconsistent"
     # would match "consistent" too.
     assert "volume is consistent" in (check.stdout + check.stderr).lower()
@@ -243,6 +244,7 @@ def test_double_write_perm_no_crash_and_still_mountable(tmp_path_factory):
     finally:
         umount_tape(mnt)
 
+    # The check mounts it as an error tape and writes nothing.
     check = run_altfsck(tape_dir=tape_dir)
-    assert check.returncode == LTFSCK_CORRECTED, check.stderr
+    assert check.returncode == LTFSCK_NO_ERRORS, check.stderr
     assert "volume is consistent" in (check.stdout + check.stderr).lower()
