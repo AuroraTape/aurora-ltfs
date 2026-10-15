@@ -265,6 +265,28 @@ out_free:
 }
 
 /**
+ * Tell whether anything was written to the medium since the device was opened:
+ * data, filemarks, an erase or a format, or an EOD recovered. Writes of MAM
+ * attributes do not count. The flag is not reset when a cartridge is loaded.
+ * @param dev the device
+ * @return true when the medium was modified
+ */
+bool tape_medium_modified(struct device_data *dev)
+{
+	return dev && dev->medium_modified;
+}
+
+/**
+ * Record a change of the medium made outside the write functions of this file.
+ * @param dev the device
+ */
+void tape_set_medium_modified(struct device_data *dev)
+{
+	if (dev)
+		dev->medium_modified = true;
+}
+
+/**
  * Reopen the device and restore the connection without any re-reservation and
  * re-prevent removal. This functall calls after the fork of LTFS, the backend
  * doesn't need to reopen the device it may have a dummy function for reopen.
@@ -1324,6 +1346,7 @@ ssize_t tape_write(struct device_data *dev, const char *buf, size_t count, bool 
 
 	_tape_medium_seen(dev);
 	dev->capacity_written += count;
+	dev->medium_modified = true;
 
 	if (dev->position.early_warning) {
 		ltfs_mutex_lock(&dev->read_only_flag_mutex);
@@ -1397,6 +1420,8 @@ int tape_write_filemark(struct device_data *dev, uint8_t count, bool ignore_less
 	/* Filemarks take capacity too, and they come with a sync: ask the drive next time */
 	_tape_medium_seen(dev);
 	_tape_capacity_forget(dev);
+	if (count)
+		dev->medium_modified = true;
 
 	/*
 	 *  This is the workaround for the drive that doesn't flush VCI with WRITE_FM command without immediate flag like HP LTO6.
@@ -1518,8 +1543,10 @@ int tape_erase(struct device_data *dev, bool long_erase)
 	ret = dev->backend->erase(dev->backend_data, &dev->position, long_erase);
 	if (ret < 0)
 		ltfsmsg(ALP0086E, ret);
-	else
+	else {
 		_tape_medium_seen(dev);
+		dev->medium_modified = true;
+	}
 
 	return ret;
 }
@@ -1712,6 +1739,7 @@ int tape_format(struct device_data *dev, tape_partition_t index_part, int densit
 		ltfsmsg(ALP0058E, ret);
 		return ret;
 	}
+	dev->medium_modified = true;
 
 	/* Reset partition space flag */
 	dev->partition_space[0] = dev->partition_space[1] = PART_WRITABLE;
@@ -1772,6 +1800,7 @@ int tape_unformat_hard(struct device_data *dev)
 		ltfsmsg(ALP0060E, ret);
 		return ret;
 	}
+	dev->medium_modified = true;
 
 	/* Reset partition space flag */
 	dev->partition_space[0] = dev->partition_space[1] = PART_WRITABLE;
