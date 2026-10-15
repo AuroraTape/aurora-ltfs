@@ -233,8 +233,9 @@ jobs:
           # The version the binaries report must be the tag's (as the
           # packages carry it: '~' for '-' in a release candidate).
           V="${GITHUB_REF_NAME#v}"
-          docker run --rm "$IMG" altfs -V | tee altfs-version.txt
-          grep -F -- "$(printf '%s' "$V" | tr -- '-' '~')" altfs-version.txt
+          # altfs -V prints on stderr
+          docker run --rm "$IMG" altfs -V 2>&1 | tee altfs-version.txt
+          grep -Fx -- "Aurora LTFS version $(printf '%s' "$V" | tr -- '-' '~')" altfs-version.txt
           docker run --rm "$IMG" mkaltfs --help > /dev/null
           docker run --rm "$IMG" altfsck --help > /dev/null
           docker run --rm "$IMG" altfsindextool --help > /dev/null
