@@ -82,8 +82,7 @@ def crash_and_recover(tape_dir, mnt, crashed_dir, need_recovery=True):
         assert check.returncode == LTFSCK_CORRECTED, check_out
         assert "ALB0189I" in check_out, "recovery must complete"
     else:
-        assert check.returncode in (LTFSCK_NO_ERRORS, LTFSCK_CORRECTED), \
-            check_out
+        assert check.returncode == LTFSCK_NO_ERRORS, check_out
 
     # The recovered full index describes every object like the ground
     # truth does: UIDs, time stamps, read-only flags, extended

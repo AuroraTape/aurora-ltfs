@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from common.altfs import LTFSCK_CORRECTED, run_altfsck
+from common.altfs import LTFSCK_CORRECTED, LTFSCK_NO_ERRORS, run_altfsck
 from common.index import index_records, parse_latest_index
 
 _IMAGE_DIR = os.environ.get("ALTFS_IMAGE_DIR")
@@ -64,12 +64,10 @@ def test_manifest_names_the_writer():
 
 
 def _consistent(check):
-    """check_ltfs_volume() exits with LTFSCK_CORRECTED after processing a
-    volume cleanly (it mounts and unmounts, which updates the MAM
-    coherency data), see tests/scenarios/test_altfsck.py; the word is
-    what tells a consistent volume from a corrected one."""
+    """A consistent volume exits with LTFSCK_NO_ERRORS: altfsck wrote
+    nothing to the medium, see tests/scenarios/test_altfsck.py."""
     out = (check.stdout + check.stderr).lower()
-    return (check.returncode == LTFSCK_CORRECTED
+    return (check.returncode == LTFSCK_NO_ERRORS
             and "volume is consistent" in out
             and "alb0189i" not in out)
 

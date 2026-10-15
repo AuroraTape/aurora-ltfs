@@ -345,10 +345,9 @@ if [ -n "$DEVICE" ]; then
 
 	altfsck "$DEVICE" > "$WORK/altfsck.log" 2>&1
 	RC=$?; info "altfsck exit status: $RC   last line: $(tail -1 "$WORK/altfsck.log" | cut -c1-120)"
-	# altfsck always runs a full consistency check and updates the MAM
-	# coherency data, so a consistent volume ends with ACK0019I and exit
-	# status 1 (LTFSCK_CORRECTED), not 0.
-	if [ "$RC" -le 1 ] && grep -q 'ACK0019I' "$WORK/altfsck.log"; then
+	# A consistent volume ends with ACK0019I and exit status 0
+	# (LTFSCK_NO_ERRORS): altfsck wrote nothing to the medium.
+	if [ "$RC" -eq 0 ] && grep -q 'ACK0019I' "$WORK/altfsck.log"; then
 		pass "altfsck reports a consistent volume (ACK0019I, exit $RC)"
 	else
 		fail "altfsck exit status $RC (log: $WORK/altfsck.log)"
