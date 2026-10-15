@@ -103,6 +103,7 @@ struct device_data {
 	int partition_space[2];               /**< Remaining space status per partition */
 	unsigned int write_protected;         /**< Write protect status of the tape (use bit field of volumelock_status) */
 	bool write_error;                     /**< Did a write error happen in the current mount? */
+	bool medium_modified;                 /**< Was anything written to the medium since the device was opened? (not reset by a load) */
 	bool device_reserved;                 /**< Do we have exclusive use of the device? */
 	bool medium_locked;                   /**< Is the medium locked in the device? */
 	bool fence;                           /**< Are device lock requests blocked? */
@@ -125,6 +126,8 @@ void tape_device_free(struct device_data **device, void * const kmi_handle, bool
 int tape_device_open(struct device_data *dev, const char *devname, struct tape_ops *ops,
 	void * const kmi_handle);
 int tape_device_reopen(struct device_data *device, const char *devname);
+bool tape_medium_modified(struct device_data *dev);
+void tape_set_medium_modified(struct device_data *dev);
 
 void _tape_device_close(struct device_data *device, void * const kmi_handle,
 						bool skip_aom_setting, bool force_release);

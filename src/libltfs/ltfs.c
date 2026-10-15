@@ -4448,7 +4448,7 @@ int ltfs_wait_device_ready(struct ltfs_volume *vol)
  */
 void ltfs_recover_eod_simple(struct ltfs_volume *vol)
 {
-	bool corrupted = false;
+	bool corrupted = false, found_eod = false;
 	int eod_status_ip, eod_status_dp;
 
 	eod_status_ip = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol));
@@ -4456,7 +4456,8 @@ void ltfs_recover_eod_simple(struct ltfs_volume *vol)
 		ltfsmsg(ALB0241I, "IP");
 		ltfsmsg(ALB0242I);
 		corrupted = true;
-		tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol));
+		if (tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_ip, vol)) == 0)
+			found_eod = true;
 	}
 
 	eod_status_dp = tape_check_eod_status(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
@@ -4464,10 +4465,14 @@ void ltfs_recover_eod_simple(struct ltfs_volume *vol)
 		ltfsmsg(ALB0241I, "DP");
 		ltfsmsg(ALB0242I);
 		corrupted = true;
-		tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol));
+		if (tape_seek_eod(vol->device, ltfs_part_id2num(vol->label->partid_dp, vol)) == 0)
+			found_eod = true;
 	}
 
 	if (corrupted) {
+		/* The unload after a seek to EOD makes the drive record the EOD again */
+		if (found_eod)
+			tape_set_medium_modified(vol->device);
 		tape_unload_tape(false, vol->device);
 		tape_load_tape(vol->device, vol->kmi_handle, true);
 	}

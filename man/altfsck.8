@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFSCK" "8" "05 April 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFSCK" "8" "15 October 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfsck \- Recover and rollback utility for LTFS formatted tape
@@ -103,6 +103,22 @@ is specified at format time. Otherwise it is [VOL_UUID]-[GEN]-[PARTITION].xml.
 .TP
 \fB--salvage-rollback-points\fR
 List the rollback points of the cartridge that has no EOD
+.SH "EXIT STATUS"
+.TP
+\fB0\fR
+No error, and no data, index or EOD was written to the cartridge (a check of a consistent volume, a verify, a listing); attributes in the cartridge memory may still be updated
+.TP
+\fB1\fR
+The volume was recovered or rolled back, and the cartridge was modified (an index written, an EOD recovered)
+.TP
+\fB4\fR
+The volume could not be recovered; the cartridge may have been modified
+.TP
+\fB8\fR
+Operational error (device, memory or configuration); the cartridge may have been modified
+.TP
+\fB16\fR
+Usage or syntax error
 .SH "SEE ALSO"
 .PP
 altfs(8), mkaltfs(8), altfsindextool(8), tape-backend(4), kmi-backend(4), altfs.conf(5).
