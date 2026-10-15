@@ -137,7 +137,12 @@ tracking issue as they land, so the notes are not written from memory.
 - [ ] Watch `release.yml`: the `.deb` (Ubuntu 24.04) and `.rpm` (Rocky Linux
       9) jobs, the container image (GHCR, `X.Y.Z` / `X.Y` / `X`, no
       `latest`) with its smoke test, and the GitHub Release with the
-      packages attached. For a final release it then starts
+      packages attached. `X.Y`, `X` and the "Latest" release move only
+      when the tag is the highest final release of the line, the major
+      version, or overall (job `moving`), so a patch release of an older
+      line leaves them alone. When releases of two lines are due together, push the
+      second tag only after the first run has finished: each run decides
+      on the tags that exist when it starts. For a final release it then starts
       `packages.yml` and `homebrew.yml` on `main`: approve the run of
       `packages.yml` (environment `packages`) and watch the installs from
       the repositories in clean containers and from the tap on macOS.
