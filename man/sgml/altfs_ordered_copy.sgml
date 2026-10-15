@@ -25,6 +25,7 @@
         <arg><option>-r</option></arg>
         <arg><option>-t <replaceable>TARGET_DIRECTORY</replaceable></option></arg>
         <arg><option>--keep-tree <replaceable>CUTOFF_PREFIX</replaceable></option></arg>
+        <arg><option>--sort-files</option></arg>
         <arg><option>-a</option></arg>
         <arg><option>-v</option></arg>
         <arg><option>--verbose <replaceable>LOG_LEVEL</replaceable></option></arg>
@@ -67,9 +68,15 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>--keep_tree=<replaceable>CUTOFF_PREFIX</replaceable></option></term>
+          <term><option>--keep-tree=<replaceable>CUTOFF_PREFIX</replaceable></option></term>
           <listitem>
             <para>CUTOFF_PREFIX, effective only when file list is provided from stdin and keep-tree option is enabled. CUTOFF_PREFIX is removed from the file paths copied to the destination.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--sort-files</option></term>
+          <listitem>
+            <para>Sort the file list before copying</para>
           </listitem>
         </varlistentry>
         <varlistentry>

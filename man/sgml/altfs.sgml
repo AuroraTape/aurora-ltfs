@@ -25,7 +25,6 @@
         <arg rep="repeat"><option>-o <replaceable>mount_option</replaceable></option></arg>
         <arg><option>-V</option></arg>
         <arg><option>-h</option></arg>
-        <arg><option>-a</option></arg>
       </cmdsynopsis>
     </refsynopsisdiv>
 
@@ -50,12 +49,6 @@
           <term><option>-h, --help</option></term>
           <listitem>
             <para>Show help information</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><option>-a</option></term>
-          <listitem>
-            <para>Full help, including advanced options</para>
           </listitem>
         </varlistentry>
       </variablelist>

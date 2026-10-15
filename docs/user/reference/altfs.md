@@ -8,7 +8,7 @@ altfs - File system based on a linear tape drive
 
 ## SYNOPSIS
 
-**altfs** *mount_point* \[ **-o** *mount_option ...* \] \[ **-V** \] \[ **-h** \] \[ **-a** \]
+**altfs** *mount_point* \[ **-o** *mount_option ...* \] \[ **-V** \] \[ **-h** \]
 
 ## DESCRIPTION
 
@@ -21,9 +21,6 @@ Version information
 
 **-h, --help**  
 Show help information
-
-**-a**  
-Full help, including advanced options
 
 ## LTFS OPTIONS (MOUNT OPTIONS)
 

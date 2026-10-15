@@ -8,7 +8,7 @@ altfsck - Recover and rollback utility for LTFS formatted tape
 
 ## SYNOPSIS
 
-**altfsck** \[ **-g** *generation* \] \[ **-r** \] \[ **-n** \] \[ **-f** \] \[ **-z** \] \[ **-l** \] \[ **-m** \] \[ **-v** *strategy* \] \[ **-j** \] \[ **-k** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] \[ **-p** \] *device_name*
+**altfsck** \[ **-g** *generation* \] \[ **-r** \] \[ **-n** \] \[ **-f** \] \[ **-z** \] \[ **-l** \] \[ **-m** \] \[ **-v** *strategy* \] \[ **-j** \] \[ **-k** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] *device_name*
 
 On Linux, *device_name* is like '/dev/IBMtape0', on OSX, *device_name* is like '0'(default: )
 
@@ -59,9 +59,6 @@ Version information
 
 **-h, --help**  
 Show help information
-
-**-p, --advanced-help**  
-Full help, including advanced options
 
 ## ADVANCED OPTIONS (EXPERIMENTAL)
 

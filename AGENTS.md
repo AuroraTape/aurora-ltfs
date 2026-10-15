@@ -40,11 +40,9 @@ make install
 
 ### macOS Build Configuration
 ```bash
-# Setup environment first:
-export ICU_PATH="/usr/local/opt/icu4c/bin"
-export LIBXML2_PATH="/usr/local/opt/libxml2/bin"
-export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libxml2/lib/pkgconfig"
-export PATH="$PATH:$ICU_PATH:$LIBXML2_PATH"
+# Setup environment first (see docs/developer/BUILDING.md):
+export PKG_CONFIG_PATH="$(brew --prefix icu4c)/lib/pkgconfig:$(brew --prefix libxml2)/lib/pkgconfig:/usr/local/lib/pkgconfig"
+export PATH="$(brew --prefix icu4c)/bin:$(brew --prefix libxml2)/bin:$PATH"
 
 ./autogen.sh
 LDFLAGS="-framework CoreFoundation -framework IOKit" ./configure --prefix=</path_to_install>
@@ -83,7 +81,9 @@ make distclean
    - `linux/sg/` - Linux SCSI generic driver
    - `osx/iokit/` - macOS IOKit driver
    - `freebsd/cam/` - FreeBSD CAM driver
+   - `netbsd/scsipi-ibmtape/` - NetBSD scsipi driver
    - `generic/file/` - Debug purpose tape emulation on a directory (for creating situations hard to recreate)
+   - `generic/itdtimg/` - Read-only access to an image taken by IBM Tape Diagnostic Tool
 
 3. **I/O Schedulers** (`src/iosched/`)
    - `fcfs.c` - First-come-first-served scheduler (This is sample of I/O scheduler. Not used at all.)
@@ -99,6 +99,7 @@ make distclean
    - `altfsck/` - Check and repair LTFS volumes like `fsck`
    - `altfsindextool/` - Manipulate LTFS indexes outside of LTFS filesystem implementation
    - `altfs_ordered_copy/` - Python script for optimized file copying
+   - `altfsctl/` - Python script setting up LTFS mounts as system services (`altfs@<serial>.service`, Linux)
 
 6. **ltfs internal filesystem operations** (`src/libltfs/ltfs_fsops.c/h`)
    - This is the ltfs own filesystem operations implementation
@@ -119,9 +120,9 @@ make distclean
 - Language: C99 with gcc
 
 # Project Structure
-- `contrib`:               Contribution code that is not a part of the project but is variable for this project
+- `contrib`:               Contribution code that is not a part of the project but is valuable for this project
 - `conf`:                  System configuration files (rsyslog, syslog-ng, systemd)
-- `docs`:                  Documentation by reader: `docs/developer` (building, coding style, AI policy), `docs/project` (governance, release process); index in `docs/README.md`
+- `docs`:                  Documentation by reader: `docs/user` (command reference, service, configuration, troubleshooting, drives, format), `docs/developer` (building, coding style, AI policy), `docs/project` (governance, release process); index in `docs/README.md`
 - `examples`:              Example and sample configuration files
 - `init.d`:                Service script for init
 - `man`:                   man pages for the commands provided by the project
@@ -136,6 +137,7 @@ make distclean
 - `src/cmd/altfsck`:       Recovery tool for the LTFS like `fsck`
 - `src/cmd/altfsindextool`: Tools for capturing indexes on the tape
 - `src/cmd/altfs_ordered_copy`: Python script for optimized file copying
+- `src/cmd/altfsctl`:      Service setup script (`altfs@<serial>.service`, Linux)
 
 ## Common Development Tasks
 
@@ -168,7 +170,8 @@ altfsck -d <device_name>
 
 - **Linux**: Uses sg (SCSI generic) driver
 - **macOS**: Uses IOKit driver
-- **FreeBSD/NetBSD**: Uses platform-specific SCSI interfaces
+- **FreeBSD**: Uses CAM driver (`freebsd/cam`)
+- **NetBSD**: Uses scsipi driver (`netbsd/scsipi-ibmtape`)
 
 ## Message System
 

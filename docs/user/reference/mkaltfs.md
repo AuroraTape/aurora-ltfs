@@ -8,7 +8,7 @@ mkaltfs - Format a tape in the drive to LTFS format
 
 ## SYNOPSIS
 
-**mkaltfs** **-d** *name* \[ **-f** \] \[ **-s** *id* \] \[ **-n** *name* \] \[ **-r** *rules* \] \[ **-w** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \] \[ **-p** \]
+**mkaltfs** **-d** *name* \[ **-f** \] \[ **-s** *id* \] \[ **-n** *name* \] \[ **-r** *rules* \] \[ **-w** \] \[ **-q** \] \[ **--verbose=** *num* \] \[ **-V** \] \[ **-h** \]
 
 ## DESCRIPTION
 
@@ -56,9 +56,6 @@ Version information
 
 **-h, --help**  
 Show help information
-
-**-p, --advanced-help**  
-Full help, including advanced options
 
 ### USAGE EXAMPLE
 
