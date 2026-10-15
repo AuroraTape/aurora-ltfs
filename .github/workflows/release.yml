@@ -16,6 +16,39 @@ defaults:
     shell: bash
 
 jobs:
+  # Which moving names this tag takes over. A patch release of an older line
+  # (v1.0.3 after v1.5.0) must not move `X` back, nor the GitHub "Latest"
+  # release; `X.Y` is checked the same way. A failed query of the tags fails
+  # the run rather than guessing: a guess would move them back.
+  moving:
+    name: Moving tags
+    runs-on: ubuntu-latest
+    outputs:
+      major: ${{ steps.moving.outputs.major }}
+      minor: ${{ steps.moving.outputs.minor }}
+      latest: ${{ steps.moving.outputs.latest }}
+    steps:
+      - name: Compare with the other final releases
+        id: moving
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+            # A release candidate takes over no moving name
+            printf 'major=false\nminor=false\nlatest=false\n' | tee -a "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          x=${BASH_REMATCH[1]} y=${BASH_REMATCH[2]}
+          refs=$(gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" \
+                     --jq '.[].ref | ltrimstr("refs/tags/")')
+          # The tag itself counts too (the first release of a line)
+          finals=$(printf '%s\n%s\n' "$refs" "$TAG" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -uV)
+          # Is the tag the highest final release whose name starts with $1?
+          highest() { [ "$(awk -v p="$1" 'index($0, p) == 1' <<<"$finals" | tail -n1)" = "$TAG" ] && echo true || echo false; }
+          printf 'major=%s\nminor=%s\nlatest=%s\n' \
+              "$(highest "v$x.")" "$(highest "v$x.$y.")" "$(highest v)" | tee -a "$GITHUB_OUTPUT"
+
   deb:
     name: Build .deb (Ubuntu 24.04)
     runs-on: ubuntu-latest
@@ -151,7 +184,7 @@ jobs:
 
   docker:
     name: Build & push container image (GHCR, amd64)
-    needs: [deb]
+    needs: [deb, moving]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -173,6 +206,7 @@ jobs:
 
       # Deliberately no `latest` tag: a tape-touching tool must never change
       # behavior behind the user's back. Only X.Y.Z / X.Y / X are published.
+      # X.Y and X move only to the highest release of their line (job moving).
       - name: Container metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -181,8 +215,8 @@ jobs:
           flavor: latest=false
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.moving.outputs.minor }}
+            type=semver,pattern={{major}},enable=${{ needs.moving.outputs.major }}
 
       - name: Build image
         uses: docker/build-push-action@v6
@@ -212,7 +246,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
-    needs: [deb, rpm]
+    needs: [deb, rpm, moving]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
@@ -235,6 +269,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ needs.moving.outputs.latest }}
           fail_on_unmatched_files: true
           files: release/*
 

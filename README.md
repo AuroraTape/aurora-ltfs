@@ -273,7 +273,9 @@ On Linux the deb / rpm packages install and enable `altfs.service`, which unmoun
 Release images are published to GHCR for x86_64. Images are tagged
 `X.Y.Z` / `X.Y` / `X` only — there is deliberately no `latest` tag, so the
 version you run never changes behind your back. Pick one explicitly: `X.Y`
-follows the newest patch release of that line, `X.Y.Z` never moves.
+follows the newest patch release of that line, `X` the newest release of
+that major version (a patch release of an older line does not move it),
+`X.Y.Z` never moves.
 
 ```
 # docker pull ghcr.io/auroratape/aurora-ltfs:1.0
