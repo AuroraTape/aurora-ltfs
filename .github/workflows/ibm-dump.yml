@@ -1,0 +1,23 @@
+name: IBM dump reader
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'contrib/ibm-dump/**'
+      - '.github/workflows/ibm-dump.yml'
+  pull_request:
+    paths:
+      - 'contrib/ibm-dump/**'
+      - '.github/workflows/ibm-dump.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test offline dump reader with synthetic fixtures
+        run: python3 -m unittest discover -s contrib/ibm-dump -v
