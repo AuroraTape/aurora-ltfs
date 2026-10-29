@@ -23,26 +23,40 @@ The current target is the [LTFS Format Specification 2.5.1](https://www.snia.org
 
 ## Goals
 
-### Short term — Foundation
+Aurora LTFS 1.0 (September 2026) and 1.5 (October 2026) completed the foundation phase. The goals below start from there; the work is tracked in the [milestones](https://github.com/AuroraTape/aurora-ltfs/milestones).
 
-- **CI and unit testing infrastructure** — Build a reliable CI pipeline and unit testing framework to catch regressions early.
-- **Package and Docker image distribution** — Provide official packages and container images for easy installation and deployment.
-- **LTFS Format Specification 2.5.1 compliance** — Fully implement and validate compliance with the current SNIA standard.
-- **Code modernization and refactoring** — Clean up the inherited codebase to improve readability, maintainability, and long-term development velocity.
-- **Up-to-date platform support** — Continuously support modern operating systems, free from corporate politics.
-- **Modern development practices** — Dev Containers, AI-assisted development, and streamlined workflows to improve developer productivity.
+### Reached — Foundation (1.0 and 1.5)
+
+- **CI and tests** — Unit, scenario and incremental index recovery tests on every push, with coverage on Codecov; builds and mount-free tests on macOS, FreeBSD and NetBSD; the mounted test suite also runs on macOS over FSKit.
+- **Distribution** — Signed apt and dnf repositories, a Homebrew tap, a container image, and release lines that receive fixes for six months after the next minor release.
+- **LTFS Format Specification 2.5.1** — The first implementation of the current SNIA standard: incremental indexes with all-or-nothing recovery in `altfsck`, and a write policy that keeps the format version of an existing volume.
+- **Platform support policy** — Tiered support that tracks OS lifecycles instead of corporate product plans; macOS mounts through macFUSE's FSKit backend without a kernel extension.
+- **Operations** — Mounting as a system service, waiting for a cartridge, browsing the tree of an index file without the tape, one log level option in every command.
+- **Project infrastructure** — Documentation by reader, design documents, governance, a release process, Dev Containers and AI-assisted development.
+
+### Short term — 2.0
+
+- **Tape library support** — Automated operation with medium changers, the theme of the [2.0 milestone](https://github.com/AuroraTape/aurora-ltfs/milestone/3).
+- **I/O scheduler rewrite** — Read ahead so that out-of-order and concurrent reads are served from buffered blocks and a sequential read stays a pure READ stream ([#234](https://github.com/AuroraTape/aurora-ltfs/issues/234)).
+- **Up-to-date interfaces** — Migrate the FUSE bridge to FUSE3 ([#89](https://github.com/AuroraTape/aurora-ltfs/issues/89)) and add the sg v4 interface to the Linux backend ([#90](https://github.com/AuroraTape/aurora-ltfs/issues/90)).
+- **arm64 packages** — Build the deb and rpm packages and the container image for arm64 as well as x86_64, so that Linux on Arm gets the same installation as the Apple silicon bottle does today.
+- **Dentry plugin** — Make the dentry layer a plugin like the tape backend and the I/O scheduler: one is always loaded, never bypassed. The current in-memory directory tree becomes the `dentry_memory` plugin and stays the default; the dormant `dcache_ops` interface is the starting point, and a plugin that keeps the tree on disk can follow.
+- **Layered libaltfs** — Restructure the inherited codebase into layers with one job each: the filesystem operations on top, an object layer for files and directories with the dentry cache beside it, a metadata layer that holds the in-memory dentries and extents and is updated by the I/O scheduler as it moves data, an index layer that reads and writes that metadata on tape, and the tape layer over the backends. Code modernization continues as each layer is carved out. The target layering is described in [docs/developer/design/COMPONENTS.md](docs/developer/design/COMPONENTS.md).
 
 ### Middle term — Expansion
 
-- **Expanded test coverage** — Broaden automated tests across components to deliver reliable software with confidence.
-- **Tape library support** — Enable automated operation with tape library devices (medium changers).
+- **Hardware coverage** — Verify IBM LTO6 to LTO9, the HP and Quantum drives, and tape libraries on real hardware, which depends on donations and loans (see [docs/user/DRIVES.md](docs/user/DRIVES.md)).
+- **Mounting on more platforms** — Make the mounted test suite pass on FreeBSD and NetBSD so they can move up a tier.
+- **Expanded test coverage** — Broaden the automated tests, including checks against real drives.
+- **Metrics** — Expose what a mounted volume is doing, first of all the transfer rate to and from the drive, in a form that monitoring systems can collect, so that a drive that stops streaming is noticed while it happens.
 - **Community-driven development** — Open governance and transparent decision-making to grow the tape storage community.
+- **HSM (Hierarchical Storage Management) support** — Integrate with HSM workflows for automated data migration between disk and tape.
 
 ### Long term — Growth
 
-- **HSM (Hierarchical Storage Management) support** — Integrate with HSM workflows for automated data migration between disk and tape.
+- **Multi-node support** — Let several hosts share the drives and cartridges of one tape library, coordinating who holds a drive and a cartridge.
+- **S3 interface** — Serve an LTFS volume through an S3-compatible API as a second front end beside the FUSE file system, both on the same `libaltfs` filesystem operations.
 - **Windows support** — Bring LTFS to the Windows platform to broaden accessibility.
-
 
 ## Platform Support Policy
 

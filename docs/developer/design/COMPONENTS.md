@@ -212,6 +212,8 @@ no dcache backend under `src/`, `altfs` has no option to name one, and
 `dcache_init()` has no caller. The code is inherited from the reference
 implementation and is dormant; `dcache_initialized()` is false on every
 mount, and the whole tree lives in memory.
+The target layering below turns this into the dentry plugin, with the
+in-memory tree as its default implementation.
 
 ## The volume in memory
 
@@ -350,7 +352,7 @@ interfaces:
 | `tape` | `src/libltfs/tape_ops.h`, `struct tape_ops` | 56, from `open` and `load` to `read`, `write`, `locate`, MAM and encryption | every command |
 | `iosched` | `src/libltfs/iosched_ops.h`, `struct iosched_ops` | 11 | `altfs` only |
 | `kmi` | `src/libltfs/kmi_ops.h`, `struct kmi_ops` | 5: `init`, `destroy`, `get_key`, `help_message`, `parse_opts` | every command, when `-o kmi_backend` names one; the tape layer asks it for the key when the drive needs one (`tape_load_tape()`, `tape_read()`) |
-| `dcache` | `src/libltfs/dcache_ops.h`, `struct dcache_ops` | dormant, see above | nothing |
+| `dcache` | `src/libltfs/dcache_ops.h`, `struct dcache_ops` | dormant, see above; becomes the dentry plugin in the target layering | nothing |
 
 `config_file.c` also accepts the types `changer` and `crepos` in a
 configuration file; nothing in this tree loads them.
@@ -359,6 +361,88 @@ Each plugin parses its own `-o` options: libaltfs hands the FUSE option
 list to `tape_parse_opts()` and `kmi_parse_opts()`, which call the
 backend's `parse_opts`, and prints the backend's help through
 `plugin_usage()`.
+
+## Where the layers are going
+
+The layering above is the inherited one, described as it is. The 2.0
+development cycle restructures libaltfs into the layers below (the
+"Layered libaltfs" and "Dentry plugin" goals in the README). This section
+is the target; the rest of this document stays the description of the
+tree until each layer has been carved out.
+
+```
+  altfs                        FUSE bridge            src/cmd/altfs/ltfs_fuse.c
+    |
+  --+---------------------------------------------------------------- libaltfs
+    |
+  file system operations       the API the bridge and the commands call
+    |
+  object layer  <--------->  dentry plugin            dentry_memory (default), ...
+    |         \
+    |          +---------->  I/O scheduler plugin     unified (default), ...
+    |                           |          |
+  metadata  <-------------------+          |          in-memory dentries and extents
+    |                                      |
+  index                                    |          index XML <-> metadata
+    |                                      |
+  tape layer  <----------------------------+          position, retries, revalidation
+    |
+  tape backend plugin          sg, iokit, cam, scsipi, file, itdtimg
+```
+
+- **File system operations** stay the API that the bridge and the
+  commands call, today `ltfs_fsops.c`: path semantics, the read-only
+  flag, extended attributes, the volume lock and the wait for
+  revalidation. A second front end, such as an S3 interface, calls this
+  layer exactly as the FUSE bridge does.
+- **The object layer** is a file, a directory or a symbolic link as an
+  object: lookup, create, open, rename, unlink, readdir. Today this is
+  spread over `ltfs_fsops.c` and `fs.c`. It asks the dentry plugin for the
+  tree and hands reads and writes to the I/O scheduler.
+- **The dentry plugin** holds the directory tree. The in-memory tree of
+  today, `struct dentry` with its `child_list` hash table, becomes the
+  `dentry_memory` plugin and stays the default. A plugin that keeps the
+  tree on disk, which the dormant `dcache_ops.h` was designed for, can
+  follow, and is what a tree shared between nodes would be built on.
+- **The I/O scheduler plugin** is the data path: it takes the reads and
+  writes of the object layer, moves blocks through the tape layer, and
+  records the resulting extents in the metadata layer. Today that is
+  `unified.c` with its `alt_extentlist`, and `ltfs_fsraw_add_extent()` in
+  `ltfs_fsops_raw.c`, which this layer absorbs.
+- **The metadata layer** is what the index describes, in memory: the
+  attributes and extents of every dentry, the extended attributes, and the
+  state of the index generation (dirty flags, counters, the journal of an
+  incremental index). Today these are fields of `struct dentry` and
+  `struct ltfs_index`, updated from several places; in the target only the
+  object layer and the I/O scheduler change them.
+- **The index layer** moves the metadata to and from the index on tape:
+  `xml_reader.c`, `xml_writer.c`, the data placement criteria, the
+  incremental index journal, and the parts of `ltfs.c` that read and write
+  an index generation.
+- **The tape layer** and **the tape backend plugin** keep the roles they
+  have today (`tape.c`, `struct tape_ops`). The key manager plugin stays
+  beside the tape layer, which is the only layer that asks it for a key.
+
+Three rules hold the target together:
+
+1. Each layer calls the one below it. The only layer that spans more
+   than one is the I/O scheduler, which is the data path from the object
+   layer to the tape layer and updates the metadata layer on the way.
+2. There are three plugin points in the path, dentry, I/O scheduler and
+   tape backend, and one of each is always loaded. No layer has a code
+   path that bypasses its plugin: the library does not keep an in-tree
+   "no scheduler" or "no dentry cache" variant beside the plugin, which is
+   what makes the dormant `dcache_initialized()` checks of today
+   unnecessary. The I/O scheduler already follows this rule (#31); the
+   dentry plugin is next.
+3. The plugins reach each other only through the layers. The dentry
+   plugin never sees a tape block and the I/O scheduler never walks the
+   tree.
+
+The goals that come after 2.0 hang off this structure: tape library and
+multi-drive operation extend the tape layer and the backends, a shared
+tree between nodes is a dentry plugin, and an S3 front end is a second
+caller of the file system operations.
 
 ## Messages and tracing
 
