@@ -37,7 +37,7 @@ Aurora LTFS 1.0 (September 2026) and 1.5 (October 2026) completed the foundation
 ### Short term — 2.0
 
 - **Tape library support** — Automated operation with medium changers, the theme of the [2.0 milestone](https://github.com/AuroraTape/aurora-ltfs/milestone/3).
-- **I/O scheduler rewrite** — Read ahead so that out-of-order and concurrent reads are served from buffered blocks and a sequential read stays a pure READ stream ([#234](https://github.com/AuroraTape/aurora-ltfs/issues/234)).
+- **New I/O scheduler** — A more efficient and more elegant implementation of the data path, which among other things reads ahead so that out-of-order and concurrent reads are served from buffered blocks and a sequential read stays a pure READ stream ([#234](https://github.com/AuroraTape/aurora-ltfs/issues/234)).
 - **Up-to-date interfaces** — Migrate the FUSE bridge to FUSE3 ([#89](https://github.com/AuroraTape/aurora-ltfs/issues/89)) and add the sg v4 interface to the Linux backend ([#90](https://github.com/AuroraTape/aurora-ltfs/issues/90)).
 - **arm64 packages** — Build the deb and rpm packages and the container image for arm64 as well as x86_64, so that Linux on Arm gets the same installation as the Apple silicon bottle does today.
 - **Dentry plugin** — Make the dentry layer a plugin like the tape backend and the I/O scheduler: one is always loaded, never bypassed. The current in-memory directory tree becomes the `dentry_memory` plugin and stays the default; the dormant `dcache_ops` interface is the starting point, and a plugin that keeps the tree on disk can follow.
