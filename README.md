@@ -21,6 +21,10 @@ This project is based on the [Linear Tape File System (LTFS)](https://github.com
 
 The current target is the [LTFS Format Specification 2.5.1](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf).
 
+## This release line
+
+This is `release/1.5`, the branch of the 1.5.x releases. It changes only through pull requests that backport fixes from `main`; no feature is developed here or added to the line. It receives fixes until six months after the next minor release (2.0). The goals of the project and the roadmap are in the [README on `main`](https://github.com/AuroraTape/aurora-ltfs/blob/main/README.md#goals); how a fix is backported and a patch release is made: [docs/project/RELEASE.md](docs/project/RELEASE.md).
+
 ## Platform Support Policy
 
 | Tier | Definition | Platforms |
