@@ -3,7 +3,7 @@
 [![Build](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/build.yml/badge.svg)](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/build.yml)
 [![Scenario tests](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/scenario.yml/badge.svg)](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/scenario.yml)
 [![Coverage](https://codecov.io/gh/AuroraTape/aurora-ltfs/graph/badge.svg)](https://codecov.io/gh/AuroraTape/aurora-ltfs)
-[![Code size](https://img.shields.io/github/languages/code-size/AuroraTape/aurora-ltfs)](https://github.com/AuroraTape/aurora-ltfs)
+[![Code LOC](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/AuroraTape/aurora-ltfs/badges/loc.json)](https://github.com/AuroraTape/aurora-ltfs/actions/workflows/build.yml)
 [![BSD License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](LICENSE)
 
 <details>
