@@ -488,6 +488,14 @@ int ltfs_fuse_open(const char *path, struct fuse_file_info *fi)
 	fi->direct_io = 0;
 	fi->keep_cache = 1;
 #endif
+	if (priv->data->mount_type == MOUNT_ROLLBACK_META) {
+		/* An index-only mount has no file contents to cache, and reading them fails with
+		 * -LTFS_INDEX_ONLY (ENODATA). Bypass the page cache so that this errno reaches the
+		 * application: since Linux 7.0 the buffered read path of FUSE (iomap) reports every
+		 * failed read as EIO, whatever the daemon answered. */
+		fi->direct_io = 1;
+		fi->keep_cache = 0;
+	}
 #endif
 
 	ltfs_request_trace(FUSE_REQ_EXIT(REQ_OPEN), 0,
