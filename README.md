@@ -21,28 +21,9 @@ This project is based on the [Linear Tape File System (LTFS)](https://github.com
 
 The current target is the [LTFS Format Specification 2.5.1](https://www.snia.org/sites/default/files/technical-work/ltfs/release/SNIA-LTFS-Format-2-5-1-Standard.pdf).
 
-## Goals
+## This release line
 
-### Short term — Foundation
-
-- **CI and unit testing infrastructure** — Build a reliable CI pipeline and unit testing framework to catch regressions early.
-- **Package and Docker image distribution** — Provide official packages and container images for easy installation and deployment.
-- **LTFS Format Specification 2.5.1 compliance** — Fully implement and validate compliance with the current SNIA standard.
-- **Code modernization and refactoring** — Clean up the inherited codebase to improve readability, maintainability, and long-term development velocity.
-- **Up-to-date platform support** — Continuously support modern operating systems, free from corporate politics.
-- **Modern development practices** — Dev Containers, AI-assisted development, and streamlined workflows to improve developer productivity.
-
-### Middle term — Expansion
-
-- **Expanded test coverage** — Broaden automated tests across components to deliver reliable software with confidence.
-- **Tape library support** — Enable automated operation with tape library devices (medium changers).
-- **Community-driven development** — Open governance and transparent decision-making to grow the tape storage community.
-
-### Long term — Growth
-
-- **HSM (Hierarchical Storage Management) support** — Integrate with HSM workflows for automated data migration between disk and tape.
-- **Windows support** — Bring LTFS to the Windows platform to broaden accessibility.
-
+This is `release/1.0`, the branch of the 1.0.x releases. It changes only through pull requests that backport fixes from `main`; no feature is developed here or added to the line. A minor release line receives fixes until six months after the next minor release: 1.5.0 was released on 2026-10-16, so the 1.0 line receives fixes until 2027-04-16. The goals of the project and the roadmap are in the [README on `main`](https://github.com/AuroraTape/aurora-ltfs/blob/main/README.md#goals); how a fix is backported and a patch release is made: [docs/project/RELEASE.md on `main`](https://github.com/AuroraTape/aurora-ltfs/blob/main/docs/project/RELEASE.md).
 
 ## Platform Support Policy
 
