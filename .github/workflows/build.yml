@@ -367,10 +367,10 @@ jobs:
             exit 1
           fi
 
-  # Per-language LOC table in the job summary (issue #45). tokei.rs (the
-  # badge service) is unreliable, so the README badge reads loc.json from
-  # the badges branch of this repository instead; a push to main rewrites
-  # that branch below.
+  # Per-language LOC table in the job summary (issue #45). The LOC badge
+  # services are unreliable (issue #144), so the README badge reads
+  # loc.json from the badges branch of this repository instead; a push to
+  # main rewrites that branch below when the number changed.
   loc:
     name: Lines of code
     runs-on: ubuntu-24.04
@@ -391,8 +391,9 @@ jobs:
         run: |
           echo '## Lines of code' >> "$GITHUB_STEP_SUMMARY"
           cloc --quiet --md --hide-rate src messages docs >> "$GITHUB_STEP_SUMMARY"
-          # The badge counts the source tree only, digits grouped by thousands.
-          code=$(cloc --quiet --json src | jq '.SUM.code' \
+          # The badge counts the same trees as the table above, digits
+          # grouped by thousands.
+          code=$(cloc --quiet --json src messages docs | jq '.SUM.code' \
                  | python3 -c 'import sys; print(f"{int(sys.stdin.read()):,}")')
           echo "Badge: $code"
           printf '{"schemaVersion":1,"label":"code loc","message":"%s","color":"blue"}\n' \
@@ -400,10 +401,16 @@ jobs:
 
       # The badges branch holds one commit with loc.json and no history;
       # the commit is assembled with plumbing commands and pushed with the
-      # credentials that actions/checkout left in the work tree.
+      # credentials that actions/checkout left in the work tree. Nothing
+      # is pushed while the published file already has the same content.
       - name: Publish the badge data on the badges branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          if git fetch -q --depth 1 origin badges 2>/dev/null \
+             && git show FETCH_HEAD:loc.json 2>/dev/null | cmp -s - "$RUNNER_TEMP/loc.json"; then
+            echo "The badge data on the badges branch is up to date"
+            exit 0
+          fi
           blob=$(git hash-object -w "$RUNNER_TEMP/loc.json")
           tree=$(printf '100644 blob %s\tloc.json\n' "$blob" | git mktree)
           commit=$(git -c user.name="github-actions[bot]" \
