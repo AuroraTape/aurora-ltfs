@@ -1517,6 +1517,10 @@ int sg_open(const char *devname, void **handle)
 			ret = init_timeout_rsoc(&priv->timeouts, rsoc_buf, rsoc_len);
 			if (!priv->timeouts)
 				ibm_tape_init_timeout(&priv->timeouts, priv->drive_type);
+			else if (!ret) {
+				/* An op code the drive left out of its RSOC answer gets the timeout of the vendor table */
+				fill_timeout_gaps(priv->vendor, &priv->timeouts, priv->drive_type);
+			}
 		}
 
 		if (ret < 0) {
