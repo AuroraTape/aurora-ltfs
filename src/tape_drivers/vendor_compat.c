@@ -435,6 +435,10 @@ int init_timeout_rsoc(struct timeout_tape **table, unsigned char *buf, uint32_t 
 		op_code = (int)(*((unsigned char *)(buf + offset)));
 		timeout = (int)(ltfs_betou32(buf + offset + RSOC_RECOM_TO_OFFSET));
 
+		/* SPC-4: a recommended command timeout of zero means that no timeout is indicated */
+		if (!timeout)
+			continue;
+
 		out = NULL;
 		HASH_FIND_INT(*table, &op_code, out);
 		if (!out) {
