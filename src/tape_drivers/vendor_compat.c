@@ -448,6 +448,34 @@ int init_timeout_rsoc(struct timeout_tape **table, unsigned char *buf, uint32_t 
 	return 0;
 }
 
+int fill_timeout_gaps(int vendor, struct timeout_tape **table, int type)
+{
+	struct timeout_tape *fallback = NULL, *entry, *tmp, *out;
+	int filled = 0;
+
+	/* The table a drive without RSOC would get: the vendor table, failing that the IBM table */
+	init_timeout(vendor, &fallback, type);
+	if (!fallback)
+		ibm_tape_init_timeout(&fallback, type);
+	if (!fallback)
+		return -EDEV_UNKNOWN;
+
+	HASH_ITER(hh, fallback, entry, tmp) {
+		out = NULL;
+		HASH_FIND_INT(*table, &entry->op_code, out);
+		HASH_DEL(fallback, entry);
+		if (out) {
+			free(entry);
+		} else {
+			ltfsmsg(ATM0015D, entry->op_code, entry->timeout);
+			HASH_ADD_INT(*table, op_code, entry);
+			filled++;
+		}
+	}
+
+	return filled;
+}
+
 void destroy_timeout(struct timeout_tape** table)
 {
 	struct timeout_tape *entry, *tmp;

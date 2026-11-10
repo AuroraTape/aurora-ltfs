@@ -91,9 +91,10 @@ other rows of the table say "Not determined".
 
 **Timeouts and sense codes.** Command timeouts come from the drive's own
 REPORT SUPPORTED OPERATION CODES when it answers; otherwise from a table per
-vendor (IBM, HP, Quantum), and failing that from the IBM table. Sense codes
-are translated with a standard table plus a vendor table for IBM, HP and
-Quantum.
+vendor (IBM, HP, Quantum), and failing that from the IBM table. An op code
+the drive leaves out of its answer takes its timeout from those tables as
+well (HP LTO5 omits LOG SENSE, for example). Sense codes are translated with
+a standard table plus a vendor table for IBM, HP and Quantum.
 
 ## Drive testing policy
 

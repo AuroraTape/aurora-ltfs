@@ -76,6 +76,7 @@ void init_error_table(int vendor,
 
 int  init_timeout(int vendor, struct timeout_tape **table, int type);
 int  init_timeout_rsoc(struct timeout_tape **table, unsigned char *buf, uint32_t len);
+int  fill_timeout_gaps(int vendor, struct timeout_tape **table, int type);
 void destroy_timeout(struct timeout_tape **table);
 int  get_timeout(struct timeout_tape *table, int op_code);
 
