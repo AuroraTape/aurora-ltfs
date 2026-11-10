@@ -907,6 +907,10 @@ int iokit_open(const char *devname, void **handle)
 		if (!ret && rsoc_len < RSOC_BUF_SIZE) {
 			ltfsmsg(ATK0068I, "RSOC");
 			ret = init_timeout_rsoc(&priv->timeouts, rsoc_buf, rsoc_len);
+			if (!ret && priv->timeouts) {
+				/* An op code the drive left out of its RSOC answer gets the timeout of the vendor table */
+				fill_timeout_gaps(priv->vendor, &priv->timeouts, priv->drive_type);
+			}
 		}
 
 		if (ret < 0) {
