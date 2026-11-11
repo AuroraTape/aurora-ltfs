@@ -369,6 +369,10 @@ start:
 			if (req->sb_len_wr) {
 				ret = sg_sense2errno(req, &sense, msg);
 				ltfsmsg(ATG0002D, sense, *msg);
+				if (ret == -EDEV_OPERATION_IN_PROGRESS && req->sb_len_wr >= 18 && (req->sbp[15] & 0x80)) {
+					/* Fixed format sense: SKSV set, the sense key specific bytes hold the progress (SSC) */
+					ltfsmsg(ATG0110D, ((unsigned int)req->sbp[16] << 8) | req->sbp[17]);
+				}
 			} else {
 				ret = -EDEV_NO_SENSE;
 				ltfsmsg(ATG0003D, "nosense");
