@@ -65,6 +65,8 @@ struct error_table standard_tape_errors[] = {
 	{0x000016, -EDEV_OPERATION_IN_PROGRESS,     "Operation in Progress"},
 	{0x000017, -EDEV_CLEANING_REQUIRED,         "Cleaning Required"},
 	{0x000018, -EDEV_OPERATION_IN_PROGRESS,     "Erase Operation in Progress"},
+	{0x000019, -EDEV_OPERATION_IN_PROGRESS,     "Locate Operation in Progress"},
+	{0x00001A, -EDEV_OPERATION_IN_PROGRESS,     "Rewind Operation in Progress"},
 	{0x001401, -EDEV_RECORD_NOT_FOUND,          "Record Not Found (String Search)"},
 	{0x002E00, -EDEV_INSUFFICIENT_TIME,         "Insufficient Time For Operation (String Search)"},
 	{0x003003, -EDEV_CLEANING_CART,             "Cleaning tape installed"},

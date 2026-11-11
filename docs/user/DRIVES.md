@@ -94,7 +94,10 @@ REPORT SUPPORTED OPERATION CODES when it answers; otherwise from a table per
 vendor (IBM, HP, Quantum), and failing that from the IBM table. An op code
 the drive leaves out of its answer takes its timeout from those tables as
 well (HP LTO5 omits LOG SENSE, for example). Sense codes are translated with
-a standard table plus a vendor table for IBM, HP and Quantum.
+a standard table plus a vendor table for IBM, HP and Quantum. A drive that
+answers a LOCATE, REWIND or SPACE with "operation in progress" (an HP LTO5
+over Fibre Channel was seen doing this, #304) is polled with TEST UNIT READY
+until it is ready, and the command is issued once more.
 
 ## Drive testing policy
 
