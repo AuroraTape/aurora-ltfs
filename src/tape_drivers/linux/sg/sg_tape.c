@@ -5406,7 +5406,7 @@ int sg_rrao(void *device, unsigned char *buf, const uint32_t len, size_t *out_si
 	if (IS_LTO(priv->drive_type)) {
 		if ( DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 ||
 			 DRIVE_GEN(priv->drive_type) == 0x07 || DRIVE_GEN(priv->drive_type) == 0x08 ) {
-			/* LTO6-LTO8 don't support RAO commands */
+			/* LTO5-LTO8 don't support RAO commands */
 			return -EDEV_UNSUPPORETD_COMMAND;
 		}
 	}
