@@ -77,6 +77,17 @@ file mark write, on every drive; on drives that flush as specified the extra
 command is short, since the data and the coherency information were already
 flushed.
 
+**HP LTO5, first mount after formatting.** The first mount of a cartridge
+that `mkaltfs` has just formatted runs a full consistency check
+(`ALB0028I`), which adds about 20 seconds. The check finds the volume
+consistent and rewrites the volume coherency information, so later mounts
+skip it; no data is at risk. The likely cause, not confirmed by reading the
+values from the drive, is that the drive changes the volume change reference
+when `mkaltfs` writes the remaining cartridge memory attributes after the
+coherency information, so that the reference stored with it no longer
+matches. A change of the reference by an attribute write is not what the
+format specifies, and Aurora LTFS does not work around it.
+
 **Remaining capacity.** LTO5 drives of any vendor, HP LTO6 and the Quantum
 "ULTRIUM 5" and "ULTRIUM 6" read the remaining capacity from the Tape
 Capacity log page (0x31); the other drives from the Volume Statistics log
