@@ -5340,10 +5340,8 @@ int sg_grao(void *device, unsigned char *buf, const uint32_t len)
 	char *msg = NULL;
 
 	if (IS_LTO(priv->drive_type)) {
-		if ( DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 ||
-			 DRIVE_GEN(priv->drive_type) == 0x07 || DRIVE_GEN(priv->drive_type) == 0x08 ||
-			 DRIVE_GEN(priv->drive_type) == DRIVE_LTO9_HH ) {
-			/* LTO5-LTO8 and LTO9-HH don't support RAO commands */
+		if ( DRIVE_GEN(priv->drive_type) < 0x09 || !IS_FULL_HEIGHT(priv->drive_type) ) {
+			/* Only full-height LTO9 and later drives support RAO commands */
 			return -EDEV_UNSUPPORETD_COMMAND;
 		}
 	}
@@ -5404,9 +5402,8 @@ int sg_rrao(void *device, unsigned char *buf, const uint32_t len, size_t *out_si
 	*out_size = 0;
 
 	if (IS_LTO(priv->drive_type)) {
-		if ( DRIVE_GEN(priv->drive_type) == 0x05 || DRIVE_GEN(priv->drive_type) == 0x06 ||
-			 DRIVE_GEN(priv->drive_type) == 0x07 || DRIVE_GEN(priv->drive_type) == 0x08 ) {
-			/* LTO6-LTO8 don't support RAO commands */
+		if ( DRIVE_GEN(priv->drive_type) < 0x09 || !IS_FULL_HEIGHT(priv->drive_type) ) {
+			/* Only full-height LTO9 and later drives support RAO commands */
 			return -EDEV_UNSUPPORETD_COMMAND;
 		}
 	}
