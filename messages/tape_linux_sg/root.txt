@@ -155,5 +155,6 @@ root:table {
 
 		// sg_open() with no usable path and the drive held by another node (issue #251)
 		ATG0109E:string { "Cannot open drive %s: it is reserved by another node" }
+		ATG0110D:string { "Progress of the operation in progress: %u / 65536" }
         }
 }
