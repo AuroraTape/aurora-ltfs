@@ -1079,6 +1079,47 @@ int tape_force_read_only(struct device_data *dev)
 }
 
 /**
+ * Wait for the drive to finish the operation it reported as in progress.
+ *
+ * A drive answers a positioning command with "operation in progress" (sense 00/0016, 00/0019,
+ * 00/001A or 02/0407) when it is still executing one: its own locate or rewind, or a command
+ * from another initiator. An HP LTO5 over Fibre Channel was seen doing this to a plain LOCATE
+ * at unmount (#304). The drive is asking the host to wait, and the destination is still the one
+ * the caller asked for, so the caller issues its command once more when this returns 0.
+ *
+ * @param dev the device
+ * @param cmd name of the command that got the answer, for the log
+ * @return 0 when the drive is ready and the command can be issued again, a negative value when
+ *         it did not become ready in time or answered something else
+ */
+static int _tape_wait_operation_in_progress(struct device_data *dev, const char *cmd)
+{
+	int ret = -EDEV_OPERATION_IN_PROGRESS;
+	int i;
+
+	ltfsmsg(ALP0130I, cmd);
+	for (i = 0; i < TAPE_IN_PROGRESS_WAIT_SEC; i++) {
+		ret = _tape_test_unit_ready(dev);
+		switch (ret) {
+			case DEVICE_GOOD:
+			case -EDEV_NEED_INITIALIZE:
+				return 0;
+			case -EDEV_OPERATION_IN_PROGRESS:
+			case -EDEV_BECOMING_READY:
+			case -EDEV_NOT_READY:
+				sleep(1);
+				break;
+			default:
+				ltfsmsg(ALP0131E, cmd, i, ret);
+				return ret;
+		}
+	}
+
+	ltfsmsg(ALP0131E, cmd, i, ret);
+	return ret;
+}
+
+/**
  * Rewind a device.
  * @param dev the device
  * @return 0 on success or a negative value on error
@@ -1091,6 +1132,8 @@ int tape_rewind(struct device_data *dev)
 	CHECK_ARG_NULL(dev->backend, -LTFS_NULL_ARG);
 
 	ret = dev->backend->rewind(dev->backend_data, &dev->position);
+	if (ret == -EDEV_OPERATION_IN_PROGRESS && !_tape_wait_operation_in_progress(dev, "rewind"))
+		ret = dev->backend->rewind(dev->backend_data, &dev->position);
 	if (ret < 0)
 		ltfsmsg(ALP0041E, ret);
 	else
@@ -1117,6 +1160,8 @@ int tape_seek(struct device_data *dev, struct tc_position *pos)
 	if ((pos->partition == 0 && pos->block == 0) || pos->partition != dev->position.partition || pos->block != dev->position.block) {
 		/* Explicitly seek to (0,0) to detect known upper generation tape */
 		ret = dev->backend->locate(dev->backend_data, *pos, &dev->position);
+		if (ret == -EDEV_OPERATION_IN_PROGRESS && !_tape_wait_operation_in_progress(dev, "locate"))
+			ret = dev->backend->locate(dev->backend_data, *pos, &dev->position);
 		if (ret < 0)
 			ltfsmsg(ALP0043E, ret);
 		else {
@@ -1169,6 +1214,8 @@ int tape_seek_eod(struct device_data *dev, tape_partition_t partition)
 	}
 
 	ret = dev->backend->locate(dev->backend_data, seekpos, &dev->position);
+	if (ret == -EDEV_OPERATION_IN_PROGRESS && !_tape_wait_operation_in_progress(dev, "locate"))
+		ret = dev->backend->locate(dev->backend_data, seekpos, &dev->position);
 	if (ret < 0) {
 		ltfsmsg(ALP0045E, ret);
 		if (IS_WRITE_PERM(-ret)) {
@@ -1282,6 +1329,13 @@ int tape_spacefm(struct device_data *dev, int count)
 		ret = dev->backend->space(dev->backend_data, count, TC_SPACE_FM_F, &dev->position);
 	else
 		ret = dev->backend->space(dev->backend_data, -count, TC_SPACE_FM_B, &dev->position);
+
+	if (ret == -EDEV_OPERATION_IN_PROGRESS && !_tape_wait_operation_in_progress(dev, "space")) {
+		if (count > 0)
+			ret = dev->backend->space(dev->backend_data, count, TC_SPACE_FM_F, &dev->position);
+		else
+			ret = dev->backend->space(dev->backend_data, -count, TC_SPACE_FM_B, &dev->position);
+	}
 
 	if (ret < 0)
 		ltfsmsg(ALP0047E, ret);
