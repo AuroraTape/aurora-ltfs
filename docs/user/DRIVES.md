@@ -11,7 +11,7 @@
 | IBM     | TS1150                  | None              | Inherited                  |
 | IBM     | TS1155                  | None              | Inherited                  |
 | IBM     | TS1160                  | None              | Inherited                  |
-| HP      | LTO5                    | Not determined    | Untested                   |
+| HP      | LTO5                    | Not determined    | Community verified (1.5.0) |
 | HP      | LTO6                    | Not determined    | Community verified (1.0.0) |
 | HP      | LTO7                    | Not determined    | Untested                   |
 | HP      | LTO8                    | Not determined    | Untested                   |
@@ -31,9 +31,10 @@ Status:
   same code. Not re-verified with Aurora LTFS, because the maintainers do not
   have the drive.
 - **Community verified (version)** - a community member verified the drive on
-  real hardware with that Aurora LTFS version. HP LTO6 was verified this way.
-  The firmware level of the reporting drive is not a tested minimum, so the
-  column stays "Not determined".
+  real hardware with that Aurora LTFS version. HP LTO6 (1.0.0) and HP LTO5
+  (1.5.0, over Fibre Channel, #298) were verified this way. The firmware
+  level of the reporting drive is not a tested minimum, so the column stays
+  "Not determined".
 - **Untested** - the drive is recognized and its code path exists, but no
   minimum firmware level was ever established and nobody has reported a
   result with Aurora LTFS. It may work, work with limitations, or fail.
