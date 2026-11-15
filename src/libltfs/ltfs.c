@@ -3283,7 +3283,7 @@ int ltfs_write_label(tape_partition_t partition, struct ltfs_volume *vol)
 		ltfsmsg(ALB0066E, (int)nw, partition);
 		free(buf);
 		xmlBufferFree(xml_buf);
-		return -nw;
+		return nw;
 	}
 	free(buf);
 	xmlBufferFree(xml_buf);
