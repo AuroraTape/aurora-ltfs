@@ -602,6 +602,7 @@ AC_CONFIG_FILES([
     init.d/Makefile
     src/Makefile
     src/libltfs/Makefile
+    src/libaltfschanger/Makefile
     src/tape_drivers/generic/file/Makefile
     src/tape_drivers/generic/itdtimg/Makefile
     src/tape_drivers/linux/sg/Makefile

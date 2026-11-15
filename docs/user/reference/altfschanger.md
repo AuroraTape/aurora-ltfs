@@ -10,13 +10,15 @@ altfschanger - Drive a tape library's medium changer through a changer plugin
 
 **altfschanger** \[ **-e** *name* \] \[ **-i** *file* \] **list**
 
-**altfschanger** **-d** *name* \[ **-e** *name* \] \[ **-i** *file* \] \[ **-o** *option* \] \[ **--verbose=** *num* \] *command* \[ *argument ...* \]
+**altfschanger** **-d** *name* \[ **-e** *name* \] \[ **-i** *file* \] \[ **-o** *option* \] \[ **--verbose=** *num* \] \[ **--ready-wait=** *seconds* \] \[ **--move-wait=** *seconds* \] *command* \[ *argument ...* \]
 
 ## DESCRIPTION
 
-**altfschanger** sends single operations to the medium changer of a tape library through a changer plugin: it reads the element status, moves and exchanges cartridges between element addresses, and makes the changer re-read its elements. It is a tool for testing the changer plugins and for driving a library by hand; it keeps no state between runs.
+**altfschanger** sends single operations to the medium changer of a tape library. It is a tool for testing the changer plugins and the changer layer and for driving a library by hand; it keeps no state between runs.
 
-Elements are named by their address as the changer reports it. The library is shared with its operator panel and with other hosts, and **altfschanger** does not reserve it: check the element status before a move.
+The plugin commands go straight to the changer plugin and name elements by their address as the changer reports it: they read the element status, move and exchange cartridges, and make the changer re-read its elements. They check nothing.
+
+The cartridge commands go through the changer layer and name cartridges by barcode and drives by serial number (by element address on a changer that does not report drive serial numbers). Each one reads the whole library first, reads the elements a move touches right before the move, and prints the inventory when it succeeds. The library is shared with its operator panel and with other hosts and is not reserved; the layer re-reads what a unit attention says has changed and does not repeat a move whose outcome is unknown.
 
 ## OPTIONS
 
@@ -35,13 +37,19 @@ Pass an option to the changer plugin; **altfschanger help** lists them
 **--verbose=** *num*  
 Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 to 6 debug.
 
+**--ready-wait=** *seconds*  
+How long a cartridge command waits for a changer that is not ready (door open) before it fails (default: 30)
+
+**--move-wait=** *seconds*  
+How long a cartridge may be in neither element of a move (on the picker) before the layer re-reads the library (default: 5)
+
 **-h, --help**  
 Show the usage
 
 **-V, --version**  
 Show the version
 
-## COMMANDS
+## PLUGIN COMMANDS
 
 **list**  
 List the medium changers this host can reach
@@ -69,6 +77,31 @@ Lock or unlock the import/export station
 
 **help**  
 Show the options of the changer plugin
+
+## CARTRIDGE COMMANDS
+
+**inventory**  
+Show the library (library line: identity, ready, stale, counts, last unit attention), its drives (drive lines: serial, address, what it holds) and its cartridges (tape lines: barcode, where, address, state, home slot). Cartridges without a readable barcode are listed as unlabeled*n* in address order.
+
+**rescan \[deep\]**  
+Read every element again; deep makes the changer re-read its elements first
+
+**load** *barcode* *drive*  
+Move the cartridge into the drive. A duplicate barcode, a cleaning cartridge (CLN) and a cartridge in the import/export station are refused.
+
+**return** *drive*  
+Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken
+
+**swap** *barcode* *drive*  
+Return the cartridge in the drive and load the other one, with EXCHANGE MEDIUM when the changer accepts it and two moves otherwise
+
+**export** *barcode*  
+Move the cartridge to a free import/export element
+
+**import** *barcode*  
+Move the cartridge from the import/export station to a free storage slot
+
+The cartridge commands only move cartridges: they do not load the tape in the drive, mount it or unload it.
 
 ## EXIT STATUS
 

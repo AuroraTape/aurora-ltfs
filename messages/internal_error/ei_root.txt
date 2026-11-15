@@ -308,5 +308,22 @@ root:table {
 		AEI5050E:string { "Unexpected compression in a label" }
 		AEI5051E:string { "Unsupported index type is specified" }
 		AEI5052E:string { "Incremental index is found where a full index is expected" }
+		AEI6000E:string { "No cartridge with that barcode is in the library" }
+		AEI6001E:string { "Two or more cartridges carry that barcode" }
+		AEI6002E:string { "No drive with that serial is in the library" }
+		AEI6003E:string { "The drive holds another cartridge" }
+		AEI6004E:string { "The drive holds no cartridge" }
+		AEI6005E:string { "The element holds a cartridge where none was expected" }
+		AEI6006E:string { "The element is empty where a cartridge was expected" }
+		AEI6007E:string { "No empty storage or import/export element" }
+		AEI6008E:string { "The cartridge in the drive has no slot to return to" }
+		AEI6009E:string { "The library changed under us; the inventory was re-read" }
+		AEI6010E:string { "The cartridge has no readable barcode" }
+		AEI6011E:string { "The cartridge is a cleaning cartridge" }
+		AEI6012E:string { "The cartridge in the drive is not the one its barcode says" }
+		AEI6013E:string { "The cartridge is in the import/export station; move it to storage first" }
+		AEI6014E:string { "The import/export station cannot be used" }
+		AEI6015E:string { "The medium changer is not ready (door or magazine open)" }
+		AEI6016E:string { "The cartridge is in another drive" }
 	}
 }

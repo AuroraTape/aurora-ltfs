@@ -1,0 +1,61 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+// Messages of the medium changer layer (libaltfschanger).
+root:table {
+	messages:table {
+		prefix:string { "ACL" }
+
+		ACL0001E:string { "The medium changer plugin for %s lacks a mandatory operation" }
+		ACL0002I:string { "Inventory of %s: %u cartridges (%u unlabeled), %u drives, %u free storage elements (%u unusable), %u free import/export elements" }
+		ACL0003I:string { "Cartridge %s appeared in %s %u" }
+		ACL0004I:string { "Cartridge %s is gone (was in %s %u)" }
+		ACL0005W:string { "%u cartridges appeared and %u disappeared; only the first %u of each are named" }
+		ACL0006W:string { "Duplicate barcode %s in %s %u and %s %u; operations by that barcode are refused" }
+		ACL0007W:string { "Unit attention %d from %s: re-reading %s" }
+		ACL0008W:string { "The medium changer is not ready (%d) after %u s, giving up" }
+		ACL0009I:string { "Waiting for the medium changer to become ready (%d)" }
+		ACL0010W:string { "Element %u holds %s where %s was expected" }
+		ACL0011W:string { "Element %u is %s where %s was expected" }
+		ACL0012I:string { "Cartridge %s moved from %s %u to %s %u" }
+		ACL0013W:string { "The move answered %d: checking whether %s left element %u for %u" }
+		ACL0014W:string { "Home slot %u of %s is occupied, returning it to slot %u" }
+		ACL0015I:string { "%s does not accept EXCHANGE MEDIUM, swapping with two moves" }
+		ACL0016W:string { "%s is in neither element after %u s" }
+		ACL0017E:string { "The library changed while moving %s; the inventory was re-read" }
+		ACL0018W:string { "Element %u is not accessible or in exception (%02X/%02X)" }
+		ACL0019E:string { "Cannot open the medium changer %s (%d)" }
+	}
+}

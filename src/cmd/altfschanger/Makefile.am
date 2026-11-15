@@ -36,7 +36,7 @@
 bin_PROGRAMS = altfschanger
 
 altfschanger_SOURCES = altfschanger.c
-altfschanger_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfschanger_dat.la
+altfschanger_DEPENDENCIES = ../../libltfs/libaltfs.la ../../libaltfschanger/libaltfschanger.la ../../../messages/libbin_altfschanger_dat.la
 altfschanger_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
-altfschanger_LDADD = ../../libltfs/libaltfs.la
+altfschanger_LDADD = ../../libaltfschanger/libaltfschanger.la ../../libltfs/libaltfs.la
 altfschanger_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfschanger_dat.la

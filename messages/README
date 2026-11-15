@@ -129,6 +129,7 @@ with its own prefix.
     bin_altfsindextool     AIX
     bin_mkaltfs            AMK
     changer_generic_file   ACF
+    changer_layer          ACL
     internal_error         AED, AEI  (see "Internal error codes")
     iosched_fcfs           AIF
     iosched_unified        AIU
@@ -144,7 +145,7 @@ with its own prefix.
 
 The second letter of the component code encodes the category:
 
-    C = medium changer plugins
+    C = medium changer plugins and the changer layer (libaltfschanger)
     E = internal error registry
     I = I/O scheduler plugins
     K = key management (KMI) plugins

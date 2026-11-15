@@ -31,6 +31,8 @@
         <arg><option>-i <replaceable>file</replaceable></option></arg>
         <arg><option>-o <replaceable>option</replaceable></option></arg>
         <arg><option>--verbose=<replaceable>num</replaceable></option></arg>
+        <arg><option>--ready-wait=<replaceable>seconds</replaceable></option></arg>
+        <arg><option>--move-wait=<replaceable>seconds</replaceable></option></arg>
         <arg choice="plain"><replaceable>command</replaceable></arg>
         <arg rep="repeat"><replaceable>argument</replaceable></arg>
       </cmdsynopsis>
@@ -40,15 +42,22 @@
       <title>DESCRIPTION</title>
       <para>
         <command>&dhcommand;</command> sends single operations to the medium changer of a tape
-        library through a changer plugin: it reads the element status, moves and exchanges
-        cartridges between element addresses, and makes the changer re-read its elements. It is
-        a tool for testing the changer plugins and for driving a library by hand; it keeps no
-        state between runs.
+        library. It is a tool for testing the changer plugins and the changer layer and for
+        driving a library by hand; it keeps no state between runs.
       </para>
       <para>
-        Elements are named by their address as the changer reports it. The library is shared
-        with its operator panel and with other hosts, and <command>&dhcommand;</command> does
-        not reserve it: check the element status before a move.
+        The plugin commands go straight to the changer plugin and name elements by their
+        address as the changer reports it: they read the element status, move and exchange
+        cartridges, and make the changer re-read its elements. They check nothing.
+      </para>
+      <para>
+        The cartridge commands go through the changer layer and name cartridges by barcode and
+        drives by serial number (by element address on a changer that does not report drive
+        serial numbers). Each one reads the whole library first, reads the elements a move
+        touches right before the move, and prints the inventory when it succeeds. The library
+        is shared with its operator panel and with other hosts and is not reserved; the layer
+        re-reads what a unit attention says has changed and does not repeat a move whose
+        outcome is unknown.
       </para>
     </refsect1>
 
@@ -95,6 +104,18 @@
           </listitem>
         </varlistentry>
         <varlistentry>
+          <term><option>--ready-wait=<replaceable>seconds</replaceable></option></term>
+          <listitem>
+            <para>How long a cartridge command waits for a changer that is not ready (door open) before it fails (default: 30)</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--move-wait=<replaceable>seconds</replaceable></option></term>
+          <listitem>
+            <para>How long a cartridge may be in neither element of a move (on the picker) before the layer re-reads the library (default: 5)</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
           <term><option>-h, --help</option></term>
           <listitem>
             <para>Show the usage</para>
@@ -110,7 +131,7 @@
     </refsect1>
 
     <refsect1>
-      <title>COMMANDS</title>
+      <title>PLUGIN COMMANDS</title>
 
       <variablelist>
         <varlistentry>
@@ -176,6 +197,65 @@
           </listitem>
         </varlistentry>
       </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>CARTRIDGE COMMANDS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>inventory</literal></term>
+          <listitem>
+            <para>
+              Show the library (<literal>library</literal> line: identity, ready, stale, counts,
+              last unit attention), its drives (<literal>drive</literal> lines: serial, address,
+              what it holds) and its cartridges (<literal>tape</literal> lines: barcode, where,
+              address, state, home slot). Cartridges without a readable barcode are listed as
+              <literal>unlabeled</literal><replaceable>n</replaceable> in address order.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>rescan</literal> [<literal>deep</literal>]</term>
+          <listitem>
+            <para>Read every element again; <literal>deep</literal> makes the changer re-read its elements first</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>load</literal> <replaceable>barcode</replaceable> <replaceable>drive</replaceable></term>
+          <listitem>
+            <para>Move the cartridge into the drive. A duplicate barcode, a cleaning cartridge (CLN) and a cartridge in the import/export station are refused.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>return</literal> <replaceable>drive</replaceable></term>
+          <listitem>
+            <para>Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>swap</literal> <replaceable>barcode</replaceable> <replaceable>drive</replaceable></term>
+          <listitem>
+            <para>Return the cartridge in the drive and load the other one, with EXCHANGE MEDIUM when the changer accepts it and two moves otherwise</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>export</literal> <replaceable>barcode</replaceable></term>
+          <listitem>
+            <para>Move the cartridge to a free import/export element</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>import</literal> <replaceable>barcode</replaceable></term>
+          <listitem>
+            <para>Move the cartridge from the import/export station to a free storage slot</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>
+        The cartridge commands only move cartridges: they do not load the tape in the drive,
+        mount it or unload it.
+      </para>
     </refsect1>
 
     <refsect1>

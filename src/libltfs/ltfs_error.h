@@ -322,6 +322,25 @@
 #define LTFS_BAD_INDEX_TYPE       5051  /* Unsupported index type is specified */
 #define LTFS_XML_INC_INDEX        5052  /* Incremental index is found where a full index is expected */
 
+/* Medium changer layer (libaltfschanger) */
+#define LTFS_BARCODE_NOT_FOUND    6000  /* No cartridge with that barcode is in the library */
+#define LTFS_BARCODE_AMBIGUOUS    6001  /* Two or more cartridges carry that barcode */
+#define LTFS_DRIVE_NOT_IN_LIBRARY 6002  /* No drive with that serial is in the library */
+#define LTFS_DRIVE_OCCUPIED       6003  /* The drive holds another cartridge */
+#define LTFS_DRIVE_EMPTY          6004  /* The drive holds no cartridge */
+#define LTFS_ELEMENT_FULL         6005  /* The element holds a cartridge where none was expected */
+#define LTFS_ELEMENT_EMPTY        6006  /* The element is empty where a cartridge was expected */
+#define LTFS_NO_FREE_SLOT         6007  /* No empty storage or import/export element */
+#define LTFS_NO_HOME_SLOT         6008  /* The cartridge in the drive has no slot to return to */
+#define LTFS_INVENTORY_STALE      6009  /* The library changed under us; the inventory was re-read */
+#define LTFS_UNLABELED_CARTRIDGE  6010  /* The cartridge has no readable barcode */
+#define LTFS_CLEANING_CARTRIDGE   6011  /* The cartridge is a cleaning cartridge */
+#define LTFS_BARCODE_MISMATCH     6012  /* The cartridge in the drive is not the one its barcode says */
+#define LTFS_TAPE_IN_IE           6013  /* The cartridge is in the import/export station; move it to storage first */
+#define LTFS_IE_NOT_ACCESSIBLE    6014  /* The import/export station cannot be used */
+#define LTFS_CHANGER_NOT_READY    6015  /* The medium changer is not ready (door or magazine open) */
+#define LTFS_TAPE_IN_DRIVE        6016  /* The cartridge is in another drive */
+
 #define LTFS_ERR_MAX              19999
 
 /*
