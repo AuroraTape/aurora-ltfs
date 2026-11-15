@@ -153,6 +153,9 @@ root:table {
 		ATG0107I:string { "The maximum transfer length to %s is %d bytes" }
 		ATG0108W:string { "The host transfer path limits a single transfer to %s to %d bytes: volumes with a larger block size cannot be read or written through this path" }
 
+		// sg_open() with no usable path and the drive held by another node (issue #251), not on this line
+		//reserved ATG0109E
+
 		// LOCATE answered with "operation in progress" (issue #304)
 		ATG0110D:string { "Progress of the operation in progress: %u / 65536" }
         }
