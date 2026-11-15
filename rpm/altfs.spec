@@ -82,6 +82,7 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %{_bindir}/altfsindextool
 %{_bindir}/altfs_ordered_copy
 %{_bindir}/altfsctl
+%{_bindir}/altfschanger
 %dir %{_libdir}/altfs
 %{_libdir}/altfs/*.so
 %{_datadir}/altfs/
@@ -97,6 +98,7 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %{_mandir}/man8/altfsck.8*
 %{_mandir}/man8/altfsindextool.8*
 %{_mandir}/man8/altfsctl.8*
+%{_mandir}/man8/altfschanger.8*
 %config(noreplace) %{_sysconfdir}/altfs.conf
 %config(noreplace) %{_sysconfdir}/altfs.conf.local
 

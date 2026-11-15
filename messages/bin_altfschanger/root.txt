@@ -1,0 +1,78 @@
+//
+//
+//  AA_Copyright_BEGIN
+//
+//
+//  Copyright 2026,      Aurora Tape Project contributors. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//   modification, are permitted provided that the following conditions
+//  are met:
+//  1. Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//  documentation and/or other materials provided with the distribution.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+//  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+//  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+//  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+//  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+//  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+//  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//
+//  AA_Copyright_END
+//
+
+// Messages for the altfschanger command.
+root:table {
+	messages:table {
+		prefix:string { "ACH" }
+
+		ACH0001I:string { "Starting altfschanger, %s version %s, log level %d" }
+		ACH0002E:string { "Cannot load the medium changer plugin %s (%d)" }
+		ACH0003E:string { "Cannot open the medium changer %s (%d)" }
+		ACH0004E:string { "%s failed (%d)" }
+		ACH0005I:string { "No medium changer found" }
+		ACH0006E:string { "Unknown command %s" }
+		ACH0007E:string { "Command %s needs %d argument(s)" }
+		ACH0008E:string { "Invalid element address %s" }
+		ACH0009E:string { "Invalid element type %s (transport, storage, ie, drive or any)" }
+		ACH0010I:string { "Usage: %s [options] <command> [arguments]\n"
+			"Options:\n"
+			"    -d, --device=<name>       Medium changer; for the file plugin a library directory\n"
+			"    -e, --backend=<name>      Medium changer plugin (default: the default changer of altfs.conf)\n"
+			"    -i, --config=<file>       Configuration file (default: altfs.conf)\n"
+			"    -o <option>               Option passed to the plugin\n"
+			"    --verbose=<level>         Log level 0 (errors) to 6\n"
+			"    -h, --help                This message\n"
+			"    -V, --version             Version\n"
+			"Commands:\n"
+			"    list                      Medium changers this host can reach\n"
+			"    info                      Identity, element address assignment and features of the changer\n"
+			"    elements [type [start [count]]]\n"
+			"                              Element status; type is transport, storage, ie, drive or any\n"
+			"    move <source> <dest> [transport]\n"
+			"                              MOVE MEDIUM between element addresses\n"
+			"    exchange <source> <dest1> <dest2> [transport]\n"
+			"                              EXCHANGE MEDIUM\n"
+			"    scan [start count]        Make the changer re-read its elements (INITIALIZE ELEMENT STATUS)\n"
+			"    tur                       TEST UNIT READY\n"
+			"    prevent | allow           Lock or unlock the import/export station\n"
+			"    help                      Options of the plugin\n" }
+		ACH0011I:string { "%s version %s" }
+		ACH0012E:string { "A medium changer must be given with -d" }
+		ACH0013E:string { "Option parsing of the plugin failed (%d)" }
+		ACH0014W:string { "The path to the medium changer changed during the command, repeating %s" }
+		ACH0015E:string { "No default medium changer plugin in the configuration; use -e" }
+	}
+}

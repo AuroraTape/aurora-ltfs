@@ -19,10 +19,12 @@ it at run time.
 | `mkaltfs` | `src/cmd/mkaltfs/` | Formats a cartridge: partitions, labels, the first index on both partitions (`ltfs_format_tape()`), or wipes it (`ltfs_unformat_tape()`) |
 | `altfsck` | `src/cmd/altfsck/` | Checks and repairs a volume: mounts with the recovery flags of `ltfs_mount()`, recovers a missing EOD, rolls back to an earlier index generation with `ltfs_traverse_index_*()` and `ltfs_write_index()` |
 | `altfsindextool` | `src/cmd/altfsindextool/` | Reads the indexes off a partition into files, or checks an index file against the volume, without mounting |
+| `altfschanger` | `src/cmd/altfschanger/` | Sends single operations to a tape library's medium changer through a changer plugin (element status, MOVE, EXCHANGE, re-inventory), by element address; a test and hand tool, no libaltfs volume involved |
 | `altfsctl` | `src/cmd/altfsctl/` | Python; sets up the Linux `altfs@<serial>.service` unit, no libaltfs involved |
 | `altfs_ordered_copy` | `src/cmd/altfs_ordered_copy/` | Python; copies files in tape order using the `ltfs.*` extended attributes of a mounted volume |
 | libaltfs | `src/libltfs/` | The library: volume, index and dentry structures, the file system operations, the tape layer, index XML, plugin loading, messages and tracing |
 | tape backends | `src/tape_drivers/` | One plugin per operating system interface: `linux/sg`, `osx/iokit`, `freebsd/cam`, `netbsd/scsipi-ibmtape`, and the drive-less `generic/file` (a directory that emulates a cartridge) and `generic/itdtimg` (a drive dump image). Vendor-specific tables and helpers shared by all of them are in `ibm_tape.c`, `hp_tape.c`, `quantum_tape.c` and `vendor_compat.c` |
+| changer backends | `src/changer_drivers/` | One plugin per changer interface: so far the drive-less `generic/file`, a tape library emulated on a directory whose drive files are the drive-link files of the `generic/file` tape backend. `smc_sense.c` maps SMC sense data to `EDEV_*` for all of them. The operation table is `src/libaltfschanger/changer_ops.h` |
 | I/O schedulers | `src/iosched/` | `unified.c`, the default scheduler, and `fcfs.c`, a minimal first-come-first-served implementation that `-o iosched_backend=fcfs` selects; it exists as a reference, not for use |
 | key managers | `src/kmi/` | `simple.c` (the key comes from the mount options) and `flatfile.c` (from a file) |
 
@@ -344,7 +346,7 @@ gives for its type and name (`config_file.c`; `plugin tape sg <path>`,
 `default tape sg`, and `altfs.conf.local` for site changes) and looks up
 two symbols: `<type>_get_ops()`, which returns the operation table, and
 `<type>_get_message_bundle_name()`, which names the plugin's message
-catalog so that its messages join the program's. The four types and their
+catalog so that its messages join the program's. The five types and their
 interfaces:
 
 | Type | Interface | Operations | Used by |
@@ -352,10 +354,11 @@ interfaces:
 | `tape` | `src/libltfs/tape_ops.h`, `struct tape_ops` | 56, from `open` and `load` to `read`, `write`, `locate`, MAM and encryption | every command |
 | `iosched` | `src/libltfs/iosched_ops.h`, `struct iosched_ops` | 11 | `altfs` only |
 | `kmi` | `src/libltfs/kmi_ops.h`, `struct kmi_ops` | 5: `init`, `destroy`, `get_key`, `help_message`, `parse_opts` | every command, when `-o kmi_backend` names one; the tape layer asks it for the key when the drive needs one (`tape_load_tape()`, `tape_read()`) |
+| `changer` | `src/libaltfschanger/changer_ops.h`, `struct changer_ops` | 16: `open`, `close`, `is_connected`, `test_unit_ready`, `inquiry`, `get_serialnumber`, `get_info`, `get_device_list`, `get_elements`, `move`, `exchange`, `prevent_medium_removal`, `allow_medium_removal`, `scan`, `help_message`, `parse_opts` | `altfschanger` |
 | `dcache` | `src/libltfs/dcache_ops.h`, `struct dcache_ops` | dormant, see above; becomes the dentry plugin in the target layering | nothing |
 
-`config_file.c` also accepts the types `changer` and `crepos` in a
-configuration file; nothing in this tree loads them.
+`config_file.c` also accepts the type `crepos` in a configuration file;
+nothing in this tree loads it.
 
 Each plugin parses its own `-o` options: libaltfs hands the FUSE option
 list to `tape_parse_opts()` and `kmi_parse_opts()`, which call the

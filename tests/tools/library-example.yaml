@@ -1,0 +1,16 @@
+# A mixed generation library for the file medium changer.
+#   tests/tools/filelib.py /var/tmp/lib1 create tests/tools/library-example.yaml
+library:
+  vid: IBM
+  pid: 3584-TL
+  serial: '0123456789'
+  slots: 100
+  ie: 20
+  drives:
+    - {vid: IBM, pid: ULTRIUM-TD5, serial: '000000001'}
+    - {vid: IBM, pid: ULTRIUM-TD6, serial: '000000002'}
+    - {vid: IBM, pid: ULTRIUM-TD7, serial: '000000003'}
+  cartridges:
+    L5: 10
+    L6: {volser: 'A01001', num: 10}
+    L7: {volser: 'B00001', num: 10}

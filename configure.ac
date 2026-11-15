@@ -243,9 +243,14 @@ if test -z "$DEFAULT_KMI" ; then
     DEFAULT_KMI=none
 fi
 
+if test -z "$DEFAULT_CHANGER" ; then
+    DEFAULT_CHANGER=file
+fi
+
 AC_ARG_VAR([DEFAULT_TAPE], [default tape device plugin, e.g. sg])
 AC_ARG_VAR([DEFAULT_IOSCHED], [default I/O scheduler plugin, e.g. unified])
 AC_ARG_VAR([DEFAULT_KMI], [default key manager interface plugin, e.g. none])
+AC_ARG_VAR([DEFAULT_CHANGER], [default medium changer plugin, e.g. file])
 
 dnl
 dnl Check for pkg-config
@@ -603,6 +608,7 @@ AC_CONFIG_FILES([
     src/tape_drivers/osx/iokit/Makefile
     src/tape_drivers/freebsd/cam/Makefile
     src/tape_drivers/netbsd/scsipi-ibmtape/Makefile
+    src/changer_drivers/generic/file/Makefile
     src/iosched/Makefile
     src/kmi/Makefile
     src/cmd/altfs/Makefile
@@ -611,6 +617,7 @@ AC_CONFIG_FILES([
     src/cmd/altfsindextool/Makefile
     src/cmd/altfs_ordered_copy/Makefile
     src/cmd/altfsctl/Makefile
+    src/cmd/altfschanger/Makefile
     altfs.pc:altfs.pc.in
 ])
 

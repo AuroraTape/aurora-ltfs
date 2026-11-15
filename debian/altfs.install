@@ -4,6 +4,7 @@ usr/bin/altfsck
 usr/bin/altfsindextool
 usr/bin/altfs_ordered_copy
 usr/bin/altfsctl
+usr/bin/altfschanger
 usr/lib/*/altfs/*.so*
 usr/share/altfs/*
 usr/lib/systemd/system/altfs.service
@@ -15,6 +16,7 @@ usr/share/man/man8/mkaltfs.8*
 usr/share/man/man8/altfsck.8*
 usr/share/man/man8/altfsindextool.8*
 usr/share/man/man8/altfsctl.8*
+usr/share/man/man8/altfschanger.8*
 etc/altfs.conf
 etc/rsyslog.d/30-altfs.conf
 etc/logrotate.d/altfs

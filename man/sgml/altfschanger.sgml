@@ -1,0 +1,196 @@
+<!doctype reference PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+          <!ENTITY dhcommand "altfschanger">
+          ]>
+
+<reference>
+  <title>LTFS Command Reference</title>
+
+  <refentry>
+    <refmeta>
+      <refentrytitle><command>&dhcommand;</command></refentrytitle>
+      <manvolnum>8</manvolnum>
+      <refmiscinfo>LTFS</refmiscinfo>
+    </refmeta>
+
+    <refnamediv>
+      <refname>&dhcommand;</refname>
+      <refpurpose>Drive a tape library's medium changer through a changer plugin</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <arg><option>-e <replaceable>name</replaceable></option></arg>
+        <arg><option>-i <replaceable>file</replaceable></option></arg>
+        <arg choice="plain">list</arg>
+      </cmdsynopsis>
+      <cmdsynopsis>
+        <command>&dhcommand;</command>
+        <arg choice="plain"><option>-d <replaceable>name</replaceable></option></arg>
+        <arg><option>-e <replaceable>name</replaceable></option></arg>
+        <arg><option>-i <replaceable>file</replaceable></option></arg>
+        <arg><option>-o <replaceable>option</replaceable></option></arg>
+        <arg><option>--verbose=<replaceable>num</replaceable></option></arg>
+        <arg choice="plain"><replaceable>command</replaceable></arg>
+        <arg rep="repeat"><replaceable>argument</replaceable></arg>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+        <command>&dhcommand;</command> sends single operations to the medium changer of a tape
+        library through a changer plugin: it reads the element status, moves and exchanges
+        cartridges between element addresses, and makes the changer re-read its elements. It is
+        a tool for testing the changer plugins and for driving a library by hand; it keeps no
+        state between runs.
+      </para>
+      <para>
+        Elements are named by their address as the changer reports it. The library is shared
+        with its operator panel and with other hosts, and <command>&dhcommand;</command> does
+        not reserve it: check the element status before a move.
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>OPTIONS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-d, --device=<replaceable>name</replaceable></option></term>
+          <listitem>
+            <para>
+              The medium changer. Its form depends on the plugin: for the <literal>file</literal>
+              plugin, a library directory, or the name or serial number of a library directory
+              under the directory that the environment variable
+              <envar>ALTFS_FILE_CHANGER_ROOT</envar> names.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-e, --backend=<replaceable>name</replaceable></option></term>
+          <listitem>
+            <para>Use the specified changer plugin (default: the <literal>default changer</literal> of the configuration file)</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-i, --config=<replaceable>file</replaceable></option></term>
+          <listitem>
+            <para>Use the specified configuration file</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-o <replaceable>option</replaceable></option></term>
+          <listitem>
+            <para>Pass an option to the changer plugin; <command>&dhcommand; help</command> lists them</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>--verbose=<replaceable>num</replaceable></option></term>
+          <listitem>
+            <para>
+              Set the log level: 0 errors, 1 warnings, 2 informational (the default),
+              3 to 6 debug.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-h, --help</option></term>
+          <listitem>
+            <para>Show the usage</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>-V, --version</option></term>
+          <listitem>
+            <para>Show the version</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>COMMANDS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>list</literal></term>
+          <listitem>
+            <para>List the medium changers this host can reach</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>info</literal></term>
+          <listitem>
+            <para>Show the identity of the changer, its element address assignment and whether it reads barcodes, reports drive serial numbers and accepts EXCHANGE MEDIUM</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>elements</literal> [<replaceable>type</replaceable> [<replaceable>start</replaceable> [<replaceable>count</replaceable>]]]</term>
+          <listitem>
+            <para>
+              Show the element status, one element per line: type, address, full or empty,
+              then <literal>voltag=</literal> (the barcode), <literal>source=</literal>,
+              <literal>dvcid=</literal> (the drive serial number) and the flags
+              <literal>inaccessible</literal>, <literal>except=</literal><replaceable>ASC</replaceable>/<replaceable>ASCQ</replaceable>
+              and <literal>impexp</literal>. <replaceable>type</replaceable> is
+              <literal>transport</literal>, <literal>storage</literal>, <literal>ie</literal>,
+              <literal>drive</literal> or <literal>any</literal> (the default).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>move</literal> <replaceable>source</replaceable> <replaceable>dest</replaceable> [<replaceable>transport</replaceable>]</term>
+          <listitem>
+            <para>MOVE MEDIUM from one element address to another</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>exchange</literal> <replaceable>source</replaceable> <replaceable>dest1</replaceable> <replaceable>dest2</replaceable> [<replaceable>transport</replaceable>]</term>
+          <listitem>
+            <para>EXCHANGE MEDIUM: the cartridge at <replaceable>source</replaceable> goes to <replaceable>dest1</replaceable> and the one at <replaceable>dest1</replaceable> goes to <replaceable>dest2</replaceable>, which may be <replaceable>source</replaceable></para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>scan</literal> [<replaceable>start</replaceable> <replaceable>count</replaceable>]</term>
+          <listitem>
+            <para>Make the changer re-read its elements (INITIALIZE ELEMENT STATUS); on a large library this takes minutes</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>tur</literal></term>
+          <listitem>
+            <para>Send TEST UNIT READY</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>prevent</literal>, <literal>allow</literal></term>
+          <listitem>
+            <para>Lock or unlock the import/export station</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>help</literal></term>
+          <listitem>
+            <para>Show the options of the changer plugin</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+
+    <refsect1>
+      <title>EXIT STATUS</title>
+      <para>
+        0 on success, 8 when the operation failed (the message <literal>ACH0004E</literal> gives
+        the internal error code), 16 for a usage error.
+      </para>
+    </refsect1>
+
+    <refsect1>
+      <title>SEE ALSO</title>
+      <para>altfs(8), mkaltfs(8).</para>
+    </refsect1>
+
+  </refentry>
+
+</reference>
