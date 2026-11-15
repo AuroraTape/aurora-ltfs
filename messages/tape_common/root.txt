@@ -52,5 +52,6 @@ root:table {
 		ATM0012W:string { "Cannot fetch network I/F information. Use host name based reservation key. (%d)" }
 		ATM0013W:string { "Drive firmware must be updated. Upgrading to %s or later is recommended" }
 		ATM0014W:string { "Drive firmware level does not correctly detect the EOD status" }
+		ATM0015D:string { "SCSI OP code 0x%02x has no timeout in the RSOC answer of the drive, use the timeout of the vendor table (%d)" }
 	}
 }
