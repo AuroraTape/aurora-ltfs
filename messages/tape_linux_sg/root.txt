@@ -152,5 +152,8 @@ root:table {
 		// Host transfer limit (issue #148)
 		ATG0107I:string { "The maximum transfer length to %s is %d bytes" }
 		ATG0108W:string { "The host transfer path limits a single transfer to %s to %d bytes: volumes with a larger block size cannot be read or written through this path" }
+
+		// LOCATE answered with "operation in progress" (issue #304)
+		ATG0110D:string { "Progress of the operation in progress: %u / 65536" }
         }
 }
