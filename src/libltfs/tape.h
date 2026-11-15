@@ -94,6 +94,10 @@ struct rao_mod {
 	size_t        out_size; /**< Valid length of out_buf */
 };
 
+/* How long a positioning command waits for a drive that answered "operation in progress"
+ * before it is issued again: the LOCATE timeout the vendors recommend for LTO (20 minutes) */
+#define TAPE_IN_PROGRESS_WAIT_SEC   1200
+
 struct device_data {
 	struct tc_position position;          /**< Current head position */
 	tape_block_t append_pos[2];           /**< Append positions, 0 means append at EOD */
