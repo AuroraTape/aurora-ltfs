@@ -167,5 +167,7 @@ root:table {
 		ALP0127E:string { "Locate command returns write-perm error (%d). Replace a return code to %d" }
 		ALP0128I:string { "RAO command returns error on %s (%d)" }
 		ALP0129I:string { "Current position is (%llu, %llu), Error position is (%llu, %llu)" }
+		ALP0130I:string { "The drive answered %s with an operation in progress: wait for the drive to become ready, then issue the command again" }
+		ALP0131E:string { "The drive did not become ready after %s reported an operation in progress (%d seconds, %d)" }
 	}
 }

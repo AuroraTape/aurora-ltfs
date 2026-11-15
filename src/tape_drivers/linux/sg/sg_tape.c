@@ -1780,6 +1780,7 @@ int sg_test_unit_ready(void *device)
 			case -EDEV_NOT_REPORTABLE:
 			case -EDEV_MEDIUM_REMOVAL_REQ:
 			case -EDEV_CLEANING_IN_PROGRESS:
+			case -EDEV_OPERATION_IN_PROGRESS:
 				take_dump = false;
 				break;
 			default:
