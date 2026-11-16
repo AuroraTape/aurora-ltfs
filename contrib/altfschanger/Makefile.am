@@ -33,10 +33,11 @@
 #  AA_Copyright_END
 #
 
-bin_PROGRAMS = altfschanger
+# A development tool: built with the tree, not installed
+noinst_PROGRAMS = altfschanger
 
 altfschanger_SOURCES = altfschanger.c
-altfschanger_DEPENDENCIES = ../../libltfs/libaltfs.la ../../../messages/libbin_altfschanger_dat.la
-altfschanger_CPPFLAGS = @AM_CPPFLAGS@ -I ../.. -fPIC
-altfschanger_LDADD = ../../libltfs/libaltfs.la
-altfschanger_LDFLAGS = @AM_LDFLAGS@ ../../../messages/libbin_altfschanger_dat.la
+altfschanger_DEPENDENCIES = ../../src/libltfs/libaltfs.la ../../messages/libbin_altfschanger_dat.la
+altfschanger_CPPFLAGS = @AM_CPPFLAGS@ -I ../../src -fPIC
+altfschanger_LDADD = ../../src/libltfs/libaltfs.la
+altfschanger_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_altfschanger_dat.la

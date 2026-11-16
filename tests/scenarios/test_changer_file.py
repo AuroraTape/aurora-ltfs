@@ -18,7 +18,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from common.changer import (  # noqa: E402
-    DRIVE_LINK_SIZE, DRIVE_START, IE_START, STORAGE_START, FileLibrary, error_code,
+    ALTFSCHANGER, DRIVE_LINK_SIZE, DRIVE_START, IE_START, STORAGE_START, FileLibrary, error_code,
 )
 from common.altfs import format_tape, mount_tape, umount_tape  # noqa: E402
 
@@ -233,25 +233,25 @@ def test_device_list_and_open_by_serial(tmp_path, lib):
     env = {"ALTFS_FILE_CHANGER_ROOT": str(lib.dir.parent)}
     proc = lib.run("list", env=env, device=False, check=True)
     assert proc.stdout.split() == [str(lib.dir), "AURORA", "FILECHANGER", "FLIB0001"]
-    proc = subprocess.run(["altfschanger", "-e", "file", "-d", "FLIB0001", "info"],
+    proc = subprocess.run([ALTFSCHANGER, "-e", "file", "-d", "FLIB0001", "info"],
                           capture_output=True, text=True, timeout=30,
                           env={**dict(__import__("os").environ), **env})
     assert proc.returncode == 0 and "serial FLIB0001" in proc.stdout
 
 
 def test_a_plain_directory_is_not_a_library(tmp_path):
-    proc = subprocess.run(["altfschanger", "-e", "file", "-d", str(tmp_path), "info"],
+    proc = subprocess.run([ALTFSCHANGER, "-e", "file", "-d", str(tmp_path), "info"],
                           capture_output=True, text=True, timeout=30)
     assert proc.returncode != 0
     assert "ACF0002E" in proc.stderr
 
 
 def test_usage_and_version():
-    assert subprocess.run(["altfschanger", "-V"], capture_output=True, text=True,
+    assert subprocess.run([ALTFSCHANGER, "-V"], capture_output=True, text=True,
                           timeout=10).returncode == 0
-    proc = subprocess.run(["altfschanger", "-h"], capture_output=True, text=True, timeout=10)
+    proc = subprocess.run([ALTFSCHANGER, "-h"], capture_output=True, text=True, timeout=10)
     assert proc.returncode == 0 and "elements" in proc.stdout + proc.stderr
-    proc = subprocess.run(["altfschanger", "-e", "file", "bogus"], capture_output=True,
+    proc = subprocess.run([ALTFSCHANGER, "-e", "file", "bogus"], capture_output=True,
                           text=True, timeout=10)
     assert proc.returncode == 16
 

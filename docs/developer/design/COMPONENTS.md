@@ -19,7 +19,7 @@ it at run time.
 | `mkaltfs` | `src/cmd/mkaltfs/` | Formats a cartridge: partitions, labels, the first index on both partitions (`ltfs_format_tape()`), or wipes it (`ltfs_unformat_tape()`) |
 | `altfsck` | `src/cmd/altfsck/` | Checks and repairs a volume: mounts with the recovery flags of `ltfs_mount()`, recovers a missing EOD, rolls back to an earlier index generation with `ltfs_traverse_index_*()` and `ltfs_write_index()` |
 | `altfsindextool` | `src/cmd/altfsindextool/` | Reads the indexes off a partition into files, or checks an index file against the volume, without mounting |
-| `altfschanger` | `src/cmd/altfschanger/` | Sends single operations to a tape library's medium changer through a changer plugin (element status, MOVE, EXCHANGE, re-inventory), by element address; a test and hand tool, no libaltfs volume involved |
+| `altfschanger` | `contrib/altfschanger/` | Sends single operations to a tape library's medium changer through a changer plugin (element status, MOVE, EXCHANGE, re-inventory), by element address; a development tool for testing the plugins and driving a library by hand, built with the tree but not installed; no libaltfs volume involved |
 | `altfsctl` | `src/cmd/altfsctl/` | Python; sets up the Linux `altfs@<serial>.service` unit, no libaltfs involved |
 | `altfs_ordered_copy` | `src/cmd/altfs_ordered_copy/` | Python; copies files in tape order using the `ltfs.*` extended attributes of a mounted volume |
 | libaltfs | `src/libltfs/` | The library: volume, index and dentry structures, the file system operations, the tape layer, index XML, plugin loading, messages and tracing |
