@@ -331,7 +331,6 @@
 #define LTFS_ELEMENT_FULL         6005  /* The element holds a cartridge where none was expected */
 #define LTFS_ELEMENT_EMPTY        6006  /* The element is empty where a cartridge was expected */
 #define LTFS_NO_FREE_SLOT         6007  /* No empty storage or import/export element */
-#define LTFS_NO_HOME_SLOT         6008  /* The cartridge in the drive has no slot to return to */
 #define LTFS_INVENTORY_STALE      6009  /* The library changed under us; the inventory was re-read */
 #define LTFS_UNLABELED_CARTRIDGE  6010  /* The cartridge has no readable barcode */
 #define LTFS_CLEANING_CARTRIDGE   6011  /* The cartridge is a cleaning cartridge */

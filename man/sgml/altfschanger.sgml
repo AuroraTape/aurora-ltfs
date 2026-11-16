@@ -230,7 +230,7 @@
         <varlistentry>
           <term><literal>return</literal> <replaceable>drive</replaceable></term>
           <listitem>
-            <para>Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken</para>
+            <para>Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken or not known</para>
           </listitem>
         </varlistentry>
         <varlistentry>

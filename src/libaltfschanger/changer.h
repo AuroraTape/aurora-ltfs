@@ -167,7 +167,7 @@ int changer_free_slot(struct changer *ch, uint16_t near, uint16_t *address);
 /** Move the cartridge into the drive. 0 when it is already there. */
 int changer_load(struct changer *ch, const char *barcode, const char *serial);
 
-/** Move the cartridge in the drive back to its home slot (or where it came from) */
+/** Move the cartridge in the drive back to its home slot (or where it came from), else to a free slot */
 int changer_return(struct changer *ch, const char *serial);
 
 /**

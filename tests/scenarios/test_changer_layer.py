@@ -26,7 +26,6 @@ LTFS_DRIVE_NOT_IN_LIBRARY = -6002
 LTFS_DRIVE_OCCUPIED = -6003
 LTFS_DRIVE_EMPTY = -6004
 LTFS_NO_FREE_SLOT = -6007
-LTFS_NO_HOME_SLOT = -6008
 LTFS_INVENTORY_STALE = -6009
 LTFS_CLEANING_CARTRIDGE = -6011
 LTFS_TAPE_IN_IE = -6013
@@ -195,10 +194,14 @@ def test_return_picks_a_free_slot_when_home_is_taken(layer, lib):
     assert inv["tapes"]["NEW001L9"]["address"] == S0
 
 
-def test_return_fails_without_any_home(layer, lib):
+def test_return_picks_a_free_slot_without_any_home(layer, lib):
     lib.put(D1, "AAA003L9")           # appeared in the drive, nobody knows from where
-    assert layer.fails("return", DRV1) == LTFS_NO_HOME_SLOT
-    assert lib.content(D1) == "AAA003L9"
+    proc = layer.run("return", DRV1, check=True)
+    assert "ACL0020W" in proc.stderr
+    inv = parse_inventory(proc.stdout)
+    assert inv["tapes"]["AAA003L9"]["where"] == "storage"
+    assert lib.content(inv["tapes"]["AAA003L9"]["address"]) == "AAA003L9"
+    assert lib.content(D1) is None
 
 
 # ---------- swap ----------

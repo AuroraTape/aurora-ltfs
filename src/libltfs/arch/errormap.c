@@ -354,7 +354,6 @@ static struct error_map fuse_error_list[] = {
 	{ LTFS_ELEMENT_FULL,             "AEI6005E", EBUSY},
 	{ LTFS_ELEMENT_EMPTY,            "AEI6006E", ENOENT},
 	{ LTFS_NO_FREE_SLOT,             "AEI6007E", ENOSPC},
-	{ LTFS_NO_HOME_SLOT,             "AEI6008E", ENOSPC},
 	{ LTFS_INVENTORY_STALE,          "AEI6009E", ESTALE},
 	{ LTFS_UNLABELED_CARTRIDGE,      "AEI6010E", EINVAL},
 	{ LTFS_CLEANING_CARTRIDGE,       "AEI6011E", EPERM},

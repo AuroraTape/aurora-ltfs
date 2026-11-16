@@ -90,7 +90,7 @@ Read every element again; deep makes the changer re-read its elements first
 Move the cartridge into the drive. A duplicate barcode, a cleaning cartridge (CLN) and a cartridge in the import/export station are refused.
 
 **return** *drive*  
-Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken
+Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken or not known
 
 **swap** *barcode* *drive*  
 Return the cartridge in the drive and load the other one, with EXCHANGE MEDIUM when the changer accepts it and two moves otherwise

@@ -57,5 +57,6 @@ root:table {
 		ACL0017E:string { "The library changed while moving %s; the inventory was re-read" }
 		ACL0018W:string { "Element %u is not accessible or in exception (%02X/%02X)" }
 		ACL0019E:string { "Cannot open the medium changer %s (%d)" }
+		ACL0020W:string { "No home slot is known for %s, returning it to slot %u" }
 	}
 }

@@ -316,7 +316,6 @@ root:table {
 		AEI6005E:string { "The element holds a cartridge where none was expected" }
 		AEI6006E:string { "The element is empty where a cartridge was expected" }
 		AEI6007E:string { "No empty storage or import/export element" }
-		AEI6008E:string { "The cartridge in the drive has no slot to return to" }
 		AEI6009E:string { "The library changed under us; the inventory was re-read" }
 		AEI6010E:string { "The cartridge has no readable barcode" }
 		AEI6011E:string { "The cartridge is a cleaning cartridge" }

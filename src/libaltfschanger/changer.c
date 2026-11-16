@@ -1224,8 +1224,14 @@ static int _return_target(struct changer *ch, const struct changer_tape *t, cons
 
 	if (!home && drive_el->source_valid && _type_of(ch, drive_el->source) == CHANGER_ELEMENT_STORAGE)
 		home = drive_el->source;
-	if (!home)
-		return -LTFS_NO_HOME_SLOT;
+	if (!home) {
+		/* Loaded from the import/export station or by another host, and the device kept no storage source */
+		ret = _free_slot(ch, 0, dest);
+		if (ret < 0)
+			return ret;
+		ltfsmsg(ACL0020W, t->barcode[0] ? t->barcode : "the unlabeled cartridge", *dest);
+		return 0;
+	}
 
 	ret = _element_at(ch, home, &e);
 	if (ret < 0)

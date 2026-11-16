@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "ALTFSCHANGER" "8" "15 November 2026" "LTFS" "LTFS Command Reference"
+.TH "ALTFSCHANGER" "8" "16 November 2026" "LTFS" "LTFS Command Reference"
 
 .SH NAME
 altfschanger \- Drive a tape library's medium changer through a changer plugin
@@ -113,7 +113,7 @@ Read every element again; deep makes the changer re-read its elements first
 Move the cartridge into the drive. A duplicate barcode, a cleaning cartridge (CLN) and a cartridge in the import/export station are refused.
 .TP
 \fBreturn \fIdrive\fB\fR
-Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken
+Move the cartridge in the drive back to the slot it came from, or to a free slot when that one is taken or not known
 .TP
 \fBswap \fIbarcode\fB \fIdrive\fB\fR
 Return the cartridge in the drive and load the other one, with EXCHANGE MEDIUM when the changer accepts it and two moves otherwise
