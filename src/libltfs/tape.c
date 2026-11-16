@@ -1981,7 +1981,8 @@ int tape_get_cart_volume_lock_status(struct device_data *dev, int *status)
 		*status = (int)(attr_data[TC_MAM_PAGE_HEADER_SIZE]); /* TC_MAM_LOCKED_SIZE is 1 byte field */
 		ltfsmsg(ALP0015D, "Read", *status);
 
-	} else if (ret == -EDEV_INVALID_FIELD_CDB) {
+	} else if (ret == -EDEV_INVALID_FIELD_CDB || ret == -EDEV_ATTRIBUTE_NOT_FOUND) {
+		/* The attribute does not exist: IBM LTO drives fail the command, the TS1170 replies without it */
 		ltfsmsg(ALP0014I);
 		*status = UNLOCKED_MAM;
 		ret = 0;

@@ -2149,6 +2149,9 @@ int camtape_read_attribute(void *device, const tape_partition_t part, const uint
 			id != TC_MAM_BARCODE &&
 			id != TC_MAM_APP_FORMAT_VERSION)
 			ltfsmsg(ATC0041I, rc);
+	} else if (is_attribute_missing_from_reply((unsigned char *)attr_header, id)) {
+		/* Good status, but the reply does not hold the requested attribute: it does not exist */
+		rc = -EDEV_ATTRIBUTE_NOT_FOUND;
 	} else {
 
 		memcpy(buf, &attr_header[1], size);
