@@ -3,9 +3,10 @@
 """
 Validate message IDs between source code and message bundle definitions.
 
-Scans src/**/*.{c,h} for message IDs and messages/**/*.txt for the same
-pattern in :string lines. Reports unused (defined but not referenced in
-source) and undefined (referenced in source but not defined) message IDs.
+Scans src/**/*.{c,h} and contrib/**/*.{c,h} for message IDs and
+messages/**/*.txt for the same pattern in :string lines. Reports unused
+(defined but not referenced in source) and undefined (referenced in source
+but not defined) message IDs.
 
 The 4-character number field is either four digits (added on HEAD) or one
 of the letter-bearing release-branch shapes (e.g. AFSA001E for 1.0.x,
@@ -45,7 +46,7 @@ msg_defined = dict()  # module -> set of IDs
 
 def scan_source():
     """Scan source files for message ID references."""
-    for dirpath, dirs, files in os.walk('src'):
+    for dirpath, dirs, files in (w for top in ('src', 'contrib') for w in os.walk(top)):
         for f in files:
             if re.search(r'\.[ch]$', f):
                 filepath = os.path.join(dirpath, f)

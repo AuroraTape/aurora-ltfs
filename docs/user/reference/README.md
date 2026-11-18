@@ -7,7 +7,6 @@ The man pages of the commands, as installed with them.
 
 - [altfs(8)](altfs.md): File system based on a linear tape drive
 - [altfs_ordered_copy(1)](altfs_ordered_copy.md): Copy files from source to destination with LTFS order optimization
-- [altfschanger(8)](altfschanger.md): Drive a tape library's medium changer through a changer plugin
 - [altfsck(8)](altfsck.md): Recover and rollback utility for LTFS formatted tape
 - [altfsctl(8)](altfsctl.md): Set up LTFS mounts as system services
 - [altfsindextool(8)](altfsindextool.md): Low level index checking tool for LTFS

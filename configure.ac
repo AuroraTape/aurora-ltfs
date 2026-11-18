@@ -618,7 +618,7 @@ AC_CONFIG_FILES([
     src/cmd/altfsindextool/Makefile
     src/cmd/altfs_ordered_copy/Makefile
     src/cmd/altfsctl/Makefile
-    src/cmd/altfschanger/Makefile
+    contrib/altfschanger/Makefile
     altfs.pc:altfs.pc.in
 ])
 

@@ -331,14 +331,14 @@
 #define LTFS_ELEMENT_FULL         6005  /* The element holds a cartridge where none was expected */
 #define LTFS_ELEMENT_EMPTY        6006  /* The element is empty where a cartridge was expected */
 #define LTFS_NO_FREE_SLOT         6007  /* No empty storage or import/export element */
-#define LTFS_INVENTORY_STALE      6009  /* The library changed under us; the inventory was re-read */
-#define LTFS_UNLABELED_CARTRIDGE  6010  /* The cartridge has no readable barcode */
-#define LTFS_CLEANING_CARTRIDGE   6011  /* The cartridge is a cleaning cartridge */
-#define LTFS_BARCODE_MISMATCH     6012  /* The cartridge in the drive is not the one its barcode says */
-#define LTFS_TAPE_IN_IE           6013  /* The cartridge is in the import/export station; move it to storage first */
-#define LTFS_IE_NOT_ACCESSIBLE    6014  /* The import/export station cannot be used */
-#define LTFS_CHANGER_NOT_READY    6015  /* The medium changer is not ready (door or magazine open) */
-#define LTFS_TAPE_IN_DRIVE        6016  /* The cartridge is in another drive */
+#define LTFS_INVENTORY_STALE      6008  /* The library changed under us; the inventory was re-read */
+#define LTFS_UNLABELED_CARTRIDGE  6009  /* The cartridge has no readable barcode */
+#define LTFS_CLEANING_CARTRIDGE   6010  /* The cartridge is a cleaning cartridge */
+#define LTFS_BARCODE_MISMATCH     6011  /* The cartridge in the drive is not the one its barcode says */
+#define LTFS_TAPE_IN_IE           6012  /* The cartridge is in the import/export station; move it to storage first */
+#define LTFS_IE_NOT_ACCESSIBLE    6013  /* The import/export station cannot be used */
+#define LTFS_CHANGER_NOT_READY    6014  /* The medium changer is not ready (door or magazine open) */
+#define LTFS_TAPE_IN_DRIVE        6015  /* The cartridge is in another drive */
 
 #define LTFS_ERR_MAX              19999
 
@@ -502,6 +502,7 @@
 #define EDEV_REAL_POWER_ON_RESET     21723  /* Real power on reset is detected */
 #define EDEV_BUFFER_ALLOCATE_ERROR   21724  /* Buffer allocation error in a driver */
 #define EDEV_RETRY                   21725  /* Retry the command again */
+#define EDEV_ATTRIBUTE_NOT_FOUND     21726  /* Requested attribute is not in the READ ATTRIBUTE reply */
 
 /* Vendor Unique codes */
 #define EDEV_UNKNOWN                 29998  /* Unknown sense code */

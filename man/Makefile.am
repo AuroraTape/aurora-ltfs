@@ -1,4 +1,4 @@
-MAN8 = mkaltfs.8 altfsck.8 altfs.8 altfsindextool.8 altfschanger.8
+MAN8 = mkaltfs.8 altfsck.8 altfs.8 altfsindextool.8
 # altfsctl is installed on Linux (systemd) only
 if PLATFORM_LINUX
 MAN8 += altfsctl.8
@@ -21,9 +21,6 @@ altfsindextool.8: $(srcdir)/sgml/altfsindextool.sgml
 	$(DOCBOOK2MAN) $< && rm -f manpage.*
 
 altfsctl.8: $(srcdir)/sgml/altfsctl.sgml
-	$(DOCBOOK2MAN) $< && rm -f manpage.*
-
-altfschanger.8: $(srcdir)/sgml/altfschanger.sgml
 	$(DOCBOOK2MAN) $< && rm -f manpage.*
 
 altfs_ordered_copy.1: $(srcdir)/sgml/altfs_ordered_copy.sgml

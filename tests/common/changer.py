@@ -32,6 +32,11 @@ DRIVE_START = 257
 IE_START = 769
 STORAGE_START = 1025
 
+# altfschanger is a development tool in contrib/: built with the tree, not
+# installed. Run the libtool wrapper from the build tree; ALTFSCHANGER overrides.
+_BUILT = Path(__file__).resolve().parents[2] / "contrib" / "altfschanger" / "altfschanger"
+ALTFSCHANGER = os.environ.get("ALTFSCHANGER") or (str(_BUILT) if _BUILT.exists() else "altfschanger")
+
 
 class FileLibrary:
     def __init__(self, base, slots=4, ie=1, drives=("1234567890.ULTRIUM-TD5",),
@@ -145,7 +150,7 @@ class FileLibrary:
     # ----- altfschanger -----
 
     def run(self, *args, env=None, check=False, device=True):
-        cmd = ["altfschanger", "-e", "file"]
+        cmd = [ALTFSCHANGER, "-e", "file"]
         if device:
             cmd += ["-d", str(self.dir)]
         cmd += [str(a) for a in args]
