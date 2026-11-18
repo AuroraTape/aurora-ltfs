@@ -39,11 +39,10 @@
 ** FILE NAME:       altfschanger.c
 **
 ** DESCRIPTION:     Drives one medium changer through a changer plugin, the way
-**                  mkaltfs drives one tape drive. For now the commands are the
+**                  mkaltfs drives one tape drive. Two sets of commands: the
 **                  operations of the plugin itself, named by element address,
-**                  which is what the plugin tests need; the cartridge level
-**                  commands (load, return, swap by barcode) arrive with the
-**                  changer layer.
+**                  and the cartridge level operations of the changer layer
+**                  (libaltfschanger), named by barcode and drive serial.
 **
 *************************************************************************************
 */
@@ -64,6 +63,7 @@
 #include "libltfs/plugin.h"
 #include "libltfs/config_file.h"
 #include "libaltfschanger/changer_ops.h"
+#include "libaltfschanger/changer.h"
 
 /* Exit codes, the shape of the other commands */
 #define ALTFSCHANGER_OK                 (0)
@@ -77,6 +77,8 @@ static struct option long_options[] = {
 	{ "backend", required_argument, 0, 'e' },
 	{ "config",  required_argument, 0, 'i' },
 	{ "verbose", required_argument, 0, 'v' },
+	{ "ready-wait", required_argument, 0, 'r' },
+	{ "move-wait",  required_argument, 0, 'm' },
 	{ "help",    no_argument,       0, 'h' },
 	{ "version", no_argument,       0, 'V' },
 	{ 0, 0, 0, 0 }
@@ -89,6 +91,7 @@ struct options {
 	const char *devname;
 	const char *backend;
 	int verbose;
+	struct changer_opts copts;	/* of the changer layer */
 };
 
 static int parse_address(const char *s, uint16_t *addr)
@@ -307,6 +310,115 @@ static int cmd_simple(const char *name, int ret)
 	return ALTFSCHANGER_OK;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Commands through the changer layer: barcodes and drive serials         */
+/* ---------------------------------------------------------------------- */
+
+static void print_inventory(const struct changer_inventory *inv)
+{
+	size_t i, unlabeled = 0;
+
+	printf("library %s %s %s ready=%s reason=%d stale=%s tapes=%zu unlabeled=%zu drives=%zu "
+		   "storage_free=%u storage_unusable=%u ie_free=%u last_ua=%d\n",
+		   inv->info.vendor, inv->info.model, inv->info.serial_number,
+		   inv->ready ? "yes" : "no", inv->not_ready_reason, inv->stale ? "yes" : "no",
+		   inv->n_tapes, inv->n_unlabeled, inv->n_drives,
+		   inv->storage_free, inv->storage_unusable, inv->ie_free, inv->last_ua);
+	for (i = 0; i < inv->n_drives; i++) {
+		const struct changer_drive *d = &inv->drives[i];
+		printf("drive %s %u %s", d->serial[0] ? d->serial : "-", d->address, d->full ? "full" : "empty");
+		if (d->full)
+			printf(" %s", d->barcode[0] ? d->barcode : "unlabeled");
+		if (!d->accessible)
+			printf(" inaccessible");
+		if (d->exception)
+			printf(" except=%02X/%02X", d->asc, d->ascq);
+		printf("\n");
+	}
+	for (i = 0; i < inv->n_tapes; i++) {
+		const struct changer_tape *t = &inv->tapes[i];
+		if (t->barcode[0])
+			printf("tape %s", t->barcode);
+		else
+			printf("tape unlabeled%zu", unlabeled++);
+		printf(" %s %u %s home=%u", type_short(t->where), t->address,
+			   changer_tape_state_name(t->state), t->home);
+		if (t->state == CHANGER_TAPE_NOT_ACCESSIBLE)
+			printf(" except=%02X/%02X", t->asc, t->ascq);
+		if (!t->barcode[0] && t->raw_voltag[0])
+			printf(" raw=%s", t->raw_voltag);
+		printf("\n");
+	}
+}
+
+static bool is_layer_command(const char *command)
+{
+	static const char *names[] = { "inventory", "load", "return", "swap", "export", "import", "rescan", NULL };
+	int i;
+
+	for (i = 0; names[i]; i++)
+		if (!strcmp(command, names[i]))
+			return true;
+	return false;
+}
+
+static int cmd_layer(struct changer_ops *ops, const struct options *opt, struct fuse_args *args,
+					 const char *command, int argc, char **argv)
+{
+	struct changer *ch = NULL;
+	struct changer_inventory inv;
+	int ret;
+
+	if ((!strcmp(command, "load") || !strcmp(command, "swap")) && argc < 2) {
+		ltfsmsg(ACH0007E, command, 2);
+		return ALTFSCHANGER_USAGE_ERROR;
+	}
+	if ((!strcmp(command, "return") || !strcmp(command, "export") || !strcmp(command, "import")) && argc < 1) {
+		ltfsmsg(ACH0007E, command, 1);
+		return ALTFSCHANGER_USAGE_ERROR;
+	}
+
+	ret = changer_open(&ch, opt->devname, ops, &opt->copts);
+	if (ret < 0) {
+		ltfsmsg(ACH0003E, opt->devname, ret);
+		return ALTFSCHANGER_OPERATIONAL_ERROR;
+	}
+	ret = ops->parse_opts(changer_backend_handle(ch), args);
+	if (ret < 0) {
+		ltfsmsg(ACH0013E, ret);
+		changer_close(ch);
+		return ALTFSCHANGER_USAGE_ERROR;
+	}
+
+	if (!strcmp(command, "inventory"))
+		ret = 0;
+	else if (!strcmp(command, "rescan"))
+		ret = changer_rescan(ch, argc >= 1 && !strcmp(argv[0], "deep"));
+	else if (!strcmp(command, "load"))
+		ret = changer_load(ch, argv[0], argv[1]);
+	else if (!strcmp(command, "return"))
+		ret = changer_return(ch, argv[0]);
+	else if (!strcmp(command, "swap"))
+		ret = changer_swap(ch, argv[0], argv[1]);
+	else if (!strcmp(command, "export"))
+		ret = changer_export(ch, argv[0]);
+	else if (!strcmp(command, "import"))
+		ret = changer_import(ch, argv[0]);
+
+	if (ret < 0) {
+		ltfsmsg(ACH0004E, command, ret);
+		ret = ALTFSCHANGER_OPERATIONAL_ERROR;
+	} else {
+		ret = ALTFSCHANGER_OK;
+		if (changer_inventory(ch, &inv) == 0) {
+			print_inventory(&inv);
+			changer_inventory_free(&inv);
+		}
+	}
+	changer_close(ch);
+	return ret;
+}
+
 int main(int argc, char **argv)
 {
 	struct options opt;
@@ -314,6 +426,7 @@ int main(int argc, char **argv)
 	struct changer_ops *ops;
 	void *handle = NULL;
 	void *message_handle = NULL;
+	void *layer_message_handle = NULL;
 	const char *config_file = NULL;
 	const char *command;
 	int ret, c, log_level, syslog_level;
@@ -346,6 +459,11 @@ int main(int argc, char **argv)
 		ltfsmsg(ALC0011E, ret);
 		return ALTFSCHANGER_OPERATIONAL_ERROR;
 	}
+	ret = changer_load_messages(&layer_message_handle);
+	if (ret < 0) {
+		ltfsmsg(ALC0011E, ret);
+		return ALTFSCHANGER_OPERATIONAL_ERROR;
+	}
 
 	while ((c = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (c) {
@@ -364,6 +482,12 @@ int main(int argc, char **argv)
 				break;
 			case 'v':
 				opt.verbose = atoi(optarg);
+				break;
+			case 'r':
+				opt.copts.ready_wait = (unsigned)atoi(optarg);
+				break;
+			case 'm':
+				opt.copts.move_wait = (unsigned)atoi(optarg);
 				break;
 			case 'h':
 				ltfsresult(ACH0010I, argv[0]);
@@ -436,6 +560,16 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
+	args.argc = fuse_argc;
+	args.argv = fuse_argv;
+	args.allocated = 0;
+
+	/* Barcode and drive serial commands go through the changer layer, which opens the plugin itself */
+	if (is_layer_command(command)) {
+		ret = cmd_layer(ops, &opt, &args, command, cmd_argc, cmd_argv);
+		goto out;
+	}
+
 	ret = ops->open(opt.devname, &handle);
 	if (ret < 0) {
 		ltfsmsg(ACH0003E, opt.devname, ret);
@@ -443,9 +577,6 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	args.argc = fuse_argc;
-	args.argv = fuse_argv;
-	args.allocated = 0;
 	ret = ops->parse_opts(handle, &args);
 	if (ret < 0) {
 		ltfsmsg(ACH0013E, ret);
@@ -479,6 +610,7 @@ close:
 out:
 	plugin_unload(&plugin);
 	config_file_free(opt.config);
+	changer_unload_messages(layer_message_handle);
 	ltfsprintf_unload_plugin(message_handle);
 	ltfs_finish();
 	free(fuse_argv);

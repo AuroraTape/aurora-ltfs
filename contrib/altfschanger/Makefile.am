@@ -37,7 +37,7 @@
 noinst_PROGRAMS = altfschanger
 
 altfschanger_SOURCES = altfschanger.c
-altfschanger_DEPENDENCIES = ../../src/libltfs/libaltfs.la ../../messages/libbin_altfschanger_dat.la
+altfschanger_DEPENDENCIES = ../../src/libltfs/libaltfs.la ../../src/libaltfschanger/libaltfschanger.la ../../messages/libbin_altfschanger_dat.la
 altfschanger_CPPFLAGS = @AM_CPPFLAGS@ -I ../../src -fPIC
-altfschanger_LDADD = ../../src/libltfs/libaltfs.la
+altfschanger_LDADD = ../../src/libaltfschanger/libaltfschanger.la ../../src/libltfs/libaltfs.la
 altfschanger_LDFLAGS = @AM_LDFLAGS@ ../../messages/libbin_altfschanger_dat.la

@@ -72,6 +72,7 @@ RESOURCES = \
 	libed_dat.la \
 	libtape_common_dat.la \
 	libchanger_generic_file_dat.la \
+	libchanger_layer_dat.la \
 	libbin_altfschanger_dat.la
 
 .PHONY: all $(RESOURCES) clean-local
@@ -113,6 +114,7 @@ EXTRA_DIST = \
 	kmi_simple \
 	libaltfs \
 	changer_generic_file \
+	changer_layer \
 	tape_common \
 	tape_freebsd_cam \
 	tape_generic_file \

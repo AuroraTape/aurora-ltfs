@@ -54,6 +54,8 @@ root:table {
 			"    -i, --config=<file>       Configuration file (default: altfs.conf)\n"
 			"    -o <option>               Option passed to the plugin\n"
 			"    --verbose=<level>         Log level 0 (errors) to 6\n"
+			"    --ready-wait=<seconds>    How long the changer layer waits for a not ready changer (30)\n"
+			"    --move-wait=<seconds>     How long a cartridge may be unseen while the picker holds it (5)\n"
 			"    -h, --help                This message\n"
 			"    -V, --version             Version\n"
 			"Commands:\n"
@@ -68,7 +70,15 @@ root:table {
 			"    scan [start count]        Make the changer re-read its elements (INITIALIZE ELEMENT STATUS)\n"
 			"    tur                       TEST UNIT READY\n"
 			"    prevent | allow           Lock or unlock the import/export station\n"
-			"    help                      Options of the plugin\n" }
+			"    help                      Options of the plugin\n"
+			"Commands through the changer layer (cartridges by barcode, drives by serial):\n"
+			"    inventory                 The library, its drives and its cartridges\n"
+			"    rescan [deep]             Re-read the elements; deep makes the changer re-inventory first\n"
+			"    load <barcode> <drive>    Move the cartridge into the drive\n"
+			"    return <drive>            Move the cartridge in the drive back to its home slot\n"
+			"    swap <barcode> <drive>    Return the cartridge in the drive and load the other one\n"
+			"    export <barcode>          Move the cartridge to the import/export station\n"
+			"    import <barcode>          Move the cartridge from the import/export station to a slot\n" }
 		ACH0011I:string { "%s version %s" }
 		ACH0012E:string { "A medium changer must be given with -d" }
 		ACH0013E:string { "Option parsing of the plugin failed (%d)" }

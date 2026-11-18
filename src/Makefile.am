@@ -65,7 +65,7 @@ if OSS
 CMD += cmd/altfs
 endif
 
-SUBDIRS = libltfs $(GEN_DRV) $(PLAT_DRV) $(SUB) $(CMD)
+SUBDIRS = libltfs libaltfschanger $(GEN_DRV) $(PLAT_DRV) $(SUB) $(CMD)
 
 noinst_HEADERS = \
 	libltfs/base64.h \
@@ -118,4 +118,5 @@ nobase_pkginclude_HEADERS = \
 	tape_drivers/spc_op_codes.h \
 	tape_drivers/ssc_op_codes.h \
 	tape_drivers/tape_drivers.h \
-	libaltfschanger/changer_ops.h
+	libaltfschanger/changer_ops.h \
+	libaltfschanger/changer.h

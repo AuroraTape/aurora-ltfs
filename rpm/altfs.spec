@@ -103,10 +103,12 @@ echo 'enable altfs.service' > %{buildroot}%{_presetdir}/90-altfs.preset
 %files -n libaltfs
 %license LICENSE
 %{_libdir}/libaltfs.so.*
+%{_libdir}/libaltfschanger.so.*
 
 %files -n libaltfs-devel
 %{_includedir}/%{pkgname}/
 %{_libdir}/libaltfs.so
+%{_libdir}/libaltfschanger.so
 %{_libdir}/pkgconfig/altfs.pc
 
 %post
