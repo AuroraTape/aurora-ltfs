@@ -37,7 +37,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 nobase_pkginclude_HEADERS = config.h
 
-SUBDIRS = messages src conf init.d man
+SUBDIRS = messages src contrib/altfschanger conf init.d man
 
 # Packaging helpers, plus headers that exist in the tree but are not
 # registered in any `_HEADERS` variable, so `make dist` would otherwise

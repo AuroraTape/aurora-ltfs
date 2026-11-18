@@ -13,6 +13,10 @@ __PLATFORM_DRIVERS__
 plugin tape file __LIBDIR__/altfs/libtape-file.so
 plugin tape itdtimg __LIBDIR__/altfs/libtape-itdtimg.so
 
+# Medium changer plugins
+# Syntax: plugin changer PLUGIN-NAME PLUGIN-PATH
+plugin changer file __LIBDIR__/altfs/libchanger-file.so
+
 # I/O scheduler plugins
 # Syntax: plugin iosched PLUGIN-NAME PLUGIN-PATH
 # The PLUGIN-PATH may contain spaces.
@@ -33,6 +37,7 @@ plugin kmi simple __LIBDIR__/altfs/libkmi-simple.so
 default tape __DEFAULT_TAPE__
 default iosched __DEFAULT_IOSCHED__
 default kmi __DEFAULT_KMI__
+default changer __DEFAULT_CHANGER__
 
 # Default mount options
 # Syntax: option MODE MOUNT-OPTION

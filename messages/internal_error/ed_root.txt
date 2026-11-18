@@ -94,6 +94,8 @@ root:table {
 		AED0504E:string { "Medium magazine is not accessible" }
 		AED0505E:string { "Element address is invalid" }
 		AED0506E:string { "Medium removal prevented. Drive media removal prevented state set" }
+		AED0507E:string { "Element disabled" }
+		AED0508E:string { "Data transfer device removed" }
 		AED0600E:string { "Other UA conditions" }
 		AED0601E:string { "Not ready to transition: medium might have changed" }
 		AED0602E:string { "IE slot is accessed" }

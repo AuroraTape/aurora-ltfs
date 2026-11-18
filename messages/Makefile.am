@@ -70,7 +70,9 @@ RESOURCES = \
 	liblx_dat.la \
 	libei_dat.la \
 	libed_dat.la \
-	libtape_common_dat.la
+	libtape_common_dat.la \
+	libchanger_generic_file_dat.la \
+	libbin_altfschanger_dat.la
 
 .PHONY: all $(RESOURCES) clean-local
 if CHK_MESSAGE
@@ -100,6 +102,7 @@ EXTRA_DIST = \
 	print_error_messages.py \
 	README \
 	bin_altfs \
+	bin_altfschanger \
 	bin_altfsck \
 	bin_altfsindextool \
 	bin_mkaltfs \
@@ -109,6 +112,7 @@ EXTRA_DIST = \
 	kmi_flatfile \
 	kmi_simple \
 	libaltfs \
+	changer_generic_file \
 	tape_common \
 	tape_freebsd_cam \
 	tape_generic_file \

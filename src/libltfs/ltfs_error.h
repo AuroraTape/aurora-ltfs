@@ -410,6 +410,8 @@
 #define EDEV_MEDIUM_LOCKED           20506  /* 05/5301 A drive did not unload a cartridge
 											   05/5302 Medium removal prevented
 											   05/5303 Drive media removal prevented state set */
+#define EDEV_ELEMENT_DISABLED        20507  /* 05/3B18 Element disabled (medium changer) */
+#define EDEV_DT_ELEMENT_REMOVED      20508  /* 05/3B1A Data transfer device removed (medium changer) */
 
 /* Sense Key 6 Unit Attention */
 #define EDEV_UA_MIN                  20600  /* Minimum UA error value */

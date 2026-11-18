@@ -34,6 +34,8 @@ altfs.conf: altfs.conf.in Makefile
 	mv altfs.conf altfs.conf.tmp
 	${SED} -e "s!__DEFAULT_KMI__!$(DEFAULT_KMI)!" altfs.conf.tmp >altfs.conf
 	mv altfs.conf altfs.conf.tmp
+	${SED} -e "s!__DEFAULT_CHANGER__!$(DEFAULT_CHANGER)!" altfs.conf.tmp >altfs.conf
+	mv altfs.conf altfs.conf.tmp
 	${SED} -e "s!__CONFDIR__!@sysconfdir@!" altfs.conf.tmp >altfs.conf
 	rm altfs.conf.tmp
 

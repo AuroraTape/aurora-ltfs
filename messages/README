@@ -134,9 +134,11 @@ with its own prefix.
     messages/ subdir       prefix(es)
     --------------------   ----------------------------------------
     bin_altfs              AFS
+    bin_altfschanger       ACH
     bin_altfsck            ACK
     bin_altfsindextool     AIX
     bin_mkaltfs            AMK
+    changer_generic_file   ACF
     internal_error         AED, AEI  (see "Internal error codes")
     iosched_fcfs           AIF
     iosched_unified        AIU
@@ -152,6 +154,7 @@ with its own prefix.
 
 The second letter of the component code encodes the category:
 
+    C = medium changer plugins
     E = internal error registry
     I = I/O scheduler plugins
     K = key management (KMI) plugins
@@ -159,7 +162,7 @@ The second letter of the component code encodes the category:
     T = tape drive plugins
 
 The command binaries use mnemonic codes instead: AFS = altfs, ACK = altfsck,
-AIX = altfsindextool, AMK = mkaltfs.
+AIX = altfsindextool, AMK = mkaltfs, ACH = altfschanger.
 
 
 Internal error codes (AEI / AED)

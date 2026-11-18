@@ -51,7 +51,7 @@ if PLATFORM_NETBSD
 PLAT_DRV += tape_drivers/netbsd/scsipi-ibmtape
 endif
 
-GEN_DRV = tape_drivers/generic/file
+GEN_DRV = tape_drivers/generic/file changer_drivers/generic/file
 SUB = iosched libltfs
 
 if OSS
@@ -85,7 +85,8 @@ noinst_HEADERS = \
 	libltfs/xml_libltfs.h \
 	libltfs/arch/filename_handling.h \
 	libltfs/arch/uuid_internal.h \
-	libltfs/arch/version.h
+	libltfs/arch/version.h \
+	changer_drivers/smc_sense.h
 
 nobase_pkginclude_HEADERS = \
 	libltfs/config_file.h \
@@ -116,4 +117,5 @@ nobase_pkginclude_HEADERS = \
 	tape_drivers/ibm_tape.h \
 	tape_drivers/spc_op_codes.h \
 	tape_drivers/ssc_op_codes.h \
-	tape_drivers/tape_drivers.h
+	tape_drivers/tape_drivers.h \
+	libaltfschanger/changer_ops.h
