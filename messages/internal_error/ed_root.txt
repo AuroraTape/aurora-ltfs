@@ -149,6 +149,7 @@ root:table {
 		AED1723E:string { "A real power on reset is detected" }
 		AED1724E:string { "Buffer allocation error in a driver" }
 		AED1725E:string { "Retry the command again" }
+		AED1726E:string { "The cartridge memory does not have the requested attribute" }
 		AED9998E:string { "Unknown sense" }
 		AED9999E:string { "Vendor unique sense. ASC >= 0x80 or ASCQ >= 0x80" }
 	}
