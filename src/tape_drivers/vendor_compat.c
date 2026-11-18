@@ -543,3 +543,23 @@ bool is_drive_state_notice(int err, bool loaded)
 
 	return false;
 }
+
+/**
+ * Tell whether a READ ATTRIBUTE (ATTRIBUTE VALUES) reply lacks the requested attribute.
+ * The drive returns the existing attributes with the requested or a higher identifier,
+ * in ascending order. When the requested attribute does not exist, some drives (TS1170)
+ * answer with good status and an empty list, or a list that starts with a higher
+ * attribute, instead of failing the command with an invalid field in CDB (IBM LTO).
+ * @param reply reply data, starting with its 4-byte AVAILABLE DATA field, at least
+ *              4 + TC_MAM_PAGE_HEADER_SIZE bytes long
+ * @param id identifier of the requested attribute
+ * @return true when the reply holds no attribute, or its first attribute is not the
+ *         requested one
+ */
+bool is_attribute_missing_from_reply(const unsigned char *reply, const uint16_t id)
+{
+	if (ltfs_betou32(reply) < TC_MAM_PAGE_HEADER_SIZE)
+		return true;
+
+	return ltfs_betou16(reply + 4) != id;
+}
