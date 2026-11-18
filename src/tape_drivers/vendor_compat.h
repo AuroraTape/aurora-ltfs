@@ -81,6 +81,7 @@ void destroy_timeout(struct timeout_tape **table);
 int  get_timeout(struct timeout_tape *table, int op_code);
 
 bool is_drive_state_notice(int err, bool loaded);
+bool is_attribute_missing_from_reply(const unsigned char *reply, const uint16_t id);
 
 #ifdef __cplusplus
 }

@@ -462,6 +462,7 @@ static struct error_map fuse_error_list[] = {
 	{ EDEV_REAL_POWER_ON_RESET,      "AED1723E", EIO},
 	{ EDEV_BUFFER_ALLOCATE_ERROR,    "AED1724E", EIO},
 	{ EDEV_RETRY,                    "AED1725E", EIO},
+	{ EDEV_ATTRIBUTE_NOT_FOUND,      "AED1726E", EIO},
 	{ EDEV_UNKNOWN,                  "AED9998E", EIO},
 	{ EDEV_VENDOR_UNIQUE,            "AED9999E", EIO},
 	{ -1, NULL, 0 }
