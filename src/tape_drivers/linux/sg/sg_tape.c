@@ -3732,6 +3732,9 @@ int sg_read_attribute(void *device, const tape_partition_t part,
 			id != TC_MAM_BARCODE &&
 			id != TC_MAM_APP_FORMAT_VERSION)
 			ltfsmsg(ATG0034I, ret);
+	} else if (size != MAXMAM_SIZE && is_attribute_missing_from_reply(buffer, id)) {
+		/* Good status, but the reply does not hold the requested attribute: it does not exist */
+		ret = -EDEV_ATTRIBUTE_NOT_FOUND;
 	} else {
 		if (size == MAXMAM_SIZE) {
 			/* Include header if request size is MAXMAM_SIZE */

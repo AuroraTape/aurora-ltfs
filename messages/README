@@ -98,6 +98,16 @@ cannot collide by construction.
     carried into a patch release cannot collide. A backported trunk ID is
     frozen as soon as any release ships it, even if HEAD itself has not
     released it.
+  * When a backport skips a trunk ID because the change that defines it is
+    not on the release line, the skipped ID is left in the catalog of that
+    line as a "reserved" marker, with a comment that names the change:
+
+        // sg_open() with no usable path and the drive held by another node (issue #251), not on this line
+        //reserved ATG0109E
+
+    The marker shows that the gap is intentional and the number is taken.
+    It differs from "unused", which retires an ID that the line used to
+    define. Write the ID alone: the text belongs to the trunk entry.
   * AEI/AED are exempt: their numbers are derived from the LTFS_*/EDEV_*
     constants (see "Internal error codes"), which cannot encode letters.
     New error constants are added on HEAD only; release branches backport

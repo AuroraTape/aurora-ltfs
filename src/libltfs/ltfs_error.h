@@ -484,6 +484,7 @@
 #define EDEV_REAL_POWER_ON_RESET     21723  /* Real power on reset is detected */
 #define EDEV_BUFFER_ALLOCATE_ERROR   21724  /* Buffer allocation error in a driver */
 #define EDEV_RETRY                   21725  /* Retry the command again */
+#define EDEV_ATTRIBUTE_NOT_FOUND     21726  /* Requested attribute is not in the READ ATTRIBUTE reply */
 
 /* Vendor Unique codes */
 #define EDEV_UNKNOWN                 29998  /* Unknown sense code */
