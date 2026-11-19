@@ -146,6 +146,31 @@ static UConverter *output_conv = NULL;
 #ifdef mingw_PLATFORM
 static int _open_message_file(char *bundle_name, void **bundle_data);
 #endif
+#ifndef mingw_PLATFORM
+/*
+ * fork() from a multithreaded process: a thread other than the forking one may hold
+ * output_lock at the fork. That thread does not exist in the child, so the child would block
+ * on its first message for good. Holding the lock over the fork makes sure nobody else has
+ * it. It also keeps every other thread out of vsyslog(), whose lock inside libc is not reset
+ * in the child.
+ * The handlers cannot be unregistered: they are registered once and do nothing while the
+ * lock does not exist.
+ */
+static bool output_lock_ready = false;
+
+static void _output_lock_fork_prepare(void)
+{
+	if (output_lock_ready)
+		ltfs_mutex_lock(&output_lock);
+}
+
+static void _output_lock_fork_done(void)
+{
+	if (output_lock_ready)
+		ltfs_mutex_unlock(&output_lock);
+}
+#endif
+
 int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 {
 	int ret;
@@ -158,6 +183,17 @@ int ltfsprintf_init(int log_level, bool use_syslog, bool print_thread_id)
 		fprintf(stderr, "ALC0003E Could not initialize mutex (%d)\n", ret);
 		return -ret;
 	}
+#ifndef mingw_PLATFORM
+	{
+		static bool registered = false;
+
+		if (! registered) {
+			pthread_atfork(_output_lock_fork_prepare, _output_lock_fork_done, _output_lock_fork_done);
+			registered = true;
+		}
+		output_lock_ready = true;
+	}
+#endif
 	output_conv = ucnv_open(NULL, &err);
 	if (U_FAILURE(err)) {
 		fprintf(stderr, "ALG0002E Could not open output converter (ucnv_open: %d)\n", err);
@@ -260,6 +296,9 @@ void ltfsprintf_finish()
 		output_conv = NULL;
 	}
 
+#ifndef mingw_PLATFORM
+	output_lock_ready = false;
+#endif
 	ltfs_mutex_destroy(&output_lock);
 	u_cleanup();
 }
