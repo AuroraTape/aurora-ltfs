@@ -38,6 +38,7 @@ lib_LTLIBRARIES = libaltfs.la
 libaltfs_la_SOURCES = \
 	ltfs.c \
 	ltfs_internal.c \
+	index_cache.c \
 	ltfs_fsops.c \
 	ltfs_fsops_raw.c \
 	fs.c \

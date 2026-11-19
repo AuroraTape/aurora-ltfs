@@ -149,6 +149,12 @@ option single-drive eject
 - `-o capture_index=<dir>`: a copy of the latest index written is kept in
   that directory as `<barcode>.index.xml` (or `<volume UUID>.index.xml`). It is what
   `-o index_file=` mounts without a tape.
+- `-o index_cache_dir=<dir>`: a copy of the latest index is kept in that
+  directory, and the next mount reads the index from the copy instead of the
+  tape when the cartridge was not written in between. The copy carries the
+  volume UUID and the volume change reference of the cartridge in extended
+  attributes, so the file system of the directory needs user extended
+  attributes. It cannot be combined with `-o capture_index`.
 - `-o eject`: eject the cartridge after the unmount.
 - `-o uid=<n>`, `-o gid=<n>`, `-o umask=<mode>` (also `fmask` and `dmask`
   for files and directories apart): the owner and permissions shown for

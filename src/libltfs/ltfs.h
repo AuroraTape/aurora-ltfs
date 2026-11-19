@@ -426,6 +426,8 @@ struct ltfs_volume {
 	struct ltfs_index *index;      /**< Current cartridge index */
 	char   *index_cache_path_w;    /**< File name of on-disk index cache update at writing an index */
 	char   *index_cache_path_r;    /**< File name of on-disk index cache update at parsing an index */
+	char   *index_cache_dir;       /**< Directory of the index cache (index_cache.c): index_cache_path_w is the
+	                                    copy of the last index and the volume can be mounted from it */
 
 	/* Opaque handles to higher-level structures */
 	void *iosched_handle;          /**< Handle to the I/O scheduler state */
@@ -737,6 +739,7 @@ void ltfs_set_index_dirty(bool locking, bool atime, struct ltfs_index *idx);
 void ltfs_unset_index_dirty(bool update_version, struct ltfs_index *idx);
 int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, struct ltfs_volume *vol);
 int ltfs_save_index_to_disk(const char *work_dir, char *reason, char id, struct ltfs_volume *vol);
+int ltfs_set_index_cache_dir(const char *dir, struct ltfs_volume *vol);
 
 char ltfs_dp_id(struct ltfs_volume *vol);
 char ltfs_ip_id(struct ltfs_volume *vol);

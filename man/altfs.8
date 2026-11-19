@@ -239,6 +239,19 @@ Capture index to the specified directory by dir when index is updated.
 The file is [BARCODE].index.xml if tape serial (barcode) is specified at format time.
 Otherwise it is [VOL_UUID].index.xml. It always holds the latest index.
 .TP
+\fB-o index_cache_dir=\fIdir\fB\fR
+Keep a copy of the latest index of the volume in the directory dir, and read the index
+from the copy at the next mount when the cartridge was not written since the copy was made.
+The file is [BARCODE].index.xml if tape serial (barcode) is specified at format time.
+Otherwise it is [VOL_UUID].index.xml.
+The volume UUID and the volume change reference of the cartridge are kept in the
+extended attributes user.altfs.volume_uuid and user.altfs.vcr of the file, and the copy is
+used only when both are those of the loaded cartridge.
+The file system of dir must have user extended attributes. Without them the index is
+always read from the tape.
+The directory is created if it does not exist.
+This option cannot be used with -o capture_index.
+.TP
 \fB-o scsi_append_only_mode=\fIon|off\fB\fR
 Set the tape device append-only mode (default=on)
 .SH "SEE ALSO"
