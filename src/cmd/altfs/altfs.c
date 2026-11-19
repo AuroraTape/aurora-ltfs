@@ -132,6 +132,7 @@ static struct fuse_opt ltfs_options[] = {
 	LTFS_OPT("noallow_other",          allow_other, 0),
 	LTFS_OPT("ro",                     read_only, 1),
 	LTFS_OPT("capture_index=%s",       capture_dir, 0),
+	LTFS_OPT("index_cache_dir=%s",     index_cache_dir, 0),
 	LTFS_OPT("symlink_type=%s",        symlink_str, 0),
 	LTFS_OPT("scsi_append_only_mode=%s", str_append_only_mode, 0),
 	FUSE_OPT_KEY("-h",                 KEY_HELP),
@@ -176,6 +177,7 @@ void single_drive_advanced_usage(const char *default_device, const char *default
 	ltfsresult(AFS0140I);                              /* -o wait_medium[=<sec>] */
 	ltfsresult(AFS0128I);                              /* -o symlink_type=type */
 	ltfsresult(AFS0127I);                              /* -o capture_index */
+	ltfsresult(AFS0163I);                              /* -o index_cache_dir */
 	ltfsresult(AFS0129I);                              /* -o scsi_append_only_mode=<on|off> */
 	ltfsresult(AFS0103I);                              /* -V, --version */
 	ltfsresult(AFS0104I);                              /* -h, --help */
@@ -1301,6 +1303,21 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 			ltfsmsg(AFS0077I, priv->symlink_str);
 		}
 
+		/* Keep a copy of the last index on disk and mount from it when it is current */
+		if (priv->index_cache_dir) {
+			if (priv->capture_dir) {
+				ltfsmsg(AFS0162E);
+				ltfs_volume_free(&priv->data);
+				return 1;
+			}
+			/* Either failure has reported itself */
+			if (mkdir_p(priv->index_cache_dir, S_IRWXU | S_IRGRP | S_IXGRP) != 0 ||
+				ltfs_set_index_cache_dir(priv->index_cache_dir, priv->data) < 0) {
+				ltfs_volume_free(&priv->data);
+				return 1;
+			}
+		}
+
 		/* Mount the volume */
 		ltfs_set_traverse_mode(TRAVERSE_BACKWARD, priv->data);
 		if (priv->index_file) {
@@ -1480,7 +1497,8 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 			return 1;
 		}
 	} else {
-		ltfsmsg(AFS0097I);
+		if (! priv->index_cache_dir)
+			ltfsmsg(AFS0097I);
 		ret = 0;
 	}
 

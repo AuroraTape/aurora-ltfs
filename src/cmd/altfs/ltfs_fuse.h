@@ -138,6 +138,7 @@ struct ltfs_fuse_data {
 	int allow_other;               /**< Allow all users to access the volume? */
 	int read_only;                 /**< Mount read-only on request (-o ro)? */
 	char *capture_dir;             /**< Directory to capture index information  */
+	char *index_cache_dir;         /**< Directory of the index cache (-o index_cache_dir) */
 	char *symlink_str;             /**< Symbolic Link type fetched by option (live or posix)*/
 	char *str_append_only_mode;    /**< option sting of scsi_append_only_mode */
 	int append_only_mode;          /**< Use append-only mode */

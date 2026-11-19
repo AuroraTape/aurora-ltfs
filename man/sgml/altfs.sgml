@@ -435,6 +435,24 @@
           </listitem>
         </varlistentry>
         <varlistentry>
+          <term><option>-o index_cache_dir=<replaceable>dir</replaceable></option></term>
+          <listitem>
+            <para>
+              Keep a copy of the latest index of the volume in the directory dir, and read the index
+              from the copy at the next mount when the cartridge was not written since the copy was made.
+              The file is [BARCODE].index.xml if tape serial (barcode) is specified at format time.
+              Otherwise it is [VOL_UUID].index.xml.
+              The volume UUID and the volume change reference of the cartridge are kept in the
+              extended attributes user.altfs.volume_uuid and user.altfs.vcr of the file, and the copy is
+              used only when both are those of the loaded cartridge.
+              The file system of dir must have user extended attributes. Without them the index is
+              always read from the tape.
+              The directory is created if it does not exist.
+              This option cannot be used with -o capture_index.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
           <term><option>-o scsi_append_only_mode=<replaceable>on|off</replaceable></option></term>
           <listitem>
             <para>Set the tape device append-only mode (default=on)</para>

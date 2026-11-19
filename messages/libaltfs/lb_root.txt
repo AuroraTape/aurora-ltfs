@@ -326,5 +326,8 @@ root:table {
 		ALB0286W:string { "An incremental index was requested but a full index is written instead (%s)" }
 		ALB0287I:string { "The volume is at LTFS format version %s and keeps it: its indexes are written at that version and no incremental index is written" }
 		ALB0288E:string { "Cannot write an incremental index: the volume is at LTFS format version %s and keeps it (incremental indexes need 2.5.0)" }
+		ALB0289I:string { "Index cache: the index is read from %s instead of the tape (Gen = %llu, VCR = %llu)" }
+		ALB0290I:string { "Index cache: %s is not used, the index is read from the tape (%s)" }
+		ALB0291W:string { "Index cache: cannot set the extended attributes of %s (%d). The file will not be used to mount the volume" }
 	}
 }

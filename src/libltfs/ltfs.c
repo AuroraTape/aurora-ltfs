@@ -60,6 +60,7 @@
 #include "fs.h"
 #include "ltfs.h"
 #include "ltfs_internal.h"
+#include "index_cache.h"
 #include "libltfs/ltfslogging.h"
 #include "tape.h"
 #include "tape_ops.h"
@@ -434,6 +435,8 @@ void _ltfs_volume_free(bool force, struct ltfs_volume **volume)
 			free((*volume)->index_cache_path_w);
 		if ((*volume)->index_cache_path_r)
 			free((*volume)->index_cache_path_r);
+		if ((*volume)->index_cache_dir)
+			free((*volume)->index_cache_dir);
 		destroy_mrsw(&(*volume)->lock);
 		ltfs_thread_mutex_destroy(&(*volume)->reval_lock);
 		ltfs_thread_cond_destroy(&(*volume)->reval_cond);
@@ -1586,6 +1589,11 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 	index->refcount++;
 	ltfs_mutex_unlock(&vol->index->refcount_lock);
 
+	/* The labels are read: the index cache file of this volume has a name */
+	ret = index_cache_setup(vol);
+	if (ret < 0)
+		goto out_unlock;
+
 	vol->first_locate.tv_sec = 0;
 	vol->first_locate.tv_nsec = 0;
 
@@ -1808,6 +1816,10 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 				if (ret < 0)
 					goto out_unlock;
 			}
+		} else if (index_cache_mount(volume_change_ref, vol) == 0) {
+			/* The index partition ends with the latest index and nothing was written to the
+			 * cartridge since the copy on disk was made: the index is read from the copy */
+			ltfsmsg(ALB0027D); /* volume is consistent */
 		} else {
 			seekpos.partition = ltfs_part_id2num(vol->label->partid_ip, vol);
 			seekpos.block = vol->ip_coh.set_id;
@@ -1832,6 +1844,7 @@ int ltfs_mount(bool force_full, bool deep_recovery, bool recover_extra, bool rec
 					goto out_unlock;
 				}
 				ltfsmsg(ALB0027D); /* volume is consistent */
+				index_cache_refresh(volume_change_ref, vol);
 			}
 		}
 	} else if (is_worm_recovery_mount) {
@@ -2707,6 +2720,9 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 	 * of the tape device do so with some kind of volume lock held, and this function
 	 * executes with an exclusive lock on the volume. */
 
+	/* From here on the tape moves away from the index the index cache holds */
+	index_cache_invalidate(vol);
+
 	/* write to data partition first if required */
 	if (partition == ltfs_ip_id(vol) &&
 		! write_perm &&
@@ -2864,8 +2880,19 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		goto out_write_perm;
 	}
 
+	/* The copy of the index cache is the last full index: an incremental index goes to the
+	 * tape only */
+	if (type != LTFS_FULL_INDEX && index_cache_enabled(vol)) {
+		cache_path_save = vol->index_cache_path_w;
+		vol->index_cache_path_w = NULL;
+	}
+
 	/* Actually write index to tape and disk if vol->index_cache_path is existed */
 	ret = xml_schema_to_tape(reason, type, vol);
+	if (cache_path_save) {
+		vol->index_cache_path_w = cache_path_save;
+		cache_path_save = NULL;
+	}
 	if (ret < 0) {
 		ltfsmsg(ALB0047E, ret);
 
@@ -2897,6 +2924,12 @@ int ltfs_write_index(char partition, char *reason, enum ltfs_index_type type, st
 		/* The MAM may be inaccessible, or it may not be available on this medium. Either way,
 		 * ignore failures when updating MAM parameters. */
 		ltfs_update_cart_coherency(vol);
+
+		/* The copy on disk is the index of the cartridge as it is now. Not after a write
+		 * perm: the cartridge is read-only from here and its mounts read the index from
+		 * the tape, so the copy stays without a VCR. */
+		if (! write_perm)
+			index_cache_written(vol);
 
 		ltfsmsg(ALB0257I,
 				bc_print,

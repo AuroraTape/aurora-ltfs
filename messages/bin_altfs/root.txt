@@ -258,5 +258,7 @@ root:table {
 		AFS0159E:string { "The index_file option cannot be used with the rollback_mount option" }
 		AFS0160E:string { "Cannot read the index file %s (%d)" }
 		AFS0161D:string { "Refused to write \'%s\': the file is read-only" }
+		AFS0162E:string { "The index_cache_dir option cannot be used with the capture_index option" }
+		AFS0163I:string { "    -o index_cache_dir=<dir>  Keep a copy of the latest index in the directory and mount from it when the tape was not written since" }
 	}
 }
