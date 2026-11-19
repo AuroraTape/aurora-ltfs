@@ -3006,14 +3006,14 @@ int ltfs_save_index_to_disk(const char *work_dir, char * reason, char id, struct
 	ltfsmsg(ALB0247D, vol->label->vol_uuid, vol->label->barcode);
 	if (id) {
 		if (HAVE_BARCODE(vol))
-			ret = asprintf(&path, "%s/%s-%d-%c.schema", work_dir, vol->label->barcode, vol->index->generation, id);
+			ret = asprintf(&path, "%s/%s-%d-%c.index.xml", work_dir, vol->label->barcode, vol->index->generation, id);
 		else
-			ret = asprintf(&path, "%s/%s-%d-%c.schema", work_dir, vol->label->vol_uuid, vol->index->generation, id);
+			ret = asprintf(&path, "%s/%s-%d-%c.index.xml", work_dir, vol->label->vol_uuid, vol->index->generation, id);
 	} else {
 		if (HAVE_BARCODE(vol))
-			ret = asprintf(&path, "%s/%s.schema", work_dir, vol->label->barcode);
+			ret = asprintf(&path, "%s/%s.index.xml", work_dir, vol->label->barcode);
 		else
-			ret = asprintf(&path, "%s/%s.schema", work_dir, vol->label->vol_uuid);
+			ret = asprintf(&path, "%s/%s.index.xml", work_dir, vol->label->vol_uuid);
 	}
 
 	if (ret < 0) {

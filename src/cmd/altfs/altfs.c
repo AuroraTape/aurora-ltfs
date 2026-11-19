@@ -1456,10 +1456,10 @@ int single_drive_main(struct fuse_args *args, struct ltfs_fuse_data *priv)
 	/* Configure index capturing */
 	if (priv->capture_dir) {
 		if (HAVE_BARCODE(priv->data))
-			ret = asprintf(&priv->data->index_cache_path_w, "%s/%s.schema",
+			ret = asprintf(&priv->data->index_cache_path_w, "%s/%s.index.xml",
 						   priv->capture_dir, priv->data->label->barcode);
 		else
-			ret = asprintf(&priv->data->index_cache_path_w, "%s/%s.schema",
+			ret = asprintf(&priv->data->index_cache_path_w, "%s/%s.index.xml",
 						   priv->capture_dir, priv->data->label->vol_uuid);
 
 		if (ret > 0) {

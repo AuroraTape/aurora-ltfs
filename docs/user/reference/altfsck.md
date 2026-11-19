@@ -74,7 +74,7 @@ Use the specified tape device backend (default: )
 Use the specified key manager interface backend (default: none)
 
 **--capture-index=** *dir*  
-Capture indexes read successfully to the specified directory by dir. (-g is effective for this option) File name of each index is \[BARCODE\]-\[GEN\]-\[PARTITION\].xml if tape serial (barcode) is specified at format time. Otherwise it is \[VOL_UUID\]-\[GEN\]-\[PARTITION\].xml.
+Capture indexes read successfully to the specified directory by dir. (-g is effective for this option) File name of each index is \[BARCODE\]-\[GEN\]-\[PARTITION\].index.xml if tape serial (barcode) is specified at format time. Otherwise it is \[VOL_UUID\]-\[GEN\]-\[PARTITION\].index.xml.
 
 **--salvage-rollback-points**  
 List the rollback points of the cartridge that has no EOD

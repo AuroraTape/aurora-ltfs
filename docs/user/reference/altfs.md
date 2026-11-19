@@ -171,7 +171,7 @@ Set the log level: 0 errors, 1 warnings, 2 informational (the default), 3 to 6 d
 Do not eject the cartridge after unmount (default)
 
 **-o capture_index=** *dir*  
-Capture index to the specified directory by dir when index is updated. File name of each index is \[BARCODE\]-\[GEN\]-\[PARTITION\].xml if tape serial (barcode) is specified at format time. Otherwise it is \[VOL_UUID\]-\[GEN\]-\[PARTITION\].xml.
+Capture index to the specified directory by dir when index is updated. The file is \[BARCODE\].index.xml if tape serial (barcode) is specified at format time. Otherwise it is \[VOL_UUID\].index.xml. It always holds the latest index.
 
 **-o scsi_append_only_mode=** *on\|off*  
 Set the tape device append-only mode (default=on)

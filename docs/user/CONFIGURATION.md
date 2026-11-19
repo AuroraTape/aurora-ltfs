@@ -146,9 +146,9 @@ option single-drive eject
   positioning the data partition. `mkaltfs -r` records a rule on the volume
   at format time; the mount option replaces it for that mount, unless the
   volume was formatted with `--no-override`.
-- `-o capture_index=<dir>`: a copy of every index written goes to that
-  directory, named after the barcode (or volume UUID), generation and
-  partition. It is what `-o index_file=` mounts without a tape.
+- `-o capture_index=<dir>`: a copy of the latest index written is kept in
+  that directory as `<barcode>.index.xml` (or `<volume UUID>.index.xml`). It is what
+  `-o index_file=` mounts without a tape.
 - `-o eject`: eject the cartridge after the unmount.
 - `-o uid=<n>`, `-o gid=<n>`, `-o umask=<mode>` (also `fmask` and `dmask`
   for files and directories apart): the owner and permissions shown for

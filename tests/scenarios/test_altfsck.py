@@ -60,7 +60,7 @@ def test_altfsck_modes_on_clean_tape(tmp_path_factory):
     assert "Initial Index" in listing_out
     assert "Format -" in listing_out  # auto-generated format comment
 
-    # --capture-index: writes one <barcode>-<gen>-<id>.schema file
+    # --capture-index: writes one <barcode>-<gen>-<id>.index.xml file
     # per partition copy of each index. A clean tape has the
     # initial index on the DP, so at least one schema file lands
     # in the output directory.
@@ -68,10 +68,10 @@ def test_altfsck_modes_on_clean_tape(tmp_path_factory):
     capture_dir.mkdir()
     cap = _altfsck(f"--capture-index={capture_dir}", tape_dir=tape_dir)
     assert cap.returncode == 0, cap.stderr
-    schemas = list(capture_dir.glob("*.schema"))
-    assert schemas, f"no schema files produced: {list(capture_dir.iterdir())}"
+    indexes = list(capture_dir.glob("*.index.xml"))
+    assert indexes, f"no index files produced: {list(capture_dir.iterdir())}"
     # Captured XML should start with the LTFS index root element.
-    head = schemas[0].read_bytes()[:128]
+    head = indexes[0].read_bytes()[:128]
     assert b"<ltfsindex" in head
 
 
