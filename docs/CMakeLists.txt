@@ -1,0 +1,3 @@
+install(DIRECTORY .
+    DESTINATION "${CMAKE_INSTALL_DOCDIR}/altfs/"
+)
