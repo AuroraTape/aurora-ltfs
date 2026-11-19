@@ -74,7 +74,7 @@ def captured(tmp_path_factory):
     finally:
         umount_tape(mnt)
 
-    index_file = cap / f"{_SERIAL}.schema"
+    index_file = cap / f"{_SERIAL}.index.xml"
     assert index_file.is_file()
 
     mount_tape(tape_dir, mnt, extra_opts=["ro"])
@@ -214,7 +214,7 @@ def test_missing_index_file_is_refused(captured):
 
 
 def test_corrupt_index_file_is_refused(captured):
-    bad = captured["base"] / "corrupt.schema"
+    bad = captured["base"] / "corrupt.index.xml"
     data = captured["index_file"].read_bytes()
     bad.write_bytes(data[:len(data) // 2])
     log = _refused(captured, ["-o", f"index_file={bad}"])
@@ -233,7 +233,7 @@ def test_incremental_index_is_refused(tmp_path):
     finally:
         umount_tape(mnt)
     (record,) = records_with_tag(tape_dir, "ltfsincrementalindex", partition=1)
-    inc = tmp_path / "incremental.schema"
+    inc = tmp_path / "incremental.index.xml"
     shutil.copyfile(record, inc)
 
     # Without the tape, and with it

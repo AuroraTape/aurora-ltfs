@@ -931,10 +931,10 @@ void _print_index(struct ltfs_volume *vol, struct index_info *list, struct other
 	/* Rename reading xml to official name */
 	if (vol->index_cache_path_r && opt->capture_dir) {
 		if (HAVE_BARCODE(vol))
-			ret = asprintf(&new_path, "%s/%s-%d-%c.schema", opt->capture_dir, vol->label->barcode,
+			ret = asprintf(&new_path, "%s/%s-%d-%c.index.xml", opt->capture_dir, vol->label->barcode,
 						   vol->index->generation, list->selfptr.partition);
 		else
-			ret = asprintf(&new_path, "%s/%s-%d-%c.schema", opt->capture_dir, vol->label->vol_uuid,
+			ret = asprintf(&new_path, "%s/%s-%d-%c.index.xml", opt->capture_dir, vol->label->vol_uuid,
 						   vol->index->generation, list->selfptr.partition);
 
 		if (ret < 0) {
