@@ -91,24 +91,56 @@ elseif(BSD)
     )
 endif()
 
+set_target_properties(libaltfs PROPERTIES OUTPUT_NAME "altfs")
+
+target_compile_definitions(libaltfs 
+    PRIVATE
+        FUSE_USE_VERSION=26
+)
+
 # Interal libraries
 
 # iosched
-add_library(iosched-fcfs MODULE)
+add_library(iosched-fcfs MODULE
+    iosched/fcfs.c
+)
 
-add_library(iosched-unified MODULE)
+add_library(iosched-unified MODULE
+    iosched/cache_manager.c
+    iosched/cache_manager.h
+    iosched/unified.c
+)
 
 # kmi
-add_library(kmi-flatfile MODULE)
+add_library(kmi-simple MODULE
+    kmi/simple.c 
+    kmi/key_format_ltfs.c
+    kmi/key_format_ltfs.h
+)
 
-add_library(kmi-simple MODULE)
+add_library(kmi-flatfile MODULE
+    kmi/flatfile.c
+    kmi/key_format_ltfs.c
+    kmi/key_format_ltfs.h
+)
 
 # tape
-add_library(tape-file MODULE)
+add_library(tape-file MODULE
+    tape_drivers/generic/file/filedebug_conf_tc.c
+    tape_drivers/generic/file/filedebug_conf_tc.h
+    tape_drivers/generic/file/filedebug_tc.c
+)
 
-add_library(tape-itdtimg MODULE)
+add_library(tape-itdtimg MODULE
+    tape_drivers/generic/itdtimg/itdtimg_tc.c
+)
 
-add_library(tape-sg MODULE)
+add_library(tape-sg MODULE
+    tape_drivers/linux/sg/sg_scsi_tape.c
+    tape_drivers/linux/sg/sg_scsi_tape.h
+    tape_drivers/linux/sg/sg_tape.c
+    tape_drivers/linux/sg/sg_tape.h
+)
 
 # Exectuables
 
