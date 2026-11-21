@@ -1,3 +1,6 @@
+# Add present directory to includes
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 # libaltfs
 add_library(libaltfs SHARED
     libltfs/base64.c
@@ -152,7 +155,6 @@ add_executable(altfs
 )
 
 # altfs_ordered_copy - python file, no compilation needed
-# configure()
 
 # altfsck
 add_executable(altfsck
@@ -160,7 +162,16 @@ add_executable(altfsck
 )
 
 # altfsctl - python file, no compilation needed
-# configure()
+include(GNUInstallDirs)
+
+set(sysconfdir "${CMAKE_INSTALL_FULL_SYSCONFDIR}")
+set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
+
+configure_file(
+    cmd/altfsctl/altfsctl.in
+    "${CMAKE_CURRENT_BINARY_DIR}/altfsctl"
+    @ONLY
+)
 
 # altfsindextool
 add_executable(altfsindextool
