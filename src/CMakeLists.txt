@@ -138,12 +138,50 @@ add_library(tape-itdtimg MODULE
     tape_drivers/generic/itdtimg/itdtimg_tc.c
 )
 
-add_library(tape-sg MODULE
-    tape_drivers/linux/sg/sg_scsi_tape.c
-    tape_drivers/linux/sg/sg_scsi_tape.h
-    tape_drivers/linux/sg/sg_tape.c
-    tape_drivers/linux/sg/sg_tape.h
-)
+# Platform-specific library
+add_library(tape-sys-specific MODULE)
+
+if(LINUX)
+    target_sources(tape-sys-specific
+        tape_drivers/linux/sg/sg_scsi_tape.c
+        tape_drivers/linux/sg/sg_scsi_tape.h
+        tape_drivers/linux/sg/sg_tape.c
+        tape_drivers/linux/sg/sg_tape.h
+    )
+
+    set_target_properties(tape-sys-specific PROPERTIES OUTPUT_NAME "tape-sg")
+elseif(APPLE)
+    target_sources(tape-sys-specific
+        tape_drivers/osx/iokit/iokit_scsi.c
+        tape_drivers/osx/iokit/iokit_scsi.h
+        tape_drivers/osx/iokit/iokit_service.c
+        tape_drivers/osx/iokit/iokit_service.h
+        tape_drivers/osx/iokit/iokit_tape.c
+        tape_drivers/osx/iokit/iokit_tape.h
+    )
+
+    set_target_properties(tape-sys-specific PROPERTIES OUTPUT_NAME "tape-iokit")
+elseif(BSD)
+    if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+        target_sources(tape-sys-specific
+            tape_drivers/freebsd/cam/cam_cmn.c
+            tape_drivers/freebsd/cam/cam_cmn.h
+            tape_drivers/freebsd/cam/cam_tc.c
+            tape_drivers/freebsd/cam/IBM_tape.h
+        )
+
+        set_target_properties(tape-sys-specific PROPERTIES OUTPUT_NAME "tape-cam")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+        target_sources(tape-sys-specific
+            tape_drivers/netbsd/scsipi-ibmtape/scsipi_ibmtape.c
+            tape_drivers/netbsd/scsipi-ibmtape/scsipi_ibmtape.h
+            tape_drivers/netbsd/scsipi-ibmtape/scsipi_scsi_tape.c
+            tape_drivers/netbsd/scsipi-ibmtape/scsipi_scsi_tape.h
+        )
+
+        set_target_properties(tape-sys-specific PROPERTIES OUTPUT_NAME "tape-scsipi-ibmtape")
+    endif()
+endif()
 
 # Exectuables
 
@@ -208,7 +246,7 @@ install(TARGETS
         kmi-flatfile
         tape-file
         tape-itdtimg
-        tape-sg
+        tape-sys-specific
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/altfs"
 )
 
