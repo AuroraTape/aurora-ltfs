@@ -186,3 +186,33 @@ add_executable(mkaltfs
 # Libraries linking
 
 # Installation rules
+
+install(TARGETS
+        altfs
+        altfsck
+        altfsindextool
+        mkaltfs
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+
+install(FILES
+        cmd/altfs_ordered_copy/altfs_ordered_copy
+        "${CMAKE_CURRENT_BINARY_DIR}/altfsctl"
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+
+install(TARGETS
+        iosched-fcfs
+        iosched-unified
+        kmi-simple
+        kmi-flatfile
+        tape-file
+        tape-itdtimg
+        tape-sg
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/altfs"
+)
+
+install(TARGETS libaltfs
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/altfs"
+)
